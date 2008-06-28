@@ -233,6 +233,28 @@ sub o_compare_i_ge {
     return $pc + 1;
 }
 
+sub o_compare_s_eq {
+    my( $op, $runtime, $pc ) = @_;
+    my $v1 = pop @{$runtime->_stack};
+    my $v2 = pop @{$runtime->_stack};
+    my $r = $v1->as_string eq $v2->as_string ? 1 : 0;
+
+    push @{$runtime->_stack}, $r;
+
+    return $pc + 1;
+}
+
+sub o_compare_s_ne {
+    my( $op, $runtime, $pc ) = @_;
+    my $v1 = pop @{$runtime->_stack};
+    my $v2 = pop @{$runtime->_stack};
+    my $r = $v1->as_string ne $v2->as_string ? 1 : 0;
+
+    push @{$runtime->_stack}, $r;
+
+    return $pc + 1;
+}
+
 sub o_assign {
     my( $op, $runtime, $pc ) = @_;
     my $v1 = pop @{$runtime->_stack};
