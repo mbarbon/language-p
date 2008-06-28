@@ -435,13 +435,38 @@ sub _parse_maybe_method_call {
     }
 }
 
+sub _parse_string_rest {
+    my( $self, $token ) = @_;
+    my $terminator = $token->[2];
+    my $interpolate = $terminator eq '"' ? 1 : 0;
+    my @values;
+
+    for(;;) {
+        my $value = $self->lexer->lex_quote( $interpolate, $terminator );
+
+        if( $value->[0] eq 'STRING' ) {
+            push @values,
+                Language::P::ParseTree::Constant->new( { type  => 'string',
+                                                         value => $value->[1],
+                                                         } );
+        } elsif( $value->[0] eq 'QUOTE' ) {
+            if(    @values == 1
+                && $values[0]->isa( 'Language::P::ParseTree::Constant' ) ) {
+                return $values[0];
+            } else {
+                die "Return something for complex quoted string";
+            }
+        } else {
+            die $value->[0], ' ', $value->[1];
+        }
+    }
+}
+
 sub _parse_term_terminal {
     my( $self, $token ) = @_;
 
-    if( $token->[0] eq 'STRING' ) {
-        return Language::P::ParseTree::Constant->new( { type  => 'string',
-                                                        value => $token->[1],
-                                                        } );
+    if( $token->[0] eq 'QUOTE' ) {
+        return _parse_string_rest( $self, $token );
     } elsif( $token->[0] eq 'NUMBER' ) {
         return Language::P::ParseTree::Constant->new( { type  => 'number',
                                                         value => $token->[1],

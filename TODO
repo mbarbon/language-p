@@ -31,3 +31,5 @@
 - handling of parse errors with recovery
 - strictures
 - lexical pragmas/hints
+- assert unlexed tokens are relexed with the correct expectations
+- assert lex_string/lex unlex buffers do not intermingle
