@@ -90,7 +90,7 @@ sub _lex_token {
 
     if(    ( $type && $type ne $token->[0] )
         || ( $value && $value eq $token->[1] ) ) {
-        die $token->[0], ' ', $token->[1];
+        Carp::confess( $token->[0], ' ', $token->[1] );
     }
 
     return $token;
@@ -325,6 +325,10 @@ sub _parse_maybe_subscripts {
 
         return _parse_maybe_subscript_rest( $self, $term );
     }
+
+    # not a subscripted expression, just return the token
+    return $is_id ? _find_symbol( $self, $sigil, $token->[1] ) :
+                    $token;
 }
 
 sub _parse_maybe_subscript_rest {
@@ -645,6 +649,8 @@ sub _parse_term {
 
         return $terminal;
     }
+
+    $self->lexer->unlex( $token );
 
     return undef;
 }
