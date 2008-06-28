@@ -99,6 +99,52 @@ my %keywords = map { ( $_ => 1 ) }
      my our state sub
      );
 
+my %quoted_chars =
+  ( 'n' => "\n",
+    );
+
+sub lex_quote {
+    my( $self, $interpolate, $terminator ) = @_;
+
+    return pop @{$self->tokens} if @{$self->tokens};
+
+    my $buffer = $self->buffer;
+    my $v = '';
+    for(;;) {
+        $self->_fill_buffer unless length $$buffer;
+        return [ 'SPECIAL', 'EOF' ] unless length $$buffer;
+
+        while( length $$buffer ) {
+            my $c = substr $$buffer, 0, 1, '';
+
+            if( $c eq $terminator ) {
+                $self->unlex( [ 'QUOTE', $c ] );
+                return [ 'STRING', $v, 1 ];
+            }
+
+            if( $c eq '\\' ) {
+                my $qc = substr $$buffer, 0, 1, '';
+
+                if( $qc =~ /[a-zA-Z]/ ) {
+                    if( $quoted_chars{$qc} ) {
+                        $v .= $quoted_chars{$qc};
+                    } else {
+                        die "Invalid escape '$qc'";
+                    }
+                } elsif( $qc =~ /[0-9]/ ) {
+                    die "Unsupported numeric escape";
+                } else {
+                    $v .= $qc;
+                }
+            } else {
+                $v .= $c;
+            }
+        }
+    }
+
+    die "Can't get there";
+}
+
 sub lex {
     my( $self, $expect ) = ( @_, X_NOTHING );
 
@@ -125,21 +171,13 @@ sub lex {
         }
         return [ $keywords{$1} ? 'KEYWORD' : 'ID', $1 ];
     };
-    $$_ =~ s/^(".*?")//x and return [ 'STRING', $1 ];
+    $$_ =~ s/^(["'])//x and return [ 'QUOTE', $1, $1 ];
     $$_ =~ s/^(<=|>=|==|!=|\$\#|=>|->
                 |\.\.|\.\.\.
                 |\+\+|\-\-
                 |\&\&|\|\|)//x and return [ $ops{$1}, $1 ];
     $$_ =~ s/^([\*\$%@&])//x and do {
-        if( 0 && ( $expect == X_TERM || $expect == X_STATE ) ) {
-            my $sigil = $1;
-            $sigil .= '#' if $$_ =~ s/^\#//x;
-            $$_ =~ s/^([\w:]+)//x or return [ 'ERROR', $sigil ];
-
-            return [ 'SYMBOL', $sigil, $1 ];
-        } else {
-            return [ $ops{$1}, $1 ];
-        }
+        return [ $ops{$1}, $1 ];
     };
     $$_ =~ s/^([;,(){}\[\]\?<>!=\/\\\+\-])//x and return [ $ops{$1}, $1 ];
 
