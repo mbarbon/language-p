@@ -139,11 +139,17 @@ my %reverse_conditionals =
 
 my %conditionals =
   ( '<'      => \&Language::P::Opcodes::o_compare_i_lt,
+    'lt'     => \&Language::P::Opcodes::o_compare_s_lt,
     '>'      => \&Language::P::Opcodes::o_compare_i_gt,
+    'gt'     => \&Language::P::Opcodes::o_compare_s_gt,
     '<='     => \&Language::P::Opcodes::o_compare_i_le,
+    'le'     => \&Language::P::Opcodes::o_compare_s_le,
     '>='     => \&Language::P::Opcodes::o_compare_i_ge,
+    'ge'     => \&Language::P::Opcodes::o_compare_s_ge,
     '=='     => \&Language::P::Opcodes::o_compare_i_eq,
+    'eq'     => \&Language::P::Opcodes::o_compare_s_eq,
     '!='     => \&Language::P::Opcodes::o_compare_i_ne,
+    'ne'     => \&Language::P::Opcodes::o_compare_s_ne,
     );
 
 my %builtins =
@@ -155,7 +161,6 @@ my %builtins =
     '='      => \&Language::P::Opcodes::o_assign,
     %conditionals,
     );
-
 
 sub _function_call {
     my( $self, $tree ) = @_;

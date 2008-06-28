@@ -63,12 +63,18 @@ my %ops =
     '?'   => 'INTERR',
     '!'   => 'NOT',
     '<'   => 'OPAN',
+    'lt'  => 'SLESS',
     '>'   => 'CLAN',
+    'gt'  => 'SGREAT',
     '='   => 'EQUAL',
     '<='  => 'LESSEQUAL',
+    'le'  => 'SLESSEQUAL',
     '>='  => 'GREATEQUAL',
+    'ge'  => 'SGREATEQUAL',
     '=='  => 'EQUALEQUAL',
+    'eq'  => 'SEQUALEQUAL',
     '!='  => 'NOTEQUAL',
+    'ne'  => 'SNOTEQUAL',
     '/'   => 'SLASH',
     '\\'  => 'BACKSLASH',
     '..'  => 'DOTDOT',
@@ -113,7 +119,12 @@ sub lex {
 
     local $_ = $buffer;
     $$_ =~ s/^([\.\d]+)//x and return [ 'NUMBER', $1 ];
-    $$_ =~ s/^(\w+)//x and return [ $keywords{$1} ? 'KEYWORD' : 'ID', $1 ];
+    $$_ =~ s/^(\w+)//x and do {
+        if( $ops{$1} ) {
+            return [ $ops{$1}, $1 ];
+        }
+        return [ $keywords{$1} ? 'KEYWORD' : 'ID', $1 ];
+    };
     $$_ =~ s/^(".*?")//x and return [ 'STRING', $1 ];
     $$_ =~ s/^(<=|>=|==|!=|\$\#|=>|->
                 |\.\.|\.\.\.
