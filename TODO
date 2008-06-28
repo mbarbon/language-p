@@ -1,0 +1,33 @@
+- proper handling of bytecode
+- parsing builtins
+- proper scalar polimorphing
+- proper handling of function return values
+- scalar/array/void context
+- stashes
+- global variables/symbols (STDOUT!)
+- local variables
+- scoping
+- function calls
+- lexing of quoted strings
+- conditional constructs
+- lexing of integers/floating point
+- do/require/use/eval
+- multiple dispatch operators
+- array/list/hash assignment
+  - optimize lists with cmmon assignments
+- undef
+- garbage collection
+- remove dependency from parser to implementation (::Values, scratchpad)
+- labels
+- subroutine prototypes
+- scope handling of conditional/while/continue
+- handle errors
+- encapsulate lexical lookup/closure
+- better handling of sub calls
+  - encapsulate enter/leave
+- proper morphing on scalar assignment
+- autovivification
+- create common superclass for reference/scalar
+- handling of parse errors with recovery
+- strictures
+- lexical pragmas/hints
