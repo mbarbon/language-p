@@ -234,6 +234,17 @@ sub o_compare_i_gt_int {
     return $pc + 1;
 }
 
+sub o_compare_i_eq_int {
+    my( $op, $runtime, $pc ) = @_;
+    my $v1 = pop @{$runtime->_stack};
+    my $v2 = pop @{$runtime->_stack};
+    my $r = $v1->as_integer == $v2->as_integer ? 1 : 0;
+
+    push @{$runtime->_stack}, $r;
+
+    return $pc + 1;
+}
+
 sub o_compare_i_eq_scalar {
     my( $op, $runtime, $pc ) = @_;
     my $v1 = pop @{$runtime->_stack};
