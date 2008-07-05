@@ -29,7 +29,12 @@ t/parser/09_assignment.t
 t/parser/10_my.t
 t/parser/20_brackets.t
 t/parser/30_quoted_string.t
+t/parser/expressions/18_ternary.t
 t/parser/loops/01_block.t
+t/run/005_assignment.t
+t/run/007_if.t
+t/run/010_arithmetic.t
+t/run/080_recursion.t
 t/runtime/01_load.t
 t/runtime/02_base.t
 t/runtime/03_call.t
