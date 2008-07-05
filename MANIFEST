@@ -3,6 +3,7 @@ MANIFEST
 MANIFEST.SKIP
 TODO
 bin/p
+inc/My/Build.pm
 lib/Language/P.pm
 lib/Language/P/Generator.pm
 lib/Language/P/Lexer.pm
