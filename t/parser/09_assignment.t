@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 1;
+use Test::More tests => 2;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -21,4 +21,20 @@ root:
         class: Language::P::ParseTree::Constant
         value: 1
         type: number
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+$x = 'test';
+EOP
+root:
+    class: Language::P::ParseTree::BinOp
+    op: =
+    left:
+        class: Language::P::ParseTree::Symbol
+        name: x
+        sigil: $
+    right:
+        class: Language::P::ParseTree::Constant
+        value: test
+        type: string
 EOE

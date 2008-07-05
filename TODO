@@ -33,3 +33,5 @@
 - lexical pragmas/hints
 - assert unlexed tokens are relexed with the correct expectations
 - assert lex_string/lex unlex buffers do not intermingle
+- handle :: in identifiers, ${^foo} special variables, "'" in identifiers
+- proper lexing of ${  id # comment\n } vs. ${ id # comment \n expr }

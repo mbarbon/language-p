@@ -119,7 +119,7 @@ root:
                 value: 1
                 type: number
                 class: Language::P::ParseTree::Constant
-                value: "xx"
+                value: xx
                 type: string
                 class: Language::P::ParseTree::BinOp
                 op: +
@@ -150,7 +150,7 @@ root:
                 value: 1
                 type: number
                 class: Language::P::ParseTree::Constant
-                value: "xx"
+                value: xx
                 type: string
                 class: Language::P::ParseTree::BinOp
                 op: +

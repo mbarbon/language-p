@@ -105,7 +105,7 @@ sub _lex_semicolon {
         return;
     }
 
-    die $token->[0], ' ', $token->[1];
+    Carp::confess( $token->[0], ' ', $token->[1] );
 }
 
 sub _parse_line {
@@ -441,8 +441,11 @@ sub _parse_string_rest {
     my $interpolate = $terminator eq '"' ? 1 : 0;
     my @values;
 
+    $self->lexer->quote( { terminator  => $terminator,
+                           interpolate => $interpolate,
+                           } );
     for(;;) {
-        my $value = $self->lexer->lex_quote( $interpolate, $terminator );
+        my $value = $self->lexer->lex_quote;
 
         if( $value->[0] eq 'STRING' ) {
             push @values,
@@ -450,15 +453,24 @@ sub _parse_string_rest {
                                                          value => $value->[1],
                                                          } );
         } elsif( $value->[0] eq 'QUOTE' ) {
-            if(    @values == 1
-                && $values[0]->isa( 'Language::P::ParseTree::Constant' ) ) {
-                return $values[0];
-            } else {
-                die "Return something for complex quoted string";
-            }
+            last;
+        } elsif( $value->[0] eq 'DOLLAR' || $value->[0] eq 'AT' ) {
+            push @values, _parse_indirobj_maybe_subscripts( $self, $value );
         } else {
             die $value->[0], ' ', $value->[1];
         }
+    }
+
+    $self->lexer->quote( undef );
+
+    if(    @values == 1
+        && $values[0]->isa( 'Language::P::ParseTree::Constant' ) ) {
+
+        return $values[0];
+    } else {
+        return Language::P::ParseTree::QuotedString->new
+                   ( { components => \@values,
+                       } );
     }
 }
 
@@ -472,18 +484,7 @@ sub _parse_term_terminal {
                                                         value => $token->[1],
                                                         } );
     } elsif( $token->[1] eq '$#' || $token->[1] =~ /[\*\$%@&]/ ) {
-        my $indir = _parse_indirobj( $self );
-
-        if( ref( $indir ) eq 'ARRAY' && $indir->[0] eq 'ID' ) {
-            return _parse_maybe_subscripts( $self, $token->[1], 1, $indir );
-        } else {
-            my $deref = Language::P::ParseTree::UnOp->new
-                            ( { left  => $indir,
-                                op    => $token->[1],
-                                } );
-
-            return _parse_maybe_subscripts( $self, $token->[1], 0, $deref );
-        }
+        return _parse_indirobj_maybe_subscripts( $self, $token );
     } elsif(    $token->[0] eq 'KEYWORD'
              && (    $token->[1] eq 'my' || $token->[1] eq 'our'
                   || $token->[1] eq 'state' ) ) {
@@ -494,6 +495,22 @@ sub _parse_term_terminal {
     }
 
     return undef;
+}
+
+sub _parse_indirobj_maybe_subscripts {
+    my( $self, $token ) = @_;
+    my $indir = _parse_indirobj( $self, 1 );
+
+    if( ref( $indir ) eq 'ARRAY' && $indir->[0] eq 'ID' ) {
+        return _parse_maybe_subscripts( $self, $token->[1], 1, $indir );
+    } else {
+        my $deref = Language::P::ParseTree::UnOp->new
+                        ( { left  => $indir,
+                            op    => $token->[1],
+                            } );
+
+        return _parse_maybe_subscripts( $self, $token->[1], 0, $deref );
+    }
 }
 
 sub _parse_lexical {
@@ -546,7 +563,8 @@ sub _parse_lexical_variable {
 
     die $sigil->[0], ' ', $sigil->[1] unless $sigil->[1] =~ /^[\$\@\%]$/;
 
-    my $name = _lex_token( $self, 'ID' );
+    my $name = $self->lexer->lex_identifier;
+    die unless $name;
 
     return Language::P::ParseTree::LexicalDeclaration->new
                ( { name             => $name->[1],
@@ -701,17 +719,21 @@ sub _parse_block_rest {
 }
 
 sub _parse_indirobj {
-    my( $self ) = @_;
+    my( $self, $is_ident ) = @_;
+    my $id = $self->lexer->lex_identifier;
+
+    if( $id ) {
+        return $id;
+    }
+
     my $token = $self->lexer->lex( X_NOTHING );
 
-    if( $token->[0] eq 'ID' ) {
-        return $token;
-    } elsif( $token->[0] eq 'OPBRK' ) {
-        my $block = _parse_block( $self );
+    if( $token->[0] eq 'OPBRK' ) {
+        my $block = _parse_block_rest( $self );
 
         return [ 'BLOCK', $block ];
     } elsif( $token->[0] eq 'DOLLAR' ) {
-        my $indir = _parse_indirobj( $self );
+        my $indir = _parse_indirobj( $self, 1 );
 
         return [ 'SCALAR', $indir ];
     } else {

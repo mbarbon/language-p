@@ -91,6 +91,16 @@ our @FIELDS = qw(value type);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+package Language::P::ParseTree::QuotedString;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(components);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
 package Language::P::ParseTree::FunctionCall;
 
 use strict;
