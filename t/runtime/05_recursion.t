@@ -24,14 +24,17 @@ my @fib =
     { function => \&Language::P::Opcodes::o_compare_i_lt },
     { function => \&Language::P::Opcodes::o_jump_if_eq_immed,
       value    => 0,
-      to       => 6,
+      to       => 8,
       },
     # if n < 2
+    { function => \&Language::P::Opcodes::o_start_call },
     { function => \&Language::P::Opcodes::o_constant,
       value    => Language::P::Value::StringNumber->new( { integer => 1 } ),
       },
+    { function => \&Language::P::Opcodes::o_push_scalar },
     { function => \&Language::P::Opcodes::o_return },
     # if n >= 2
+    { function => \&Language::P::Opcodes::o_start_call },
     # fib( n - 1 )
     { function => \&Language::P::Opcodes::o_start_call },
     { function => \&Language::P::Opcodes::o_constant,
@@ -62,6 +65,7 @@ my @fib =
     { function => \&Language::P::Opcodes::o_call },
     # sum
     { function => \&Language::P::Opcodes::o_add },
+    { function => \&Language::P::Opcodes::o_push_scalar },
     { function => \&Language::P::Opcodes::o_return },
     );
 

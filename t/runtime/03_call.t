@@ -11,7 +11,8 @@ use Language::P::Value::Subroutine;
 my $runtime = Language::P::Runtime->new;
 
 my @add_mul =
-  ( { function => \&Language::P::Opcodes::o_parameter_index,
+  ( { function => \&Language::P::Opcodes::o_start_call },
+    { function => \&Language::P::Opcodes::o_parameter_index,
       index    => 0,
       },
     { function => \&Language::P::Opcodes::o_parameter_index,
@@ -22,6 +23,7 @@ my @add_mul =
       index    => 2,
       },
     { function => \&Language::P::Opcodes::o_multiply },
+    { function => \&Language::P::Opcodes::o_push_scalar },
     { function => \&Language::P::Opcodes::o_return },
     );
 
