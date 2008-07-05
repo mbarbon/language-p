@@ -7,6 +7,15 @@ use Language::P::Value::StringNumber;
 use Language::P::Value::Array;
 use Language::P::Value::List;
 
+sub o_dup {
+    my( $op, $runtime, $pc ) = @_;
+    my $value = $runtime->_stack->[-1];
+
+    push @{$runtime->_stack}, $value;
+
+    return $pc + 1;
+}
+
 sub o_print {
     my( $op, $runtime, $pc ) = @_;
     my $args = pop @{$runtime->_stack};
@@ -189,7 +198,21 @@ sub o_jump_if_eq_immed {
     return $v1 == $op->{value} ? $op->{to} : $pc + 1;
 }
 
-sub o_compare_i_lt {
+sub o_jump_if_false {
+    my( $op, $runtime, $pc ) = @_;
+    my $v1 = pop @{$runtime->_stack};
+
+    return !$v1->as_boolean_int ? $op->{to} : $pc + 1;
+}
+
+sub o_jump_if_true {
+    my( $op, $runtime, $pc ) = @_;
+    my $v1 = pop @{$runtime->_stack};
+
+    return $v1->as_boolean_int ? $op->{to} : $pc + 1;
+}
+
+sub o_compare_i_lt_int {
     my( $op, $runtime, $pc ) = @_;
     my $v1 = pop @{$runtime->_stack};
     my $v2 = pop @{$runtime->_stack};
@@ -200,7 +223,7 @@ sub o_compare_i_lt {
     return $pc + 1;
 }
 
-sub o_compare_i_gt {
+sub o_compare_i_gt_int {
     my( $op, $runtime, $pc ) = @_;
     my $v1 = pop @{$runtime->_stack};
     my $v2 = pop @{$runtime->_stack};
@@ -211,7 +234,29 @@ sub o_compare_i_gt {
     return $pc + 1;
 }
 
-sub o_compare_i_le {
+sub o_compare_i_eq_scalar {
+    my( $op, $runtime, $pc ) = @_;
+    my $v1 = pop @{$runtime->_stack};
+    my $v2 = pop @{$runtime->_stack};
+    my $r = $v1->as_integer == $v2->as_integer ? 1 : 0;
+
+    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => $r } );
+
+    return $pc + 1;
+}
+
+sub o_compare_i_ne_scalar {
+    my( $op, $runtime, $pc ) = @_;
+    my $v1 = pop @{$runtime->_stack};
+    my $v2 = pop @{$runtime->_stack};
+    my $r = $v1->as_integer != $v2->as_integer ? 1 : 0;
+
+    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => $r } );
+
+    return $pc + 1;
+}
+
+sub o_compare_i_le_int {
     my( $op, $runtime, $pc ) = @_;
     my $v1 = pop @{$runtime->_stack};
     my $v2 = pop @{$runtime->_stack};
@@ -222,7 +267,7 @@ sub o_compare_i_le {
     return $pc + 1;
 }
 
-sub o_compare_i_ge {
+sub o_compare_i_ge_int {
     my( $op, $runtime, $pc ) = @_;
     my $v1 = pop @{$runtime->_stack};
     my $v2 = pop @{$runtime->_stack};
@@ -233,7 +278,7 @@ sub o_compare_i_ge {
     return $pc + 1;
 }
 
-sub o_compare_s_eq {
+sub o_compare_s_eq_int {
     my( $op, $runtime, $pc ) = @_;
     my $v1 = pop @{$runtime->_stack};
     my $v2 = pop @{$runtime->_stack};
@@ -244,13 +289,35 @@ sub o_compare_s_eq {
     return $pc + 1;
 }
 
-sub o_compare_s_ne {
+sub o_compare_s_ne_int {
     my( $op, $runtime, $pc ) = @_;
     my $v1 = pop @{$runtime->_stack};
     my $v2 = pop @{$runtime->_stack};
     my $r = $v1->as_string ne $v2->as_string ? 1 : 0;
 
     push @{$runtime->_stack}, $r;
+
+    return $pc + 1;
+}
+
+sub o_compare_s_eq_scalar {
+    my( $op, $runtime, $pc ) = @_;
+    my $v1 = pop @{$runtime->_stack};
+    my $v2 = pop @{$runtime->_stack};
+    my $r = $v1->as_string eq $v2->as_string ? 1 : 0;
+
+    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => $r } );
+
+    return $pc + 1;
+}
+
+sub o_compare_s_ne_scalar {
+    my( $op, $runtime, $pc ) = @_;
+    my $v1 = pop @{$runtime->_stack};
+    my $v2 = pop @{$runtime->_stack};
+    my $r = $v1->as_string ne $v2->as_string ? 1 : 0;
+
+    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => $r } );
 
     return $pc + 1;
 }

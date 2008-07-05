@@ -138,28 +138,37 @@ my %reverse_conditionals =
     );
 
 my %conditionals =
-  ( '<'      => \&Language::P::Opcodes::o_compare_i_lt,
-    'lt'     => \&Language::P::Opcodes::o_compare_s_lt,
-    '>'      => \&Language::P::Opcodes::o_compare_i_gt,
-    'gt'     => \&Language::P::Opcodes::o_compare_s_gt,
-    '<='     => \&Language::P::Opcodes::o_compare_i_le,
-    'le'     => \&Language::P::Opcodes::o_compare_s_le,
-    '>='     => \&Language::P::Opcodes::o_compare_i_ge,
-    'ge'     => \&Language::P::Opcodes::o_compare_s_ge,
-    '=='     => \&Language::P::Opcodes::o_compare_i_eq,
-    'eq'     => \&Language::P::Opcodes::o_compare_s_eq,
-    '!='     => \&Language::P::Opcodes::o_compare_i_ne,
-    'ne'     => \&Language::P::Opcodes::o_compare_s_ne,
+  ( '<'      => \&Language::P::Opcodes::o_compare_i_lt_int,
+    'lt'     => \&Language::P::Opcodes::o_compare_s_lt_int,
+    '>'      => \&Language::P::Opcodes::o_compare_i_gt_int,
+    'gt'     => \&Language::P::Opcodes::o_compare_s_gt_int,
+    '<='     => \&Language::P::Opcodes::o_compare_i_le_int,
+    'le'     => \&Language::P::Opcodes::o_compare_s_le_int,
+    '>='     => \&Language::P::Opcodes::o_compare_i_ge_int,
+    'ge'     => \&Language::P::Opcodes::o_compare_s_ge_int,
+    '=='     => \&Language::P::Opcodes::o_compare_i_eq_int,
+    'eq'     => \&Language::P::Opcodes::o_compare_s_eq_int,
+    '!='     => \&Language::P::Opcodes::o_compare_i_ne_int,
+    'ne'     => \&Language::P::Opcodes::o_compare_s_ne_int,
+    );
+
+my %short_circuit =
+  ( '&&'     => \&Language::P::Opcodes::o_jump_if_false,
+    '||'     => \&Language::P::Opcodes::o_jump_if_true,
     );
 
 my %builtins =
   ( print    => \&Language::P::Opcodes::o_print,
     return   => \&Language::P::Opcodes::o_return,
+    %short_circuit,
     '+'      => \&Language::P::Opcodes::o_add,
     '*'      => \&Language::P::Opcodes::o_multiply,
     '-'      => \&Language::P::Opcodes::o_subtract,
     '='      => \&Language::P::Opcodes::o_assign,
-    %conditionals,
+    '=='     => \&Language::P::Opcodes::o_compare_i_eq_scalar,
+    'eq'     => \&Language::P::Opcodes::o_compare_s_eq_scalar,
+    '!='     => \&Language::P::Opcodes::o_compare_i_ne_scalar,
+    'ne'     => \&Language::P::Opcodes::o_compare_s_ne_scalar,
     );
 
 sub _function_call {
@@ -215,16 +224,33 @@ sub _binary_op {
 
     die $tree->op unless $builtins{$tree->op};
 
-    $self->dispatch( $tree->right );
-    $self->dispatch( $tree->left );
+    if( $short_circuit{$tree->op} ) {
+        $self->dispatch( $tree->left );
 
-    push @bytecode, { function => $builtins{$tree->op} };
+        my $end = _new_label;
+
+        # jump to $end if evalutating right is not necessary
+        push @bytecode,
+            { function => \&Language::P::Opcodes::o_dup },
+            { function => $short_circuit{$tree->op} };
+        _to_label( $end, $bytecode[-1] );
+
+        # evalutates right only if this is the correct return value
+        $self->dispatch( $tree->right );
+
+        _set_label( $end, scalar @bytecode );
+    } else {
+        $self->dispatch( $tree->right );
+        $self->dispatch( $tree->left );
+
+        push @bytecode, { function => $builtins{$tree->op} };
+    }
 }
 
 sub _binary_op_cond {
     my( $self, $tree, $true, $false ) = @_;
 
-    die $tree->op unless $builtins{$tree->op};
+    die $tree->op unless $conditionals{$tree->op};
 
     $self->dispatch( $tree->right );
     $self->dispatch( $tree->left );
