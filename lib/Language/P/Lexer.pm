@@ -175,9 +175,13 @@ sub lex_quote {
                     $v .= $qc;
                 }
             } elsif( $c =~ /^[\$\@]$/ && $self->quote->{interpolate} ) {
-                $self->unlex( [ $ops{$c}, $c ] );
+                if( length $v ) {
+                    $self->unlex( [ $ops{$c}, $c ] );
 
-                return [ 'STRING', $v ];
+                    return [ 'STRING', $v ];
+                } else {
+                    return [ $ops{$c}, $c ];
+                }
             } else {
                 $v .= $c;
             }
