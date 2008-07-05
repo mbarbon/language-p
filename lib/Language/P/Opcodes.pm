@@ -57,6 +57,26 @@ sub o_add {
     return $pc + 1;
 }
 
+sub o_stringify {
+    my( $op, $runtime, $pc ) = @_;
+    my $v = pop @{$runtime->_stack};
+
+    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { string => $v->as_string } );
+
+    return $pc + 1;
+}
+
+sub o_concat {
+    my( $op, $runtime, $pc ) = @_;
+    my $v1 = pop @{$runtime->_stack};
+    my $v2 = pop @{$runtime->_stack};
+    my $r = $v1->as_string . $v2->as_string;
+
+    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { string => $r } );
+
+    return $pc + 1;
+}
+
 sub o_subtract {
     my( $op, $runtime, $pc ) = @_;
     my $v1 = pop @{$runtime->_stack};
