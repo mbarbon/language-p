@@ -11,9 +11,9 @@ sub type { 11 }
 sub clone {
     my( $self, $level ) = @_;
 
-    return Language::P::Value::Scalar->new( { string  => $self->{string},
-                                              integer => $self->{integer},
-                                              } );
+    return Language::P::Value::StringNumber->new( { string  => $self->{string},
+                                                    integer => $self->{integer},
+                                                    } );
 }
 
 sub as_string {
