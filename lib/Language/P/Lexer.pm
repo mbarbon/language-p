@@ -122,7 +122,7 @@ sub _skip_space {
         last if length $$buffer;
     }
 
-    return [ 'STRING', $retval ];
+    return $retval;
 }
 
 sub _quoted_code_lookahead {
@@ -216,7 +216,7 @@ sub lex_identifier {
             return [ 'ID', $maybe_id ];
         } else {
             # not a simple identifier
-            $$_ = $spcbef . $maybe_id . $spcaft . '}' . $$_;
+            $$_ = '{' . $spcbef . $maybe_id . $spcaft . $$_;
             return undef;
         }
     };
