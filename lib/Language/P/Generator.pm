@@ -95,6 +95,7 @@ my %dispatch =
     Ternary                => '_ternary',
     Block                  => '_block',
     Subroutine             => '_subroutine',
+    QuotedString           => '_quoted_string',
     );
 
 my %dispatch_cond =
@@ -397,6 +398,29 @@ sub _subroutine {
     $self->pop_code;
 
     $self->runtime->symbol_table->set_symbol( $tree->name, '&', $sub );
+}
+
+sub _quoted_string {
+    my( $self, $tree ) = @_;
+
+    if( @{$tree->components} == 1 ) {
+        $self->dispatch( $tree->components->[0] );
+
+        push @bytecode,
+            { function => \&Language::P::Opcodes::o_stringify,
+              };
+
+        return;
+    }
+
+    $self->dispatch( $tree->components->[-1] );
+    for( my $i = @{$tree->components} - 2; $i >= 0; --$i ) {
+        $self->dispatch( $tree->components->[$i] );
+
+        push @bytecode,
+            { function => \&Language::P::Opcodes::o_concat,
+              };
+    }
 }
 
 sub _allocate_lexicals {
