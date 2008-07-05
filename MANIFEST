@@ -25,8 +25,11 @@ lib/Language/P/Value/SymbolTable.pm
 lib/Language/P/Value/Typeglob.pm
 t/lib/TestParser.pm
 t/parser/01_load.t
+t/parser/09_assignment.t
 t/parser/10_my.t
 t/parser/20_brackets.t
+t/parser/30_quoted_string.t
+t/parser/loops/01_block.t
 t/runtime/01_load.t
 t/runtime/02_base.t
 t/runtime/03_call.t

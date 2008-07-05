@@ -103,6 +103,9 @@ sub _lex_semicolon {
     if(    ( $token->[0] eq 'SPECIAL' && $token->[1] eq 'EOF' )
         || ( $token->[0] eq 'SEMICOLON' ) ) {
         return;
+    } elsif( $token->[0] eq 'CLBRK' ) {
+        $self->lexer->unlex( $token );
+        return;
     }
 
     Carp::confess( $token->[0], ' ', $token->[1] );
@@ -114,9 +117,13 @@ sub _parse_line {
     my $label = _label( $self );
     my $token = $self->lexer->peek( X_STATE );
 
-    if(    $token->[0] ne 'KEYWORD'
-        || (    $token->[1] eq 'my' || $token->[1] eq 'our'
-             || $token->[1] eq 'state' ) ) {
+    if( $token->[0] eq 'OPBRK' ) {
+        _lex_token( $self, 'OPBRK' );
+
+        return _parse_block_rest( $self, 1 );
+    } elsif(    $token->[0] ne 'KEYWORD'
+             || (    $token->[1] eq 'my' || $token->[1] eq 'our'
+                  || $token->[1] eq 'state' ) ) {
         my $sideff = _parse_sideff( $self );
         _lex_semicolon( $self );
 
@@ -729,13 +736,13 @@ sub _parse_indirobj {
     my $token = $self->lexer->lex( X_NOTHING );
 
     if( $token->[0] eq 'OPBRK' ) {
-        my $block = _parse_block_rest( $self );
+        my $block = _parse_block_rest( $self, 0 );
 
-        return [ 'BLOCK', $block ];
+        return $block;
     } elsif( $token->[0] eq 'DOLLAR' ) {
         my $indir = _parse_indirobj( $self, 1 );
 
-        return [ 'SCALAR', $indir ];
+        return $indir;
     } else {
         die $token->[0], ' ', $token->[1];
     }
@@ -766,6 +773,7 @@ sub _parse_cslist {
     my( $self ) = @_;
 
     my $term = _parse_term( $self );
+    return unless $term;
     return _parse_cslist_rest( $self, $term );
 }
 

@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 3;
+use Test::More tests => 4;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -63,4 +63,24 @@ root:
                 class: Language::P::ParseTree::Constant
                 value: 3
                 type: number
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+my( ${foo}, @{b}, $x );
+EOP
+root:
+    class: Language::P::ParseTree::List
+    expressions:
+            class: Language::P::ParseTree::LexicalDeclaration
+            name: foo
+            sigil: $
+            declaration_type: my
+            class: Language::P::ParseTree::LexicalDeclaration
+            name: b
+            sigil: @
+            declaration_type: my
+            class: Language::P::ParseTree::LexicalDeclaration
+            name: x
+            sigil: $
+            declaration_type: my
 EOE

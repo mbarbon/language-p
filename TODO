@@ -1,3 +1,4 @@
+- barewords
 - proper handling of bytecode
 - parsing builtins
 - proper scalar polimorphing

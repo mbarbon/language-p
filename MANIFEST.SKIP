@@ -4,7 +4,9 @@
 ,v$
 \B\.svn\b
 \B\.cvsignore$
+\B\.gitignore$
 \B\.git\b
+^t/perl5/
 
 # Avoid Makemaker generated and utility files.
 \bMakefile$
@@ -12,7 +14,6 @@
 \bMakeMaker-\d
 \bpm_to_blib$
 \bblibdirs$
-^MANIFEST\.SKIP$
 
 # Avoid Module::Build generated and utility files.
 \bBuild$

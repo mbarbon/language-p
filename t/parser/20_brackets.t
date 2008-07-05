@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 8;
+use Test::More tests => 10;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -231,4 +231,50 @@ root:
             type: number
     type: (
     reference: 1
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+${foo}[1]
+EOP
+root:
+    class: Language::P::ParseTree::Subscript
+    subscripted:
+        class: Language::P::ParseTree::Symbol
+        name: foo
+        sigil: @
+    subscript:
+        class: Language::P::ParseTree::Constant
+        value: 1
+        type: number
+    type: [
+    reference: 0
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+${foo() . "x"}[1]
+EOP
+root:
+    class: Language::P::ParseTree::Subscript
+    subscripted:
+        class: Language::P::ParseTree::UnOp
+        op: $
+        left:
+            class: Language::P::ParseTree::Block
+            lines:
+                    class: Language::P::ParseTree::BinOp
+                    op: .
+                    left:
+                        class: Language::P::ParseTree::FunctionCall
+                        function: foo
+                        arguments: undef
+                    right:
+                        class: Language::P::ParseTree::Constant
+                        value: x
+                        type: string
+    subscript:
+        class: Language::P::ParseTree::Constant
+        value: 1
+        type: number
+    type: [
+    reference: 0
 EOE
