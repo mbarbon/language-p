@@ -21,7 +21,7 @@ my @fib =
     { function => \&Language::P::Opcodes::o_parameter_index,
       index    => 0,
       },
-    { function => \&Language::P::Opcodes::o_compare_i_lt },
+    { function => \&Language::P::Opcodes::o_compare_i_lt_int },
     { function => \&Language::P::Opcodes::o_jump_if_eq_immed,
       value    => 0,
       to       => 8,

@@ -35,6 +35,12 @@ sub get_or_create_slot {
     return $self->body->get_or_create( $slot );
 }
 
+sub as_boolean_int {
+    my( $self ) = @_;
+
+    return 1;
+}
+
 package Language::P::Value::Typeglob::Body;
 
 use strict;

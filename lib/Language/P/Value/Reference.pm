@@ -51,4 +51,10 @@ sub dereference_typeglob {
     return $self->{reference};
 }
 
+sub as_boolean_int {
+    my( $self ) = @_;
+
+    return 1;
+}
+
 1;

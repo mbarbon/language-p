@@ -65,6 +65,12 @@ sub as_scalar {
     return Language::P::Value::StringNumber->new( { integer => $self->get_count } );
 }
 
+sub as_boolean_int {
+    my( $self ) = @_;
+
+    return $self->get_count ? 1 : 0;
+}
+
 package Language::P::Value::Array::Iterator;
 
 use strict;
