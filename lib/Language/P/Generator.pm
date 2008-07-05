@@ -92,16 +92,13 @@ my %dispatch =
     LexicalSymbol          => '_lexical_declaration',
     List                   => '_list',
     Conditional            => '_cond',
+    Ternary                => '_ternary',
     Block                  => '_block',
     Subroutine             => '_subroutine',
     );
 
 my %dispatch_cond =
-  ( FunctionCall   => '_function_call',
-    BinOp          => '_binary_op_cond',
-    Constant       => '_constant',
-    Symbol         => '_symbol',
-    List           => '_list',
+  ( BinOp          => '_binary_op_cond',
     );
 
 sub dispatch {
@@ -119,7 +116,7 @@ sub dispatch {
 sub dispatch_cond {
     my( $self, $tree, $true, $false ) = @_;
     ( my $pack = ref $tree ) =~ s/^.*:://;
-    my $meth = $dispatch_cond{$pack};
+    my $meth = $dispatch_cond{$pack} || '_anything_cond';
 
 #     use Data::Dumper;
 #     print Dumper( $tree );
@@ -250,7 +247,9 @@ sub _binary_op {
 sub _binary_op_cond {
     my( $self, $tree, $true, $false ) = @_;
 
-    die $tree->op unless $conditionals{$tree->op};
+    if( !$conditionals{$tree->op} ) {
+        _anything_cond( $self, $tree, $true, $false );
+    }
 
     $self->dispatch( $tree->right );
     $self->dispatch( $tree->left );
@@ -258,7 +257,20 @@ sub _binary_op_cond {
     push @bytecode, { function => $conditionals{$tree->op} };
     # jump to $false if false, fall trough if true
     push @bytecode,
-        { function => \&Language::P::Opcodes::o_jump_if_eq_immed,,
+        { function => \&Language::P::Opcodes::o_jump_if_eq_immed,
+          value    => 0,
+          };
+    _to_label( $false, $bytecode[-1] );
+}
+
+sub _anything_cond {
+    my( $self, $tree, $true, $false ) = @_;
+
+    $self->dispatch( $tree );
+
+    # jump to $false if false, fall trough if true
+    push @bytecode,
+        { function => \&Language::P::Opcodes::o_jump_if_false,
           value    => 0,
           };
     _to_label( $false, $bytecode[-1] );
@@ -339,6 +351,24 @@ sub _cond {
     if( $tree->iffalse ) {
         $self->dispatch( $tree->iffalse->[2] );
     }
+    _set_label( $end, scalar @bytecode );
+}
+
+sub _ternary {
+    my( $self, $tree ) = @_;
+
+    my( $end, $true, $false ) = ( _new_label, _new_label, _new_label );
+    $self->dispatch_cond( $tree->condition, $true, $false );
+    _set_label( $true, scalar @bytecode );
+    $self->dispatch( $tree->iftrue );
+    push @bytecode,
+        { function => \&Language::P::Opcodes::o_jump,
+          };
+    _to_label( $end, $bytecode[-1] );
+    _set_label( $false, scalar @bytecode );
+
+    $self->dispatch( $tree->iffalse );
+
     _set_label( $end, scalar @bytecode );
 }
 
