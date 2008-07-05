@@ -2,10 +2,11 @@
 
 use strict;
 use warnings;
+use lib 'inc';
 
-use Module::Build;
+use My::Build;
 
-my $build = Module::Build->new
+my $build = My::Build->new
   ( module_name          => 'Language::P',
     license              => 'perl',
     requires             =>
@@ -13,8 +14,10 @@ my $build = Module::Build->new
           'Module::Build'     => '0.28',
           'Exporter'          => '5.58',
           'Test::Differences' => '0.47',
+          'TAP::Harness'      => '3.10',
           'perl'              => '5.8.3',
           },
     recursive_test_files => 1,
+    test_files           => 't/parser t/runtime',
     );
 $build->create_build_script;
