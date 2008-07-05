@@ -56,6 +56,7 @@ sub unlex {
 
 my %ops =
   ( ';'   => 'SEMICOLON',
+    ':'   => 'COLON',
     ','   => 'COMMA',
     '=>'  => 'FATARROW',
     '('   => 'OPPAR',
@@ -263,7 +264,7 @@ sub lex {
             return [ $ops{$1}, $1 ];
         };
     }
-    $$_ =~ s/^([;,(){}\[\]\?<>!=\/\\\+\-])//x and return [ $ops{$1}, $1 ];
+    $$_ =~ s/^([:;,(){}\[\]\?<>!=\/\\\+\-])//x and return [ $ops{$1}, $1 ];
 
     die "Lexer error: '$$_'";
 }

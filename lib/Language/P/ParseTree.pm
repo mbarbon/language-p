@@ -233,4 +233,14 @@ our @FIELDS = qw(iftrues iffalse);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+package Language::P::ParseTree::Ternary;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(condition iftrue iffalse);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
 1;
