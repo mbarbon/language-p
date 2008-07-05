@@ -608,12 +608,13 @@ my %prec_assoc_bin =
     '||'  => [ 16, 'LEFT' ],
     '..'  => [ 17, 'NON' ],
     '...' => [ 17, 'NON' ],
-    # 18, ternary
+    '?'   => [ 18, 'RIGHT' ], # ternary
     '='   => [ 19, 'RIGHT' ],
     '+='  => [ 19, 'RIGHT' ],
     '-='  => [ 19, 'RIGHT' ],
     '*='  => [ 19, 'RIGHT' ],
     '/='  => [ 19, 'RIGHT' ],
+    ':'   => [ 40, 'RIGHT' ], # ternary, must be lowest,
     );
 
 my %prec_assoc_un =
@@ -632,7 +633,11 @@ sub _parse_term_p {
     if( $terminal ) {
         my $la = $self->lexer->peek( X_OPERATOR );
 
-        if( $prec_assoc_bin{$la->[1]} ) {
+        if( $la->[0] eq 'INTERR' ) {
+            _lex_token( $self, 'INTERR' );
+            return _parse_ternary( $self, $prec_assoc_bin{$la->[1]}[0],
+                                   $terminal );
+        } elsif( $prec_assoc_bin{$la->[1]} ) {
             return _parse_term_n( $self, $prec_assoc_bin{$la->[1]}[0],
                                   $terminal );
         } else {
@@ -657,6 +662,20 @@ sub _parse_term_p {
     return undef;
 }
 
+sub _parse_ternary {
+    my( $self, $prec, $terminal ) = @_;
+
+    my $iftrue = _parse_term_n( $self, $prec_assoc_bin{':'}[0] + 1 );
+    _lex_token( $self, 'COLON' );
+    my $iffalse = _parse_term_n( $self, $prec + 1 );
+
+    return Language::P::ParseTree::Ternary->new
+               ( { condition => $terminal,
+                   iftrue    => $iftrue,
+                   iffalse   => $iffalse,
+                   } );
+}
+
 sub _parse_term_n {
     my( $self, $prec, $terminal ) = @_;
 
@@ -676,14 +695,22 @@ sub _parse_term_n {
         if( !$bin || $bin->[0] < $prec ) {
             $self->lexer->unlex( $token );
             last;
-        }
-        my $q = $bin->[1] eq 'RIGHT' ? $bin->[0] : $bin->[0] + 1;
-        my $rterm = _parse_term_n( $self, $q );
+        } elsif( $token->[0] eq 'INTERR' ) {
+            $terminal = _parse_ternary( $self, $bin->[0], $terminal );
+        } else {
+            # do not try to use colon as binary
+            Carp::confess $token->[0], ' ', $token->[1]
+                if $token->[0] eq 'COLON';
 
-        $terminal = Language::P::ParseTree::BinOp->new( { op    => $token->[1],
-                                                          left  => $terminal,
-                                                          right => $rterm,
-                                                          } );
+            my $q = $bin->[1] eq 'RIGHT' ? $bin->[0] : $bin->[0] + 1;
+            my $rterm = _parse_term_n( $self, $q );
+
+            $terminal = Language::P::ParseTree::BinOp->new
+                            ( { op    => $token->[1],
+                                left  => $terminal,
+                                right => $rterm,
+                                } );
+        }
     }
 
     return $terminal;
