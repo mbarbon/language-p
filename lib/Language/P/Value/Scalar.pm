@@ -11,6 +11,8 @@ sub as_scalar { return $_[0] }
 sub assign {
     my( $self, $other ) = @_;
 
+    Carp::confess if ref( $other ) eq __PACKAGE__;
+
     # FIXME proper morphing
     %$self = ();
     bless $self, ref( $other );
