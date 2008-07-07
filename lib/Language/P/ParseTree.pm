@@ -38,7 +38,7 @@ sub _print_value {
     my( $prefix ) = ( ' ' x ( $level * 4 ) );
 
     if( !defined $value ) {
-        return $prefix . "undef";
+        return $prefix . "undef\n";
     } elsif( ref $value eq 'ARRAY' ) {
         my $str = '';
 
@@ -53,7 +53,7 @@ sub _print_value {
              && ref( $value )->isa( 'Language::P::ParseTree::Node' ) ) {
         return $value->_pretty_print( $level + 1 );
     } else {
-        return $value;
+        return $prefix . $value . "\n";
     }
 }
 
@@ -73,8 +73,7 @@ sub _pretty_print {
             $str .= $prefix . $field . ":\n";
             $str .= _print_value( $self, $value, $level );
         } else {
-            $str .= $prefix . $field . ": " . _print_value( $self, $value, 0 )
-                                            .  "\n";
+            $str .= $prefix . $field . ": " . _print_value( $self, $value, 0 );
         }
     }
 
