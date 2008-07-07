@@ -268,6 +268,36 @@ sub _parse_while {
 sub _parse_sideff {
     my( $self ) = @_;
     my $expr = _parse_expr( $self );
+    my $keyword = $self->lexer->peek( X_TERM );
+
+    if( $keyword->[0] eq 'KEYWORD' ) {
+        if( $keyword->[1] eq 'if' || $keyword->[1] eq 'unless' ) {
+            _lex_token( $self, 'KEYWORD' );
+            my $cond = _parse_expr( $self );
+
+            $expr = Language::P::ParseTree::Conditional->new
+                        ( { iftrues => [ [ $keyword->[1], $cond, $expr ] ],
+                            } );
+        } elsif( $keyword->[1] eq 'while' || $keyword->[1] eq 'until' ) {
+            _lex_token( $self, 'KEYWORD' );
+            my $cond = _parse_expr( $self );
+
+            $expr = Language::P::ParseTree::ConditionalLoop->new
+                        ( { condition  => $cond,
+                            block      => $expr,
+                            block_type => $keyword->[1],
+                            } );
+        } elsif( $keyword->[1] eq 'for' || $keyword->[1] eq 'foreach' ) {
+            _lex_token( $self, 'KEYWORD' );
+            my $cond = _parse_expr( $self );
+
+            $expr = Language::P::ParseTree::Foreach->new
+                        ( { expression => $cond,
+                            block      => $expr,
+                            variable   => '$_', # FIXME
+                            } );
+        }
+    }
 
     return $expr;
 }
