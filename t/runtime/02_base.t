@@ -5,7 +5,7 @@ use warnings;
 use Test::More tests => 4;
 
 use Language::P::Runtime;
-use Language::P::Opcodes;
+use Language::P::Opcodes qw(o);
 use Language::P::Value::StringNumber;
 use Language::P::Value::Handle;
 
@@ -21,18 +21,16 @@ my $runtime = Language::P::Runtime->new;
 my( $out1, $fh1 ) = _oth();
 
 my @program1 =
-  ( { function => \&Language::P::Opcodes::o_start_call },
-    { function => \&Language::P::Opcodes::o_constant,
-      value    => $fh1,
-      },
-    { function => \&Language::P::Opcodes::o_push_scalar },
-    { function => \&Language::P::Opcodes::o_constant,
-      value    => Language::P::Value::StringNumber->new( { string => "Hello, world!\n" } ),
-      },
-    { function => \&Language::P::Opcodes::o_push_scalar },
-    { function => \&Language::P::Opcodes::o_print },
-    { function => \&Language::P::Opcodes::o_end },
-    );
+  ( o( 'start_call' ),
+    o( 'constant', value => $fh1 ),
+    o( 'push_scalar' ),
+    o( 'constant',
+       value => Language::P::Value::StringNumber->new( { string => "Hello, world!\n" } ),
+       ),
+    o( 'push_scalar' ),
+    o( 'print' ),
+    o( 'end' ),
+  );
 
 $runtime->reset;
 $runtime->run_bytecode( \@program1 );
@@ -42,25 +40,23 @@ is( $$out1, "Hello, world!\n" );
 my( $out2, $fh2 ) = _oth();
 
 my @program2 =
-  ( { function => \&Language::P::Opcodes::o_start_call },
-    { function => \&Language::P::Opcodes::o_constant,
-      value    => $fh2,
-      },
-    { function => \&Language::P::Opcodes::o_push_scalar },
-    { function => \&Language::P::Opcodes::o_constant,
-      value    => Language::P::Value::StringNumber->new( { string => "Hello, " } ),
-      },
-    { function => \&Language::P::Opcodes::o_push_scalar },
-    { function => \&Language::P::Opcodes::o_constant,
-      value    => Language::P::Value::StringNumber->new( { string => "world!" } ),
-      },
-    { function => \&Language::P::Opcodes::o_push_scalar },
-    { function => \&Language::P::Opcodes::o_constant,
-      value    => Language::P::Value::StringNumber->new( { string => "\n" } ),
-      },
-    { function => \&Language::P::Opcodes::o_push_scalar },
-    { function => \&Language::P::Opcodes::o_print },
-    { function => \&Language::P::Opcodes::o_end },
+  ( o( 'start_call' ),
+    o( 'constant', value => $fh2 ),
+    o( 'push_scalar' ),
+    o( 'constant',
+       value => Language::P::Value::StringNumber->new( { string => "Hello, " } ),
+       ),
+    o( 'push_scalar' ),
+    o( 'constant',
+       value => Language::P::Value::StringNumber->new( { string => "world!" } ),
+       ),
+    o( 'push_scalar' ),
+    o( 'constant',
+       value => Language::P::Value::StringNumber->new( { string => "\n" } ),
+       ),
+    o( 'push_scalar' ),
+    o( 'print' ),
+    o( 'end' ),
     );
 
 $runtime->reset;
@@ -69,18 +65,18 @@ $runtime->run_bytecode( \@program2 );
 is( $$out2, "Hello, world!\n" );
 
 my @program3 =
-  ( { function => \&Language::P::Opcodes::o_constant,
-      value    => Language::P::Value::StringNumber->new( { integer => 1 } ),
-      },
-    { function => \&Language::P::Opcodes::o_constant,
-      value    => Language::P::Value::StringNumber->new( { integer => 3 } ),
-      },
-    { function => \&Language::P::Opcodes::o_add },
-    { function => \&Language::P::Opcodes::o_constant,
-      value    => Language::P::Value::StringNumber->new( { integer => 7 } ),
-      },
-    { function => \&Language::P::Opcodes::o_multiply },
-    { function => \&Language::P::Opcodes::o_end },
+  ( o( 'constant',
+       value => Language::P::Value::StringNumber->new( { integer => 1 } ),
+       ),
+    o( 'constant',
+       value => Language::P::Value::StringNumber->new( { integer => 3 } ),
+       ),
+    o( 'add' ),
+    o( 'constant',
+       value => Language::P::Value::StringNumber->new( { integer => 7 } ),
+       ),
+    o( 'multiply' ),
+    o( 'end' ),
     );
 
 $runtime->reset;

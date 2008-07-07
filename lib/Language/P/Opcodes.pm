@@ -2,10 +2,28 @@ package Language::P::Opcodes;
 
 use strict;
 use warnings;
+use Exporter 'import';
 
 use Language::P::Value::StringNumber;
 use Language::P::Value::Array;
 use Language::P::Value::List;
+
+our @EXPORT_OK = qw(o);
+
+sub o {
+    my( $name, %args ) = @_;
+
+    die "Invalid opcode '$name'"
+        unless defined $Language::P::Opcodes::{"o_$name"};
+    my $fun = *{$Language::P::Opcodes::{"o_$name"}}{CODE};
+    die "Invalid opcode '$name'"
+        unless defined $fun;
+
+    return { %args,
+             function => $fun,
+             op_name  => $name,
+             };
+}
 
 sub o_dup {
     my( $op, $runtime, $pc ) = @_;

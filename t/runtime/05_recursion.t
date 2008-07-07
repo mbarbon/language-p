@@ -5,7 +5,7 @@ use warnings;
 use Test::More tests => 2;
 
 use Language::P::Runtime;
-use Language::P::Opcodes;
+use Language::P::Opcodes qw(o);
 use Language::P::Value::Subroutine;
 
 my $runtime = Language::P::Runtime->new;
@@ -15,73 +15,61 @@ my $fib = Language::P::Value::Subroutine->new( { bytecode   => [],
                                                   } );
 
 my @fib =
-  ( { function => \&Language::P::Opcodes::o_constant,
-      value    => Language::P::Value::StringNumber->new( { integer => 2 } ),
-      },
-    { function => \&Language::P::Opcodes::o_parameter_index,
-      index    => 0,
-      },
-    { function => \&Language::P::Opcodes::o_compare_i_lt_int },
-    { function => \&Language::P::Opcodes::o_jump_if_eq_immed,
-      value    => 0,
-      to       => 8,
-      },
+  ( o( 'constant',
+       value => Language::P::Value::StringNumber->new( { integer => 2 } ),
+       ),
+    o( 'parameter_index', index => 0 ),
+    o( 'compare_i_lt_int' ),
+    o( 'jump_if_eq_immed',
+       value => 0,
+       to    => 8,
+       ),
     # if n < 2
-    { function => \&Language::P::Opcodes::o_start_call },
-    { function => \&Language::P::Opcodes::o_constant,
-      value    => Language::P::Value::StringNumber->new( { integer => 1 } ),
-      },
-    { function => \&Language::P::Opcodes::o_push_scalar },
-    { function => \&Language::P::Opcodes::o_return },
+    o( 'start_call' ),
+    o( 'constant',
+       value => Language::P::Value::StringNumber->new( { integer => 1 } ),
+       ),
+    o( 'push_scalar' ),
+    o( 'return' ),
     # if n >= 2
-    { function => \&Language::P::Opcodes::o_start_call },
+    o( 'start_call' ),
     # fib( n - 1 )
-    { function => \&Language::P::Opcodes::o_start_call },
-    { function => \&Language::P::Opcodes::o_constant,
-      value    => Language::P::Value::StringNumber->new( { integer => 1 } ),
-      },
-    { function => \&Language::P::Opcodes::o_parameter_index,
-      index    => 0,
-      },
-    { function => \&Language::P::Opcodes::o_subtract },
-    { function => \&Language::P::Opcodes::o_push_scalar },
-    { function => \&Language::P::Opcodes::o_constant,
-      value    => $fib,
-      },
-    { function => \&Language::P::Opcodes::o_call },
+    o( 'start_call' ),
+    o( 'constant',
+       value => Language::P::Value::StringNumber->new( { integer => 1 } ),
+       ),
+    o( 'parameter_index', index => 0 ),
+    o( 'subtract' ),
+    o( 'push_scalar' ),
+    o( 'constant', value => $fib ),
+    o( 'call' ),
     # fib( n - 2 )
-    { function => \&Language::P::Opcodes::o_start_call },
-    { function => \&Language::P::Opcodes::o_constant,
-      value    => Language::P::Value::StringNumber->new( { integer => 2 } ),
-      },
-    { function => \&Language::P::Opcodes::o_parameter_index,
-      index    => 0,
-      },
-    { function => \&Language::P::Opcodes::o_subtract },
-    { function => \&Language::P::Opcodes::o_push_scalar },
-    { function => \&Language::P::Opcodes::o_constant,
-      value    => $fib,
-      },
-    { function => \&Language::P::Opcodes::o_call },
+    o( 'start_call' ),
+    o( 'constant',
+       value => Language::P::Value::StringNumber->new( { integer => 2 } ),
+       ),
+    o( 'parameter_index', index => 0 ),
+    o( 'subtract' ),
+    o( 'push_scalar' ),
+    o( 'constant', value => $fib ),
+    o( 'call' ),
     # sum
-    { function => \&Language::P::Opcodes::o_add },
-    { function => \&Language::P::Opcodes::o_push_scalar },
-    { function => \&Language::P::Opcodes::o_return },
+    o( 'add' ),
+    o( 'push_scalar' ),
+    o( 'return' ),
     );
 
 $fib->{bytecode} = \@fib;
 
 my @main =
-  ( { function => \&Language::P::Opcodes::o_start_call },
-    { function => \&Language::P::Opcodes::o_constant,
-      value    => Language::P::Value::StringNumber->new( { integer => 10 } ),
-      },
-    { function => \&Language::P::Opcodes::o_push_scalar },
-    { function => \&Language::P::Opcodes::o_constant,
-      value    => $fib,
-      },
-    { function => \&Language::P::Opcodes::o_call },
-    { function => \&Language::P::Opcodes::o_end },
+  ( o( 'start_call' ),
+    o( 'constant',
+       value => Language::P::Value::StringNumber->new( { integer => 10 } ),
+       ),
+    o( 'push_scalar' ),
+    o( 'constant', value => $fib ),
+    o( 'call' ),
+    o( 'end' ),
     );
 
 $runtime->reset;
