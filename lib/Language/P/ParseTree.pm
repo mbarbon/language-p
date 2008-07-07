@@ -232,6 +232,24 @@ our @FIELDS = qw(iftrues iffalse);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+package Language::P::ParseTree::ConditionalBlock;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(condition block block_type);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
+package Language::P::ParseTree::ConditionalLoop;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::ConditionalBlock);
+
+our @FIELDS = qw(condition block block_type);
+
 package Language::P::ParseTree::Ternary;
 
 use strict;
