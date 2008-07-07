@@ -134,6 +134,8 @@ sub _parse_line {
         return _parse_sub( $self, 1 | 2 );
     } elsif( $token->[1] eq 'if' || $token->[1] eq 'unless' ) {
         return _parse_cond( $self );
+    } elsif( $token->[1] eq 'while' || $token->[1] eq 'until' ) {
+        return _parse_while( $self );
     }
 
     die $token->[0];
@@ -235,6 +237,32 @@ sub _parse_cond {
     $self->_leave_scope;
 
     return $if;
+}
+
+sub _parse_while {
+    my( $self ) = @_;
+    my $keyword = _lex_token( $self, 'KEYWORD' );
+
+    _lex_token( $self, 'OPPAR' );
+
+    $self->_enter_scope;
+    my $expr = _parse_expr( $self );
+    $self->_add_pending_lexicals;
+
+    _lex_token( $self, 'CLPAR' );
+    _lex_token( $self, 'OPBRK' );
+
+    my $block = _parse_block_rest( $self, 1 );
+
+    my $while = Language::P::ParseTree::ConditionalLoop
+                    ->new( { condition  => $expr,
+                             block      => $block,
+                             block_type => $keyword->[1],
+                             } );
+
+    $self->_leave_scope;
+
+    return $while;
 }
 
 sub _parse_sideff {
