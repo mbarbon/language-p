@@ -17,7 +17,7 @@ sub _run_with_p {
     $harness->runtests( @base );
 }
 
-sub ACTION_perl_tests {
+sub ACTION_test_perl {
     my( $self ) = @_;
 
     $self->_run_with_p( 't/perl5' );
