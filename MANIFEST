@@ -31,6 +31,7 @@ t/parser/20_brackets.t
 t/parser/30_quoted_string.t
 t/parser/expressions/18_ternary.t
 t/parser/loops/01_block.t
+t/parser/statements/40_if.t
 t/run/005_assignment.t
 t/run/007_if.t
 t/run/010_arithmetic.t
