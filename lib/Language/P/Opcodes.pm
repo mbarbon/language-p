@@ -46,17 +46,6 @@ sub o_push_scalar {
     return $pc + 1;
 }
 
-sub o_add {
-    my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
-    my $v2 = pop @{$runtime->_stack};
-    my $r = $v1->as_integer + $v2->as_integer;
-
-    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => $r } );
-
-    return $pc + 1;
-}
-
 sub o_stringify {
     my( $op, $runtime, $pc ) = @_;
     my $v = pop @{$runtime->_stack};
@@ -66,60 +55,58 @@ sub o_stringify {
     return $pc + 1;
 }
 
-sub o_concat {
+sub _make_binary_op {
+    my( $op ) = @_;
+
+    eval sprintf <<'EOT',
+sub %s {
     my( $op, $runtime, $pc ) = @_;
     my $v1 = pop @{$runtime->_stack};
     my $v2 = pop @{$runtime->_stack};
-    my $r = $v1->as_string . $v2->as_string;
+    my $r = $v1->%s %s $v2->%s;
 
-    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { string => $r } );
-
-    return $pc + 1;
-}
-
-sub o_subtract {
-    my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
-    my $v2 = pop @{$runtime->_stack};
-    my $r = $v1->as_integer - $v2->as_integer;
-
-    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => $r } );
+    push @{$runtime->_stack},
+         Language::P::Value::StringNumber->new( { %s => $r } );
 
     return $pc + 1;
 }
-
-sub o_multiply {
-    my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
-    my $v2 = pop @{$runtime->_stack};
-    my $r = $v1->as_integer * $v2->as_integer;
-
-    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => $r } );
-
-    return $pc + 1;
+EOT
+        $op->{name}, $op->{convert}, $op->{operator}, $op->{convert},
+        $op->{new_type};
 }
 
-sub o_divide {
-    my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
-    my $v2 = pop @{$runtime->_stack};
-    my $r = $v1->as_integer / $v2->as_integer;
-
-    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => $r } );
-
-    return $pc + 1;
-}
-
-sub o_modulus {
-    my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
-    my $v2 = pop @{$runtime->_stack};
-    my $r = $v1->as_integer % $v2->as_integer;
-
-    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => $r } );
-
-    return $pc + 1;
-}
+_make_binary_op( $_ ) foreach
+  ( { name     => 'o_add',
+      convert  => 'as_integer',
+      operator => '+',
+      new_type => 'integer',
+      },
+    { name     => 'o_subtract',
+      convert  => 'as_integer',
+      operator => '-',
+      new_type => 'integer',
+      },
+    { name     => 'o_multiply',
+      convert  => 'as_integer',
+      operator => '*',
+      new_type => 'integer',
+      },
+    { name     => 'o_divide',
+      convert  => 'as_integer',
+      operator => '/',
+      new_type => 'integer',
+      },
+    { name     => 'o_modulus',
+      convert  => 'as_integer',
+      operator => '%',
+      new_type => 'integer',
+      },
+    { name     => 'o_concat',
+      convert  => 'as_string',
+      operator => '.',
+      new_type => 'string',
+      },
+    );
 
 sub o_start_call {
     my( $op, $runtime, $pc ) = @_;
@@ -232,126 +219,89 @@ sub o_jump_if_true {
     return $v1->as_boolean_int ? $op->{to} : $pc + 1;
 }
 
-sub o_compare_i_lt_int {
+sub _make_compare {
+    my( $op ) = @_;
+
+    my $ret = $op->{new_type} eq 'int' ?
+                  '$r' :
+                  'Language::P::Value::StringNumber->new( { integer => $r } )';
+
+    eval sprintf <<'EOT',
+sub %s {
     my( $op, $runtime, $pc ) = @_;
     my $v1 = pop @{$runtime->_stack};
     my $v2 = pop @{$runtime->_stack};
-    my $r = $v1->as_integer < $v2->as_integer ? 1 : 0;
+    my $r = $v1->%s %s $v2->%s ? 1 : 0;
 
-    push @{$runtime->_stack}, $r;
-
-    return $pc + 1;
-}
-
-sub o_compare_i_gt_int {
-    my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
-    my $v2 = pop @{$runtime->_stack};
-    my $r = $v1->as_integer > $v2->as_integer ? 1 : 0;
-
-    push @{$runtime->_stack}, $r;
+    push @{$runtime->_stack}, %s;
 
     return $pc + 1;
 }
-
-sub o_compare_i_eq_int {
-    my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
-    my $v2 = pop @{$runtime->_stack};
-    my $r = $v1->as_integer == $v2->as_integer ? 1 : 0;
-
-    push @{$runtime->_stack}, $r;
-
-    return $pc + 1;
+EOT
+        $op->{name}, $op->{convert}, $op->{operator}, $op->{convert},
+        $ret;
 }
 
-sub o_compare_i_eq_scalar {
-    my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
-    my $v2 = pop @{$runtime->_stack};
-    my $r = $v1->as_integer == $v2->as_integer ? 1 : 0;
+_make_compare( $_ ) foreach
+  ( { name     => 'o_compare_i_lt_int',
+      convert  => 'as_integer',
+      operator => '<',
+      new_type => 'int',
+      },
+    { name     => 'o_compare_i_le_int',
+      convert  => 'as_integer',
+      operator => '<=',
+      new_type => 'int',
+      },
+    { name     => 'o_compare_i_eq_int',
+      convert  => 'as_integer',
+      operator => '==',
+      new_type => 'int',
+      },
+    { name     => 'o_compare_i_ge_int',
+      convert  => 'as_integer',
+      operator => '>=',
+      new_type => 'int',
+      },
+    { name     => 'o_compare_i_gt_int',
+      convert  => 'as_integer',
+      operator => '>',
+      new_type => 'int',
+      },
 
-    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => $r } );
+    { name     => 'o_compare_i_eq_scalar',
+      convert  => 'as_integer',
+      operator => '==',
+      new_type => 'scalar',
+      },
 
-    return $pc + 1;
-}
+    { name     => 'o_compare_i_ne_scalar',
+      convert  => 'as_integer',
+      operator => '!=',
+      new_type => 'scalar',
+      },
+    { name     => 'o_compare_s_eq_int',
+      convert  => 'as_string',
+      operator => 'eq',
+      new_type => 'int',
+      },
+    { name     => 'o_compare_s_ne_int',
+      convert  => 'as_string',
+      operator => 'ne',
+      new_type => 'int',
+      },
 
-sub o_compare_i_ne_scalar {
-    my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
-    my $v2 = pop @{$runtime->_stack};
-    my $r = $v1->as_integer != $v2->as_integer ? 1 : 0;
-
-    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => $r } );
-
-    return $pc + 1;
-}
-
-sub o_compare_i_le_int {
-    my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
-    my $v2 = pop @{$runtime->_stack};
-    my $r = $v1->as_integer <= $v2->as_integer ? 1 : 0;
-
-    push @{$runtime->_stack}, $r;
-
-    return $pc + 1;
-}
-
-sub o_compare_i_ge_int {
-    my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
-    my $v2 = pop @{$runtime->_stack};
-    my $r = $v1->as_integer >= $v2->as_integer ? 1 : 0;
-
-    push @{$runtime->_stack}, $r;
-
-    return $pc + 1;
-}
-
-sub o_compare_s_eq_int {
-    my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
-    my $v2 = pop @{$runtime->_stack};
-    my $r = $v1->as_string eq $v2->as_string ? 1 : 0;
-
-    push @{$runtime->_stack}, $r;
-
-    return $pc + 1;
-}
-
-sub o_compare_s_ne_int {
-    my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
-    my $v2 = pop @{$runtime->_stack};
-    my $r = $v1->as_string ne $v2->as_string ? 1 : 0;
-
-    push @{$runtime->_stack}, $r;
-
-    return $pc + 1;
-}
-
-sub o_compare_s_eq_scalar {
-    my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
-    my $v2 = pop @{$runtime->_stack};
-    my $r = $v1->as_string eq $v2->as_string ? 1 : 0;
-
-    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => $r } );
-
-    return $pc + 1;
-}
-
-sub o_compare_s_ne_scalar {
-    my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
-    my $v2 = pop @{$runtime->_stack};
-    my $r = $v1->as_string ne $v2->as_string ? 1 : 0;
-
-    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => $r } );
-
-    return $pc + 1;
-}
+    { name     => 'o_compare_s_eq_scalar',
+      convert  => 'as_string',
+      operator => 'eq',
+      new_type => 'scalar',
+      },
+    { name     => 'o_compare_s_ne_scalar',
+      convert  => 'as_string',
+      operator => 'ne',
+      new_type => 'scalar',
+      },
+    );
 
 sub o_assign {
     my( $op, $runtime, $pc ) = @_;
