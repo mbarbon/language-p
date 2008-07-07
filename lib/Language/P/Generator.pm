@@ -6,7 +6,7 @@ use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_ro_accessors( qw(runtime) );
 
-use Language::P::Opcodes;
+use Language::P::Opcodes qw(o);
 use Language::P::Value::StringNumber;
 use Language::P::Value::Handle;
 use Language::P::Value::ScratchPad;
@@ -77,9 +77,9 @@ sub finished {
     $self->_allocate_lexicals;
 
     if( $codes[-1]->isa( 'Language::P::Value::Subroutine' ) ) {
-        push @bytecode, { function => \&Language::P::Opcodes::o_return };
+        push @bytecode, o( 'return' );
     } else {
-        push @bytecode, { function => \&Language::P::Opcodes::o_end };
+        push @bytecode, o( 'end' );
     }
 }
 
@@ -136,84 +136,76 @@ my %reverse_conditionals =
     );
 
 my %conditionals =
-  ( '<'      => \&Language::P::Opcodes::o_compare_i_lt_int,
-    'lt'     => \&Language::P::Opcodes::o_compare_s_lt_int,
-    '>'      => \&Language::P::Opcodes::o_compare_i_gt_int,
-    'gt'     => \&Language::P::Opcodes::o_compare_s_gt_int,
-    '<='     => \&Language::P::Opcodes::o_compare_i_le_int,
-    'le'     => \&Language::P::Opcodes::o_compare_s_le_int,
-    '>='     => \&Language::P::Opcodes::o_compare_i_ge_int,
-    'ge'     => \&Language::P::Opcodes::o_compare_s_ge_int,
-    '=='     => \&Language::P::Opcodes::o_compare_i_eq_int,
-    'eq'     => \&Language::P::Opcodes::o_compare_s_eq_int,
-    '!='     => \&Language::P::Opcodes::o_compare_i_ne_int,
-    'ne'     => \&Language::P::Opcodes::o_compare_s_ne_int,
+  ( '<'      => 'compare_i_lt_int',
+    'lt'     => 'compare_s_lt_int',
+    '>'      => 'compare_i_gt_int',
+    'gt'     => 'compare_s_gt_int',
+    '<='     => 'compare_i_le_int',
+    'le'     => 'compare_s_le_int',
+    '>='     => 'compare_i_ge_int',
+    'ge'     => 'compare_s_ge_int',
+    '=='     => 'compare_i_eq_int',
+    'eq'     => 'compare_s_eq_int',
+    '!='     => 'compare_i_ne_int',
+    'ne'     => 'compare_s_ne_int',
     );
 
 my %short_circuit =
-  ( '&&'     => \&Language::P::Opcodes::o_jump_if_false,
-    '||'     => \&Language::P::Opcodes::o_jump_if_true,
+  ( '&&'     => 'jump_if_false',
+    '||'     => 'jump_if_true',
     );
 
 my %builtins =
-  ( print    => \&Language::P::Opcodes::o_print,
-    return   => \&Language::P::Opcodes::o_return,
+  ( print    => 'print',
+    return   => 'return',
     %short_circuit,
-    '+'      => \&Language::P::Opcodes::o_add,
-    '*'      => \&Language::P::Opcodes::o_multiply,
-    '-'      => \&Language::P::Opcodes::o_subtract,
-    '='      => \&Language::P::Opcodes::o_assign,
-    '=='     => \&Language::P::Opcodes::o_compare_i_eq_scalar,
-    'eq'     => \&Language::P::Opcodes::o_compare_s_eq_scalar,
-    '!='     => \&Language::P::Opcodes::o_compare_i_ne_scalar,
-    'ne'     => \&Language::P::Opcodes::o_compare_s_ne_scalar,
+    '+'      => 'add',
+    '*'      => 'multiply',
+    '-'      => 'subtract',
+    '='      => 'assign',
+    '=='     => 'compare_i_eq_scalar',
+    'eq'     => 'compare_s_eq_scalar',
+    '!='     => 'compare_i_ne_scalar',
+    'ne'     => 'compare_s_ne_scalar',
     );
 
 sub _function_call {
     my( $self, $tree ) = @_;
 
-    push @bytecode, { function => \&Language::P::Opcodes::o_start_call };
+    push @bytecode, o( 'start_call' );
 
     if( $tree->function eq 'print' ) {
         # FIXME HACK, must create a builtin node type
         my $out = Language::P::Value::Handle->new( { handle => \*STDOUT } );
-        push @bytecode, { function => \&Language::P::Opcodes::o_constant,
-                          value    => $out,
-                          },
-                        { function => \&Language::P::Opcodes::o_push_scalar };
+        push @bytecode, o( 'constant', value => $out ),
+                        o( 'push_scalar' );
     }
 
     foreach my $arg ( @{$tree->arguments} ) {
         $self->dispatch( $arg );
         # FIXME HACK
-        push @bytecode, { function => \&Language::P::Opcodes::o_push_scalar },
+        push @bytecode, o( 'push_scalar' );
     }
 
     if( $builtins{$tree->function} ) {
-        push @bytecode, { function => $builtins{$tree->function} };
+        push @bytecode, o( $builtins{$tree->function} );
     } else {
         push @bytecode,
-          { function => \&Language::P::Opcodes::o_glob,
-            name     => $tree->function,
-            create   => 1,
-            },
-          { function => \&Language::P::Opcodes::o_glob_slot,
-            slot     => 'subroutine',
-            },
-          { function => \&Language::P::Opcodes::o_call,
-            };
+             o( 'glob',      name => $tree->function, create => 1 ),
+             o( 'glob_slot', slot => 'subroutine' ),
+             o( 'call' );
     }
 }
 
 sub _list {
     my( $self, $tree ) = @_;
 
-    push @bytecode, { function => \&Language::P::Opcodes::o_start_list };
+    push @bytecode, o( 'start_list' );
 
     foreach my $arg ( @{$tree->expressions} ) {
         $self->dispatch( $arg );
         # HACK
-        push @bytecode, { function => \&Language::P::Opcodes::o_push_scalar },
+        push @bytecode, o( 'push_scalar' );
     }
 }
 
@@ -229,8 +221,8 @@ sub _binary_op {
 
         # jump to $end if evalutating right is not necessary
         push @bytecode,
-            { function => \&Language::P::Opcodes::o_dup },
-            { function => $short_circuit{$tree->op} };
+             o( 'dup' ),
+             o( $short_circuit{$tree->op} );
         _to_label( $end, $bytecode[-1] );
 
         # evalutates right only if this is the correct return value
@@ -241,7 +233,7 @@ sub _binary_op {
         $self->dispatch( $tree->right );
         $self->dispatch( $tree->left );
 
-        push @bytecode, { function => $builtins{$tree->op} };
+        push @bytecode, o( $builtins{$tree->op} );
     }
 }
 
@@ -255,12 +247,9 @@ sub _binary_op_cond {
     $self->dispatch( $tree->right );
     $self->dispatch( $tree->left );
 
-    push @bytecode, { function => $conditionals{$tree->op} };
+    push @bytecode, o( $conditionals{$tree->op} );
     # jump to $false if false, fall trough if true
-    push @bytecode,
-        { function => \&Language::P::Opcodes::o_jump_if_eq_immed,
-          value    => 0,
-          };
+    push @bytecode, o( 'jump_if_eq_immed', value => 0 );
     _to_label( $false, $bytecode[-1] );
 }
 
@@ -270,10 +259,7 @@ sub _anything_cond {
     $self->dispatch( $tree );
 
     # jump to $false if false, fall trough if true
-    push @bytecode,
-        { function => \&Language::P::Opcodes::o_jump_if_false,
-          value    => 0,
-          };
+    push @bytecode, o( 'jump_if_false' );
     _to_label( $false, $bytecode[-1] );
 }
 
@@ -290,10 +276,7 @@ sub _constant {
         die $type;
     }
 
-    push @bytecode,
-        { function => \&Language::P::Opcodes::o_constant,
-          value    => $v,
-          };
+    push @bytecode, o( 'constant', value => $v );
 }
 
 my %sigils =
@@ -308,13 +291,8 @@ sub _symbol {
     die $tree->sigil unless $slot;
 
     push @bytecode,
-        { function => \&Language::P::Opcodes::o_glob,
-          name     => $tree->name,
-          create   => 1,
-          },
-        { function => \&Language::P::Opcodes::o_glob_slot_create,
-          slot     => $slot,
-          };
+         o( 'glob',             name => $tree->name, create => 1 ),
+         o( 'glob_slot_create', slot => $slot );
 }
 
 sub _lexical_declaration {
@@ -325,11 +303,10 @@ sub _lexical_declaration {
 #     print Dumper $tree;
     my $in_pad = $tree->{slot}->{slot}->{in_pad};
     push @bytecode,
-        { function => $in_pad ? \&Language::P::Opcodes::o_lexical_pad :
-                                \&Language::P::Opcodes::o_lexical,
-          lexical  => $tree->{slot}->{slot},
-          level    => $tree->{slot}->{level},
-          };
+        o( $in_pad ? 'lexical_pad' : 'lexical',
+           lexical  => $tree->{slot}->{slot},
+           level    => $tree->{slot}->{level},
+           );
 }
 
 sub _cond {
@@ -343,9 +320,7 @@ sub _cond {
         $self->dispatch_cond( $elsif->[1], $true, $false );
         _set_label( $true, scalar @bytecode );
         $self->dispatch( $elsif->[2] );
-        push @bytecode,
-            { function => \&Language::P::Opcodes::o_jump,
-              };
+        push @bytecode, o( 'jump' );
         _to_label( $end, $bytecode[-1] );
         _set_label( $false, scalar @bytecode );
     }
@@ -362,9 +337,7 @@ sub _ternary {
     $self->dispatch_cond( $tree->condition, $true, $false );
     _set_label( $true, scalar @bytecode );
     $self->dispatch( $tree->iftrue );
-    push @bytecode,
-        { function => \&Language::P::Opcodes::o_jump,
-          };
+    push @bytecode, o( 'jump' );
     _to_label( $end, $bytecode[-1] );
     _set_label( $false, scalar @bytecode );
 
@@ -406,9 +379,7 @@ sub _quoted_string {
     if( @{$tree->components} == 1 ) {
         $self->dispatch( $tree->components->[0] );
 
-        push @bytecode,
-            { function => \&Language::P::Opcodes::o_stringify,
-              };
+        push @bytecode, o( 'stringify' );
 
         return;
     }
@@ -417,9 +388,7 @@ sub _quoted_string {
     for( my $i = @{$tree->components} - 2; $i >= 0; --$i ) {
         $self->dispatch( $tree->components->[$i] );
 
-        push @bytecode,
-            { function => \&Language::P::Opcodes::o_concat,
-              };
+        push @bytecode, o( 'concat' );
     }
 }
 
