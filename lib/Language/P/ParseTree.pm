@@ -250,6 +250,16 @@ use base qw(Language::P::ParseTree::ConditionalBlock);
 
 our @FIELDS = qw(condition block block_type);
 
+package Language::P::ParseTree::Foreach;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(expression block variable);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
 package Language::P::ParseTree::Ternary;
 
 use strict;
