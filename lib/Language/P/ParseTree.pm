@@ -110,6 +110,8 @@ our @FIELDS = qw(function arguments);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub parsing_prototype { return [ -1, '@' ] }
+
 package Language::P::ParseTree::MethodCall;
 
 use strict;
@@ -269,5 +271,34 @@ use base qw(Language::P::ParseTree::Node);
 our @FIELDS = qw(condition iftrue iffalse);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
+
+package Language::P::ParseTree::Builtin;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::FunctionCall);
+
+our @FIELDS = qw(function arguments);
+
+my %prototype_bi =
+  ( print       => [ -1, '@' ],
+    defined     => [ 1 , '$' ],
+    );
+
+sub parsing_prototype { return $prototype_bi{$_[0]->function} }
+
+package Language::P::ParseTree::Overridable;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::FunctionCall);
+
+our @FIELDS = qw(function arguments);
+
+my %prototype_ov =
+  ( unlink      => [ -1, '@' ],
+    );
+
+sub parsing_prototype { return $prototype_ov{$_[0]->function} }
 
 1;

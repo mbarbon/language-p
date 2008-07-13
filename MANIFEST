@@ -28,6 +28,7 @@ t/parser/01_load.t
 t/parser/09_assignment.t
 t/parser/10_my.t
 t/parser/20_brackets.t
+t/parser/21_prototypes.t
 t/parser/30_quoted_string.t
 t/parser/expressions/18_ternary.t
 t/parser/loops/01_block.t
