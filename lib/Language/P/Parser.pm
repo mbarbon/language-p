@@ -127,7 +127,7 @@ sub _parse_line {
         return _parse_cond( $self );
     } elsif( $token->[1] eq 'while' || $token->[1] eq 'until' ) {
         return _parse_while( $self );
-    } elsif( $token->[0] eq 'ID' ) {
+    } else {
         my $sideff = _parse_sideff( $self );
         _lex_semicolon( $self );
 
