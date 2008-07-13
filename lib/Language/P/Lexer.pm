@@ -16,13 +16,17 @@ use constant
 
     LEX_NORMAL => 1,
     LEX_QUOTED => 2,
+
+    T_ID          => 1,
+    T_KEYWORD     => 2,
+    T_OVERRIDABLE => 3,
     };
 
 use Exporter qw(import);
 
 our @EXPORT_OK =
   qw(X_NOTHING X_STATE X_TERM X_OPERATOR
-     T_ID T_SPECIAL T_NUMBER T_STRING T_KEYWORD);
+     T_ID T_SPECIAL T_NUMBER T_STRING T_KEYWORD T_OVERRIDABLE);
 our %EXPORT_TAGS =
   ( all  => \@EXPORT_OK,
     );
@@ -102,7 +106,10 @@ my %ops =
 my %keywords = map { ( $_ => 1 ) }
   qw(if unless else elsif for foreach while until do last next redo
      my our state sub
-     );
+     ),
+  qw(print);
+my %overridables = map { ( $_ => 1 ) }
+  qw(unlink glob readline);
 
 my %quoted_chars =
   ( 'n' => "\n",
@@ -243,7 +250,10 @@ sub lex {
         if( $ops{$1} ) {
             return [ $ops{$1}, $1 ];
         }
-        return [ $keywords{$1} ? 'KEYWORD' : 'ID', $1 ];
+        return [ 'ID', $1, $keywords{$1}     ? T_KEYWORD :
+                           $overridables{$1} ? T_OVERRIDABLE :
+                                               T_ID
+                 ];
     };
     $$_ =~ s/^(["'])//x and return [ 'QUOTE', $1, $1 ];
     $$_ =~ s/^(<=|>=|==|!=|\$\#|=>|->
