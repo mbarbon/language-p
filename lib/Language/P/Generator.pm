@@ -37,7 +37,7 @@ sub _set_label {
 sub _to_label {
     my( $label, $op ) = @_;
 
-    return $labels{$label} if $labels{$label};
+    $op->{to} = $labels{$label} if $labels{$label};
     push @{$patch{$label} ||= []}, $op;
 }
 
@@ -85,6 +85,8 @@ sub finished {
 
 my %dispatch =
   ( FunctionCall           => '_function_call',
+    Builtin                => '_function_call',
+    Overridable            => '_function_call',
     BinOp                  => '_binary_op',
     Constant               => '_constant',
     Symbol                 => '_symbol',
@@ -92,6 +94,7 @@ my %dispatch =
     LexicalSymbol          => '_lexical_declaration',
     List                   => '_list',
     Conditional            => '_cond',
+    ConditionalLoop        => '_cond_loop',
     Ternary                => '_ternary',
     Block                  => '_block',
     Subroutine             => '_subroutine',
@@ -158,6 +161,7 @@ my %short_circuit =
 my %builtins =
   ( print    => 'print',
     return   => 'return',
+    unlink   => 'unlink',
     %short_circuit,
     '+'      => 'add',
     '*'      => 'multiply',
@@ -307,6 +311,22 @@ sub _lexical_declaration {
            lexical  => $tree->{slot}->{slot},
            level    => $tree->{slot}->{level},
            );
+}
+
+sub _cond_loop {
+    my( $self, $tree ) = @_;
+
+    die $tree->block_type unless $tree->block_type eq 'while';
+
+    my( $start, $true, $false ) = ( _new_label, _new_label, _new_label );
+    _set_label( $start, scalar @bytecode );
+
+    $self->dispatch_cond( $tree->condition, $true, $false );
+    _set_label( $true, scalar @bytecode );
+    $self->dispatch( $tree->block );
+    push @bytecode, o( 'jump' );
+    _to_label( $start, $bytecode[-1] );
+    _set_label( $false, scalar @bytecode );
 }
 
 sub _cond {

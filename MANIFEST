@@ -37,6 +37,7 @@ t/parser/statements/40_if.t
 t/parser/statements/41_while.t
 t/run/005_assignment.t
 t/run/007_if.t
+t/run/008_while.t
 t/run/010_arithmetic.t
 t/run/080_recursion.t
 t/runtime/01_load.t

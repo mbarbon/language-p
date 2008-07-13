@@ -351,4 +351,20 @@ sub o_glob_slot {
     return $pc + 1;
 }
 
+sub o_unlink {
+    my( $op, $runtime, $pc ) = @_;
+    my $args = pop @{$runtime->_stack};
+    my @args;
+
+    for( my $it = $args->iterator; $it->next; ) {
+        my $arg = $it->item;
+
+        push @args, $arg->as_string;
+    }
+
+    my $ret = unlink @args;
+
+    return Language::P::Value::StringNumber( { string => $ret } );
+}
+
 1;
