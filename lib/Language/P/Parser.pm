@@ -121,24 +121,22 @@ sub _parse_line {
         _lex_token( $self, 'OPBRK' );
 
         return _parse_block_rest( $self, 1 );
-    } elsif(    $token->[0] ne 'KEYWORD'
-             || (    $token->[1] eq 'my' || $token->[1] eq 'our'
-                  || $token->[1] eq 'state' ) ) {
-        my $sideff = _parse_sideff( $self );
-        _lex_semicolon( $self );
-
-        $self->_add_pending_lexicals;
-
-        return $sideff;
     } elsif( $token->[1] eq 'sub' ) {
         return _parse_sub( $self, 1 | 2 );
     } elsif( $token->[1] eq 'if' || $token->[1] eq 'unless' ) {
         return _parse_cond( $self );
     } elsif( $token->[1] eq 'while' || $token->[1] eq 'until' ) {
         return _parse_while( $self );
+    } elsif( $token->[0] eq 'ID' ) {
+        my $sideff = _parse_sideff( $self );
+        _lex_semicolon( $self );
+
+        $self->_add_pending_lexicals;
+
+        return $sideff;
     }
 
-    die $token->[0];
+    Carp::confess $token->[0], ' ', $token->[1];
 }
 
 sub _add_pending_lexicals {
@@ -157,7 +155,7 @@ sub _add_pending_lexicals {
 
 sub _parse_sub {
     my( $self, $flags ) = @_;
-    _lex_token( $self, 'KEYWORD' ); # sub
+    _lex_token( $self, 'ID' ); # sub
     my $name = $self->lexer->peek( X_NOTHING );
 
     # TODO prototypes
@@ -195,7 +193,7 @@ sub _parse_sub {
 
 sub _parse_cond {
     my( $self ) = @_;
-    my $cond = _lex_token( $self, 'KEYWORD' );
+    my $cond = _lex_token( $self, 'ID' );
 
     _lex_token( $self, 'OPPAR' );
 
@@ -214,7 +212,7 @@ sub _parse_cond {
 
     for(;;) {
         my $else = $self->lexer->peek( X_STATE );
-        last if    $else->[0] ne 'KEYWORD'
+        last if    $else->[0] ne 'ID' || $else->[2] != T_KEYWORD
                 || ( $else->[1] ne 'else' && $else->[1] ne 'elsif' );
         _lex_token( $self );
 
@@ -241,7 +239,7 @@ sub _parse_cond {
 
 sub _parse_while {
     my( $self ) = @_;
-    my $keyword = _lex_token( $self, 'KEYWORD' );
+    my $keyword = _lex_token( $self, 'ID' );
 
     _lex_token( $self, 'OPPAR' );
 
@@ -270,16 +268,16 @@ sub _parse_sideff {
     my $expr = _parse_expr( $self );
     my $keyword = $self->lexer->peek( X_TERM );
 
-    if( $keyword->[0] eq 'KEYWORD' ) {
+    if( $keyword->[0] eq 'ID' && $keyword->[2] == T_KEYWORD ) {
         if( $keyword->[1] eq 'if' || $keyword->[1] eq 'unless' ) {
-            _lex_token( $self, 'KEYWORD' );
+            _lex_token( $self, 'ID' );
             my $cond = _parse_expr( $self );
 
             $expr = Language::P::ParseTree::Conditional->new
                         ( { iftrues => [ [ $keyword->[1], $cond, $expr ] ],
                             } );
         } elsif( $keyword->[1] eq 'while' || $keyword->[1] eq 'until' ) {
-            _lex_token( $self, 'KEYWORD' );
+            _lex_token( $self, 'ID' );
             my $cond = _parse_expr( $self );
 
             $expr = Language::P::ParseTree::ConditionalLoop->new
@@ -288,7 +286,7 @@ sub _parse_sideff {
                             block_type => $keyword->[1],
                             } );
         } elsif( $keyword->[1] eq 'for' || $keyword->[1] eq 'foreach' ) {
-            _lex_token( $self, 'KEYWORD' );
+            _lex_token( $self, 'ID' );
             my $cond = _parse_expr( $self );
 
             $expr = Language::P::ParseTree::Foreach->new
@@ -550,7 +548,7 @@ sub _parse_term_terminal {
                                                         } );
     } elsif( $token->[1] eq '$#' || $token->[1] =~ /[\*\$%@&]/ ) {
         return _parse_indirobj_maybe_subscripts( $self, $token );
-    } elsif(    $token->[0] eq 'KEYWORD'
+    } elsif(    $token->[0] eq 'ID' && $token->[2] == T_KEYWORD
              && (    $token->[1] eq 'my' || $token->[1] eq 'our'
                   || $token->[1] eq 'state' ) ) {
         return _parse_lexical( $self, $token->[1] );
@@ -849,6 +847,8 @@ sub _parse_listop {
         $args = _parse_cslist( $self );
     }
 
+    die "Check override" if $op->[2] == T_OVERRIDABLE;
+    die "Construct builtin" if $op->[2] == T_KEYWORD;
     return Language::P::ParseTree::FunctionCall->new( { function  => $op->[1],
                                                         arguments => $args,
                                                         } );
