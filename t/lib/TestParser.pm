@@ -6,6 +6,7 @@ use warnings;
 use Exporter 'import';
 
 use Language::P::Parser;
+use Language::P::Value::SymbolTable;
 
 our @EXPORT_OK = qw(fresh_parser parsed_program parse_and_diff);
 our %EXPORT_TAGS =
@@ -33,8 +34,13 @@ my @lines;
 
     package TestParserRuntime;
 
-    sub new { return __PACKAGE__ }
+    sub new {
+        my $st = Language::P::Value::SymbolTable->new;
 
+        return bless { symbol_table => $st }, __PACKAGE__;
+    }
+
+    sub symbol_table { $_[0]->{symbol_table} }
     sub set_bytecode { }
 }
 

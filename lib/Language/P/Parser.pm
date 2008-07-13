@@ -306,7 +306,7 @@ sub _parse_expr {
     my $la = $self->lexer->peek( X_TERM );
 
     if( $la->[0] eq 'COMMA' ) {
-        my $terms = _parse_cslist_rest( $self, $expr );
+        my $terms = _parse_cslist_rest( $self, -1, $expr );
 
         return Language::P::ParseTree::List->new( { expressions => $terms } );
     }
@@ -835,40 +835,62 @@ sub _parse_listop {
     my( $self ) = @_;
     my $op = $self->lexer->lex( X_NOTHING );
     my $token = $self->lexer->peek( X_TERM );
-    my $args;
+    my( $call, $args );
 
+    if( $op->[2] == T_OVERRIDABLE ) {
+        my $st = $self->runtime->symbol_table;
+
+        if( $st->get_symbol( $op->[1], '&' ) ) {
+            die "Overriding '$op->[1]' not implemented";
+        }
+        $call = Language::P::ParseTree::Overridable->new
+                    ( { function  => $op->[1],
+                        } );
+    } elsif( $op->[2] == T_KEYWORD ) {
+        $call = Language::P::ParseTree::Builtin->new
+                    ( { function  => $op->[1],
+                        } );
+    } else {
+        $call = Language::P::ParseTree::FunctionCall->new
+                    ( { function  => $op->[1],
+                        arguments => undef,
+                        } );
+    }
+
+    my $proto = $call->parsing_prototype;
     if( $token->[0] eq 'OPPAR' ) {
         $self->lexer->lex; # comsume token
-        $args = _parse_cslist( $self );
+        $args = _parse_cslist( $self, -1 );
         my $cl = $self->lexer->lex( X_NOTHING );
 
         die $cl->[0], ' ', $cl->[1] unless $cl->[0] eq 'CLPAR';
-    } else {
-        $args = _parse_cslist( $self );
+    } elsif( $proto->[0] != 0 ) {
+        $args = _parse_cslist( $self, $proto->[0] );
     }
 
-    die "Check override" if $op->[2] == T_OVERRIDABLE;
-    die "Construct builtin" if $op->[2] == T_KEYWORD;
-    return Language::P::ParseTree::FunctionCall->new( { function  => $op->[1],
-                                                        arguments => $args,
-                                                        } );
+    $call->{arguments} = $args;
+
+    return $call;
 }
 
 sub _parse_cslist {
-    my( $self ) = @_;
+    my( $self, $term_count ) = @_;
 
     my $term = _parse_term( $self );
     return unless $term;
-    return _parse_cslist_rest( $self, $term );
+    return [ $term ] if $term_count == 1;
+    return _parse_cslist_rest( $self, $term_count - 1, $term );
 }
 
 sub _parse_cslist_rest {
-    my( $self, @terms ) = @_;
+    my( $self, $term_count, @terms ) = @_;
 
-    for(;;) {
+    for(; $term_count != 0;) {
         my $comma = $self->lexer->lex( X_TERM );
         if( $comma->[0] eq 'COMMA' ) {
-            push @terms, scalar _parse_term( $self );
+            my $term = scalar _parse_term( $self );
+            push @terms, $term;
+            --$term_count if $term_count > 0;
         } else {
             $self->lexer->unlex( $comma );
             last;
