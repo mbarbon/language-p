@@ -259,6 +259,12 @@ sub _parse_sub {
     $self->_leave_scope;
     $self->_current_sub( $sub->outer );
 
+    # add a subroutine declaration, the generator might
+    # not create it until later
+    if( $name ) {
+        $self->generator->add_declaration( $name->[1] );
+    }
+
     return $sub;
 }
 
