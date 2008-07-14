@@ -18,4 +18,12 @@ sub new {
     return $self;
 }
 
+package Language::P::Value::Subroutine::Stub;
+
+use strict;
+use warnings;
+use base qw(Language::P::Value::Subroutine);
+
+sub call { Carp::confess( "Called subroutine stub" ) }
+
 1;

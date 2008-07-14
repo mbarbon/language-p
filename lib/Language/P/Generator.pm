@@ -71,6 +71,15 @@ sub process {
     return;
 }
 
+sub add_declaration {
+    my( $self, $name ) = @_;
+
+    my $sub = Language::P::Value::Subroutine::Stub->new
+                  ( { name     => $name,
+                      } );
+    $self->runtime->symbol_table->set_symbol( $name, '&', $sub );
+}
+
 sub finished {
     my( $self ) = @_;
 
@@ -98,6 +107,7 @@ my %dispatch =
     Ternary                => '_ternary',
     Block                  => '_block',
     Subroutine             => '_subroutine',
+    SubroutineDeclaration  => '_subroutine_decl',
     QuotedString           => '_quoted_string',
     );
 
@@ -372,6 +382,12 @@ sub _block {
     foreach my $line ( @{$tree->lines} ) {
         $self->dispatch( $line );
     }
+}
+
+sub _subroutine_decl {
+    my( $self, $tree ) = @_;
+
+    # nothing to do
 }
 
 sub _subroutine {

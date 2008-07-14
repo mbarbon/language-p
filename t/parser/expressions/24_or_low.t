@@ -24,7 +24,7 @@ root:
                 value: 2
                 type: number
     right:
-        class: Language::P::ParseTree::FunctionCall
+        class: Language::P::ParseTree::Overridable
         function: die
         arguments: undef
 EOE
