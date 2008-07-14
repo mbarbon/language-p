@@ -293,6 +293,7 @@ our @FIELDS = qw(function arguments);
 my %prototype_bi =
   ( print       => [ -1, '@' ],
     defined     => [ 1 , '$' ],
+    return      => [ -1, '@' ],
     );
 
 sub parsing_prototype { return $prototype_bi{$_[0]->function} }
