@@ -111,7 +111,7 @@ my %keywords = map { ( $_ => 1 ) }
   qw(if unless else elsif for foreach while until do last next redo
      my our state sub
      ),
-  qw(print defined);
+  qw(print defined return);
 my %overridables = map { ( $_ => 1 ) }
   qw(unlink glob readline die);
 
