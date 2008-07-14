@@ -13,6 +13,62 @@ __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime) );
 __PACKAGE__->mk_accessors( qw(_package _lexicals _pending_lexicals
                               _current_sub) );
 
+use constant
+  { PREC_HIGHEST       => 0,
+    PREC_TERNARY       => 18,
+    PREC_TERNARY_COLON => 40,
+    PREC_LISTOP        => 21,
+    PREC_LOWEST        => 50,
+    };
+
+my %prec_assoc_bin =
+  ( '->'  => [ 2,  'LEFT' ],
+    '**'  => [ 4,  'RIGHT' ],
+    '*'   => [ 7,  'LEFT' ],
+    '/'   => [ 7,  'LEFT' ],
+    '%'   => [ 7,  'LEFT' ],
+    'x'   => [ 7,  'LEFT' ],
+    '+'   => [ 8,  'LEFT' ],
+    '-'   => [ 8,  'LEFT' ],
+    '.'   => [ 8,  'LEFT' ],
+    '<'   => [ 11, 'NON' ],
+    '>'   => [ 11, 'NON' ],
+    '<='  => [ 11, 'NON' ],
+    '>='  => [ 11, 'NON' ],
+    'lt'  => [ 11, 'NON' ],
+    'gt'  => [ 11, 'NON' ],
+    'le'  => [ 11, 'NON' ],
+    'ge'  => [ 11, 'NON' ],
+    '=='  => [ 12, 'NON' ],
+    '!='  => [ 12, 'NON' ],
+    '<=>' => [ 12, 'NON' ],
+    'eq'  => [ 12, 'NON' ],
+    'ne'  => [ 12, 'NON' ],
+    'cmp' => [ 12, 'NON' ],
+    '&&'  => [ 15, 'LEFT' ],
+    '||'  => [ 16, 'LEFT' ],
+    '..'  => [ 17, 'NON' ],
+    '...' => [ 17, 'NON' ],
+    '?'   => [ 18, 'RIGHT' ], # ternary
+    '='   => [ 19, 'RIGHT' ],
+    '+='  => [ 19, 'RIGHT' ],
+    '-='  => [ 19, 'RIGHT' ],
+    '*='  => [ 19, 'RIGHT' ],
+    '/='  => [ 19, 'RIGHT' ],
+    # 20, comma
+    # 21, list ops
+    'not' => [ 22, 'RIGHT' ],
+    'and' => [ 23, 'LEFT' ],
+    'or'  => [ 24, 'LEFT' ],
+    'xor' => [ 24, 'LEFT' ],
+    ':'   => [ 40, 'RIGHT' ], # ternary, must be lowest,
+    );
+
+my %prec_assoc_un =
+  ( '+'   => [ 5,  'RIGHT' ],
+    '-'   => [ 5,  'RIGHT' ],
+    );
+
 sub parse_string {
     my( $self, $string ) = @_;
 
@@ -177,7 +233,7 @@ sub _parse_sub {
                       outer    => $self->_current_sub,
                       name     => $name ? $name->[1] : undef,
                       } );
-    # add @_
+
     # FIXME incestuos with runtime
     my $args_slot = $self->_lexicals->add_name( '@', '_' );
     $args_slot->{index} = $self->_lexicals->add_value;
@@ -302,11 +358,11 @@ sub _parse_sideff {
 
 sub _parse_expr {
     my( $self ) = @_;
-    my $expr = _parse_term( $self );
+    my $expr = _parse_term( $self, PREC_LOWEST );
     my $la = $self->lexer->peek( X_TERM );
 
     if( $la->[0] eq 'COMMA' ) {
-        my $terms = _parse_cslist_rest( $self, -1, $expr );
+        my $terms = _parse_cslist_rest( $self, PREC_LOWEST, -1, $expr );
 
         return Language::P::ParseTree::List->new( { expressions => $terms } );
     }
@@ -636,52 +692,8 @@ sub _parse_lexical_variable {
                    } );
 }
 
-my %prec_assoc_bin =
-  ( '->'  => [ 2,  'LEFT' ],
-    '**'  => [ 4,  'RIGHT' ],
-    '*'   => [ 7,  'LEFT' ],
-    '/'   => [ 7,  'LEFT' ],
-    '%'   => [ 7,  'LEFT' ],
-    'x'   => [ 7,  'LEFT' ],
-    '+'   => [ 8,  'LEFT' ],
-    '-'   => [ 8,  'LEFT' ],
-    '.'   => [ 8,  'LEFT' ],
-    '<'   => [ 11, 'NON' ],
-    '>'   => [ 11, 'NON' ],
-    '<='  => [ 11, 'NON' ],
-    '>='  => [ 11, 'NON' ],
-    'lt'  => [ 11, 'NON' ],
-    'gt'  => [ 11, 'NON' ],
-    'le'  => [ 11, 'NON' ],
-    'ge'  => [ 11, 'NON' ],
-    '=='  => [ 12, 'NON' ],
-    '!='  => [ 12, 'NON' ],
-    '<=>' => [ 12, 'NON' ],
-    'eq'  => [ 12, 'NON' ],
-    'ne'  => [ 12, 'NON' ],
-    'cmp' => [ 12, 'NON' ],
-    '&&'  => [ 15, 'LEFT' ],
-    '||'  => [ 16, 'LEFT' ],
-    '..'  => [ 17, 'NON' ],
-    '...' => [ 17, 'NON' ],
-    '?'   => [ 18, 'RIGHT' ], # ternary
-    '='   => [ 19, 'RIGHT' ],
-    '+='  => [ 19, 'RIGHT' ],
-    '-='  => [ 19, 'RIGHT' ],
-    '*='  => [ 19, 'RIGHT' ],
-    '/='  => [ 19, 'RIGHT' ],
-    ':'   => [ 40, 'RIGHT' ], # ternary, must be lowest,
-    );
-
-my %prec_assoc_un =
-  ( '+'   => [ 5,  'RIGHT' ],
-    '-'   => [ 5,  'RIGHT' ],
-    );
-
-$_->[0] = 999 - $_->[0] foreach values %prec_assoc_bin;
-
 sub _parse_term_p {
-    my( $self, $token, $lookahead ) = @_;
+    my( $self, $prec, $token, $lookahead ) = @_;
     my $terminal = _parse_term_terminal( $self, $token );
 
     return $terminal if $terminal && !$lookahead;
@@ -689,7 +701,9 @@ sub _parse_term_p {
     if( $terminal ) {
         my $la = $self->lexer->peek( X_OPERATOR );
 
-        if( $la->[0] eq 'INTERR' ) {
+        if( !$prec_assoc_bin{$la->[1]} || $prec_assoc_bin{$la->[1]}[0] > $prec ) {
+            return $terminal;
+        } elsif( $la->[0] eq 'INTERR' ) {
             _lex_token( $self, 'INTERR' );
             return _parse_ternary( $self, $prec_assoc_bin{$la->[1]}[0],
                                    $terminal );
@@ -697,7 +711,7 @@ sub _parse_term_p {
             return _parse_term_n( $self, $prec_assoc_bin{$la->[1]}[0],
                                   $terminal );
         } else {
-            return $terminal;
+            Carp::confess $la->[0], ' ', $la->[1];
         }
     } elsif( $prec_assoc_un{$token->[1]} ) {
         my $rest = _parse_term_n( $self, $prec_assoc_un{$token->[1]}[0] );
@@ -721,9 +735,9 @@ sub _parse_term_p {
 sub _parse_ternary {
     my( $self, $prec, $terminal ) = @_;
 
-    my $iftrue = _parse_term_n( $self, $prec_assoc_bin{':'}[0] + 1 );
+    my $iftrue = _parse_term_n( $self, PREC_TERNARY_COLON - 1 );
     _lex_token( $self, 'COLON' );
-    my $iffalse = _parse_term_n( $self, $prec + 1 );
+    my $iffalse = _parse_term_n( $self, $prec - 1 );
 
     return Language::P::ParseTree::Ternary->new
                ( { condition => $terminal,
@@ -737,7 +751,7 @@ sub _parse_term_n {
 
     if( !$terminal ) {
         my $token = $self->lexer->lex( X_TERM );
-        $terminal = _parse_term_p( $self, $token );
+        $terminal = _parse_term_p( $self, $prec, $token );
 
         if( !$terminal ) {
             $self->lexer->unlex( $token );
@@ -748,7 +762,7 @@ sub _parse_term_n {
     for(;;) {
         my $token = $self->lexer->lex( X_OPERATOR );
         my $bin = $prec_assoc_bin{$token->[1]};
-        if( !$bin || $bin->[0] < $prec ) {
+        if( !$bin || $bin->[0] > $prec ) {
             $self->lexer->unlex( $token );
             last;
         } elsif( $token->[0] eq 'INTERR' ) {
@@ -758,7 +772,7 @@ sub _parse_term_n {
             Carp::confess $token->[0], ' ', $token->[1]
                 if $token->[0] eq 'COLON';
 
-            my $q = $bin->[1] eq 'RIGHT' ? $bin->[0] : $bin->[0] + 1;
+            my $q = $bin->[1] eq 'RIGHT' ? $bin->[0] : $bin->[0] - 1;
             my $rterm = _parse_term_n( $self, $q );
 
             $terminal = Language::P::ParseTree::BinOp->new
@@ -773,12 +787,12 @@ sub _parse_term_n {
 }
 
 sub _parse_term {
-    my( $self ) = @_;
+    my( $self, $prec ) = @_;
     my $token = $self->lexer->lex( X_TERM );
-    my $terminal = _parse_term_p( $self, $token, 1 );
+    my $terminal = _parse_term_p( $self, $prec, $token, 1 );
 
     if( $terminal ) {
-        $terminal = _parse_term_n( $self, 0, $terminal );
+        $terminal = _parse_term_n( $self, $prec, $terminal );
 
         return $terminal;
     }
@@ -860,12 +874,12 @@ sub _parse_listop {
     my $proto = $call->parsing_prototype;
     if( $token->[0] eq 'OPPAR' ) {
         $self->lexer->lex; # comsume token
-        $args = _parse_cslist( $self, -1 );
+        $args = _parse_cslist( $self, PREC_LOWEST, -1 );
         my $cl = $self->lexer->lex( X_NOTHING );
 
         die $cl->[0], ' ', $cl->[1] unless $cl->[0] eq 'CLPAR';
     } elsif( $proto->[0] != 0 ) {
-        $args = _parse_cslist( $self, $proto->[0] );
+        $args = _parse_cslist( $self, PREC_LISTOP, $proto->[0] );
     }
 
     $call->{arguments} = $args;
@@ -874,21 +888,21 @@ sub _parse_listop {
 }
 
 sub _parse_cslist {
-    my( $self, $term_count ) = @_;
+    my( $self, $prec, $term_count ) = @_;
 
-    my $term = _parse_term( $self );
+    my $term = _parse_term( $self, $prec );
     return unless $term;
     return [ $term ] if $term_count == 1;
-    return _parse_cslist_rest( $self, $term_count - 1, $term );
+    return _parse_cslist_rest( $self, $prec, $term_count - 1, $term );
 }
 
 sub _parse_cslist_rest {
-    my( $self, $term_count, @terms ) = @_;
+    my( $self, $prec, $term_count, @terms ) = @_;
 
     for(; $term_count != 0;) {
         my $comma = $self->lexer->lex( X_TERM );
         if( $comma->[0] eq 'COMMA' ) {
-            my $term = scalar _parse_term( $self );
+            my $term = scalar _parse_term( $self, $prec );
             push @terms, $term;
             --$term_count if $term_count > 0;
         } else {
