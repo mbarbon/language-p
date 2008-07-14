@@ -21,7 +21,7 @@ my @lines;
     sub new {
         @lines = ();
 
-        return __PACKAGE__;
+        return bless $_[1], __PACKAGE__;
     }
 
     sub process {
@@ -31,6 +31,16 @@ my @lines;
     sub push_code { }
     sub pop_code { }
     sub finished { }
+    sub runtime { $_[0]->{runtime} }
+
+    sub add_declaration {
+        my( $self, $name ) = @_;
+
+        my $sub = Language::P::Value::Subroutine::Stub->new
+                      ( { name     => $name,
+                          } );
+        $self->runtime->symbol_table->set_symbol( $name, '&', $sub );
+    }
 
     package TestParserRuntime;
 
@@ -45,9 +55,11 @@ my @lines;
 }
 
 sub fresh_parser {
+    my $rt = TestParserRuntime->new;
     my $parser = Language::P::Parser->new
-                     ( { generator => TestParserGenerator->new,
-                         runtime   => TestParserRuntime->new,
+                     ( { generator => TestParserGenerator->new
+                                          ( { runtime => $rt } ),
+                         runtime   => $rt,
                          } );
 
     return $parser;

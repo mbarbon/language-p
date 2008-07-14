@@ -173,7 +173,11 @@ sub _parse_line {
     my $label = _label( $self );
     my $token = $self->lexer->peek( X_STATE );
 
-    if( $token->[0] eq 'OPBRK' ) {
+    if( $token->[0] eq 'SEMICOLON' ) {
+        _lex_semicolon( $self );
+
+        return _parse_line( $self );
+    } elsif( $token->[0] eq 'OPBRK' ) {
         _lex_token( $self, 'OPBRK' );
 
         return _parse_block_rest( $self, 1 );
@@ -218,7 +222,18 @@ sub _parse_sub {
     if( $name->[0] eq 'ID' ) {
         die 'Syntax error: named sub' unless $flags & 1;
         _lex_token( $self, 'ID' );
-        _lex_token( $self, 'OPBRK' );
+
+        my $next = $self->lexer->lex( X_OPERATOR );
+
+        if( $next->[0] eq 'SEMICOLON' ) {
+            $self->generator->add_declaration( $name->[1] );
+
+            return Language::P::ParseTree::SubroutineDeclaration->new
+                       ( { name => $name->[1],
+                           } );
+        } elsif( $next->[0] ne 'OPBRK' ) {
+            Carp::confess( $next->[0], ' ', $next->[1] );
+        }
     } elsif( $name->[0] eq 'OPBRK' ) {
         die 'Syntax error: anonymous sub' unless $flags & 2;
         undef $name;
@@ -849,7 +864,7 @@ sub _parse_listop {
     my( $self ) = @_;
     my $op = $self->lexer->lex( X_NOTHING );
     my $token = $self->lexer->peek( X_TERM );
-    my( $call, $args );
+    my( $call, $args, $declared );
 
     if( $op->[2] == T_OVERRIDABLE ) {
         my $st = $self->runtime->symbol_table;
@@ -860,11 +875,19 @@ sub _parse_listop {
         $call = Language::P::ParseTree::Overridable->new
                     ( { function  => $op->[1],
                         } );
+        $declared = 1;
     } elsif( $op->[2] == T_KEYWORD ) {
         $call = Language::P::ParseTree::Builtin->new
                     ( { function  => $op->[1],
                         } );
+        $declared = 1;
     } else {
+        my $st = $self->runtime->symbol_table;
+
+        if( $st->get_symbol( $op->[1], '&' ) ) {
+            $declared = 1;
+        }
+
         $call = Language::P::ParseTree::FunctionCall->new
                     ( { function  => $op->[1],
                         arguments => undef,
@@ -879,6 +902,7 @@ sub _parse_listop {
 
         die $cl->[0], ' ', $cl->[1] unless $cl->[0] eq 'CLPAR';
     } elsif( $proto->[0] != 0 ) {
+        Carp::confess( "Undeclared identifier '$op->[1]'" ) unless $declared;
         $args = _parse_cslist( $self, PREC_LISTOP, $proto->[0] );
     }
 

@@ -113,7 +113,7 @@ my %keywords = map { ( $_ => 1 ) }
      ),
   qw(print defined);
 my %overridables = map { ( $_ => 1 ) }
-  qw(unlink glob readline);
+  qw(unlink glob readline die);
 
 my %quoted_chars =
   ( 'n' => "\n",

@@ -174,6 +174,16 @@ our @FIELDS = qw(name lexicals outer lines);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+package Language::P::ParseTree::SubroutineDeclaration;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(name);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
 package Language::P::ParseTree::BinOp;
 
 use strict;
@@ -297,6 +307,7 @@ our @FIELDS = qw(function arguments);
 
 my %prototype_ov =
   ( unlink      => [ -1, '@' ],
+    die         => [ -1, '@' ],
     );
 
 sub parsing_prototype { return $prototype_ov{$_[0]->function} }
