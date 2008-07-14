@@ -101,6 +101,10 @@ my %ops =
     '||'  => 'OROR',
     '$#'  => 'ARYLEN',
     '->'  => 'ARROW',
+    'and' => 'ANDANDLOW',
+    'or'  => 'ORORLOW',
+    'not' => 'NOTLOW',
+    'xor' => 'XORLOW',
     );
 
 my %keywords = map { ( $_ => 1 ) }
