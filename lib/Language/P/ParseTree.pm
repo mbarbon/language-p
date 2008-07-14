@@ -170,9 +170,9 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(name lexicals outer lines);
+our @FIELDS = qw(name lines);
 
-__PACKAGE__->mk_ro_accessors( @FIELDS );
+__PACKAGE__->mk_ro_accessors( @FIELDS, qw(lexicals outer) );
 
 package Language::P::ParseTree::SubroutineDeclaration;
 
