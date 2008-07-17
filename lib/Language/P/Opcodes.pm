@@ -390,7 +390,7 @@ sub o_array_element {
     my $array = pop @{$runtime->_stack};
     my $index = pop @{$runtime->_stack};
 
-    push @{$runtime->_stack}, $array->get_item( $index );
+    push @{$runtime->_stack}, $array->get_item( $index->as_integer );
 
     return $pc + 1;
 }
@@ -400,7 +400,7 @@ sub o_hash_element {
     my $hash = pop @{$runtime->_stack};
     my $key = pop @{$runtime->_stack};
 
-    push @{$runtime->_stack}, $hash->get_item( $key );
+    push @{$runtime->_stack}, $hash->get_item( $key->as_string );
 
     return $pc + 1;
 }

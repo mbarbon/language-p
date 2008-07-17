@@ -72,7 +72,7 @@ sub iterator_from {
 sub get_item {
     my( $self, $index ) = @_;
 
-    die 'Array index out of range'
+    die "Array index out of range ($index > $#{$self->{array}})"
         if $index < 0 || $index > $#{$self->{array}};
 
     return $self->{array}->[$index];
