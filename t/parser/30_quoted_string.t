@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 6;
+use Test::More tests => 10;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -98,4 +98,74 @@ root:
         class: Language::P::ParseTree::Constant
         value: 1
         type: number
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+<$x $y>;
+EOP
+root:
+    class: Language::P::ParseTree::Glob
+    op: glob
+    left:
+        class: Language::P::ParseTree::QuotedString
+        components:
+                class: Language::P::ParseTree::Symbol
+                name: x
+                sigil: $
+                class: Language::P::ParseTree::Constant
+                value:  
+                type: string
+                class: Language::P::ParseTree::Symbol
+                name: y
+                sigil: $
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+<$x>;
+EOP
+root:
+    class: Language::P::ParseTree::Readline
+    op: readline
+    left:
+        class: Language::P::ParseTree::Symbol
+        name: x
+        sigil: $
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+<${x}>;
+EOP
+root:
+    class: Language::P::ParseTree::Readline
+    op: readline
+    left:
+        class: Language::P::ParseTree::Symbol
+        name: x
+        sigil: $
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+<'$x $y'>;
+EOP
+root:
+    class: Language::P::ParseTree::Glob
+    op: glob
+    left:
+        class: Language::P::ParseTree::QuotedString
+        components:
+                class: Language::P::ParseTree::Constant
+                value: '
+                type: string
+                class: Language::P::ParseTree::Symbol
+                name: x
+                sigil: $
+                class: Language::P::ParseTree::Constant
+                value:  
+                type: string
+                class: Language::P::ParseTree::Symbol
+                name: y
+                sigil: $
+                class: Language::P::ParseTree::Constant
+                value: '
+                type: string
 EOE

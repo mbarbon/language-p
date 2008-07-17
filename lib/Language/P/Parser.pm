@@ -603,7 +603,7 @@ sub _parse_maybe_direct_method_call {
 sub _parse_string_rest {
     my( $self, $token ) = @_;
     my $terminator = $token->[2];
-    my $interpolate = $terminator eq '"' ? 1 : 0;
+    my $interpolate = $terminator eq '"' || $terminator eq '>' ? 1 : 0;
     my @values;
 
     $self->lexer->quote( { terminator  => $terminator,
@@ -647,7 +647,23 @@ sub _parse_term_terminal {
     my( $self, $token ) = @_;
 
     if( $token->[0] eq 'QUOTE' ) {
-        return _parse_string_rest( $self, $token );
+        my $qstring = _parse_string_rest( $self, $token );
+
+        if( $token->[1] eq '<' ) {
+            # simple scalar: readline, anything else: glob
+            if(    $qstring->isa( 'Language::P::ParseTree::QuotedString' )
+                && $#{$qstring->components} == 0
+                && $qstring->components->[0]
+                           ->isa( 'Language::P::ParseTree::Symbol' ) ) {
+                return Language::P::ParseTree::Readline
+                           ->new( { left => $qstring->components->[0] } );
+            } else {
+                return Language::P::ParseTree::Glob
+                           ->new( { left => $qstring } );
+            }
+        }
+
+        return $qstring;
     } elsif( $token->[0] eq 'NUMBER' ) {
         return Language::P::ParseTree::Constant->new( { type  => 'number',
                                                         value => $token->[1],
@@ -889,7 +905,7 @@ sub _parse_indirobj {
         return $id;
     }
 
-    my $token = $self->lexer->lex( X_NOTHING );
+    my $token = $self->lexer->lex( X_TERM );
 
     if( $token->[0] eq 'OPBRK' ) {
         my $block = _parse_block_rest( $self, 0 );
@@ -1007,7 +1023,7 @@ sub _parse_listop {
     if( $next->[0] eq 'OPPAR' ) {
         $self->lexer->lex; # comsume token
         ( $args, $fh ) = _parse_arglist( $self, PREC_LOWEST, $proto, 0 );
-        my $cl = $self->lexer->lex( X_NOTHING );
+        my $cl = $self->lexer->lex( X_OPERATOR );
 
         die $cl->[0], ' ', $cl->[1] unless $cl->[0] eq 'CLPAR';
     } elsif( $proto->[1] != 0 ) {
