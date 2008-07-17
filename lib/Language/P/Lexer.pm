@@ -113,7 +113,7 @@ my %keywords = map { ( $_ => 1 ) }
      ),
   qw(print defined return);
 my %overridables = map { ( $_ => 1 ) }
-  qw(unlink glob readline die open pipe);
+  qw(unlink glob readline die open pipe chdir rmdir);
 
 my %quoted_chars =
   ( 'n' => "\n",
@@ -209,8 +209,6 @@ sub lex_identifier {
         return undef if $self->tokens->[-1]->[0] ne 'ID';
         return pop @{$self->tokens};
     }
-
-    _skip_space( $self );
 
     local $_ = $self->buffer;
 

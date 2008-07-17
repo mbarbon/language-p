@@ -346,7 +346,7 @@ sub _symbol {
          o( 'glob_slot_create', slot => $slot );
 
     if( $tree->sigil eq '$#' ) {
-        push @bytecode, o( 'o_array_size' );
+        push @bytecode, o( 'array_size' );
     }
 }
 
