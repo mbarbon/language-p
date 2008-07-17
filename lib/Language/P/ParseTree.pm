@@ -108,8 +108,6 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Constant);
 
-our @FIELDS = qw(value type);
-
 sub type { 'string' }
 sub bare { 1 }
 sub is_bareword { 1 }
@@ -284,8 +282,6 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::ConditionalBlock);
 
-our @FIELDS = qw(condition block block_type);
-
 package Language::P::ParseTree::Foreach;
 
 use strict;
@@ -312,8 +308,6 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::FunctionCall);
 
-our @FIELDS = qw(function arguments);
-
 my %prototype_bi =
   ( print       => [ -1, -1, '!', '@' ],
     defined     => [ 1 ,  1, '$' ],
@@ -328,7 +322,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Builtin);
 
-our @FIELDS = qw(function arguments filehandle);
+our @FIELDS = qw(filehandle);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -338,13 +332,13 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::FunctionCall);
 
-our @FIELDS = qw(function arguments);
-
 my %prototype_ov =
   ( unlink      => [ -1, -1, '@' ],
     die         => [ -1, -1, '@' ],
     open        => [  1, -1, '*', '$', '@' ],
     pipe        => [  2,  2, '*', '*' ],
+    chdir       => [  0,  1, '$' ],
+    rmdir       => [  0,  1, '$' ],
     );
 
 sub parsing_prototype { return $prototype_ov{$_[0]->function} }
