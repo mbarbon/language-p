@@ -2,10 +2,19 @@
 
 use strict;
 use warnings;
-use Test::More tests => 5;
+use Test::More tests => 6;
 
 use lib 't/lib';
 use TestParser qw(:all);
+
+parse_and_diff( <<'EOP', <<'EOE' );
+"";
+EOP
+root:
+    class: Language::P::ParseTree::Constant
+    value: 
+    type: string
+EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );
 "abcdefg";
