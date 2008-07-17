@@ -213,6 +213,10 @@ sub lex_identifier {
     _skip_space( $self );
 
     local $_ = $self->buffer;
+
+    _skip_space( $self )
+      if defined( $$_ ) && $$_ =~ /^[\s\r\n]/;
+
     return [ 'SPECIAL', 'EOF' ] unless length $$_;
 
     $$_ =~ s/^(\w+)//x and do {
@@ -239,6 +243,13 @@ sub lex_identifier {
             return undef;
         }
     };
+    $$_ =~ s/^(\W)(?=\W)// and do {
+        if( $self->quote && $self->{brackets} == 0 ) {
+            _quoted_code_lookahead( $self );
+        }
+
+        return [ 'ID', $1 ];
+    };
 }
 
 sub lex {
@@ -263,11 +274,24 @@ sub lex {
                  ];
     };
     $$_ =~ s/^(["'])//x and return [ 'QUOTE', $1, $1 ];
-    $$_ =~ s/^(<=|>=|==|!=|\$\#|=>|->
+    $$_ =~ s/^(<=|>=|==|!=|=>|->
                 |\.\.|\.\.\.
                 |\+\+|\-\-
                 |\&\&|\|\|)//x and return [ $ops{$1}, $1 ];
-    $$_ =~ s/^([\*\$%@&])//x and do {
+    $$_ =~ s/^\$//x and do {
+        if( $$_ =~ /^\#/ ) {
+            my $id = $self->lex_identifier;
+
+            if( $id ) {
+                $self->unlex( $id );
+            } else {
+                $$_ =~ s/^\#//x;
+                return [ $ops{'$#'}, '$#' ];
+            }
+        }
+        return [ $ops{'$'}, '$' ];
+    };
+    $$_ =~ s/^([\*%@&])//x and do {
         return [ $ops{$1}, $1 ];
     };
     if( $self->quote ) {
