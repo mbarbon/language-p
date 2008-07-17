@@ -632,6 +632,10 @@ sub _parse_string_rest {
         && $values[0]->isa( 'Language::P::ParseTree::Constant' ) ) {
 
         return $values[0];
+    } elsif( @values == 0 ) {
+        return Language::P::ParseTree::Constant->new( { value => "",
+                                                        type  => 'string',
+                                                        } );
     } else {
         return Language::P::ParseTree::QuotedString->new
                    ( { components => \@values,
