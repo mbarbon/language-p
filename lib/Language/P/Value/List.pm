@@ -8,20 +8,6 @@ __PACKAGE__->mk_ro_accessors( qw() );
 
 sub type { 8 }
 
-sub clone {
-    my( $self, $level ) = @_;
-    # FIXME optimize
-    my $clone = Language::P::Value::List->new( { array => [ @{$self->{array}} ] } );
-
-    if( $level > 0 ) {
-        foreach my $entry ( @{$clone->{array}} ) {
-            $entry = $entry->clone( $level - 1 );
-        }
-    }
-
-    return $clone;
-}
-
 sub assign {
     my( $self, $other ) = @_;
 
@@ -35,8 +21,15 @@ sub assign {
 sub push {
     my( $self, @values ) = @_;
 
-    die 'unimplemented' if grep $_->isa( __PACKAGE__ ), @values;
-    push @{$self->{array}}, @values;
+    foreach my $value ( @values ) {
+        if( $value->isa( 'Language::P::Value::Array' ) ) {
+            for( my $it = $value->iterator; $it->next; ) {
+                push @{$self->{array}}, $it->item;
+            }
+        } else {
+            push @{$self->{array}}, $value;
+        }
+    }
 
     return;
 }
