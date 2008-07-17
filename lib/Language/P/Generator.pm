@@ -97,6 +97,7 @@ my %dispatch =
     Builtin                => '_function_call',
     Overridable            => '_function_call',
     Print                  => '_print',
+    UnOp                   => '_unary_op',
     BinOp                  => '_binary_op',
     Constant               => '_constant',
     Symbol                 => '_symbol',
@@ -170,6 +171,11 @@ my %short_circuit =
     '||'     => 'jump_if_true',
     );
 
+my %unary =
+  ( '-'      => \&Language::P::Opcodes::o_negate,
+    '!'      => \&Language::P::Opcodes::o_not,
+    );
+
 my %builtins =
   ( print    => 'print',
     return   => 'return',
@@ -240,6 +246,16 @@ sub _list {
         # HACK
         push @bytecode, o( 'push_scalar' );
     }
+}
+
+sub _unary_op {
+    my( $self, $tree ) = @_;
+
+    die $tree->op unless $unary{$tree->op};
+
+    $self->dispatch( $tree->left );
+
+    push @bytecode, { function => $unary{$tree->op} };
 }
 
 sub _binary_op {

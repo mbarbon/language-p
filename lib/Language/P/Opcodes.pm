@@ -321,6 +321,24 @@ _make_compare( $_ ) foreach
       },
     );
 
+sub o_negate {
+    my( $op, $runtime, $pc ) = @_;
+    my $v = pop @{$runtime->_stack};
+
+    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => -$v->get_integer } );
+
+    return $pc + 1;
+}
+
+sub o_not {
+    my( $op, $runtime, $pc ) = @_;
+    my $v = pop @{$runtime->_stack};
+
+    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => !$v->as_boolean_int } );
+
+    return $pc + 1;
+}
+
 sub o_assign {
     my( $op, $runtime, $pc ) = @_;
     my $v1 = pop @{$runtime->_stack};
