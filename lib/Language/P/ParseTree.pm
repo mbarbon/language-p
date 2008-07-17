@@ -349,4 +349,20 @@ my %prototype_ov =
 
 sub parsing_prototype { return $prototype_ov{$_[0]->function} }
 
+package Language::P::ParseTree::Glob;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::UnOp);
+
+sub op { 'glob' }
+
+package Language::P::ParseTree::Readline;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::UnOp);
+
+sub op { 'readline' }
+
 1;
