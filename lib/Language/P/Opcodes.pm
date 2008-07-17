@@ -128,7 +128,7 @@ _make_binary_op( $_ ) foreach
 
 sub o_start_call {
     my( $op, $runtime, $pc ) = @_;
-    push @{$runtime->_stack}, Language::P::Value::Array->new;
+    push @{$runtime->_stack}, Language::P::Value::List->new;
 
     return $pc + 1;
 }
@@ -365,6 +365,35 @@ sub o_unlink {
     my $ret = unlink @args;
 
     return Language::P::Value::StringNumber( { string => $ret } );
+}
+
+sub o_array_element {
+    my( $op, $runtime, $pc ) = @_;
+    my $array = pop @{$runtime->_stack};
+    my $index = pop @{$runtime->_stack};
+
+    push @{$runtime->_stack}, $array->get_item( $index );
+
+    return $pc + 1;
+}
+
+sub o_hash_element {
+    my( $op, $runtime, $pc ) = @_;
+    my $hash = pop @{$runtime->_stack};
+    my $key = pop @{$runtime->_stack};
+
+    push @{$runtime->_stack}, $hash->get_item( $key );
+
+    return $pc + 1;
+}
+
+sub o_array_size {
+    my( $op, $runtime, $pc ) = @_;
+    my $array = pop @{$runtime->_stack};
+
+    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => $array->get_count - 1 } );
+
+    return $pc + 1;
 }
 
 1;

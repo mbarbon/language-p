@@ -20,8 +20,33 @@ sub new {
 sub clone {
     my( $self, $level ) = @_;
 
-    return Language::P::Value::Array->new( { array  => $self->{array},
-                                              } );
+    my $clone = ref( $self )->new( { array  => [ @{$self->{array}} ],
+                                     } );
+
+    if( $level > 0 ) {
+        foreach my $entry ( @{$clone->{array}} ) {
+            $entry = $entry->clone( $level - 1 );
+        }
+    }
+
+    return $clone;
+}
+
+sub assign {
+    my( $self, $other ) = @_;
+
+    # FIXME optimize: don't do it unless necessary
+    my $oiter = $other->clone( 1 )->iterator;
+    $self->assign_iterator( $oiter );
+}
+
+sub assign_iterator {
+    my( $self, $iter ) = @_;
+
+    $self->{array} = [];
+    while( $iter->next ) {
+        push @{$self->{array}}, $iter->item;
+    }
 }
 
 sub push {

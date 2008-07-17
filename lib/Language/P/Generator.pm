@@ -110,6 +110,7 @@ my %dispatch =
     Subroutine             => '_subroutine',
     SubroutineDeclaration  => '_subroutine_decl',
     QuotedString           => '_quoted_string',
+    Subscript              => '_subscript',
     );
 
 my %dispatch_cond =
@@ -312,8 +313,10 @@ sub _constant {
 }
 
 my %sigils =
-  ( '$' => 'scalar',
-    '&' => 'subroutine',
+  ( '$'  => 'scalar',
+    '&'  => 'subroutine',
+    '@'  => 'array',
+    '$#' => 'array',
     );
 
 sub _symbol {
@@ -325,6 +328,10 @@ sub _symbol {
     push @bytecode,
          o( 'glob',             name => $tree->name, create => 1 ),
          o( 'glob_slot_create', slot => $slot );
+
+    if( $tree->sigil eq '$#' ) {
+        push @bytecode, o( 'o_array_size' );
+    }
 }
 
 sub _lexical_declaration {
@@ -443,6 +450,27 @@ sub _quoted_string {
         $self->dispatch( $tree->components->[$i] );
 
         push @bytecode, o( 'concat' );
+    }
+}
+
+sub _subscript {
+    my( $self, $tree ) = @_;
+
+    die if $tree->reference;
+
+    $self->dispatch( $tree->subscript );
+    $self->dispatch( $tree->subscripted );
+
+    if( $tree->type eq '[' ) {
+        push @bytecode,
+            { function => \&Language::P::Opcodes::o_array_element,
+              };
+    } elsif( $tree->type eq '{' ) {
+        push @bytecode,
+            { function => \&Language::P::Opcodes::o_hash_element,
+              };
+    } else {
+        die $tree->type;
     }
 }
 
