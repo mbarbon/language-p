@@ -656,11 +656,12 @@ sub _parse_term_terminal {
                 && $#{$qstring->components} == 0
                 && $qstring->components->[0]
                            ->isa( 'Language::P::ParseTree::Symbol' ) ) {
-                return Language::P::ParseTree::Readline
-                           ->new( { left => $qstring->components->[0] } );
+                return Language::P::ParseTree::Overridable
+                           ->new( { function  => 'readline',
+                                    arguments => $qstring->components->[0] } );
             } else {
                 return Language::P::ParseTree::Glob
-                           ->new( { left => $qstring } );
+                           ->new( { arguments => $qstring } );
             }
         }
 
