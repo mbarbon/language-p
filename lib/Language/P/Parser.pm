@@ -383,7 +383,8 @@ sub _parse_expr {
     my $la = $self->lexer->peek( X_TERM );
 
     if( $la->[0] eq 'COMMA' ) {
-        my $terms = _parse_cslist_rest( $self, PREC_LOWEST, -1, $expr );
+        my $terms = _parse_cslist_rest( $self, PREC_LOWEST,
+                                        [ -1, -1, '@' ], 0, $expr );
 
         return Language::P::ParseTree::List->new( { expressions => $terms } );
     }
@@ -494,7 +495,7 @@ sub _parse_maybe_subscript_rest {
 
             return _parse_maybe_subscript_rest( $self, $term );
         } else {
-            return _parse_maybe_method_call( $self, $subscripted );
+            return _parse_maybe_direct_method_call( $self, $subscripted );
         }
     } elsif(    $next->[0] eq 'OPPAR'
              || $next->[0] eq 'OPSQ'
@@ -534,7 +535,31 @@ sub _parse_bracketed_expr {
     return ( $bracket, $subscript );
 }
 
-sub _parse_maybe_method_call {
+sub _parse_maybe_indirect_method_call {
+    my( $self, $op, $next ) = @_;
+    my $indir = _parse_indirobj( $self, 1 );
+
+    if( $indir ) {
+        # if FH -> no method
+        # proto FH -> no method
+        # Foo $bar (?) -> no method
+        # foo $bar -> method
+        # print xxx .... -> no method
+        if( $op->[1] eq 'print' ) {
+            my $la = 1;
+        }
+        # foo pack:: -> method
+
+        use Data::Dumper;
+        Carp::confess Dumper( $indir ) . ' ';
+    }
+
+    return Language::P::ParseTree::Bareword->new
+               ( { value => $op->[1],
+                   } );
+}
+
+sub _parse_maybe_direct_method_call {
     my( $self, $invocant ) = @_;
     my $token = $self->lexer->lex( X_TERM );
 
@@ -630,8 +655,17 @@ sub _parse_term_terminal {
                   || $token->[1] eq 'state' ) ) {
         return _parse_lexical( $self, $token->[1] );
     } elsif( $token->[0] eq 'ID' ) {
-        $self->lexer->unlex( $token );
-        return _parse_listop( $self );
+        my $next = $self->lexer->peek( X_OPERATOR );
+
+        if( $next->[0] eq 'COMMA' && $next->[1] eq '=>' ) {
+            # quoted by fat arrow
+            return Language::P::ParseTree::Constant->new
+                       ( { value => $token->[1],
+                           type  => 'string',
+                           } );
+        }
+
+        return _parse_listop( $self, $token );
     }
 
     return undef;
@@ -639,7 +673,7 @@ sub _parse_term_terminal {
 
 sub _parse_indirobj_maybe_subscripts {
     my( $self, $token ) = @_;
-    my $indir = _parse_indirobj( $self, 1 );
+    my $indir = _parse_indirobj( $self, 0 );
 
     if( ref( $indir ) eq 'ARRAY' && $indir->[0] eq 'ID' ) {
         return _parse_maybe_subscripts( $self, $token->[1], 1, $indir );
@@ -844,7 +878,7 @@ sub _parse_block_rest {
 }
 
 sub _parse_indirobj {
-    my( $self, $is_ident ) = @_;
+    my( $self, $allow_fail ) = @_;
     my $id = $self->lexer->lex_identifier;
 
     if( $id ) {
@@ -858,20 +892,30 @@ sub _parse_indirobj {
 
         return $block;
     } elsif( $token->[0] eq 'DOLLAR' ) {
-        my $indir = _parse_indirobj( $self, 1 );
+        my $indir = _parse_indirobj( $self, 0 );
 
-        return $indir;
+        if( ref( $indir ) eq 'ARRAY' && $indir->[0] eq 'ID' ) {
+            return _find_symbol( $self, '$', $indir->[1] );
+        } else {
+            return Language::P::ParseTree::UnOp->new
+                       ( { left  => $indir,
+                           op    => $token->[1],
+                           } );
+        }
+    } elsif( $allow_fail ) {
+        $self->lexer->unlex( $token );
+
+        return undef;
     } else {
         die $token->[0], ' ', $token->[1];
     }
 }
 
-sub _parse_listop {
-    my( $self ) = @_;
-    my $op = $self->lexer->lex( X_NOTHING );
-    my $token = $self->lexer->peek( X_TERM );
-    my( $call, $args, $declared );
+sub _declared_id {
+    my( $self, $op ) = @_;
+    my $call;
 
+    my $is_print = $op->[1] eq 'print';
     if( $op->[2] == T_OVERRIDABLE ) {
         my $st = $self->runtime->symbol_table;
 
@@ -881,17 +925,72 @@ sub _parse_listop {
         $call = Language::P::ParseTree::Overridable->new
                     ( { function  => $op->[1],
                         } );
-        $declared = 1;
+
+        return ( $call, 1 );
+    } elsif( $is_print ) {
+        $call = Language::P::ParseTree::Print->new
+                    ( { function  => $op->[1],
+                        } );
+
+        return ( $call, 1 );
     } elsif( $op->[2] == T_KEYWORD ) {
         $call = Language::P::ParseTree::Builtin->new
                     ( { function  => $op->[1],
                         } );
-        $declared = 1;
+
+        return ( $call, 1 );
     } else {
         my $st = $self->runtime->symbol_table;
 
         if( $st->get_symbol( $op->[1], '&' ) ) {
-            $declared = 1;
+            return ( undef, 1 );
+        }
+    }
+
+    return ( undef, 0 );
+}
+
+sub _parse_listop {
+    my( $self, $op ) = @_;
+    my $next = $self->lexer->peek( X_TERM );
+
+    my $is_print = $op->[1] eq 'print';
+    my( $call, $declared ) = _declared_id( $self, $op );
+    my( $args, $fh );
+
+    if( !$call || !$declared ) {
+        my $st = $self->runtime->symbol_table;
+
+        if( $next->[0] eq 'ARROW' ) {
+            _lex_token( $self, 'ARROW' );
+            my $la = $self->lexer->peek( X_TERM );
+
+            if( $la->[0] eq 'ID' || $la->[0] eq 'DOLLAR' ) {
+                # here we are calling the method on a bareword
+                my $invocant = Language::P::ParseTree::Constant->new
+                                   ( { value => $op->[1],
+                                       type  => 'string',
+                                       } );
+
+                return _parse_maybe_direct_method_call( $self, $invocant );
+            } else {
+                # looks like a bareword, report as such
+                $self->lexer->unlex( $next );
+
+                return Language::P::ParseTree::Bareword->new
+                           ( { value => $op->[1],
+                               } );
+            }
+        } elsif( !$declared && $next->[0] ne 'OPPAR' ) {
+            # not a declared subroutine, nor followed by parenthesis
+            # try to see if it is some sort of (indirect) method call
+            return _parse_maybe_indirect_method_call( $self, $op, $next );
+        }
+
+        # foo Bar:: is always a method call
+        if(    $next->[0] eq 'ID'
+            && $st->get_package( $next->[1] ) ) {
+            return _parse_maybe_indirect_method_call( $self, $op, $next );
         }
 
         $call = Language::P::ParseTree::FunctionCall->new
@@ -901,40 +1000,78 @@ sub _parse_listop {
     }
 
     my $proto = $call->parsing_prototype;
-    if( $token->[0] eq 'OPPAR' ) {
+    if( $next->[0] eq 'OPPAR' ) {
         $self->lexer->lex; # comsume token
-        $args = _parse_cslist( $self, PREC_LOWEST, -1 );
+        ( $args, $fh ) = _parse_arglist( $self, PREC_LOWEST, $proto, 0 );
         my $cl = $self->lexer->lex( X_NOTHING );
 
         die $cl->[0], ' ', $cl->[1] unless $cl->[0] eq 'CLPAR';
-    } elsif( $proto->[0] != 0 ) {
+    } elsif( $proto->[1] != 0 ) {
         Carp::confess( "Undeclared identifier '$op->[1]'" ) unless $declared;
-        $args = _parse_cslist( $self, PREC_LISTOP, $proto->[0] );
+        ( $args, $fh ) = _parse_arglist( $self, PREC_LISTOP, $proto, 0 );
     }
 
     $call->{arguments} = $args;
+    $call->{filehandle} = $fh if $fh;
 
     return $call;
 }
 
-sub _parse_cslist {
-    my( $self, $prec, $term_count ) = @_;
+sub _parse_arglist {
+    my( $self, $prec, $proto, $index ) = @_;
+    my $la = $self->lexer->peek( X_TERM );
 
-    my $term = _parse_term( $self, $prec );
+    my $term;
+    my $indirect_filehandle = $index == 0 && $proto->[2] eq '!';
+    ++$index if $indirect_filehandle;
+    if( $la->[0] eq 'ID' && $indirect_filehandle ) {
+        my( $call, $declared ) = _declared_id( $self, $la );
+
+        if( !$declared ) {
+            _lex_token( $self, 'ID' );
+            $term = Language::P::ParseTree::Symbol->new
+                        ( { name  => $la->[1],
+                            sigil => '*',
+                            } );
+        } else {
+            $indirect_filehandle = 0;
+        }
+    } elsif( $indirect_filehandle ) {
+        $indirect_filehandle = 0;
+    }
+
+    if( !$term ) {
+        $term = _maybe_handle( _parse_term( $self, $prec ),
+                               $proto, $index );
+        ++$index;
+    }
+
     return unless $term;
-    return [ $term ] if $term_count == 1;
-    return _parse_cslist_rest( $self, $prec, $term_count - 1, $term );
+    return [ $term ] if $proto->[1] == $index;
+
+    if( $indirect_filehandle ) {
+        my $la = $self->lexer->peek( X_TERM );
+
+        if( $la->[0] eq 'COMMA' ) {
+            return _parse_cslist_rest( $self, $prec, $proto, $index, $term );
+        } else {
+            return ( _parse_arglist( $self, $prec, $proto, $index ), $term );
+        }
+    }
+
+    return _parse_cslist_rest( $self, $prec, $proto, $index, $term );
 }
 
 sub _parse_cslist_rest {
-    my( $self, $prec, $term_count, @terms ) = @_;
+    my( $self, $prec, $proto, $index, @terms ) = @_;
 
-    for(; $term_count != 0;) {
+    for(; $proto->[1] != $index;) {
         my $comma = $self->lexer->lex( X_TERM );
         if( $comma->[0] eq 'COMMA' ) {
-            my $term = scalar _parse_term( $self, $prec );
+            my $term = _maybe_handle( _parse_term( $self, $prec ),
+                                      $proto, $index );
             push @terms, $term;
-            --$term_count if $term_count > 0;
+            ++$index;
         } else {
             $self->lexer->unlex( $comma );
             last;
@@ -942,6 +1079,18 @@ sub _parse_cslist_rest {
     }
 
     return \@terms;
+}
+
+sub _maybe_handle {
+    my( $term, $proto, $index ) = @_;
+
+    return $term if !$term || !$term->is_bareword;
+    return $term if $index + 2 > $#$proto || $proto->[$index + 2] ne '*';
+
+    return Language::P::ParseTree::Symbol->new
+               ( { name  => $term->value,
+                   sigil => '*',
+                   } );
 }
 
 1;
