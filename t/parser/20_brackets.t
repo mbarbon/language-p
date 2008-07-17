@@ -2,10 +2,44 @@
 
 use strict;
 use warnings;
-use Test::More tests => 10;
+use Test::More tests => 12;
 
 use lib 't/lib';
 use TestParser qw(:all);
+
+parse_and_diff( <<'EOP', <<'EOE' );
+$#[1]
+EOP
+root:
+    class: Language::P::ParseTree::Subscript
+    subscripted:
+        class: Language::P::ParseTree::Symbol
+        name: #
+        sigil: @
+    subscript:
+        class: Language::P::ParseTree::Constant
+        value: 1
+        type: number
+    type: [
+    reference: 0
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+$_[1]
+EOP
+root:
+    class: Language::P::ParseTree::Subscript
+    subscripted:
+        class: Language::P::ParseTree::Symbol
+        name: _
+        sigil: @
+    subscript:
+        class: Language::P::ParseTree::Constant
+        value: 1
+        type: number
+    type: [
+    reference: 0
+EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );
 $foo[1]
