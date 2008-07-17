@@ -24,10 +24,18 @@ use base qw(Class::Accessor::Fast);
 
 sub is_bareword { 0 }
 
-sub fields {
+sub _fields {
     no strict 'refs';
-    return @{ref( $_[0] ) . '::FIELDS'};
+    my @fields = @{$_[0] . '::FIELDS'};
+
+    foreach my $base ( reverse @{$_[0] . '::ISA'} ) {
+        unshift @fields, _fields( $base );
+    }
+
+    return @fields;
 }
+
+sub fields { _fields( ref( $_[0] ) ) }
 
 sub pretty_print {
     my( $self ) = @_;
