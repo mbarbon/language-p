@@ -339,6 +339,8 @@ my %prototype_ov =
     pipe        => [  2,  2, '*', '*' ],
     chdir       => [  0,  1, '$' ],
     rmdir       => [  0,  1, '$' ],
+    readline    => [  0,  1, '$' ],
+    glob        => [ -1, -1, '@' ],
     );
 
 sub parsing_prototype { return $prototype_ov{$_[0]->function} }
@@ -347,16 +349,8 @@ package Language::P::ParseTree::Glob;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::UnOp);
+use base qw(Language::P::ParseTree::Overridable);
 
-sub op { 'glob' }
-
-package Language::P::ParseTree::Readline;
-
-use strict;
-use warnings;
-use base qw(Language::P::ParseTree::UnOp);
-
-sub op { 'readline' }
+sub function { 'glob' }
 
 1;

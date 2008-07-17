@@ -105,8 +105,8 @@ parse_and_diff( <<'EOP', <<'EOE' );
 EOP
 root:
     class: Language::P::ParseTree::Glob
-    op: glob
-    left:
+    function: glob
+    arguments:
         class: Language::P::ParseTree::QuotedString
         components:
                 class: Language::P::ParseTree::Symbol
@@ -124,9 +124,9 @@ parse_and_diff( <<'EOP', <<'EOE' );
 <$x>;
 EOP
 root:
-    class: Language::P::ParseTree::Readline
-    op: readline
-    left:
+    class: Language::P::ParseTree::Overridable
+    function: readline
+    arguments:
         class: Language::P::ParseTree::Symbol
         name: x
         sigil: $
@@ -136,9 +136,9 @@ parse_and_diff( <<'EOP', <<'EOE' );
 <${x}>;
 EOP
 root:
-    class: Language::P::ParseTree::Readline
-    op: readline
-    left:
+    class: Language::P::ParseTree::Overridable
+    function: readline
+    arguments:
         class: Language::P::ParseTree::Symbol
         name: x
         sigil: $
@@ -149,8 +149,8 @@ parse_and_diff( <<'EOP', <<'EOE' );
 EOP
 root:
     class: Language::P::ParseTree::Glob
-    op: glob
-    left:
+    function: glob
+    arguments:
         class: Language::P::ParseTree::QuotedString
         components:
                 class: Language::P::ParseTree::Constant
