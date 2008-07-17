@@ -96,6 +96,7 @@ my %dispatch =
   ( FunctionCall           => '_function_call',
     Builtin                => '_function_call',
     Overridable            => '_function_call',
+    Print                  => '_print',
     BinOp                  => '_binary_op',
     Constant               => '_constant',
     Symbol                 => '_symbol',
@@ -183,17 +184,34 @@ my %builtins =
     'ne'     => 'compare_s_ne_scalar',
     );
 
-sub _function_call {
+sub _print {
     my( $self, $tree ) = @_;
 
     push @bytecode, o( 'start_call' );
 
-    if( $tree->function eq 'print' ) {
-        # FIXME HACK, must create a builtin node type
+    if( $tree->filehandle ) {
+        $self->dispatch( $tree->filehandle );
+        # FIXME HACK
+        push @bytecode, o( 'push_scalar' );
+    } else {
         my $out = Language::P::Value::Handle->new( { handle => \*STDOUT } );
         push @bytecode, o( 'constant', value => $out ),
                         o( 'push_scalar' );
     }
+
+    foreach my $arg ( @{$tree->arguments} ) {
+        $self->dispatch( $arg );
+        # FIXME HACK
+        push @bytecode, o( 'push_scalar' );
+    }
+
+    push @bytecode, o( $builtins{$tree->function} );
+}
+
+sub _function_call {
+    my( $self, $tree ) = @_;
+
+    push @bytecode, o( 'start_call' );
 
     foreach my $arg ( @{$tree->arguments} ) {
         $self->dispatch( $arg );

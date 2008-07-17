@@ -14,7 +14,7 @@ root:
     class: Language::P::ParseTree::BinOp
     op: or
     left:
-        class: Language::P::ParseTree::Builtin
+        class: Language::P::ParseTree::Print
         function: print
         arguments:
                 class: Language::P::ParseTree::Constant
@@ -23,6 +23,7 @@ root:
                 class: Language::P::ParseTree::Constant
                 value: 2
                 type: number
+        filehandle: undef
     right:
         class: Language::P::ParseTree::Overridable
         function: die

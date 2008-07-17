@@ -62,7 +62,7 @@ my %ops =
   ( ';'   => 'SEMICOLON',
     ':'   => 'COLON',
     ','   => 'COMMA',
-    '=>'  => 'FATARROW',
+    '=>'  => 'COMMA',
     '('   => 'OPPAR',
     ')'   => 'CLPAR',
     '['   => 'OPSQ',
@@ -113,7 +113,7 @@ my %keywords = map { ( $_ => 1 ) }
      ),
   qw(print defined return);
 my %overridables = map { ( $_ => 1 ) }
-  qw(unlink glob readline die);
+  qw(unlink glob readline die open pipe);
 
 my %quoted_chars =
   ( 'n' => "\n",
@@ -205,7 +205,10 @@ sub lex_quote {
 sub lex_identifier {
     my( $self ) = @_;
 
-    die if @{$self->tokens};
+    if( @{$self->tokens} ) {
+        return undef if $self->tokens->[-1]->[0] ne 'ID';
+        return pop @{$self->tokens};
+    }
 
     _skip_space( $self );
 
