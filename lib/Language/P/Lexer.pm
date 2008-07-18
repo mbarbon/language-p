@@ -217,12 +217,18 @@ sub lex_identifier {
 
     return [ 'SPECIAL', 'EOF' ] unless length $$_;
 
+    $$_ =~ s/^\^([A-Z\[\\\]^_?])//x and do {
+        return [ 'ID', chr( ord( $1 ) - ord( 'A' ) + 1 ) ];
+    };
     $$_ =~ s/^(\w+)//x and do {
         if( $self->quote && $self->{brackets} == 0 ) {
             _quoted_code_lookahead( $self );
         }
 
         return [ 'ID', $1 ];
+    };
+    $$_ =~ s/^{\^([A-Z\[\\\]^_?])(\w*)}//x and do {
+        return [ 'ID', chr( ord( $1 ) - ord( 'A' ) + 1 ) . $2 ];
     };
     $$_ =~ s/^{//x and do {
         my $spcbef = _skip_space( $self );
