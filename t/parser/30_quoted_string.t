@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 12;
+use Test::More tests => 14;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -152,6 +152,30 @@ root:
                 class: Language::P::ParseTree::Symbol
                 name: y
                 sigil: $
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+<foo>;
+EOP
+root:
+    class: Language::P::ParseTree::Overridable
+    function: readline
+    arguments:
+        class: Language::P::ParseTree::Symbol
+        name: foo
+        sigil: *
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+<foo >;
+EOP
+root:
+    class: Language::P::ParseTree::Glob
+    function: glob
+    arguments:
+        class: Language::P::ParseTree::Constant
+        value: foo 
+        type: string
 EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );

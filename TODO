@@ -35,3 +35,4 @@
 - proper lexing of ${  id # comment\n } vs. ${ id # comment \n expr }
 - proper check for overridable builtins (only if imported)
 - special treatment for glob()
+- simplify detection of <foo> vs. <foo >

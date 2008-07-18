@@ -658,10 +658,30 @@ sub _parse_term_terminal {
                            ->isa( 'Language::P::ParseTree::Symbol' ) ) {
                 return Language::P::ParseTree::Overridable
                            ->new( { function  => 'readline',
-                                    arguments => $qstring->components->[0] } );
+                                    arguments => [ $qstring->components->[0] ] } );
+            } elsif( $qstring->isa( 'Language::P::ParseTree::Constant' ) ) {
+                if( $qstring->value =~ /^[a-zA-Z_]/ ) {
+                    # FIXME simpler method, make lex_identifier static
+                    my $lexer = Language::P::Lexer->new
+                                    ( { string => $qstring->value } );
+                    my $id = $lexer->lex_identifier;
+
+                    if( $id && !length( ${$lexer->buffer} ) ) {
+                        my $glob = Language::P::ParseTree::Symbol->new
+                                       ( { name  => $id->[1],
+                                           sigil => '*',
+                                           } );
+                        return Language::P::ParseTree::Overridable
+                                   ->new( { function  => 'readline',
+                                            arguments => [ $glob ],
+                                            } );
+                    }
+                }
+                return Language::P::ParseTree::Glob
+                           ->new( { arguments => [ $qstring ] } );
             } else {
                 return Language::P::ParseTree::Glob
-                           ->new( { arguments => $qstring } );
+                           ->new( { arguments => [ $qstring ] } );
             }
         }
 
