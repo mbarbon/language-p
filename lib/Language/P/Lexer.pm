@@ -217,43 +217,38 @@ sub lex_identifier {
 
     return [ 'SPECIAL', 'EOF' ] unless length $$_;
 
+    my $id;
     $$_ =~ s/^\^([A-Z\[\\\]^_?])//x and do {
-        return [ 'ID', chr( ord( $1 ) - ord( 'A' ) + 1 ) ];
+        $id = [ 'ID', chr( ord( $1 ) - ord( 'A' ) + 1 ) ];
     };
-    $$_ =~ s/^(\w+)//x and do {
-        if( $self->quote && $self->{brackets} == 0 ) {
-            _quoted_code_lookahead( $self );
-        }
-
-        return [ 'ID', $1 ];
+    $id or $$_ =~ s/^(\w+)//x and do {
+        $id = [ 'ID', $1 ];
     };
-    $$_ =~ s/^{\^([A-Z\[\\\]^_?])(\w*)}//x and do {
-        return [ 'ID', chr( ord( $1 ) - ord( 'A' ) + 1 ) . $2 ];
+    $id or $$_ =~ s/^{\^([A-Z\[\\\]^_?])(\w*)}//x and do {
+        $id = [ 'ID', chr( ord( $1 ) - ord( 'A' ) + 1 ) . $2 ];
     };
-    $$_ =~ s/^{//x and do {
+    $id or $$_ =~ s/^{//x and do {
         my $spcbef = _skip_space( $self );
         $$_ =~ s/^(\w+)//x and my $maybe_id = $1;
         my $spcaft = _skip_space( $self );
 
         if( $$_ =~ s/^}//x ) {
-            if( $self->quote && $self->{brackets} == 0 ) {
-                _quoted_code_lookahead( $self );
-            }
-
-            return [ 'ID', $maybe_id ];
+            $id = [ 'ID', $maybe_id ];
         } else {
             # not a simple identifier
             $$_ = '{' . $spcbef . $maybe_id . $spcaft . $$_;
             return undef;
         }
     };
-    $$_ =~ s/^(\W)(?=\W)// and do {
-        if( $self->quote && $self->{brackets} == 0 ) {
-            _quoted_code_lookahead( $self );
-        }
-
-        return [ 'ID', $1 ];
+    $id or $$_ =~ s/^(\W)(?=\W)// and do {
+        $id = [ 'ID', $1 ];
     };
+
+    if( $self->quote && $self->{brackets} == 0 ) {
+        _quoted_code_lookahead( $self );
+    }
+
+    return $id;
 }
 
 sub lex {
