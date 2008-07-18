@@ -341,6 +341,8 @@ my %prototype_ov =
     rmdir       => [  0,  1, '$' ],
     readline    => [  0,  1, '$' ],
     glob        => [ -1, -1, '@' ],
+    close       => [  0,  1, '*' ],
+    binmode     => [  0,  2, '*', '$' ],
     );
 
 sub parsing_prototype { return $prototype_ov{$_[0]->function} }

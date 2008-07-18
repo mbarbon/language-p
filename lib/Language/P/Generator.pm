@@ -169,6 +169,8 @@ my %conditionals =
 my %short_circuit =
   ( '&&'     => 'jump_if_false',
     '||'     => 'jump_if_true',
+    'and'    => 'jump_if_false',
+    'or'     => 'jump_if_true',
     );
 
 my %unary =
@@ -337,6 +339,11 @@ my %sigils =
 
 sub _symbol {
     my( $self, $tree ) = @_;
+
+    if( $tree->sigil eq '*' ) {
+        push @bytecode, o( 'glob', name => $tree->name, create => 1 );
+        return;
+    }
 
     my $slot = $sigils{$tree->sigil};
     die $tree->sigil unless $slot;

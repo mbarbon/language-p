@@ -34,7 +34,7 @@ our %EXPORT_TAGS =
 sub new {
     my( $class, $args ) = @_;
     my $self = $class->SUPER::new( $args );
-    my $a = "";
+    my $a = delete $self->{string} || "";
 
     $self->{buffer} = \$a;
     $self->{tokens} = [];
@@ -113,7 +113,8 @@ my %keywords = map { ( $_ => 1 ) }
      ),
   qw(print defined return);
 my %overridables = map { ( $_ => 1 ) }
-  qw(unlink glob readline die open pipe chdir rmdir glob readline);
+  qw(unlink glob readline die open pipe chdir rmdir glob readline
+     close binmode);
 
 my %quoted_chars =
   ( 'n' => "\n",
@@ -244,7 +245,7 @@ sub lex_identifier {
         $id = [ 'ID', $1 ];
     };
 
-    if( $self->quote && $self->{brackets} == 0 ) {
+    if( $id && $self->quote && $self->{brackets} == 0 ) {
         _quoted_code_lookahead( $self );
     }
 
