@@ -68,6 +68,7 @@ my %prec_assoc_un =
   ( '+'   => [ 5,  'RIGHT' ],
     '-'   => [ 5,  'RIGHT' ],
     '!'   => [ 5,  'RIGHT' ],
+    '\\'  => [ 5,  'RIGHT' ],
     );
 
 sub parse_string {
