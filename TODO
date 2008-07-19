@@ -36,5 +36,9 @@
 - proper check for overridable builtins (only if imported)
 - special treatment for glob()
 - simplify detection of <foo> vs. <foo >
-- quote-like operators (qw, qx, ...)
+- parsing of regular expressions
+- nesting delimiters in all quote-like operators
 - for, foreach
+- packages
+- package handling in our()
+
