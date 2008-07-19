@@ -6,4 +6,6 @@ use lib 'lib';
 
 use Language::P;
 
-Language::P->run( @ARGV );
+my $p = Language::P->new_from_argv( \@ARGV );
+
+$p->run;
