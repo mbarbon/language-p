@@ -36,3 +36,5 @@
 - proper check for overridable builtins (only if imported)
 - special treatment for glob()
 - simplify detection of <foo> vs. <foo >
+- quote-like operators (qw, qx, ...)
+- for, foreach

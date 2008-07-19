@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 14;
+use Test::More tests => 15;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -132,6 +132,26 @@ root:
         class: Language::P::ParseTree::Constant
         value: 1
         type: number
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+`ab${a}cd`;
+EOP
+root:
+    class: Language::P::ParseTree::UnOp
+    op: backtick
+    left:
+        class: Language::P::ParseTree::QuotedString
+        components:
+                class: Language::P::ParseTree::Constant
+                value: ab
+                type: string
+                class: Language::P::ParseTree::Symbol
+                name: a
+                sigil: $
+                class: Language::P::ParseTree::Constant
+                value: cd
+                type: string
 EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );

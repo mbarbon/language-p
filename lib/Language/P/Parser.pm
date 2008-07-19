@@ -610,7 +610,7 @@ sub _parse_maybe_direct_method_call {
 sub _parse_string_rest {
     my( $self, $token ) = @_;
     my $terminator = $token->[2];
-    my $interpolate = $terminator eq '"' || $terminator eq '>' ? 1 : 0;
+    my $interpolate = $terminator eq "'" ? 0 : 1;
     my @values;
 
     $self->lexer->quote( { terminator  => $terminator,
@@ -635,19 +635,29 @@ sub _parse_string_rest {
 
     $self->lexer->quote( undef );
 
+    my $string;
     if(    @values == 1
         && $values[0]->isa( 'Language::P::ParseTree::Constant' ) ) {
 
-        return $values[0];
+        $string = $values[0];
     } elsif( @values == 0 ) {
-        return Language::P::ParseTree::Constant->new( { value => "",
-                                                        type  => 'string',
-                                                        } );
+        $string = Language::P::ParseTree::Constant->new( { value => "",
+                                                           type  => 'string',
+                                                           } );
     } else {
-        return Language::P::ParseTree::QuotedString->new
-                   ( { components => \@values,
-                       } );
+        $string = Language::P::ParseTree::QuotedString->new
+                      ( { components => \@values,
+                           } );
     }
+
+    if( $terminator eq '`' ) {
+        $string = Language::P::ParseTree::UnOp->new
+                      ( { op   => 'backtick',
+                          left => $string,
+                          } );
+    }
+
+    return $string;
 }
 
 sub _parse_term_terminal {
