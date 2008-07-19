@@ -168,6 +168,9 @@ sub _lex_semicolon {
     Carp::confess( $token->[0], ' ', $token->[1] );
 }
 
+my %special_sub = map { $_ => 1 }
+  ( qw(AUTOLOAD DESTROY BEGIN UNITCHECK CHECK INIT END) );
+
 sub _parse_line {
     my( $self ) = @_;
 
@@ -184,6 +187,8 @@ sub _parse_line {
         return _parse_block_rest( $self, 1 );
     } elsif( $token->[1] eq 'sub' ) {
         return _parse_sub( $self, 1 | 2 );
+    } elsif( $special_sub{$token->[1]} ) {
+        return _parse_sub( $self, 1, 1 );
     } elsif( $token->[1] eq 'if' || $token->[1] eq 'unless' ) {
         return _parse_cond( $self );
     } elsif( $token->[1] eq 'while' || $token->[1] eq 'until' ) {
@@ -215,8 +220,8 @@ sub _add_pending_lexicals {
 }
 
 sub _parse_sub {
-    my( $self, $flags ) = @_;
-    _lex_token( $self, 'ID' ); # sub
+    my( $self, $flags, $no_sub_token ) = @_;
+    _lex_token( $self, 'ID' ) unless $no_sub_token;
     my $name = $self->lexer->peek( X_NOTHING );
 
     # TODO prototypes
