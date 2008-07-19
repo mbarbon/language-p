@@ -263,7 +263,7 @@ sub lex {
     local $_ = $self->buffer;
     return [ 'SPECIAL', 'EOF' ] unless length $$_;
 
-    $$_ =~ s/^([\.\d]+)//x and return [ 'NUMBER', $1 ];
+    $$_ =~ s/^([-+]?[\.\d]+)//x and return [ 'NUMBER', $1 ];
     $$_ =~ s/^(\w+)//x and do {
         if( $ops{$1} ) {
             return [ $ops{$1}, $1 ];
