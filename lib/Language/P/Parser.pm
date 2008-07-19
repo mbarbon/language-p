@@ -209,6 +209,7 @@ sub _parse_line {
 sub _add_pending_lexicals {
     my( $self ) = @_;
 
+    # FIXME our() is different
     foreach my $lexical ( @{$self->_pending_lexicals} ) {
         my( undef, $slot ) = $self->_lexicals->add_name( $lexical->sigil,
                                                          $lexical->name );
@@ -748,7 +749,7 @@ sub _parse_indirobj_maybe_subscripts {
 sub _parse_lexical {
     my( $self, $keyword ) = @_;
 
-    die unless $keyword eq 'my';
+    die $keyword unless $keyword eq 'my' || $keyword eq 'our';
 
     my $list = _parse_lexical_rest( $self, $keyword );
 
@@ -798,6 +799,7 @@ sub _parse_lexical_variable {
     my $name = $self->lexer->lex_identifier;
     die unless $name;
 
+    # FIXME our() variable refers to package it was declared in
     return Language::P::ParseTree::LexicalDeclaration->new
                ( { name             => $name->[1],
                    sigil            => $sigil->[1],
