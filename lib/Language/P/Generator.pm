@@ -195,8 +195,11 @@ my %short_circuit =
     );
 
 my %unary =
-  ( '-'      => \&Language::P::Opcodes::o_negate,
-    '!'      => \&Language::P::Opcodes::o_not,
+  ( '-'      => 'negate',
+    '!'      => 'not',
+    '\\'     => 'reference',
+    '$'      => 'dereference_scalar',
+    backtick => 'backtick',
     );
 
 my %builtins =
@@ -243,7 +246,7 @@ sub _function_call {
 
     push @bytecode, o( 'start_call' );
 
-    foreach my $arg ( @{$tree->arguments} ) {
+    foreach my $arg ( @{$tree->arguments || []} ) {
         $self->dispatch( $arg );
         # FIXME HACK
         push @bytecode, o( 'push_scalar' );
@@ -278,7 +281,7 @@ sub _unary_op {
 
     $self->dispatch( $tree->left );
 
-    push @bytecode, { function => $unary{$tree->op} };
+    push @bytecode, o( $unary{$tree->op} );
 }
 
 sub _binary_op {
@@ -506,13 +509,9 @@ sub _subscript {
     $self->dispatch( $tree->subscripted );
 
     if( $tree->type eq '[' ) {
-        push @bytecode,
-            { function => \&Language::P::Opcodes::o_array_element,
-              };
+        push @bytecode, o( 'array_element' );
     } elsif( $tree->type eq '{' ) {
-        push @bytecode,
-            { function => \&Language::P::Opcodes::o_hash_element,
-              };
+        push @bytecode, o( 'hash_element' );
     } else {
         die $tree->type;
     }

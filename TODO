@@ -34,11 +34,12 @@
 - handle :: in identifiers, ${^foo} special variables, "'" in identifiers
 - proper lexing of ${  id # comment\n } vs. ${ id # comment \n expr }
 - proper check for overridable builtins (only if imported)
+- builtins overridable using CORE::GLOBAL
+- CORE::builtin to always call builtin
 - special treatment for glob()
 - simplify detection of <foo> vs. <foo >
 - parsing of regular expressions
 - nesting delimiters in all quote-like operators
-- for, foreach
 - packages
 - package handling in our()
-
+- parsing of nullary/unary vs. list operators

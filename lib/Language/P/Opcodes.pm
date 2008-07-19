@@ -5,6 +5,7 @@ use warnings;
 use Exporter 'import';
 
 use Language::P::Value::StringNumber;
+use Language::P::Value::Reference;
 use Language::P::Value::Array;
 use Language::P::Value::List;
 
@@ -382,7 +383,21 @@ sub o_unlink {
 
     my $ret = unlink @args;
 
-    return Language::P::Value::StringNumber( { string => $ret } );
+    push @{$runtime->_stack}, Language::P::Value::StringNumber( { integer => $ret } );
+    return $pc + 1;
+}
+
+sub o_backtick {
+    my( $op, $runtime, $pc ) = @_;
+    my $arg = pop @{$runtime->_stack};
+    my $command = $arg->as_string;
+
+    # context
+    my $ret = `$command`;
+
+    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { string => $ret } );
+
+    return $pc + 1;
 }
 
 sub o_array_element {
@@ -410,6 +425,24 @@ sub o_array_size {
     my $array = pop @{$runtime->_stack};
 
     push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => $array->get_count - 1 } );
+
+    return $pc + 1;
+}
+
+sub o_reference {
+    my( $op, $runtime, $pc ) = @_;
+    my $value = pop @{$runtime->_stack};
+
+    push @{$runtime->_stack}, Language::P::Value::Reference->new( { reference => $value } );
+
+    return $pc + 1;
+}
+
+sub o_dereference_scalar {
+    my( $op, $runtime, $pc ) = @_;
+    my $ref = pop @{$runtime->_stack};
+
+    push @{$runtime->_stack}, $ref->dereference_scalar;
 
     return $pc + 1;
 }
