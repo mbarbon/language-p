@@ -117,5 +117,8 @@ root:
         class: Language::P::ParseTree::Constant
         value: 1
         type: number
-    variable: $_
+    variable:
+        class: Language::P::ParseTree::Symbol
+        name: _
+        sigil: $
 EOE

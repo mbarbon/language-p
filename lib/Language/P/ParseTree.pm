@@ -160,9 +160,9 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(name sigil slot);
+our @FIELDS = qw(name sigil);
 
-__PACKAGE__->mk_ro_accessors( @FIELDS );
+__PACKAGE__->mk_ro_accessors( @FIELDS, qw(slot) );
 
 package Language::P::ParseTree::LexicalDeclaration;
 
@@ -281,6 +281,16 @@ package Language::P::ParseTree::ConditionalLoop;
 use strict;
 use warnings;
 use base qw(Language::P::ParseTree::ConditionalBlock);
+
+package Language::P::ParseTree::For;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::ConditionalLoop);
+
+our @FIELDS = qw(initializer step);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
 
 package Language::P::ParseTree::Foreach;
 
