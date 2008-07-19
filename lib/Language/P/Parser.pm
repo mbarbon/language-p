@@ -194,6 +194,8 @@ sub _parse_line {
         return _parse_cond( $self );
     } elsif( $token->[1] eq 'while' || $token->[1] eq 'until' ) {
         return _parse_while( $self );
+    } elsif( $token->[1] eq 'for' || $token->[1] eq 'foreach' ) {
+        return _parse_for( $self );
     } else {
         my $sideff = _parse_sideff( $self );
         _lex_semicolon( $self );
@@ -322,6 +324,84 @@ sub _parse_cond {
     return $if;
 }
 
+sub _parse_for {
+    my( $self ) = @_;
+    my $keyword = _lex_token( $self, 'ID' );
+    my $token = $self->lexer->lex( X_OPERATOR );
+    my( $foreach_var, $foreach_expr );
+
+    $self->_enter_scope;
+
+    if( $token->[0] eq 'OPPAR' ) {
+        my $expr = _parse_expr( $self );
+        my $sep = $self->lexer->lex( X_OPERATOR );
+
+        if( $sep->[0] eq 'CLPAR' ) {
+            $foreach_var = _find_symbol( $self, '$', '_' );
+            $foreach_expr = $expr;
+        } elsif( $sep->[0] eq 'SEMICOLON' ) {
+            # C-style for
+            $self->_add_pending_lexicals;
+
+            my $cond = _parse_expr( $self );
+            _lex_token( $self, 'SEMICOLON' );
+            $self->_add_pending_lexicals;
+
+            my $incr = _parse_expr( $self );
+            _lex_token( $self, 'CLPAR' );
+            $self->_add_pending_lexicals;
+
+            _lex_token( $self, 'OPBRK' );
+            my $block = _parse_block_rest( $self, 1 );
+
+            my $for = Language::P::ParseTree::For->new
+                          ( { block_type  => 'for',
+                              initializer => $expr,
+                              condition   => $cond,
+                              step        => $incr,
+                              block       => $block,
+                              } );
+
+            $self->_leave_scope;
+
+            return $for;
+        } else {
+            Carp::confess $sep->[0], ' ', $sep->[1];
+        }
+    } elsif( $token->[0] eq 'ID' && (    $token->[1] eq 'my'
+                                      || $token->[1] eq 'our'
+                                      || $token->[1] eq 'state' ) ) {
+        $foreach_var = _parse_lexical_variable( $self, $token->[1] )
+    } elsif( $token->[0] eq 'DOLLAR' ) {
+        my $id = $self->lexer->lex_identifier;
+        $foreach_var = _find_symbol( $self, '$', $id->[1] );
+    } else {
+        Carp::confess $token->[0], ' ', $token->[1];
+    }
+
+    # if we get there it is not C-style for
+    if( !$foreach_expr ) {
+        _lex_token( $self, 'OPPAR' );
+        $foreach_expr = _parse_expr( $self );
+        _lex_token( $self, 'CLPAR' );
+    }
+
+    $self->_add_pending_lexicals;
+    _lex_token( $self, 'OPBRK' );
+
+    my $block = _parse_block_rest( $self, 1 );
+
+    my $for = Language::P::ParseTree::Foreach->new
+                  ( { expression => $foreach_expr,
+                      block      => $block,
+                      variable   => $foreach_var,
+                      } );
+
+    $self->_leave_scope;
+
+    return $for;
+}
+
 sub _parse_while {
     my( $self ) = @_;
     my $keyword = _lex_token( $self, 'ID' );
@@ -377,7 +457,7 @@ sub _parse_sideff {
             $expr = Language::P::ParseTree::Foreach->new
                         ( { expression => $cond,
                             block      => $expr,
-                            variable   => '$_', # FIXME
+                            variable   => _find_symbol( $self, '$', '_' ),
                             } );
         }
     }
