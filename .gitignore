@@ -2,4 +2,4 @@
 Build
 _build
 blib
-t/perl5/*
+t/perl5/[a-z]*
