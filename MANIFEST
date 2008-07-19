@@ -40,6 +40,7 @@ t/parser/loops/01_block.t
 t/parser/statements/35_postfix.t
 t/parser/statements/40_if.t
 t/parser/statements/41_while.t
+t/parser/statements/50_special_blocks.t
 t/run/005_assignment.t
 t/run/006_brackets.t
 t/run/007_if.t
