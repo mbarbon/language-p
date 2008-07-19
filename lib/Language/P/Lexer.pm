@@ -273,7 +273,7 @@ sub lex {
                                                T_ID
                  ];
     };
-    $$_ =~ s/^(["'])//x and return [ 'QUOTE', $1, $1 ];
+    $$_ =~ s/^(["'`])//x and return [ 'QUOTE', $1, $1 ];
     $$_ =~ /^</ and $expect != X_OPERATOR and do {
         $$_ =~ s/^(<<|<)//x;
 
