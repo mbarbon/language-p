@@ -18,5 +18,5 @@ print fib( 2 ) == 2      ? "ok 3\n" : "not ok 3\n";
 print fib( 3 ) == 3      ? "ok 4\n" : "not ok 4\n";
 print fib( 4 ) == 5      ? "ok 5\n" : "not ok 5\n";
 print fib( 10 ) == 89    ? "ok 6\n" : "not ok 6\n";
-print fib( 15 ) == 987   ? "ok 7\n" : "not ok 7\n";
-print fib( 20 ) == 10946 ? "ok 8\n" : "not ok 8\n";
+print fib( 12 ) == 233   ? "ok 7\n" : "not ok 7\n";
+print fib( 15 ) == 987   ? "ok 8\n" : "not ok 8\n";
