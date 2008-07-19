@@ -41,6 +41,7 @@ t/parser/terms/004_bareword.t
 t/parser/terms/005_variables.t
 t/parser/terms/050_my.t
 t/parser/terms/080_quoted_string.t
+t/parser/terms/081_quote_like.t
 t/parser/terms/110_brackets.t
 t/parser/terms/140_prototypes.t
 t/run/005_assignment.t
