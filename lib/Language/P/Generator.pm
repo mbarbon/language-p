@@ -11,6 +11,15 @@ use Language::P::Value::StringNumber;
 use Language::P::Value::Handle;
 use Language::P::Value::ScratchPad;
 
+# global on purpose
+our %debug_options;
+
+sub set_debug {
+    my( $class, $option, $value ) = @_;
+
+    $debug_options{$option} = defined $value ? $value : 1;
+}
+
 # HACK
 our @bytecode;
 our %labels;
@@ -41,12 +50,12 @@ sub _to_label {
     push @{$patch{$label} ||= []}, $op;
 }
 
-my @codes;
+my @code_stack;
 
 sub push_code {
     my( $self, $code ) = @_;
 
-    push @codes, $code;
+    push @code_stack, [ $code, [] ];
 
     # TODO do not use global
     *bytecode = $code->bytecode;
@@ -55,20 +64,31 @@ sub push_code {
 sub pop_code {
     my( $self, $code ) = @_;
 
-    pop @codes;
+    pop @code_stack;
 
     # TODO do not use global
-    *bytecode = @codes ? $codes[-1]->bytecode : [];
+    *bytecode = @code_stack ? $code_stack[-1][0]->bytecode : [];
 }
 
 sub process {
     my( $self, $tree ) = @_;
 
-#     use Data::Dumper;
-#     print Dumper( $tree );
-    $self->dispatch( $tree );
+    push @{$code_stack[-1][1]}, $tree;
 
     return;
+}
+
+sub process_pending {
+    my( $self ) = @_;
+
+    foreach my $tree ( @{$code_stack[-1][1]} ) {
+        if( $debug_options{parse_tree} ) {
+            print STDERR $tree->pretty_print;
+        }
+
+        $self->dispatch( $tree );
+    }
+    $code_stack[-1][1] = []
 }
 
 sub add_declaration {
@@ -83,9 +103,10 @@ sub add_declaration {
 sub finished {
     my( $self ) = @_;
 
+    $self->process_pending;
     $self->_allocate_lexicals;
 
-    if( $codes[-1]->isa( 'Language::P::Value::Subroutine' ) ) {
+    if( $code_stack[-1][0]->isa( 'Language::P::Value::Subroutine' ) ) {
         push @bytecode, o( 'return' );
     } else {
         push @bytecode, o( 'end' );
@@ -512,14 +533,14 @@ sub _allocate_lexicals {
         if( $op->{level} == 0 && $op->{lexical}->{index} == -100 ) {
             if( $op->{lexical}->{in_pad} ) {
                 if( !$has_pad ) {
-                    $codes[-1]->{lexicals} = $pad;
-                    $pad->{outer} = $codes[-1]->{outer};
+                    $code_stack[-1][0]->{lexicals} = $pad;
+                    $pad->{outer} = $code_stack[-1][0]->{outer};
                     $has_pad = 1;
                 }
                 $op->{lexical}->{index} = $pad->add_value;
             } else {
-                $op->{lexical}->{index} = $codes[-1]->stack_size;
-                ++$codes[-1]->{stack_size};
+                $op->{lexical}->{index} = $code_stack[-1][0]->stack_size;
+                ++$code_stack[-1][0]->{stack_size};
             }
         }
 
