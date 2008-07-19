@@ -320,8 +320,9 @@ use base qw(Language::P::ParseTree::FunctionCall);
 
 my %prototype_bi =
   ( print       => [ -1, -1, '!', '@' ],
-    defined     => [ 1 ,  1, '$' ],
+    defined     => [  1,  1, '$' ],
     return      => [ -1, -1, '@' ],
+    undef       => [  0,  1, '$' ],
     );
 
 sub parsing_prototype { return $prototype_bi{$_[0]->function} }
