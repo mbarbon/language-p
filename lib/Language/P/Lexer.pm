@@ -252,6 +252,8 @@ sub lex_identifier {
     return $id;
 }
 
+my %quote_end = qw!( ) { } [ ] < >!;
+
 sub lex {
     my( $self, $expect ) = ( @_, X_NOTHING );
 
@@ -264,6 +266,15 @@ sub lex {
     return [ 'SPECIAL', 'EOF' ] unless length $$_;
 
     $$_ =~ s/^([-+]?[\.\d]+)//x and return [ 'NUMBER', $1 ];
+    $$_ =~ s/^(q|qq|qx|qw|m|qr|s|tr|y)(?=\W)//x and do {
+        my $op = $1;
+        if( $$_ =~ /^[\s\r\n]/ ) {
+            _skip_space( $self );
+        }
+        $$_ =~ s/(\S)// or die;
+
+        return [ 'QUOTE', $op, $quote_end{$1} || $1 ];
+    };
     $$_ =~ s/^(\w+)//x and do {
         if( $ops{$1} ) {
             return [ $ops{$1}, $1 ];

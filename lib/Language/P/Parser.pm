@@ -690,8 +690,12 @@ sub _parse_maybe_direct_method_call {
 
 sub _parse_string_rest {
     my( $self, $token ) = @_;
-    my $terminator = $token->[2];
-    my $interpolate = $terminator eq "'" ? 0 : 1;
+    my( $quote, $terminator ) = ( $token->[1], $token->[2] );
+    my $interpolate = $quote eq 'qq'     ? 1 :
+                      $quote eq 'q'      ? 0 :
+                      $quote eq 'qw'     ? 0 :
+                      $terminator eq "'" ? 0 :
+                                           1;
     my @values;
 
     $self->lexer->quote( { terminator  => $terminator,
@@ -731,10 +735,20 @@ sub _parse_string_rest {
                            } );
     }
 
-    if( $terminator eq '`' ) {
+    if( $quote eq '`' || $quote eq 'qx' ) {
         $string = Language::P::ParseTree::UnOp->new
                       ( { op   => 'backtick',
                           left => $string,
+                          } );
+    } elsif( $quote eq 'qw' ) {
+        my @words = map Language::P::ParseTree::Constant->new
+                            ( { value => $_,
+                                type  => 'string',
+                                } ),
+                        split /[\s\r\n]+/, $string->value;
+
+        $string = Language::P::ParseTree::List->new
+                      ( { expressions => \@words,
                           } );
     }
 
