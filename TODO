@@ -44,3 +44,9 @@
 - package handling in our()
 - parsing of nullary/unary vs. list operators
 - => must also quote qw/qx/s/etc.
+- detect patters that have interpolations and treat them
+  specially
+- \Q\L\U\E in quoted strings/patterns
+- substitutions, s///e
+- regexp backreferences
+- regexp magic variables

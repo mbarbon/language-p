@@ -366,4 +366,54 @@ use base qw(Language::P::ParseTree::Overridable);
 
 sub function { 'glob' }
 
+package Language::P::ParseTree::Pattern;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(op components flags);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
+package Language::P::ParseTree::RXGroup;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(components);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
+package Language::P::ParseTree::RXQuantifier;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(node min max greedy);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
+package Language::P::ParseTree::RXAssertion;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(type);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
+package Language::P::ParseTree::RXClass;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(elements);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
 1;

@@ -24,6 +24,8 @@ use constant
 my %prec_assoc_bin =
   ( '->'  => [ 2,  'LEFT' ],
     '**'  => [ 4,  'RIGHT' ],
+    '=~'  => [ 6,  'LEFT' ],
+    '!~'  => [ 6,  'LEFT' ],
     '*'   => [ 7,  'LEFT' ],
     '/'   => [ 7,  'LEFT' ],
     '%'   => [ 7,  'LEFT' ],
@@ -688,6 +690,95 @@ sub _parse_maybe_direct_method_call {
     }
 }
 
+sub _parse_match {
+    my( $self, $token ) = @_;
+    my( $quote, $terminator ) = ( $token->[1], $token->[2] );
+    my $interpolate = $terminator eq "'" ? 0 : 1;
+
+    my( @values );
+    local $self->{lexer} = $token->[3];
+
+    $self->lexer->quote( { terminator  => $terminator,
+                           interpolate => $interpolate,
+                           pattern     => 1,
+                           } );
+
+    my( $in_group, $st ) = ( 0, \@values );
+    for(;;) {
+        my $value = $self->lexer->lex_quote;
+
+        if( $value->[0] eq 'STRING' ) {
+            push @$st,
+                Language::P::ParseTree::Constant->new( { type  => 'string',
+                                                         value => $value->[1],
+                                                         } );
+        } elsif( $value->[0] eq 'PATTERN' ) {
+            if( $value->[1] eq ')' ) {
+                die 'Unmatched ) in regexp' unless $in_group;
+
+                --$in_group;
+                $st = pop @values;
+            } elsif( $value->[1] eq '(' ) {
+                ++$in_group;
+                push @$st, Language::P::ParseTree::RXGroup->new
+                               ( { components => [],
+                                    } );
+                my $nst = $st->[-1]->components;
+                push @values, $st;
+                $st = $nst;
+            } elsif( $value->[2]->[0] eq 'QUANTIFIER' ) {
+                die 'Nothing to quantify in regexp' unless @$st;
+
+                if(    $st->[-1]->isa( 'Language::P::ParseTree::Constant' )
+                    && length( $st->[-1]->value ) > 1 ) {
+                    my $last = chop $st->[-1]->{value}; # XXX
+
+                    push @$st, Language::P::ParseTree::Constant->new
+                                   ( { type  => 'string',
+                                       value => $last,
+                                       } );
+                }
+
+                $st->[-1] = Language::P::ParseTree::RXQuantifier->new
+                                ( { node   => $st->[-1],
+                                    min    => $value->[2]->[1],
+                                    max    => $value->[2]->[2],
+                                    greedy => $value->[2]->[3],
+                                    } );
+            } elsif( $value->[2]->[0] eq 'ASSERTION' ) {
+                push @$st, Language::P::ParseTree::RXAssertion->new
+                               ( { type => $value->[2]->[1],
+                                   } );
+            } elsif( $value->[2]->[0] eq 'CLASS' ) {
+                push @$st, Language::P::ParseTree::RXClass->new
+                               ( { elements => $value->[2]->[1],
+                                   } );
+            } else {
+                Carp::confess $value->[0], ' ', $value->[1], ' ',
+                              $value->[2]->[0];
+            }
+        } elsif( $value->[0] eq 'SPECIAL' ) {
+            last;
+        } elsif( $value->[0] eq 'DOLLAR' || $value->[0] eq 'AT' ) {
+            push @$st, _parse_indirobj_maybe_subscripts( $self, $value );
+        } else {
+                Carp::confess $value->[0], ' ', $value->[1];
+        }
+    }
+
+    $self->lexer->quote( undef );
+
+    die 'Unmatched ( in regexp' if $in_group;
+
+    my $match = Language::P::ParseTree::Pattern->new
+                    ( { components => \@values,
+                        op         => $token->[1],
+                        flags      => $token->[5],
+                        } );
+
+    return $match;
+}
+
 sub _parse_string_rest {
     my( $self, $token ) = @_;
     my( $quote, $terminator ) = ( $token->[1], $token->[2] );
@@ -701,6 +792,7 @@ sub _parse_string_rest {
 
     $self->lexer->quote( { terminator  => $terminator,
                            interpolate => $interpolate,
+                           pattern     => 0,
                            } );
     for(;;) {
         my $value = $self->lexer->lex_quote;
@@ -798,6 +890,12 @@ sub _parse_term_terminal {
         }
 
         return $qstring;
+    } elsif( $token->[0] eq 'PATTERN' ) {
+        if( $token->[1] eq 'm' || $token->[1] eq 'qr' ) {
+            return _parse_match( $self, $token );
+        } else {
+            die;
+        }
     } elsif( $token->[0] eq 'NUMBER' ) {
         return Language::P::ParseTree::Constant->new( { type  => 'number',
                                                         value => $token->[1],
