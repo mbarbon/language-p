@@ -101,6 +101,8 @@ my %ops =
     '||'  => 'OROR',
     '$#'  => 'ARYLEN',
     '->'  => 'ARROW',
+    '=~'  => 'MATCH',
+    '!~'  => 'NOTMATCH',
     'and' => 'ANDANDLOW',
     'or'  => 'ORORLOW',
     'not' => 'NOTLOW',
@@ -118,6 +120,32 @@ my %overridables = map { ( $_ => 1 ) }
 
 my %quoted_chars =
   ( 'n' => "\n",
+    );
+
+my %quoted_pattern =
+  ( w  => [ 'CLASS', 'WORDS' ],
+    W  => [ 'CLASS', 'NON_WORDS' ],
+    s  => [ 'CLASS', 'SPACES' ],
+    S  => [ 'CLASS', 'NOT_SPACES' ],
+    d  => [ 'CLASS', 'DIGITS' ],
+    D  => [ 'CLASS', 'NOT_DIGITS' ],
+    b  => [ 'ASSERTION', 'WORD_BOUNDARY' ],
+    B  => [ 'ASSERTION', 'NON_WORD_BOUNDARY' ],
+    A  => [ 'ASSERTION', 'BEGINNING' ],
+    Z  => [ 'ASSERTION', 'END_OR_NEWLINE' ],
+    z  => [ 'ASSERTION', 'END' ],
+    G  => [ 'ASSERTION', 'POS' ],
+    );
+
+my %pattern_special =
+  ( '^'  => [ 'ASSERTION', 'START' ],
+    '*'  => [ 'QUANTIFIER', 0, -1, 1 ],
+    '+'  => [ 'QUANTIFIER', 1, -1, 1 ],
+    '?'  => [ 'QUANTIFIER', 0,  1, 1 ],
+    '*?' => [ 'QUANTIFIER', 0, -1, 0 ],
+    '+?' => [ 'QUANTIFIER', 1, -1, 0 ],
+    '??' => [ 'QUANTIFIER', 0,  1, 0 ],
+    ')'  => [ 'SPECIAL' ],
     );
 
 sub _skip_space {
@@ -170,6 +198,43 @@ sub lex_quote {
         my $to_return;
         while( length $$buffer ) {
             my $c = substr $$buffer, 0, 1, '';
+
+            if( $self->quote->{pattern} ) {
+                if( $c eq '\\' ) {
+                    my $qc = substr $$buffer, 0, 1;
+
+                    if( $quoted_pattern{$qc} ) {
+                        substr $$buffer, 0, 1, ''; # eat character
+                        $to_return = [ 'PATTERN', $qc, $quoted_pattern{$qc} ];
+                    }
+                } elsif( $c eq '(' ) {
+                    # FIXME (?...) syntax
+                    $to_return = [ 'PATTERN', '(' ];
+                } elsif( $pattern_special{$c} ) {
+                    my $special = $pattern_special{$c};
+
+                    # check nongreedy quantifiers
+                    if( $special->[0] eq 'QUANTIFIER' ) {
+                        my $qc = substr $$buffer, 0, 1;
+
+                        if( $qc eq '?' ) {
+                            substr $$buffer, 0, 1, '';
+                            $special = $pattern_special{$c . $qc};
+                        }
+                    }
+
+                    $to_return = [ 'PATTERN', $c, $special ];
+                }
+            }
+
+            if( $to_return ) {
+                if( length $v ) {
+                    $self->unlex( $to_return );
+                    return [ 'STRING', $v, 1 ];
+                } else {
+                    return $to_return;
+                }
+            }
 
             if( $c eq '\\' && $self->quote->{interpolate} ) {
                 my $qc = substr $$buffer, 0, 1, '';
@@ -252,6 +317,13 @@ sub lex_identifier {
 }
 
 my %quote_end = qw!( ) { } [ ] < >!;
+my %regex_flags =
+  ( m  => 'msixopgc',
+    qr => 'msixop',
+    s  => 'msixopgce',
+    tr => 'cds',
+    y  => 'cds',
+    );
 
 sub _find_end {
     my( $self, $op, $quote_start ) = @_;
@@ -301,13 +373,30 @@ sub _find_end {
 
     my $lexer = Language::P::Lexer->new( { string => \$str } );
 
-    return [ 'QUOTE',
+    return [ $regex_flags{$op} ? 'PATTERN' : 'QUOTE',
              $op, $quote_start, $lexer ];
 }
 
 sub _prepare_sublex {
     my( $self, $op, $quote_start ) = @_;
     my $token = _find_end( $self, $op, $quote_start );
+
+    # scan second part of substitution/transliteration
+    if( $op eq 's' || $op eq 'tr' || $op eq 'y' ) {
+        die 'Not implemented yet';
+        my $quote_char = $quote_end{$token->[2]} ? undef : $token->[2];
+        my $rest = _find_end( $self, $op, $quote_char );
+        $token->[4] = $rest->[3];
+    }
+    if( my $flags = $regex_flags{$op} ) {
+        local $_ = $self->buffer;
+
+        my @flags;
+        while( length( $$_ ) && index( $flags, substr( $$_, 0, 1 ) ) >= 0 ) {
+            push @flags, substr $$_, 0, 1, '';
+        }
+        $token->[5] = \@flags if @flags;
+    }
 
     return $token;
 }
@@ -344,6 +433,7 @@ sub lex {
         }
     };
     $$_ =~ s/^(<=|>=|==|!=|=>|->
+                |=~|!~
                 |\.\.|\.\.\.
                 |\+\+|\-\-
                 |\&\&|\|\|)//x and return [ $ops{$1}, $1 ];
@@ -378,6 +468,13 @@ sub lex {
             return [ $ops{$1}, $1 ];
         };
     }
+    $$_ =~ s/^\///x and do {
+        if( $expect == X_TERM || $expect == X_STATE ) {
+            return _prepare_sublex( $self, 'm', '/' );
+        } else {
+            return [ 'SLASH', '/' ];
+        }
+    };
     $$_ =~ s/^([:;,(){}\[\]\?<>!=\/\\\+\-])//x and return [ $ops{$1}, $1 ];
 
     die "Lexer error: '$$_'";
