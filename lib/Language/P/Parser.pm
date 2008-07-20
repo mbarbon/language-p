@@ -697,6 +697,7 @@ sub _parse_string_rest {
                       $terminator eq "'" ? 0 :
                                            1;
     my @values;
+    local $self->{lexer} = $token->[3];
 
     $self->lexer->quote( { terminator  => $terminator,
                            interpolate => $interpolate,
@@ -709,7 +710,7 @@ sub _parse_string_rest {
                 Language::P::ParseTree::Constant->new( { type  => 'string',
                                                          value => $value->[1],
                                                          } );
-        } elsif( $value->[0] eq 'QUOTE' ) {
+        } elsif( $value->[0] eq 'SPECIAL' ) {
             last;
         } elsif( $value->[0] eq 'DOLLAR' || $value->[0] eq 'AT' ) {
             push @values, _parse_indirobj_maybe_subscripts( $self, $value );
