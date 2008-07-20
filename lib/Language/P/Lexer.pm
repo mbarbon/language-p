@@ -36,7 +36,7 @@ sub new {
     my $self = $class->SUPER::new( $args );
     my $a = delete $self->{string} || "";
 
-    $self->{buffer} = \$a;
+    $self->{buffer} = ref $a ? $a : \$a;
     $self->{tokens} = [];
     $self->{brackets} = 0;
 
@@ -158,21 +158,20 @@ sub lex_quote {
     my $v = '';
     for(;;) {
         $self->_fill_buffer unless length $$buffer;
-        return [ 'SPECIAL', 'EOF' ] unless length $$buffer;
+        unless( length $$buffer ) {
+            if( length $v ) {
+                $self->unlex( [ 'SPECIAL', 'EOF' ] );
+                return [ 'STRING', $v, 1 ];
+            } else {
+                return [ 'SPECIAL', 'EOF' ];
+            }
+        }
 
+        my $to_return;
         while( length $$buffer ) {
             my $c = substr $$buffer, 0, 1, '';
 
-            if( $c eq $self->quote->{terminator} ) {
-                if( length $v ) {
-                    $self->unlex( [ 'QUOTE', $c ] );
-                    return [ 'STRING', $v, 1 ];
-                } else {
-                    return [ 'QUOTE', $c ];
-                }
-            }
-
-            if( $c eq '\\' ) {
+            if( $c eq '\\' && $self->quote->{interpolate} ) {
                 my $qc = substr $$buffer, 0, 1, '';
 
                 if( $qc =~ /^[a-zA-Z]$/ ) {
@@ -254,6 +253,65 @@ sub lex_identifier {
 
 my %quote_end = qw!( ) { } [ ] < >!;
 
+sub _find_end {
+    my( $self, $op, $quote_start ) = @_;
+
+    local $_ = $self->buffer;
+
+    if( $op && !$quote_start ) {
+        if( $$_ =~ /^[\s\r\n]/ ) {
+            _skip_space( $self );
+        }
+        $$_ =~ s/(\S)// or die;
+        $quote_start = $1;
+    }
+
+    my $quote_end = $quote_end{$quote_start} || $quote_start;
+    my $paired = $quote_start eq $quote_end ? 0 : 1;
+
+    my( $delim_count, $str ) = ( 1, '' );
+    SCAN_END: for(;;) {
+        $self->_fill_buffer unless length $$_;
+        die "EOF while parsing quoted string" unless length $$_;
+
+        while( length $$_ ) {
+            my $c = substr $$_, 0, 1, '';
+
+            if( $c eq '\\' ) {
+                my $qc = substr $$_, 0, 1, '';
+
+                if( $qc eq $quote_start || $qc eq $quote_end ) {
+                    $str .= $qc;
+                } else {
+                    $str .= "\\" . $qc;
+                }
+
+                next;
+            } elsif( $paired && $c eq $quote_start ) {
+                ++$delim_count;
+            } elsif( $c eq $quote_end ) {
+                --$delim_count;
+
+                last SCAN_END unless $delim_count;
+            }
+
+            $str .= $c;
+        }
+    }
+
+    my $lexer = Language::P::Lexer->new( { string => \$str } );
+
+    return [ 'QUOTE',
+             $op, $quote_start, $lexer ];
+}
+
+sub _prepare_sublex {
+    my( $self, $op, $quote_start ) = @_;
+    my $token = _find_end( $self, $op, $quote_start );
+
+    return $token;
+}
+
 sub lex {
     my( $self, $expect ) = ( @_, X_NOTHING );
 
@@ -266,15 +324,8 @@ sub lex {
     return [ 'SPECIAL', 'EOF' ] unless length $$_;
 
     $$_ =~ s/^([-+]?[\.\d]+)//x and return [ 'NUMBER', $1 ];
-    $$_ =~ s/^(q|qq|qx|qw|m|qr|s|tr|y)(?=\W)//x and do {
-        my $op = $1;
-        if( $$_ =~ /^[\s\r\n]/ ) {
-            _skip_space( $self );
-        }
-        $$_ =~ s/(\S)// or die;
-
-        return [ 'QUOTE', $op, $quote_end{$1} || $1 ];
-    };
+    $$_ =~ s/^(q|qq|qx|qw|m|qr|s|tr|y)(?=\W)//x and
+        return _prepare_sublex( $self, $1, undef );
     $$_ =~ s/^(\w+)//x and do {
         if( $ops{$1} ) {
             return [ $ops{$1}, $1 ];
@@ -284,12 +335,12 @@ sub lex {
                                                T_ID
                  ];
     };
-    $$_ =~ s/^(["'`])//x and return [ 'QUOTE', $1, $1 ];
+    $$_ =~ s/^(["'`])//x and return _prepare_sublex( $self, $1, $1 );
     $$_ =~ /^</ and $expect != X_OPERATOR and do {
         $$_ =~ s/^(<<|<)//x;
 
         if( $1 eq '<' ) {
-            return [ 'QUOTE', '<', '>' ]
+            return _prepare_sublex( $self, '<', '<' );
         }
     };
     $$_ =~ s/^(<=|>=|==|!=|=>|->
@@ -334,8 +385,10 @@ sub lex {
 
 sub _fill_buffer {
     my( $self ) = @_;
+    my $stream = $self->stream;
+    return unless $stream;
     my $buffer = $self->buffer;
-    my $l = readline $self->stream;
+    my $l = readline $stream;
 
     if( defined $l ) {
         $$buffer .= $l;

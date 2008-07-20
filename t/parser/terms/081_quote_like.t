@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 10;
+use Test::More tests => 11;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -48,6 +48,23 @@ root:
             sigil: $
             class: Language::P::ParseTree::Constant
             value: cdefg
+            type: string
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+qq(a(${e}(d)e\)f)g);
+EOP
+root:
+    class: Language::P::ParseTree::QuotedString
+    components:
+            class: Language::P::ParseTree::Constant
+            value: a(
+            type: string
+            class: Language::P::ParseTree::Symbol
+            name: e
+            sigil: $
+            class: Language::P::ParseTree::Constant
+            value: (d)e)f)g
             type: string
 EOE
 
