@@ -43,3 +43,4 @@
 - packages
 - package handling in our()
 - parsing of nullary/unary vs. list operators
+- => must also quote qw/qx/s/etc.
