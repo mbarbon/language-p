@@ -779,6 +779,26 @@ sub _parse_match {
     return $match;
 }
 
+sub _parse_substitution {
+    my( $self, $token ) = @_;
+    my $match = _parse_match( $self, $token );
+
+    my $replace;
+    if( $match->flags && grep $_ eq 'e', @{$match->flags} ) {
+        local $self->{lexer} = $token->[4]->[3];
+        $replace = _parse_block_rest( $self, 1, 'SPECIAL' );
+    } else {
+        $replace = _parse_string_rest( $self, $token->[4] );
+    }
+
+    my $sub = Language::P::ParseTree::Substitution->new
+                  ( { pattern     => $match,
+                      replacement => $replace,
+                      } );
+
+    return $sub;
+}
+
 sub _parse_string_rest {
     my( $self, $token ) = @_;
     my( $quote, $terminator ) = ( $token->[1], $token->[2] );
@@ -893,6 +913,8 @@ sub _parse_term_terminal {
     } elsif( $token->[0] eq 'PATTERN' ) {
         if( $token->[1] eq 'm' || $token->[1] eq 'qr' ) {
             return _parse_match( $self, $token );
+        } elsif( $token->[1] eq 's' ) {
+            return _parse_substitution( $self, $token );
         } else {
             die;
         }
@@ -1111,14 +1133,15 @@ sub _parse_term {
 }
 
 sub _parse_block_rest {
-    my( $self, $open_scope ) = @_;
+    my( $self, $open_scope, $end_token ) = @_;
 
+    $end_token ||= 'CLBRK';
     $self->_enter_scope if $open_scope;
 
     my @lines;
     for(;;) {
         my $token = $self->lexer->lex( X_STATE );
-        if( $token->[0] eq 'CLBRK' ) {
+        if( $token->[0] eq $end_token ) {
             $self->_leave_scope if $open_scope;
             return Language::P::ParseTree::Block->new( { lines => \@lines } );
         } else {

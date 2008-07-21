@@ -383,10 +383,9 @@ sub _prepare_sublex {
 
     # scan second part of substitution/transliteration
     if( $op eq 's' || $op eq 'tr' || $op eq 'y' ) {
-        die 'Not implemented yet';
         my $quote_char = $quote_end{$token->[2]} ? undef : $token->[2];
         my $rest = _find_end( $self, $op, $quote_char );
-        $token->[4] = $rest->[3];
+        $token->[4] = $rest;
     }
     if( my $flags = $regex_flags{$op} ) {
         local $_ = $self->buffer;
