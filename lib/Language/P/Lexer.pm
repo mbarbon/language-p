@@ -138,7 +138,8 @@ my %quoted_pattern =
     );
 
 my %pattern_special =
-  ( '^'  => [ 'ASSERTION', 'START' ],
+  ( '^'  => [ 'ASSERTION', 'START_SPECIAL' ],
+    '$'  => [ 'ASSERTION', 'END_SPECIAL' ],
     '*'  => [ 'QUANTIFIER', 0, -1, 1 ],
     '+'  => [ 'QUANTIFIER', 1, -1, 1 ],
     '?'  => [ 'QUANTIFIER', 0,  1, 1 ],
@@ -340,8 +341,9 @@ sub _find_end {
 
     my $quote_end = $quote_end{$quote_start} || $quote_start;
     my $paired = $quote_start eq $quote_end ? 0 : 1;
+    my $is_regex = $regex_flags{$op};
 
-    my( $delim_count, $str ) = ( 1, '' );
+    my( $interpolated, $delim_count, $str ) = ( 0, 1, '' );
     SCAN_END: for(;;) {
         $self->_fill_buffer unless length $$_;
         die "EOF while parsing quoted string" unless length $$_;
@@ -365,16 +367,22 @@ sub _find_end {
                 --$delim_count;
 
                 last SCAN_END unless $delim_count;
+            } elsif(    $is_regex
+                     && ( $c eq '$' || $c eq '@' )
+                     && $quote_start ne "'" ) {
+                my $nc = substr $$_, 0, 1;
+
+                if( length( $nc ) && index( "()| \r\n\t", $nc ) == -1 ) {
+                    $interpolated = 1;
+                }
             }
 
             $str .= $c;
         }
     }
 
-    my $lexer = Language::P::Lexer->new( { string => \$str } );
-
-    return [ $regex_flags{$op} ? 'PATTERN' : 'QUOTE',
-             $op, $quote_start, $lexer ];
+    return [ $is_regex ? 'PATTERN' : 'QUOTE',
+             $op, $quote_start, \$str, undef, undef, $interpolated ];
 }
 
 sub _prepare_sublex {

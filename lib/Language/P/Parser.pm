@@ -692,11 +692,29 @@ sub _parse_maybe_direct_method_call {
 
 sub _parse_match {
     my( $self, $token ) = @_;
+
+    if( $token->[6] ) {
+        my $string = _parse_string_rest( $self, $token );
+        my $match = Language::P::ParseTree::InterpolatedPattern->new
+                        ( { string     => $string,
+                            op         => $token->[1],
+                            flags      => $token->[5],
+                            } );
+
+        return $match;
+    return $match;
+    } else {
+        return _parse_match_regex( $self, $token );
+    }
+}
+
+sub _parse_match_regex {
+    my( $self, $token ) = @_;
     my( $quote, $terminator ) = ( $token->[1], $token->[2] );
     my $interpolate = $terminator eq "'" ? 0 : 1;
 
     my( @values );
-    local $self->{lexer} = $token->[3];
+    local $self->{lexer} = Language::P::Lexer->new( { string => $token->[3] } );
 
     $self->lexer->quote( { terminator  => $terminator,
                            interpolate => $interpolate,
@@ -785,7 +803,8 @@ sub _parse_substitution {
 
     my $replace;
     if( $match->flags && grep $_ eq 'e', @{$match->flags} ) {
-        local $self->{lexer} = $token->[4]->[3];
+        local $self->{lexer} = Language::P::Lexer->new
+                                   ( { string => $token->[4]->[3] } );
         $replace = _parse_block_rest( $self, 1, 'SPECIAL' );
     } else {
         $replace = _parse_string_rest( $self, $token->[4] );
@@ -808,7 +827,7 @@ sub _parse_string_rest {
                       $terminator eq "'" ? 0 :
                                            1;
     my @values;
-    local $self->{lexer} = $token->[3];
+    local $self->{lexer} = Language::P::Lexer->new( { string => $token->[3] } );
 
     $self->lexer->quote( { terminator  => $terminator,
                            interpolate => $interpolate,

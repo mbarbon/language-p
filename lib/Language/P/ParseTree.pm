@@ -366,6 +366,16 @@ use base qw(Language::P::ParseTree::Overridable);
 
 sub function { 'glob' }
 
+package Language::P::ParseTree::InterpolatedPattern;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(op string flags);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
 package Language::P::ParseTree::Pattern;
 
 use strict;
