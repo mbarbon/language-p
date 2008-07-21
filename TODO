@@ -39,9 +39,8 @@ Parsing:
 - package handling in our()
 - parsing of nullary/unary vs. list operators
 - => must also quote qw/qx/s/etc.
-- detect patters that have interpolations and treat them
-  specially while lexing
 - \Q\L\U\E in quoted strings/patterns
+- regexp char classes and other metacharacters
 - regexp backreferences, also in substitution
 - regexp magic variables
 - intuit_more, esp. inside patterns

@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 7;
+use Test::More tests => 9;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -15,7 +15,7 @@ root:
     op: m
     components:
             class: Language::P::ParseTree::RXAssertion
-            type: START
+            type: START_SPECIAL
             class: Language::P::ParseTree::Constant
             value: test
             type: string
@@ -30,7 +30,7 @@ root:
     op: m
     components:
             class: Language::P::ParseTree::RXAssertion
-            type: START
+            type: START_SPECIAL
             class: Language::P::ParseTree::Constant
             value: 
 test
@@ -55,7 +55,7 @@ root:
         op: m
         components:
                 class: Language::P::ParseTree::RXAssertion
-                type: START
+                type: START_SPECIAL
                 class: Language::P::ParseTree::Constant
                 value: test
                 type: string
@@ -173,9 +173,47 @@ root:
     op: qr
     components:
             class: Language::P::ParseTree::RXAssertion
-            type: START
+            type: START_SPECIAL
             class: Language::P::ParseTree::Constant
             value: test
+            type: string
+    flags: undef
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+m/^${foo}aaa/;
+EOP
+root:
+    class: Language::P::ParseTree::InterpolatedPattern
+    op: m
+    string:
+        class: Language::P::ParseTree::QuotedString
+        components:
+                class: Language::P::ParseTree::Constant
+                value: ^
+                type: string
+                class: Language::P::ParseTree::Symbol
+                name: foo
+                sigil: $
+                class: Language::P::ParseTree::Constant
+                value: aaa
+                type: string
+    flags: undef
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+m'^${foo}aaa';
+EOP
+root:
+    class: Language::P::ParseTree::Pattern
+    op: m
+    components:
+            class: Language::P::ParseTree::RXAssertion
+            type: START_SPECIAL
+            class: Language::P::ParseTree::RXAssertion
+            type: END_SPECIAL
+            class: Language::P::ParseTree::Constant
+            value: {foo}aaa
             type: string
     flags: undef
 EOE

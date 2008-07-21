@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 4;
+use Test::More tests => 6;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -99,4 +99,48 @@ root:
                 class: Language::P::ParseTree::LexicalSymbol
                 name: x
                 sigil: $
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+s/$foo/bar/g;
+EOP
+root:
+    class: Language::P::ParseTree::Substitution
+    pattern:
+        class: Language::P::ParseTree::InterpolatedPattern
+        op: s
+        string:
+            class: Language::P::ParseTree::QuotedString
+            components:
+                    class: Language::P::ParseTree::Symbol
+                    name: foo
+                    sigil: $
+        flags:
+            g
+    replacement:
+        class: Language::P::ParseTree::Constant
+        value: bar
+        type: string
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+s'$foo'bar'g;
+EOP
+root:
+    class: Language::P::ParseTree::Substitution
+    pattern:
+        class: Language::P::ParseTree::Pattern
+        op: s
+        components:
+                class: Language::P::ParseTree::RXAssertion
+                type: END_SPECIAL
+                class: Language::P::ParseTree::Constant
+                value: foo
+                type: string
+        flags:
+            g
+    replacement:
+        class: Language::P::ParseTree::Constant
+        value: bar
+        type: string
 EOE
