@@ -219,3 +219,67 @@ root:
             type: string
     flags: undef
 EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+/^t|es|t$/;
+EOP
+root:
+    class: Language::P::ParseTree::Pattern
+    op: m
+    components:
+            class: Language::P::ParseTree::RXAlternation
+            left:
+                    class: Language::P::ParseTree::RXAssertion
+                    type: START_SPECIAL
+                    class: Language::P::ParseTree::Constant
+                    value: t
+                    type: string
+            right:
+                    class: Language::P::ParseTree::RXAlternation
+                    left:
+                            class: Language::P::ParseTree::Constant
+                            value: es
+                            type: string
+                    right:
+                            class: Language::P::ParseTree::Constant
+                            value: t
+                            type: string
+                            class: Language::P::ParseTree::RXAssertion
+                            type: END_SPECIAL
+    flags: undef
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+/a+(a|b|c)/;
+EOP
+root:
+    class: Language::P::ParseTree::Pattern
+    op: m
+    components:
+            class: Language::P::ParseTree::RXQuantifier
+            node:
+                class: Language::P::ParseTree::Constant
+                value: a
+                type: string
+            min: 1
+            max: -1
+            greedy: 1
+            class: Language::P::ParseTree::RXGroup
+            components:
+                    class: Language::P::ParseTree::RXAlternation
+                    left:
+                            class: Language::P::ParseTree::Constant
+                            value: a
+                            type: string
+                    right:
+                            class: Language::P::ParseTree::RXAlternation
+                            left:
+                                    class: Language::P::ParseTree::Constant
+                                    value: b
+                                    type: string
+                            right:
+                                    class: Language::P::ParseTree::Constant
+                                    value: c
+                                    type: string
+    flags: undef
+EOE

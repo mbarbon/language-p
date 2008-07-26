@@ -147,6 +147,7 @@ my %pattern_special =
     '+?' => [ 'QUANTIFIER', 1, -1, 0 ],
     '??' => [ 'QUANTIFIER', 0,  1, 0 ],
     ')'  => [ 'SPECIAL' ],
+    '|'  => [ 'ALTERNATE' ],
     );
 
 sub _skip_space {
