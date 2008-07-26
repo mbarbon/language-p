@@ -372,7 +372,9 @@ sub _find_end {
                      && $quote_start ne "'" ) {
                 my $nc = substr $$_, 0, 1;
 
-                if( length( $nc ) && index( "()| \r\n\t", $nc ) == -1 ) {
+                if(    length( $nc )
+                    && $nc ne $quote_end
+                    && index( "()| \r\n\t", $nc ) == -1 ) {
                     $interpolated = 1;
                 }
             }

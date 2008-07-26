@@ -2,13 +2,13 @@
 
 use strict;
 use warnings;
-use Test::More tests => 9;
+use Test::More tests => 11;
 
 use lib 't/lib';
 use TestParser qw(:all);
 
 parse_and_diff( <<'EOP', <<'EOE' );
-/^test/;
+/^test$/;
 EOP
 root:
     class: Language::P::ParseTree::Pattern
@@ -19,6 +19,8 @@ root:
             class: Language::P::ParseTree::Constant
             value: test
             type: string
+            class: Language::P::ParseTree::RXAssertion
+            type: END_SPECIAL
     flags: undef
 EOE
 
