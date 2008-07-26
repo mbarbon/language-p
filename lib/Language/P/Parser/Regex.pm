@@ -6,6 +6,7 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 use Language::P::Lexer;
+use Language::P::ParseTree;
 
 __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime
                                  interpolate) );
@@ -51,6 +52,13 @@ sub _parse {
                 my $nst = $st->[-1]->components;
                 push @values, $st;
                 $st = $nst;
+            } elsif( $value->[1] eq '|' ) {
+                my $alt = Language::P::ParseTree::RXAlternation->new
+                              ( { left  => [ @$st ],
+                                  right => [],
+                                  } );
+                @$st = $alt;
+                $st = $alt->right;
             } elsif( $value->[2]->[0] eq 'QUANTIFIER' ) {
                 die 'Nothing to quantify in regexp' unless @$st;
 
