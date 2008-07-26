@@ -34,11 +34,12 @@ Parsing:
 - builtins overridable using CORE::GLOBAL
 - CORE::builtin to always call builtin
 - special treatment for glob()
-- simplify detection of <foo> vs. <foo >
+- simplify detection of <foo> vs. <foo >, avoid constructing a lexer
 - packages
 - package handling in our()
 - parsing of nullary/unary vs. list operators
 - => must also quote qw/qx/s/etc.
+- quoting inside ->{}, also of {s}, etc.
 - \Q\L\U\E in quoted strings/patterns
 - regexp char classes and other metacharacters
 - regexp backreferences, also in substitution
@@ -50,8 +51,6 @@ Refactoring:
 - proper handling of bytecode
 - replace all strings with integer constants/flags
 - remove dependency from parser to implementation (::Values, scratchpad)
-- create specialized parser for patterns that can call-back the code
-  parser if required (?{})
 - assert unlexed tokens are relexed with the correct expectations
 - assert lex_string/lex unlex buffers do not intermingle
 - separate compile-time lexicals from run-time scratchpads
