@@ -201,7 +201,8 @@ sub o_rx_quantifier {
 
     if( $c == $op->{max} ) {
         v "Reached max limit\n";
-        die;
+        $cxt->{btg} = $cxt->{btg}->{btg};
+        return $pc + 1;
     }
 
     # try to continue match if matched twice at the same position
