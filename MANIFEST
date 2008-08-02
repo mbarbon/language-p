@@ -8,8 +8,10 @@ lib/Language/P.pm
 lib/Language/P/Generator.pm
 lib/Language/P/Lexer.pm
 lib/Language/P/Opcodes.pm
+lib/Language/P/Opcodes/Regexp.pm
 lib/Language/P/ParseTree.pm
 lib/Language/P/Parser.pm
+lib/Language/P/Parser/Regex.pm
 lib/Language/P/Runtime.pm
 lib/Language/P/Value/Any.pm
 lib/Language/P/Value/Array.pm
@@ -17,6 +19,7 @@ lib/Language/P/Value/Code.pm
 lib/Language/P/Value/Handle.pm
 lib/Language/P/Value/List.pm
 lib/Language/P/Value/Reference.pm
+lib/Language/P/Value/Regexp.pm
 lib/Language/P/Value/Scalar.pm
 lib/Language/P/Value/ScratchPad.pm
 lib/Language/P/Value/StringNumber.pm
@@ -24,6 +27,7 @@ lib/Language/P/Value/Subroutine.pm
 lib/Language/P/Value/SymbolTable.pm
 lib/Language/P/Value/Typeglob.pm
 t/lib/TestParser.pm
+t/lib/TestRegex.pm
 t/parser/001_load.t
 t/parser/expressions/005_unary.t
 t/parser/expressions/011_relational.t
@@ -42,6 +46,8 @@ t/parser/terms/005_variables.t
 t/parser/terms/050_my.t
 t/parser/terms/080_quoted_string.t
 t/parser/terms/081_quote_like.t
+t/parser/terms/085_pattern.t
+t/parser/terms/086_substitution.t
 t/parser/terms/110_brackets.t
 t/parser/terms/140_prototypes.t
 t/run/005_assignment.t
@@ -54,3 +60,11 @@ t/runtime/001_load.t
 t/runtime/002_base.t
 t/runtime/010_call.t
 t/runtime/015_recursion.t
+t/runtime/regex/001_load.t
+t/runtime/regex/002_base.t
+t/runtime/regex/003_star.t
+t/runtime/regex/004_alternation.t
+t/runtime/regex/005_quantifiers.t
+t/runtime/regex/006_nongreedy.t
+t/runtime/regex/020_complex.t
+t/runtime/regex/040_generator.t
