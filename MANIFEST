@@ -68,3 +68,5 @@ t/runtime/regex/005_quantifiers.t
 t/runtime/regex/006_nongreedy.t
 t/runtime/regex/020_complex.t
 t/runtime/regex/040_generator.t
+t/runtime/regex/050_assert_start.t
+t/runtime/regex/051_assert_end.t

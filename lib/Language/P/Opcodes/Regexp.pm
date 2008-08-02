@@ -5,8 +5,9 @@ use warnings;
 use Exporter 'import';
 
 our @EXPORT_OK = qw(o_rx_start_match o_rx_accept o_rx_exact o_rx_start_group
-                    o_rx_quantifier o_rx_capture_start
-                    o_rx_capture_end o_rx_try);
+                    o_rx_quantifier o_rx_capture_start o_rx_capture_end o_rx_try
+                    o_rx_start_special o_rx_end_special
+                    o_rx_match);
 our %EXPORT_TAGS =
   ( opcodes => \@EXPORT_OK,
     );
@@ -122,13 +123,27 @@ sub _backtrack {
     }
 }
 
+sub o_rx_match {
+    my( $op, $runtime, $pc ) = @_;
+    my $scalar = pop @{$runtime->{_stack}};
+    my $pattern = pop @{$runtime->{_stack}};
+
+    my $match = $pattern->match( $runtime, $scalar->as_string );
+
+    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new
+                                    ( { integer => $match->{matched} } );
+
+    return $pc + 1;
+}
+
 sub o_rx_start_match {
     my( $op, $runtime, $pc ) = @_;
-    my $scalar = $runtime->{_stack}[-6]; # FIXME offset
+    my $string = $runtime->{_stack}[-6]; # FIXME offset
     my $start = $runtime->{_stack}[-7]; # FIXME offset
     my @stack;
-    my $cxt = { string   => $scalar,
+    my $cxt = { string   => $string,
                 pos      => $start,
+                length   => length( $string ),
                 stack    => \@stack,
                 st       => \@stack,
                 btg      => undef,
@@ -138,7 +153,7 @@ sub o_rx_start_match {
                 };
     push @{$runtime->{_stack}}, $cxt;
 
-    v "String '$scalar', start $start\n";
+    v "String '$string', start $start\n";
 
     return $pc + 1;
 }
@@ -275,6 +290,30 @@ sub o_rx_capture_end {
     my $cxt = $runtime->{_stack}->[-1];
 
     _end_capture( $cxt, $op->{group} );
+
+    return $pc + 1;
+}
+
+sub o_rx_start_special {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    if( $cxt->{pos} != 0 ) {
+        return _backtrack( $runtime, $cxt );
+    }
+
+    return $pc + 1;
+}
+
+sub o_rx_end_special {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    if(    $cxt->{pos} != $cxt->{length}
+        && (    $cxt->{pos} != $cxt->{length} - 1
+             || substr( $cxt->{string}, -1, 1 ) ne "\n" ) ) {
+        return _backtrack( $runtime, $cxt );
+    }
 
     return $pc + 1;
 }
