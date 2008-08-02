@@ -38,7 +38,6 @@ sub _save_groups {
 
     vv "Saving $op->{subgroups_start}-$op->{subgroups_end}\n";
     for( my $i = $op->{subgroups_start}; $i < $op->{subgroups_end}; ++$i ) {
-        # last if $i > $#{$cxt->{capt}};
         my $g = $clear ? [-1, -1] : $cxt->{capt}[$i] || [-1, -1];
         push @saved, [ $g->[0], $g->[1] ];
     }
@@ -65,6 +64,10 @@ sub _start_capture {
     my( $cxt, $group ) = @_;
 
     v "SCapt: $group: $cxt->{pos}\n";
+
+    for( my $i = $cxt->{last_open} + 1; $i < $group; ++$i ) {
+        $cxt->{capt}[$i][0] = $cxt->{capt}[$i][1] = -1;
+    }
 
     $cxt->{capt}[$group][0] = $cxt->{pos};
     $cxt->{capt}[$group][1] = -1;
@@ -180,10 +183,9 @@ sub o_rx_start_group {
     $cxt->{btg} = { c   => -1,
                     st  => [],
                     btg => $cxt->{btg},
-                    lm => -1,
+                    lm  => -1,
                     };
     # add a new backtrack group
-#    $cxt->{btg} = $st->[-1];
     my $nst = $cxt->{btg}->{st};
     push @{$cxt->{stack}}, $st;
     $cxt->{st} = $nst;
@@ -216,8 +218,6 @@ sub o_rx_quantifier {
     my $groups = defined $op->{subgroups_start} && ( $c == 0 || $c >= $op->{min} ) ?
                      _save_groups( $cxt, $op, $c == 0 ) : undef;
 
-    _start_capture( $cxt, $op->{group} ) if defined $op->{group};
-
     if( $c == 0 && $op->{min} > 0 ) {
         # force failure of the group on backtrack
         push @{$cxt->{st}}, { s => $cxt->{pos},
@@ -233,6 +233,14 @@ sub o_rx_quantifier {
     }
 
     $cxt->{btg}->{lm} = $cxt->{pos};
+
+    # if nongreedy, match at least min
+    if( !$op->{greedy} && $c >= $op->{min} ) {
+        $cxt->{btg} = $cxt->{btg}->{btg};
+        return $pc + 1;
+    }
+
+    _start_capture( $cxt, $op->{group} ) if defined $op->{group};
 
     return $op->{to};
 }
