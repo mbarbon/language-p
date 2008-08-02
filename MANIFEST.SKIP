@@ -22,6 +22,7 @@
 
 # Avoid Devel::Cover generated files
 \bcover_db
+\bnytprof
 
 # Avoid temp and backup files.
 ~$
