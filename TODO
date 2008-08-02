@@ -41,10 +41,15 @@ Parsing:
 - => must also quote qw/qx/s/etc.
 - quoting inside ->{}, also of {s}, etc.
 - \Q\L\U\E in quoted strings/patterns
-- regexp char classes and other metacharacters
-- regexp backreferences, also in substitution
-- regexp magic variables
-- regexp (?...) syntax and grouping
+- regexp
+  - char classes and other metacharacters
+  - backreferences, also in substitution
+  - magic variables
+  - (?...) syntax and grouping
+  - empty pattern
+  - flags
+  - context-dependent bexaviour
+  - always a pattern after =~/!~
 - intuit_more, esp. inside patterns
 - \xaf, \011,etc when lexing quoted strings
 

@@ -24,12 +24,15 @@ my $parser = Language::P::Parser::Regex->new( { runtime     => $runtime,
 sub match {
     my( $string, $regex ) = @_;
     my $parsed_rx = $parser->parse_string( $regex );
+    my $pattern = Language::P::ParseTree::Pattern->new
+                      ( { components => $parsed_rx,
+                          } );
 
 #    use Data::Dumper; print Dumper $parsed_rx;
 
-    my $code = $generator->process_regex( $parsed_rx );
+    my $re = $generator->process_regex( $pattern );
 #    use Data::Dumper; print Dumper $code;
-    my $match = $code->match( $runtime, $string );
+    my $match = $re->match( $runtime, $string );
 
     return $match;
 }

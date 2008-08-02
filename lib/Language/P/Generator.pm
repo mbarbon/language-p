@@ -105,13 +105,15 @@ sub process_regex {
 
     push @bytecode, o( 'rx_start_match' );
 
-    foreach my $e ( @$regexp ) {
+    foreach my $e ( @{$regexp->components} ) {
         $self->dispatch_regexp( $e );
     }
 
     push @bytecode, o( 'rx_accept', groups => $group_count );
 
     $self->pop_code;
+
+    die "Flags not supported" if $regexp->flags;
 
     return $rx;
 }
@@ -158,6 +160,7 @@ my %dispatch =
     SubroutineDeclaration  => '_subroutine_decl',
     QuotedString           => '_quoted_string',
     Subscript              => '_subscript',
+    Pattern                => '_pattern',
     );
 
 my %dispatch_cond =
@@ -169,6 +172,7 @@ my %dispatch_regexp =
     RXGroup        => '_regexp_group',
     Constant       => '_regexp_exact',
     RXAlternation  => '_regexp_alternate',
+    RXAssertion    => '_regexp_assertion',
     );
 
 sub dispatch {
@@ -555,6 +559,21 @@ sub _subscript {
     }
 }
 
+sub _pattern {
+    my( $self, $tree, $explicit_bind ) = @_;
+
+    my $re = $self->process_regex( $tree );
+    push @bytecode, o( 'constant', value => $re );
+
+    if( !$explicit_bind ) {
+        push @bytecode,
+             o( 'glob',             name => '_', create => 1 ),
+             o( 'glob_slot_create', slot => 'scalar' );
+    }
+
+    push @bytecode, o( 'rx_match' );
+}
+
 sub _allocate_lexicals {
     my( $self ) = @_;
 
@@ -585,6 +604,20 @@ sub _allocate_lexicals {
         $op->{index} = $op->{lexical}->{index};
         delete $op->{lexical};
     }
+}
+
+my %regexp_assertions =
+  ( START_SPECIAL => 'rx_start_special',
+    END_SPECIAL   => 'rx_end_special',
+    );
+
+sub _regexp_assertion {
+    my( $self, $tree ) = @_;
+    my $type = $tree->type;
+
+    die "Unsupported assertion '$type'" unless $regexp_assertions{$type};
+
+    push @bytecode, o( $regexp_assertions{$type} );
 }
 
 sub _regexp_quantifier {
