@@ -19,7 +19,7 @@ my @re3 =
     o( 'rx_capture_start', group  => 0 ),
     o( 'rx_exact',       string   => 'a', length => 1 ),
     o( 'rx_capture_end', group    => 0 ),
-    o( 'rx_quantifier',  to       => 2, min => 2, max => 3, greedy => 1,
+    o( 'rx_quantifier',  to       => 2, min => 2, max => 3, greedy => 0,
                          subgroups_start => 0, subgroups_end => 1 ),
     # end quantifier
     o( 'rx_capture_start', group  => 1 ), # 4
@@ -38,7 +38,7 @@ my @re7 =
     # start quantifier
     o( 'rx_start_group', to       => 3 ), # 1
     o( 'rx_exact',       string   => 'a', length => 1 ),
-    o( 'rx_quantifier',  to       => 2, min => 0, max => 1, greedy => 1, # 3
+    o( 'rx_quantifier',  to       => 2, min => 0, max => 1, greedy => 0, # 3
                          group    => 0,
                          subgroups_start => 0, subgroups_end => 1 ),
     # end quantifier
@@ -66,22 +66,22 @@ eq_or_diff( $re3->match( $runtime, 'babbaaabbaaaaa' ),
 eq_or_diff( $re3->match( $runtime, 'babbaabbaaaaa' ),
             { matched     => 1,
               match_start => 8,
-              match_end   => 12,
-              captures    => [ [10, 11], [11, 12] ],
+              match_end   => 11,
+              captures    => [ [9, 10], [10, 11] ],
               } );
 
 eq_or_diff( $re3->match( $runtime, 'aaaaaaa' ),
             { matched     => 1,
               match_start => 0,
-              match_end   => 4,
-              captures    => [ [2, 3], [3, 4] ],
+              match_end   => 3,
+              captures    => [ [1, 2], [2, 3] ],
               } );
 
 eq_or_diff( $re7->match( $runtime, 'aaaa' ),
             { matched     => 1,
               match_start => 0,
-              match_end   => 2,
-              captures    => [ [0, 1], [1, 2] ],
+              match_end   => 1,
+              captures    => [ [-1, -1], [0, 1] ],
               } );
 
 eq_or_diff( $re7->match( $runtime, 'a' ),

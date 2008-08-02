@@ -17,7 +17,7 @@ my @re4 =
     # start quantifier
     o( 'rx_start_group', to       => 3 ), # 1
     o( 'rx_exact',       string   => 'a', length => 1 ),
-    o( 'rx_quantifier',  to       => 2, min => 0, max => -1 ), # 3
+    o( 'rx_quantifier',  to       => 2, min => 0, max => -1, greedy => 1 ), # 3
     # end quantifier
     # start alternation
     o( 'rx_try',         fail_to  => 7 ), # 4
@@ -41,7 +41,7 @@ my @re6 =
     # start quantifier
     o( 'rx_start_group', to       => 3 ),
     o( 'rx_exact',       string   => 'a', length => 1 ),
-    o( 'rx_quantifier',  to       => 2, min => 0, max => -1 ),
+    o( 'rx_quantifier',  to       => 2, min => 0, max => -1, greedy => 1 ),
     # end quantifier
     # start capture
     o( 'rx_capture_start', group  => 0 ),
@@ -74,21 +74,21 @@ my @re8 =
     # start quantifier
     o( 'rx_start_group', to       => 5 ), # 3
     o( 'rx_exact',       string   => 'b', length => 1 ),
-    o( 'rx_quantifier',  to       => 4, min => 0, max => -1, # 5
-                         group => 1,
+    o( 'rx_quantifier',  to       => 4, min => 0, max => -1, greedy => 1, # 5
+                         group    => 1,
                          subgroups_start => 1, subgroups_end => 2 ),
     o( 'jump',           to       => 10 ),
     # end quantifier
     # start quantifier
     o( 'rx_start_group', to       => 9 ), # 7
     o( 'rx_exact',       string   => 'a', length => 1 ),
-    o( 'rx_quantifier',  to       => 8, min => 0, max => -1, # 9
-                         group => 2,
+    o( 'rx_quantifier',  to       => 8, min => 0, max => -1, greedy => 1, # 9
+                         group    => 2,
                          subgroups_start => 2, subgroups_end => 3 ),
     # end quantifier
     # end alternation
-    o( 'rx_quantifier',  to       => 2, min => 0, max => -1, # 10
-                         group => 0,
+    o( 'rx_quantifier',  to       => 2, min => 0, max => -1, greedy => 1, # 10
+                         group    => 0,
                          subgroups_start => 0, subgroups_end => 3 ),
     # end quantifier
     o( 'rx_exact',       string   => 'w', length => 1 ), # 11
