@@ -10,6 +10,7 @@ use Language::P::Opcodes qw(o);
 use Language::P::Value::StringNumber;
 use Language::P::Value::Handle;
 use Language::P::Value::ScratchPad;
+use Language::P::Value::Regexp;
 
 # global on purpose
 our %debug_options;
@@ -25,6 +26,7 @@ our @bytecode;
 our %labels;
 our %patch;
 our $label_count = 0;
+our $group_count;
 
 sub _new_label {
     ++$label_count;
@@ -91,6 +93,29 @@ sub process_pending {
     $code_stack[-1][1] = []
 }
 
+sub process_regex {
+    my( $self, $regexp ) = @_;
+    my $rx = Language::P::Value::Regexp->new
+                 ( { bytecode   => [],
+                     stack_size => 0,
+                     } );
+    $group_count = 0;
+
+    $self->push_code( $rx );
+
+    push @bytecode, o( 'rx_start_match' );
+
+    foreach my $e ( @$regexp ) {
+        $self->dispatch_regexp( $e );
+    }
+
+    push @bytecode, o( 'rx_accept', groups => $group_count );
+
+    $self->pop_code;
+
+    return $rx;
+}
+
 sub add_declaration {
     my( $self, $name ) = @_;
 
@@ -139,13 +164,18 @@ my %dispatch_cond =
   ( BinOp          => '_binary_op_cond',
     );
 
+my %dispatch_regexp =
+  ( RXQuantifier   => '_regexp_quantifier',
+    RXGroup        => '_regexp_group',
+    Constant       => '_regexp_exact',
+    RXAlternation  => '_regexp_alternate',
+    );
+
 sub dispatch {
     my( $self, $tree ) = @_;
     ( my $pack = ref $tree ) =~ s/^.*:://;
     my $meth = $dispatch{$pack};
 
-#     use Data::Dumper;
-#     print Dumper( $tree );
     Carp::confess( $pack ) unless $meth;
 
     $self->$meth( $tree );
@@ -156,9 +186,17 @@ sub dispatch_cond {
     ( my $pack = ref $tree ) =~ s/^.*:://;
     my $meth = $dispatch_cond{$pack} || '_anything_cond';
 
-#     use Data::Dumper;
-#     print Dumper( $tree );
-    die $pack unless $meth;
+    Carp::confess( $pack ) unless $meth;
+
+    $self->$meth( $tree, $true, $false );
+}
+
+sub dispatch_regexp {
+    my( $self, $tree, $true, $false ) = @_;
+    ( my $pack = ref $tree ) =~ s/^.*:://;
+    my $meth = $dispatch_regexp{$pack};
+
+    Carp::confess( $pack ) unless $meth;
 
     $self->$meth( $tree, $true, $false );
 }
@@ -546,6 +584,89 @@ sub _allocate_lexicals {
         $op->{in_pad} = $op->{lexical}->{in_pad};
         $op->{index} = $op->{lexical}->{index};
         delete $op->{lexical};
+    }
+}
+
+sub _regexp_quantifier {
+    my( $self, $tree ) = @_;
+
+    my( $start, $quant ) = ( _new_label, _new_label );
+    push @bytecode, o( 'rx_start_group' );
+    _to_label( $quant, $bytecode[-1] );
+    _set_label( $start, scalar @bytecode );
+
+    my $is_group = $tree->node->isa( 'Language::P::ParseTree::RXGroup' );
+    my $capture = $is_group ? $tree->node->capture : 0;
+    my $start_group = $group_count;
+    ++$group_count if $capture;
+
+    if( $capture ) {
+        foreach my $c ( @{$tree->node->components} ) {
+            $self->dispatch_regexp( $c );
+        }
+    } else {
+        $self->dispatch_regexp( $tree->node );
+    }
+
+    _set_label( $quant, scalar @bytecode );
+    push @bytecode, o( 'rx_quantifier', min => $tree->min, max => $tree->max,
+                                        greedy => $tree->greedy,
+                                        group => ( $capture ? $start_group : undef ),
+                                        subgroups_start => $start_group,
+                                        subgroups_end => $group_count );
+    _to_label( $start, $bytecode[-1] );
+}
+
+sub _regexp_group {
+    my( $self, $tree ) = @_;
+
+    if( $tree->capture ) {
+        push @bytecode, o( 'rx_capture_start', group => $group_count );
+    }
+
+    foreach my $c ( @{$tree->components} ) {
+        $self->dispatch_regexp( $c );
+    }
+
+    if( $tree->capture ) {
+        push @bytecode, o( 'rx_capture_end', group => $group_count );
+        ++$group_count;
+    }
+}
+
+sub _regexp_exact {
+    my( $self, $tree ) = @_;
+
+    push @bytecode, o( 'rx_exact', string => $tree->value,
+                                   length => length( $tree->value ) );
+}
+
+sub _regexp_alternate {
+    my( $self, $tree, $end ) = @_;
+    my $is_last = !$tree->right->[0]
+                        ->isa( 'Language::P::ParseTree::RXAlternation' );
+    my( $next_l, $next_r ) = ( _new_label, _new_label );
+    $end ||= _new_label;
+
+    push @bytecode, o( 'rx_try' );
+    _to_label( $next_l, $bytecode[-1] );
+
+    foreach my $c ( @{$tree->left} ) {
+        $self->dispatch_regexp( $c );
+    }
+
+    push @bytecode, o( 'jump' );
+    _to_label( $end, $bytecode[-1] );
+    _set_label( $next_l, scalar @bytecode );
+
+    if( !$is_last ) {
+        _regexp_alternate( $self, $tree->right->[0], $end );
+    } else {
+        foreach my $c ( @{$tree->right} ) {
+            $self->dispatch_regexp( $c );
+        }
+
+        _set_label( $end, scalar @bytecode );
     }
 }
 
