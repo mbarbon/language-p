@@ -253,7 +253,7 @@ sub o_rx_try {
                      _save_groups( $cxt, $op ) : undef;
 
     push @{$cxt->{st}}, { s => $cxt->{pos},
-                          r => $op->{fail_to},
+                          r => $op->{to},
                           g => $groups,
                           btg => $cxt->{btg},
                           };

@@ -20,10 +20,10 @@ my @re4 =
     o( 'rx_quantifier',  to       => 2, min => 0, max => -1, greedy => 1 ), # 3
     # end quantifier
     # start alternation
-    o( 'rx_try',         fail_to  => 7 ), # 4
+    o( 'rx_try',         to       => 7 ), # 4
     o( 'rx_exact',       string   => 'a', length => 1 ),
     o( 'jump',           to       => 11 ),
-    o( 'rx_try',         fail_to  => 10 ), # 7
+    o( 'rx_try',         to       => 10 ), # 7
     o( 'rx_exact',       string   => 'b', length => 1 ),
     o( 'jump',           to       => 11 ),
     o( 'rx_exact',       string   => 'c', length => 1 ), # 10
@@ -46,10 +46,10 @@ my @re6 =
     # start capture
     o( 'rx_capture_start', group  => 0 ),
     # start alternation
-    o( 'rx_try',         fail_to  => 8 ), # 5
+    o( 'rx_try',         to       => 8 ), # 5
     o( 'rx_exact',       string   => 'x', length => 1 ),
     o( 'jump',           to       => 12 ),
-    o( 'rx_try',         fail_to  => 11 ), # 8
+    o( 'rx_try',         to       => 11 ), # 8
     o( 'rx_exact',       string   => 'b', length => 1 ),
     o( 'jump',           to       => 12 ),
     o( 'rx_exact',       string   => 'c', length => 1 ), # 11
@@ -69,7 +69,7 @@ my @re8 =
     # start quantifer
     o( 'rx_start_group', to       => 10 ),
     # start alternation
-    o( 'rx_try',         fail_to  => 7, # 2
+    o( 'rx_try',         to       => 7, # 2
                          subgroups_start => 1, subgroups_end => 2 ),
     # start quantifier
     o( 'rx_start_group', to       => 5 ), # 3
