@@ -97,4 +97,15 @@ sub pop_frame {
     $self->{_frame} = $last_frame->[1];
 }
 
+sub call_return {
+    my( $self ) = @_;
+    my $rpc = $self->{_stack}->[$self->{_frame} - 2][0];
+    my $bytecode = $self->{_stack}->[$self->{_frame} - 2][1];
+
+    $self->set_bytecode( $bytecode );
+    $self->pop_frame;
+
+    return $rpc;
+}
+
 1;
