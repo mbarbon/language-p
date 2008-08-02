@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 11;
+use Test::More tests => 12;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -155,12 +155,14 @@ root:
                                     class: Language::P::ParseTree::Constant
                                     value: cbc
                                     type: string
+                            capture: 1
                         min: 0
                         max: 1
                         greedy: 0
                         class: Language::P::ParseTree::Constant
                         value: w
                         type: string
+                capture: 1
             min: 0
             max: -1
             greedy: 1
@@ -281,5 +283,31 @@ root:
                                     class: Language::P::ParseTree::Constant
                                     value: c
                                     type: string
+            capture: 1
+    flags: undef
+EOE
+
+parse_and_diff( <<'EOP', <<'EOE' );
+/a(?:a)(a)/;
+EOP
+root:
+    class: Language::P::ParseTree::Pattern
+    op: m
+    components:
+            class: Language::P::ParseTree::Constant
+            value: a
+            type: string
+            class: Language::P::ParseTree::RXGroup
+            components:
+                    class: Language::P::ParseTree::Constant
+                    value: a
+                    type: string
+            capture: 0
+            class: Language::P::ParseTree::RXGroup
+            components:
+                    class: Language::P::ParseTree::Constant
+                    value: a
+                    type: string
+            capture: 1
     flags: undef
 EOE

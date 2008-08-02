@@ -179,6 +179,18 @@ sub _quoted_code_lookahead {
     return 0;
 }
 
+sub lex_pattern_group {
+    my( $self ) = @_;
+    my $buffer = $self->buffer;
+
+    die unless length $$buffer; # no whitespace allowed after '(?'
+
+    $$buffer =~ s/^(\#|:|[imsx]*\-[imsx]*:?|!|=|<=|<!|{|\?{|\?>)//x
+      or die "Invalid character after (?";
+
+    return [ 'PATTERN', $1 ];
+}
+
 sub lex_quote {
     my( $self ) = @_;
 
@@ -210,8 +222,14 @@ sub lex_quote {
                         $to_return = [ 'PATTERN', $qc, $quoted_pattern{$qc} ];
                     }
                 } elsif( $c eq '(' ) {
-                    # FIXME (?...) syntax
-                    $to_return = [ 'PATTERN', '(' ];
+                    my $nc = substr $$buffer, 0, 1;
+
+                    if( $nc eq '?' ) {
+                        substr $$buffer, 0, 1, ''; # eat character
+                        $to_return = [ 'PATTERN', '(?' ];
+                    } else {
+                        $to_return = [ 'PATTERN', '(' ];
+                    }
                 } elsif( $pattern_special{$c} ) {
                     my $special = $pattern_special{$c};
 
