@@ -9,6 +9,8 @@ use Language::P::Value::Reference;
 use Language::P::Value::Array;
 use Language::P::Value::List;
 
+use Language::P::Opcodes::Regexp qw(:opcodes);
+
 our @EXPORT_OK = qw(o);
 
 sub o {
@@ -24,6 +26,12 @@ sub o {
              function => $fun,
              op_name  => $name,
              };
+}
+
+sub o_noop {
+    my( $op, $runtime, $pc ) = @_;
+
+    return $pc + 1;
 }
 
 sub o_dup {
@@ -159,11 +167,7 @@ sub o_call {
 sub o_return {
     my( $op, $runtime, $pc ) = @_;
     my $rv = $runtime->_stack->[-1];
-    my $rpc = $runtime->_stack->[$runtime->_frame - 2][0];
-    my $bytecode = $runtime->_stack->[$runtime->_frame - 2][1];
-
-    $runtime->set_bytecode( $bytecode );
-    $runtime->pop_frame;
+    my $rpc = $runtime->call_return;
 
     # FIXME context handling, assume scalar for now
     if( 1 ) {

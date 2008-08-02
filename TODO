@@ -44,13 +44,17 @@ Parsing:
 - regexp char classes and other metacharacters
 - regexp backreferences, also in substitution
 - regexp magic variables
+- regexp (?...) syntax and grouping
 - intuit_more, esp. inside patterns
 - \xaf, \011,etc when lexing quoted strings
 
 Refactoring:
+- check offsets for call sequence, refactor stack handling
 - proper handling of bytecode
 - replace all strings with integer constants/flags
 - remove dependency from parser to implementation (::Values, scratchpad)
 - assert unlexed tokens are relexed with the correct expectations
 - assert lex_string/lex unlex buffers do not intermingle
 - separate compile-time lexicals from run-time scratchpads
+- make regexp parser a full blown parser, not the hack it is;
+  add a lexer subclass for parsing patterns
