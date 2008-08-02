@@ -19,10 +19,10 @@ sub new {
 
 sub call {
     my( $self, $runtime, $pc ) = @_;
-    my $args = pop @{$runtime->_stack};
+    my $args = pop @{$runtime->{_stack}};
     my $frame = $runtime->push_frame( $self->stack_size + 3 );
 
-    my $stack = $runtime->_stack;
+    my $stack = $runtime->{_stack};
     if( $self->lexicals ) {
         # FIXME copy closed-over scalars
         my $pad = $self->lexicals->new_scope( undef );

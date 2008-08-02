@@ -7,7 +7,6 @@ use base qw(Class::Accessor::Fast);
 use Language::P::Value::SymbolTable;
 
 __PACKAGE__->mk_ro_accessors( qw(symbol_table) );
-__PACKAGE__->mk_ro_accessors( qw(_stack _pc _bytecode _frame) );
 
 sub new {
     my( $class, $args ) = @_;
@@ -52,14 +51,14 @@ sub run_bytecode {
 sub run {
     my( $self ) = @_;
 
-    return if $self->_pc < 0;
+    return if $self->{_pc} < 0;
 
 #     use Data::Dumper;
-#     print Dumper( $self->_bytecode );
+#     print Dumper( $self->{_bytecode} );
 
     for(;;) {
-        my $op = $self->_bytecode->[$self->_pc];
-        my $pc = $op->{function}->( $op, $self, $self->_pc );
+        my $op = $self->{_bytecode}->[$self->{_pc}];
+        my $pc = $op->{function}->( $op, $self, $self->{_pc} );
 
         last if $pc < 0;
         $self->{_pc} = $pc;
@@ -69,31 +68,31 @@ sub run {
 sub stack_copy {
     my( $self ) = @_;
 
-    return @{$self->_stack};
+    return @{$self->{_stack}};
 }
 
 sub push_frame {
     my( $self, $size ) = @_;
-    my $last_frame = $self->_frame;
-    my $stack_size = $#{$self->_stack};
+    my $last_frame = $self->{_frame};
+    my $stack_size = $#{$self->{_stack}};
 
     $#{$self->{_stack}} = $self->{_frame} = $stack_size + 1 + $size + 1;
     $self->{_stack}->[-1] = [ $stack_size, $last_frame ];
 
 #    print "Stack size: $stack_size -> $self->{_frame}\n";
 
-    return $self->_frame;
+    return $self->{_frame};
 }
 
 sub pop_frame {
     my( $self, $size ) = @_;
-    my $last_frame = $self->_stack->[$self->_frame];
+    my $last_frame = $self->{_stack}->[$self->{_frame}];
 
 #    print "New stack size: $last_frame->[0]\n";
 
     # TODO unwind
 
-    $#{$self->_stack} = $last_frame->[0];
+    $#{$self->{_stack}} = $last_frame->[0];
     $self->{_frame} = $last_frame->[1];
 }
 

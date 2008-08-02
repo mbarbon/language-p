@@ -36,16 +36,16 @@ sub o_noop {
 
 sub o_dup {
     my( $op, $runtime, $pc ) = @_;
-    my $value = $runtime->_stack->[-1];
+    my $value = $runtime->{_stack}->[-1];
 
-    push @{$runtime->_stack}, $value;
+    push @{$runtime->{_stack}}, $value;
 
     return $pc + 1;
 }
 
 sub o_print {
     my( $op, $runtime, $pc ) = @_;
-    my $args = pop @{$runtime->_stack};
+    my $args = pop @{$runtime->{_stack}};
 
     my $fh = $args->get_item( 0 );
     for( my $iter = $args->iterator_from( 1 ); $iter->next; ) {
@@ -53,31 +53,31 @@ sub o_print {
     }
 
     # HACK
-    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => 1 } );
+    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new( { integer => 1 } );
 
     return $pc + 1;
 }
 
 sub o_constant {
     my( $op, $runtime, $pc ) = @_;
-    push @{$runtime->_stack}, $op->{value};
+    push @{$runtime->{_stack}}, $op->{value};
 
     return $pc + 1;
 }
 
 sub o_push_scalar {
     my( $op, $runtime, $pc ) = @_;
-    my $value = pop @{$runtime->_stack};
-    $runtime->_stack->[-1]->push( $value );
+    my $value = pop @{$runtime->{_stack}};
+    $runtime->{_stack}->[-1]->push( $value );
 
     return $pc + 1;
 }
 
 sub o_stringify {
     my( $op, $runtime, $pc ) = @_;
-    my $v = pop @{$runtime->_stack};
+    my $v = pop @{$runtime->{_stack}};
 
-    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { string => $v->as_string } );
+    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new( { string => $v->as_string } );
 
     return $pc + 1;
 }
@@ -88,11 +88,11 @@ sub _make_binary_op {
     eval sprintf <<'EOT',
 sub %s {
     my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
-    my $v2 = pop @{$runtime->_stack};
+    my $v1 = pop @{$runtime->{_stack}};
+    my $v2 = pop @{$runtime->{_stack}};
     my $r = $v1->%s %s $v2->%s;
 
-    push @{$runtime->_stack},
+    push @{$runtime->{_stack}},
          Language::P::Value::StringNumber->new( { %s => $r } );
 
     return $pc + 1;
@@ -137,14 +137,14 @@ _make_binary_op( $_ ) foreach
 
 sub o_start_call {
     my( $op, $runtime, $pc ) = @_;
-    push @{$runtime->_stack}, Language::P::Value::List->new;
+    push @{$runtime->{_stack}}, Language::P::Value::List->new;
 
     return $pc + 1;
 }
 
 sub o_start_list {
     my( $op, $runtime, $pc ) = @_;
-    push @{$runtime->_stack}, Language::P::Value::List->new;
+    push @{$runtime->{_stack}}, Language::P::Value::List->new;
 
     return $pc + 1;
 }
@@ -157,7 +157,7 @@ sub o_end {
 
 sub o_call {
     my( $op, $runtime, $pc ) = @_;
-    my $sub = pop @{$runtime->_stack};
+    my $sub = pop @{$runtime->{_stack}};
 
     $sub->call( $runtime, $pc );
 
@@ -166,12 +166,12 @@ sub o_call {
 
 sub o_return {
     my( $op, $runtime, $pc ) = @_;
-    my $rv = $runtime->_stack->[-1];
+    my $rv = $runtime->{_stack}->[-1];
     my $rpc = $runtime->call_return;
 
     # FIXME context handling, assume scalar for now
     if( 1 ) {
-        push @{$runtime->_stack}, $rv->get_item( $rv->get_count - 1 )
+        push @{$runtime->{_stack}}, $rv->get_item( $rv->get_count - 1 )
                                       ->as_scalar;
     }
 
@@ -183,34 +183,34 @@ sub o_glob {
     my $value = $runtime->symbol_table->get_symbol( $op->{name}, '*',
                                                     $op->{create} );
 
-    push @{$runtime->_stack}, $value;
+    push @{$runtime->{_stack}}, $value;
 
     return $pc + 1;
 }
 
 sub o_lexical {
     my( $op, $runtime, $pc ) = @_;
-    my $value = $runtime->_stack->[$runtime->_frame - 3 - $op->{index}];
+    my $value = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
 
-    push @{$runtime->_stack}, $value;
+    push @{$runtime->{_stack}}, $value;
 
     return $pc + 1;
 }
 
 sub o_lexical_pad {
     my( $op, $runtime, $pc ) = @_;
-    my $pad = $runtime->_stack->[$runtime->_frame - 1];
+    my $pad = $runtime->{_stack}->[$runtime->{_frame} - 1];
 
-    push @{$runtime->_stack}, $pad->values->[$op->{index}];
+    push @{$runtime->{_stack}}, $pad->values->[$op->{index}];
 
     return $pc + 1;
 }
 
 sub o_parameter_index {
     my( $op, $runtime, $pc ) = @_;
-    my $value = $runtime->_stack->[$runtime->_frame - 3]->get_item( $op->{index} );
+    my $value = $runtime->{_stack}->[$runtime->{_frame} - 3]->get_item( $op->{index} );
 
-    push @{$runtime->_stack}, $value;
+    push @{$runtime->{_stack}}, $value;
 
     return $pc + 1;
 }
@@ -223,21 +223,21 @@ sub o_jump {
 
 sub o_jump_if_eq_immed {
     my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
+    my $v1 = pop @{$runtime->{_stack}};
 
     return $v1 == $op->{value} ? $op->{to} : $pc + 1;
 }
 
 sub o_jump_if_false {
     my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
+    my $v1 = pop @{$runtime->{_stack}};
 
     return !$v1->as_boolean_int ? $op->{to} : $pc + 1;
 }
 
 sub o_jump_if_true {
     my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
+    my $v1 = pop @{$runtime->{_stack}};
 
     return $v1->as_boolean_int ? $op->{to} : $pc + 1;
 }
@@ -252,11 +252,11 @@ sub _make_compare {
     eval sprintf <<'EOT',
 sub %s {
     my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
-    my $v2 = pop @{$runtime->_stack};
+    my $v1 = pop @{$runtime->{_stack}};
+    my $v2 = pop @{$runtime->{_stack}};
     my $r = $v1->%s %s $v2->%s ? 1 : 0;
 
-    push @{$runtime->_stack}, %s;
+    push @{$runtime->{_stack}}, %s;
 
     return $pc + 1;
 }
@@ -328,26 +328,26 @@ _make_compare( $_ ) foreach
 
 sub o_negate {
     my( $op, $runtime, $pc ) = @_;
-    my $v = pop @{$runtime->_stack};
+    my $v = pop @{$runtime->{_stack}};
 
-    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => -$v->get_integer } );
+    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new( { integer => -$v->get_integer } );
 
     return $pc + 1;
 }
 
 sub o_not {
     my( $op, $runtime, $pc ) = @_;
-    my $v = pop @{$runtime->_stack};
+    my $v = pop @{$runtime->{_stack}};
 
-    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => !$v->as_boolean_int } );
+    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new( { integer => !$v->as_boolean_int } );
 
     return $pc + 1;
 }
 
 sub o_assign {
     my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->_stack};
-    my $v2 = pop @{$runtime->_stack};
+    my $v1 = pop @{$runtime->{_stack}};
+    my $v2 = pop @{$runtime->{_stack}};
 
     $v1->assign( $v2 );
 
@@ -356,27 +356,27 @@ sub o_assign {
 
 sub o_glob_slot_create {
     my( $op, $runtime, $pc ) = @_;
-    my $glob = pop @{$runtime->_stack};
+    my $glob = pop @{$runtime->{_stack}};
     my $slot = $op->{slot};
 
-    push @{$runtime->_stack}, $glob->get_or_create_slot( $slot, $op->{create} );
+    push @{$runtime->{_stack}}, $glob->get_or_create_slot( $slot, $op->{create} );
 
     return $pc + 1;
 }
 
 sub o_glob_slot {
     my( $op, $runtime, $pc ) = @_;
-    my $glob = pop @{$runtime->_stack};
+    my $glob = pop @{$runtime->{_stack}};
     my $slot = $op->{slot};
 
-    push @{$runtime->_stack}, $glob->get_slot( $slot, $op->{create} );
+    push @{$runtime->{_stack}}, $glob->get_slot( $slot, $op->{create} );
 
     return $pc + 1;
 }
 
 sub o_unlink {
     my( $op, $runtime, $pc ) = @_;
-    my $args = pop @{$runtime->_stack};
+    my $args = pop @{$runtime->{_stack}};
     my @args;
 
     for( my $it = $args->iterator; $it->next; ) {
@@ -387,66 +387,66 @@ sub o_unlink {
 
     my $ret = unlink @args;
 
-    push @{$runtime->_stack}, Language::P::Value::StringNumber( { integer => $ret } );
+    push @{$runtime->{_stack}}, Language::P::Value::StringNumber( { integer => $ret } );
     return $pc + 1;
 }
 
 sub o_backtick {
     my( $op, $runtime, $pc ) = @_;
-    my $arg = pop @{$runtime->_stack};
+    my $arg = pop @{$runtime->{_stack}};
     my $command = $arg->as_string;
 
     # context
     my $ret = `$command`;
 
-    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { string => $ret } );
+    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new( { string => $ret } );
 
     return $pc + 1;
 }
 
 sub o_array_element {
     my( $op, $runtime, $pc ) = @_;
-    my $array = pop @{$runtime->_stack};
-    my $index = pop @{$runtime->_stack};
+    my $array = pop @{$runtime->{_stack}};
+    my $index = pop @{$runtime->{_stack}};
 
-    push @{$runtime->_stack}, $array->get_item( $index->as_integer );
+    push @{$runtime->{_stack}}, $array->get_item( $index->as_integer );
 
     return $pc + 1;
 }
 
 sub o_hash_element {
     my( $op, $runtime, $pc ) = @_;
-    my $hash = pop @{$runtime->_stack};
-    my $key = pop @{$runtime->_stack};
+    my $hash = pop @{$runtime->{_stack}};
+    my $key = pop @{$runtime->{_stack}};
 
-    push @{$runtime->_stack}, $hash->get_item( $key->as_string );
+    push @{$runtime->{_stack}}, $hash->get_item( $key->as_string );
 
     return $pc + 1;
 }
 
 sub o_array_size {
     my( $op, $runtime, $pc ) = @_;
-    my $array = pop @{$runtime->_stack};
+    my $array = pop @{$runtime->{_stack}};
 
-    push @{$runtime->_stack}, Language::P::Value::StringNumber->new( { integer => $array->get_count - 1 } );
+    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new( { integer => $array->get_count - 1 } );
 
     return $pc + 1;
 }
 
 sub o_reference {
     my( $op, $runtime, $pc ) = @_;
-    my $value = pop @{$runtime->_stack};
+    my $value = pop @{$runtime->{_stack}};
 
-    push @{$runtime->_stack}, Language::P::Value::Reference->new( { reference => $value } );
+    push @{$runtime->{_stack}}, Language::P::Value::Reference->new( { reference => $value } );
 
     return $pc + 1;
 }
 
 sub o_dereference_scalar {
     my( $op, $runtime, $pc ) = @_;
-    my $ref = pop @{$runtime->_stack};
+    my $ref = pop @{$runtime->{_stack}};
 
-    push @{$runtime->_stack}, $ref->dereference_scalar;
+    push @{$runtime->{_stack}}, $ref->dereference_scalar;
 
     return $pc + 1;
 }
