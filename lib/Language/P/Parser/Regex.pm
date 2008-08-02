@@ -44,11 +44,29 @@ sub _parse {
 
                 --$in_group;
                 $st = pop @values;
+            } elsif( $value->[1] eq '(?' ) {
+                ++$in_group;
+                my $type = $self->lexer->lex_pattern_group;
+
+                if( $type->[1] eq ':' ) {
+                    push @$st, Language::P::ParseTree::RXGroup->new
+                                   ( { components => [],
+                                       capture    => 0,
+                                       } );
+                } else {
+                    # remaining (?...) constructs
+                    die "Unhandled (?$type->[1]) in regexp";
+                }
+
+                my $nst = $st->[-1]->components;
+                push @values, $st;
+                $st = $nst;
             } elsif( $value->[1] eq '(' ) {
                 ++$in_group;
                 push @$st, Language::P::ParseTree::RXGroup->new
                                ( { components => [],
-                                    } );
+                                   capture    => 1,
+                                   } );
                 my $nst = $st->[-1]->components;
                 push @values, $st;
                 $st = $nst;
