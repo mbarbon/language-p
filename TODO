@@ -6,7 +6,6 @@ Parsing:
 - scoping
 - lexing of quoted strings
 - conditional constructs
-- lexing of integers/floating point
 - do/require/use/eval
 - undef
 - garbage collection
@@ -45,7 +44,10 @@ Parsing:
 Runtime:
 - integer -> float on overflow (also in parsing!)
 - proper scalar polimorphing
+  - mixed-mode arithmetic
 - proper handling of function return values
+  - implicit return
+  - context
 - encapsulate lexical lookup/closure
 - better handling of sub calls
   - encapsulate enter/leave
@@ -60,6 +62,9 @@ Refactoring:
 - check offsets for call sequence, refactor stack handling
 - proper handling of bytecode
 - replace all strings with integer constants/flags
+  - move lexer/parser constants to a separate module from runtime ones
+  - move information about bultins/overridables to a separate module
+    (currently in both lexer and parse-tree)
 - remove dependency from parser to implementation (::Values, scratchpad)
 - assert unlexed tokens are relexed with the correct expectations
 - assert lex_string/lex unlex buffers do not intermingle

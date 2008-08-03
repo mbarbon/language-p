@@ -366,6 +366,7 @@ my %prototype_ov =
     glob        => [ -1, -1, '@' ],
     close       => [  0,  1, '*' ],
     binmode     => [  0,  2, '*', '$' ],
+    abs         => [  0,  1, '$' ],
     );
 
 sub parsing_prototype { return $prototype_ov{$_[0]->function} }

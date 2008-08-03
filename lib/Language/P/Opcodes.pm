@@ -104,24 +104,24 @@ EOT
 
 _make_binary_op( $_ ) foreach
   ( { name     => 'o_add',
-      convert  => 'as_integer',
+      convert  => 'as_float',
       operator => '+',
-      new_type => 'integer',
+      new_type => 'float',
       },
     { name     => 'o_subtract',
-      convert  => 'as_integer',
+      convert  => 'as_float',
       operator => '-',
-      new_type => 'integer',
+      new_type => 'float',
       },
     { name     => 'o_multiply',
-      convert  => 'as_integer',
+      convert  => 'as_float',
       operator => '*',
-      new_type => 'integer',
+      new_type => 'float',
       },
     { name     => 'o_divide',
-      convert  => 'as_integer',
+      convert  => 'as_float',
       operator => '/',
-      new_type => 'integer',
+      new_type => 'float',
       },
     { name     => 'o_modulus',
       convert  => 'as_integer',
@@ -292,17 +292,22 @@ _make_compare( $_ ) foreach
       new_type => 'int',
       },
 
+    { name     => 'o_compare_i_le_scalar',
+      convert  => 'as_integer',
+      operator => '<=',
+      new_type => 'scalar',
+      },
     { name     => 'o_compare_i_eq_scalar',
       convert  => 'as_integer',
       operator => '==',
       new_type => 'scalar',
       },
-
     { name     => 'o_compare_i_ne_scalar',
       convert  => 'as_integer',
       operator => '!=',
       new_type => 'scalar',
       },
+
     { name     => 'o_compare_s_eq_int',
       convert  => 'as_string',
       operator => 'eq',
@@ -330,7 +335,16 @@ sub o_negate {
     my( $op, $runtime, $pc ) = @_;
     my $v = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new( { integer => -$v->get_integer } );
+    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new( { float => -$v->as_float } );
+
+    return $pc + 1;
+}
+
+sub o_abs {
+    my( $op, $runtime, $pc ) = @_;
+    my $v = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new( { float => abs $v->get_item( 0 )->as_float } );
 
     return $pc + 1;
 }

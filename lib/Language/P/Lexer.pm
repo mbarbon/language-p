@@ -124,7 +124,7 @@ my %keywords = map { ( $_ => 1 ) }
   qw(print defined return undef);
 my %overridables = map { ( $_ => 1 ) }
   qw(unlink glob readline die open pipe chdir rmdir glob readline
-     close binmode);
+     close binmode abs);
 
 my %quoted_chars =
   ( 'n' => "\n",
