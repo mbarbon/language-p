@@ -250,6 +250,7 @@ my %builtins =
     return   => 'return',
     unlink   => 'unlink',
     %short_circuit,
+    '.'      => 'concat',
     '+'      => 'add',
     '*'      => 'multiply',
     '-'      => 'subtract',
