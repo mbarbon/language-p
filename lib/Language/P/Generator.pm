@@ -361,6 +361,8 @@ sub _binary_op_cond {
 
     if( !$conditionals{$tree->op} ) {
         _anything_cond( $self, $tree, $true, $false );
+
+        return;
     }
 
     $self->dispatch( $tree->right );
