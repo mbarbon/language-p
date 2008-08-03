@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..3\n";
+print "1..4\n";
 
 $a = 1;
 
@@ -30,4 +30,10 @@ if( $a < 2 ) {
     print "not ok 3\n";
 } else {
     print "ok 3\n";
+}
+
+unless( $a > 2 ) {
+    print "ok 4\n";
+} else {
+    print "not ok 4\n";
 }
