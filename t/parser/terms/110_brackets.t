@@ -17,9 +17,10 @@ root:
         name: #
         sigil: @
     subscript:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 1
         type: number
+        flags: 1
     type: [
     reference: 0
 EOE
@@ -34,9 +35,10 @@ root:
         name: _
         sigil: @
     subscript:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 1
         type: number
+        flags: 1
     type: [
     reference: 0
 EOE
@@ -51,9 +53,10 @@ root:
         name: foo
         sigil: @
     subscript:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 1
         type: number
+        flags: 1
     type: [
     reference: 0
 EOE
@@ -68,9 +71,10 @@ root:
         name: foo
         sigil: %
     subscript:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 2
         type: number
+        flags: 1
     type: {
     reference: 0
 EOE
@@ -88,13 +92,15 @@ root:
         class: Language::P::ParseTree::BinOp
         op: +
         left:
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 2
             type: number
+            flags: 1
         right:
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 3
             type: number
+            flags: 1
     type: {
     reference: 0
 EOE
@@ -126,13 +132,15 @@ root:
         class: Language::P::ParseTree::BinOp
         op: +
         left:
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 1
             type: number
+            flags: 1
         right:
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 2
             type: number
+            flags: 1
     type: (
     reference: 1
 EOE
@@ -149,22 +157,25 @@ root:
     subscript:
         class: Language::P::ParseTree::List
         expressions:
-                class: Language::P::ParseTree::Constant
+                class: Language::P::ParseTree::Number
                 value: 1
                 type: number
+                flags: 1
                 class: Language::P::ParseTree::Constant
                 value: xx
                 type: string
                 class: Language::P::ParseTree::BinOp
                 op: +
                 left:
-                    class: Language::P::ParseTree::Constant
+                    class: Language::P::ParseTree::Number
                     value: 3
                     type: number
+                    flags: 1
                 right:
-                    class: Language::P::ParseTree::Constant
+                    class: Language::P::ParseTree::Number
                     value: 4
                     type: number
+                    flags: 1
     type: [
 EOE
 
@@ -180,22 +191,25 @@ root:
     subscript:
         class: Language::P::ParseTree::List
         expressions:
-                class: Language::P::ParseTree::Constant
+                class: Language::P::ParseTree::Number
                 value: 1
                 type: number
+                flags: 1
                 class: Language::P::ParseTree::Constant
                 value: xx
                 type: string
                 class: Language::P::ParseTree::BinOp
                 op: +
                 left:
-                    class: Language::P::ParseTree::Constant
+                    class: Language::P::ParseTree::Number
                     value: 3
                     type: number
+                    flags: 1
                 right:
-                    class: Language::P::ParseTree::Constant
+                    class: Language::P::ParseTree::Number
                     value: 4
                     type: number
+                    flags: 1
     type: {
 EOE
 
@@ -219,30 +233,34 @@ root:
                             name: foo
                             sigil: @
                         subscript:
-                            class: Language::P::ParseTree::Constant
+                            class: Language::P::ParseTree::Number
                             value: 1
                             type: number
+                            flags: 1
                         type: [
                         reference: 0
                     subscript:
-                        class: Language::P::ParseTree::Constant
+                        class: Language::P::ParseTree::Number
                         value: 2
                         type: number
+                        flags: 1
                     type: {
                     reference: 1
                 subscript: undef
                 type: (
                 reference: 1
             subscript:
-                class: Language::P::ParseTree::Constant
+                class: Language::P::ParseTree::Number
                 value: 3
                 type: number
+                flags: 1
             type: [
             reference: 1
         subscript:
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 5
             type: number
+            flags: 1
         type: {
         reference: 1
     subscript:
@@ -252,17 +270,20 @@ root:
             class: Language::P::ParseTree::BinOp
             op: +
             left:
-                class: Language::P::ParseTree::Constant
+                class: Language::P::ParseTree::Number
                 value: 1
                 type: number
+                flags: 1
             right:
-                class: Language::P::ParseTree::Constant
+                class: Language::P::ParseTree::Number
                 value: 2
                 type: number
+                flags: 1
         right:
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 3
             type: number
+            flags: 1
     type: (
     reference: 1
 EOE
@@ -277,9 +298,10 @@ root:
         name: foo
         sigil: @
     subscript:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 1
         type: number
+        flags: 1
     type: [
     reference: 0
 EOE
@@ -306,9 +328,10 @@ root:
                         value: x
                         type: string
     subscript:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 1
         type: number
+        flags: 1
     type: [
     reference: 0
 EOE

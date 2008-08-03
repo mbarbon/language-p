@@ -1,6 +1,4 @@
 Parsing:
-- proper scalar polimorphing
-- proper handling of function return values
 - scalar/array/void context
 - stashes
 - global variables/symbols (STDOUT!)
@@ -10,21 +8,12 @@ Parsing:
 - conditional constructs
 - lexing of integers/floating point
 - do/require/use/eval
-- multiple dispatch operators
-- array/list/hash assignment
-  - optimize lists with common assignments
 - undef
 - garbage collection
 - labels
 - subroutine prototypes
 - scope handling of conditional/while/continue
 - handle errors
-- encapsulate lexical lookup/closure
-- better handling of sub calls
-  - encapsulate enter/leave
-- proper morphing on scalar assignment
-- autovivification
-- create common superclass for reference/scalar
 - handling of parse errors with recovery
 - strictures
 - lexical pragmas/hints
@@ -52,6 +41,20 @@ Parsing:
   - always a pattern after =~/!~
 - intuit_more, esp. inside patterns
 - \xaf, \011,etc when lexing quoted strings
+
+Runtime:
+- integer -> float on overflow (also in parsing!)
+- proper scalar polimorphing
+- proper handling of function return values
+- encapsulate lexical lookup/closure
+- better handling of sub calls
+  - encapsulate enter/leave
+- proper morphing on scalar assignment
+- autovivification
+- create common superclass for reference/scalar
+- multiple dispatch operators
+- array/list/hash assignment
+  - optimize lists with common assignments
 
 Refactoring:
 - check offsets for call sequence, refactor stack handling

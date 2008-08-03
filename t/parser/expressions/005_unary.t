@@ -11,18 +11,26 @@ parse_and_diff( <<'EOP', <<'EOE' );
 +12
 EOP
 root:
-    class: Language::P::ParseTree::Constant
-    value: +12
-    type: number
+    class: Language::P::ParseTree::UnOp
+    op: +
+    left:
+        class: Language::P::ParseTree::Number
+        value: 12
+        type: number
+        flags: 1
 EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );
 -12
 EOP
 root:
-    class: Language::P::ParseTree::Constant
-    value: -12
-    type: number
+    class: Language::P::ParseTree::UnOp
+    op: -
+    left:
+        class: Language::P::ParseTree::Number
+        value: 12
+        type: number
+        flags: 1
 EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );
@@ -32,9 +40,10 @@ root:
     class: Language::P::ParseTree::UnOp
     op: -
     left:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 1
         type: number
+        flags: 1
 EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );
@@ -56,9 +65,10 @@ root:
     class: Language::P::ParseTree::UnOp
     op: \
     left:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 1
         type: number
+        flags: 1
 EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );

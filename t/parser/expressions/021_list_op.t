@@ -14,12 +14,14 @@ root:
     class: Language::P::ParseTree::FunctionCall
     function: x
     arguments:
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 1
             type: number
-            class: Language::P::ParseTree::Constant
+            flags: 1
+            class: Language::P::ParseTree::Number
             value: 2
             type: number
+            flags: 1
 EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );
@@ -34,12 +36,14 @@ root:
     class: Language::P::ParseTree::FunctionCall
     function: x
     arguments:
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 1
             type: number
-            class: Language::P::ParseTree::Constant
+            flags: 1
+            class: Language::P::ParseTree::Number
             value: 2
             type: number
+            flags: 1
 EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );
@@ -55,12 +59,14 @@ root:
     class: Language::P::ParseTree::FunctionCall
     function: x
     arguments:
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 1
             type: number
-            class: Language::P::ParseTree::Constant
+            flags: 1
+            class: Language::P::ParseTree::Number
             value: 2
             type: number
+            flags: 1
 EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );
@@ -74,16 +80,18 @@ root:
             function: print
             arguments: undef
             filehandle: undef
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 1
             type: number
+            flags: 1
             class: Language::P::ParseTree::Print
             function: print
             arguments: undef
             filehandle: undef
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 1
             type: number
+            flags: 1
 EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );
@@ -97,13 +105,15 @@ root:
             function: print
             arguments: undef
             filehandle: undef
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 1
             type: number
+            flags: 1
             class: Language::P::ParseTree::Constant
             value: print
             type: string
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 1
             type: number
+            flags: 1
 EOE

@@ -16,17 +16,20 @@ root:
         class: Language::P::ParseTree::BinOp
         op: <
         left:
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 1
             type: number
+            flags: 1
         right:
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 2
             type: number
+            flags: 1
     block:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 1
         type: number
+        flags: 1
     block_type: while
 EOE
 
@@ -36,20 +39,23 @@ EOP
 root:
     class: Language::P::ParseTree::ConditionalLoop
     condition:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 1
         type: number
+        flags: 1
     block:
         class: Language::P::ParseTree::BinOp
         op: +
         left:
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 1
             type: number
+            flags: 1
         right:
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 1
             type: number
+            flags: 1
     block_type: until
 EOE
 
@@ -60,19 +66,22 @@ root:
     class: Language::P::ParseTree::Conditional
     iftrues:
             if
-                class: Language::P::ParseTree::Constant
+                class: Language::P::ParseTree::Number
                 value: 1
                 type: number
+                flags: 1
                 class: Language::P::ParseTree::BinOp
                 op: +
                 left:
-                    class: Language::P::ParseTree::Constant
+                    class: Language::P::ParseTree::Number
                     value: 1
                     type: number
+                    flags: 1
                 right:
-                    class: Language::P::ParseTree::Constant
+                    class: Language::P::ParseTree::Number
                     value: 1
                     type: number
+                    flags: 1
     iffalse: undef
 EOE
 
@@ -83,19 +92,22 @@ root:
     class: Language::P::ParseTree::Conditional
     iftrues:
             unless
-                class: Language::P::ParseTree::Constant
+                class: Language::P::ParseTree::Number
                 value: 1
                 type: number
+                flags: 1
                 class: Language::P::ParseTree::BinOp
                 op: +
                 left:
-                    class: Language::P::ParseTree::Constant
+                    class: Language::P::ParseTree::Number
                     value: 1
                     type: number
+                    flags: 1
                 right:
-                    class: Language::P::ParseTree::Constant
+                    class: Language::P::ParseTree::Number
                     value: 1
                     type: number
+                    flags: 1
     iffalse: undef
 EOE
 
@@ -107,16 +119,19 @@ root:
     expression:
         class: Language::P::ParseTree::List
         expressions:
-                class: Language::P::ParseTree::Constant
+                class: Language::P::ParseTree::Number
                 value: 1
                 type: number
-                class: Language::P::ParseTree::Constant
+                flags: 1
+                class: Language::P::ParseTree::Number
                 value: 2
                 type: number
+                flags: 1
     block:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 1
         type: number
+        flags: 1
     variable:
         class: Language::P::ParseTree::Symbol
         name: _

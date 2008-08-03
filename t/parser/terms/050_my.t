@@ -29,9 +29,10 @@ root:
         sigil: $
         declaration_type: my
     right:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 1
         type: number
+        flags: 1
 EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );
@@ -54,15 +55,18 @@ root:
     right:
         class: Language::P::ParseTree::List
         expressions:
-                class: Language::P::ParseTree::Constant
+                class: Language::P::ParseTree::Number
                 value: 1
                 type: number
-                class: Language::P::ParseTree::Constant
+                flags: 1
+                class: Language::P::ParseTree::Number
                 value: 2
                 type: number
-                class: Language::P::ParseTree::Constant
+                flags: 1
+                class: Language::P::ParseTree::Number
                 value: 3
                 type: number
+                flags: 1
 EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );

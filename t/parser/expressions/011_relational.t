@@ -14,13 +14,15 @@ root:
     class: Language::P::ParseTree::BinOp
     op: <
     left:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 1
         type: number
+        flags: 1
     right:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 2
         type: number
+        flags: 1
 EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );
@@ -30,13 +32,15 @@ root:
     class: Language::P::ParseTree::BinOp
     op: >
     left:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 1
         type: number
+        flags: 1
     right:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 2
         type: number
+        flags: 1
 EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );
@@ -46,13 +50,15 @@ root:
     class: Language::P::ParseTree::BinOp
     op: >=
     left:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 1
         type: number
+        flags: 1
     right:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 2
         type: number
+        flags: 1
 EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );
@@ -62,11 +68,13 @@ root:
     class: Language::P::ParseTree::BinOp
     op: <=
     left:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 1
         type: number
+        flags: 1
     right:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 2
         type: number
+        flags: 1
 EOE

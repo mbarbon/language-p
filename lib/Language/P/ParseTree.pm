@@ -112,6 +112,18 @@ sub type { 'string' }
 sub bare { 1 }
 sub is_bareword { 1 }
 
+package Language::P::ParseTree::Number;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Constant);
+
+our @FIELDS = qw(flags);
+
+sub type { 'number' }
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
 package Language::P::ParseTree::QuotedString;
 
 use strict;
