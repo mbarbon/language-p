@@ -20,13 +20,20 @@ use constant
     T_ID          => 1,
     T_KEYWORD     => 2,
     T_OVERRIDABLE => 3,
+
+    T_INTEGER     => 1,
+    T_FLOAT       => 2,
+    T_HEXADECIMAL => 4,
+    T_OCTAL       => 8,
+    T_BINARY      => 16,
     };
 
 use Exporter qw(import);
 
 our @EXPORT_OK =
   qw(X_NOTHING X_STATE X_TERM X_OPERATOR
-     T_ID T_SPECIAL T_NUMBER T_STRING T_KEYWORD T_OVERRIDABLE);
+     T_ID T_SPECIAL T_NUMBER T_STRING T_KEYWORD T_OVERRIDABLE
+     T_INTEGER T_FLOAT T_HEXADECIMAL T_OCTAL T_BINARY);
 our %EXPORT_TAGS =
   ( all  => \@EXPORT_OK,
     );
@@ -86,6 +93,7 @@ my %ops =
     'ne'  => 'SNOTEQUAL',
     '/'   => 'SLASH',
     '\\'  => 'BACKSLASH',
+    '.'   => 'DOT',
     '..'  => 'DOTDOT',
     '...' => 'DOTDOTDOT',
     '+'   => 'PLUS',
@@ -336,6 +344,65 @@ sub lex_identifier {
     return $id;
 }
 
+sub lex_number {
+    my( $self ) = @_;
+    local $_ = $self->buffer;
+    my( $num, $flags ) = ( '', 0 );
+
+    $$_ =~ s/^0([xb]?)//x and do {
+        if( $1 eq 'b' ) {
+            # binary number
+            if( $$_ =~ s/^([01]+)// ) {
+                $flags = T_BINARY | T_INTEGER;
+                $num .= $1;
+
+                return [ 'NUMBER', $num, $flags ];
+            } else {
+                die "Invalid binary digit";
+            }
+        } elsif( $1 eq 'x' ) {
+            # hexadecimal number
+            if( $$_ =~ s/^([0-9a-fA-F]+)// ) {
+                $flags = T_HEXADECIMAL | T_INTEGER;
+                $num .= $1;
+
+                return [ 'NUMBER', $num, $flags ];
+            } else {
+                die "Invalid hexadecimal digit";
+            }
+        } else {
+            # maybe octal number
+            if( $$_ =~ s/^([0-7]+)// ) {
+                $flags = T_OCTAL | T_INTEGER;
+                $num .= $1;
+                $$_ =~ /^[89]/ and die "Invalid octal digit";
+
+                return [ 'NUMBER', $num, $flags ];
+            } else {
+                $flags = T_INTEGER;
+                $num = '0'
+            }
+        }
+    };
+    $$_ =~ s/^(\d+)//x and do {
+        $flags = T_INTEGER;
+        $num .= $1;
+    };
+    # '..' operator (es. 12..15)
+    $$_ =~ /^\.\./ and return [ 'NUMBER', $num, $flags ];
+    $$_ =~ s/^\.(\d*)//x and do {
+        $flags = T_FLOAT;
+        $num = '0' unless length $num;
+        $num .= ".$1" if length $1;
+    };
+    $$_ =~ s/^[eE]([+-]?\d+)//x and do {
+        $flags = T_FLOAT;
+        $num .= "e$1";
+    };
+
+    return [ 'NUMBER', $num, $flags ];
+}
+
 my %quote_end = qw!( ) { } [ ] < >!;
 my %regex_flags =
   ( m  => 'msixopgc',
@@ -440,7 +507,7 @@ sub lex {
     local $_ = $self->buffer;
     return [ 'SPECIAL', 'EOF' ] unless length $$_;
 
-    $$_ =~ s/^([-+]?[\.\d]+)//x and return [ 'NUMBER', $1 ];
+    $$_ =~ /^\d|^\.\d/ and return $self->lex_number;
     $$_ =~ s/^(q|qq|qx|qw|m|qr|s|tr|y)(?=\W)//x and
         return _prepare_sublex( $self, $1, undef );
     $$_ =~ s/^(\w+)//x and do {
@@ -503,7 +570,7 @@ sub lex {
             return [ 'SLASH', '/' ];
         }
     };
-    $$_ =~ s/^([:;,(){}\[\]\?<>!=\/\\\+\-])//x and return [ $ops{$1}, $1 ];
+    $$_ =~ s/^([:;,(){}\[\]\?<>!=\/\\\+\-\.])//x and return [ $ops{$1}, $1 ];
 
     die "Lexer error: '$$_'";
 }

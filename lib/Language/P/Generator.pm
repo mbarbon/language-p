@@ -148,6 +148,7 @@ my %dispatch =
     UnOp                   => '_unary_op',
     BinOp                  => '_binary_op',
     Constant               => '_constant',
+    Number                 => '_constant',
     Symbol                 => '_symbol',
     LexicalDeclaration     => '_lexical_declaration',
     LexicalSymbol          => '_lexical_declaration',

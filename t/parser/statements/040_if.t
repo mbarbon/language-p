@@ -23,14 +23,16 @@ root:
                     name: a
                     sigil: $
                 right:
-                    class: Language::P::ParseTree::Constant
+                    class: Language::P::ParseTree::Number
                     value: 2
                     type: number
+                    flags: 1
                 class: Language::P::ParseTree::Block
                 lines:
-                        class: Language::P::ParseTree::Constant
+                        class: Language::P::ParseTree::Number
                         value: 1
                         type: number
+                        flags: 1
     iffalse: undef
 EOE
 
@@ -50,14 +52,16 @@ root:
                     name: a
                     sigil: $
                 right:
-                    class: Language::P::ParseTree::Constant
+                    class: Language::P::ParseTree::Number
                     value: 2
                     type: number
+                    flags: 1
                 class: Language::P::ParseTree::Block
                 lines:
-                        class: Language::P::ParseTree::Constant
+                        class: Language::P::ParseTree::Number
                         value: 1
                         type: number
+                        flags: 1
     iffalse: undef
 EOE
 
@@ -79,22 +83,25 @@ root:
                     name: a
                     sigil: $
                 right:
-                    class: Language::P::ParseTree::Constant
+                    class: Language::P::ParseTree::Number
                     value: 2
                     type: number
+                    flags: 1
                 class: Language::P::ParseTree::Block
                 lines:
-                        class: Language::P::ParseTree::Constant
+                        class: Language::P::ParseTree::Number
                         value: 1
                         type: number
+                        flags: 1
     iffalse:
         else
         undef
             class: Language::P::ParseTree::Block
             lines:
-                    class: Language::P::ParseTree::Constant
+                    class: Language::P::ParseTree::Number
                     value: 3
                     type: number
+                    flags: 1
 EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );
@@ -117,14 +124,16 @@ root:
                     name: a
                     sigil: $
                 right:
-                    class: Language::P::ParseTree::Constant
+                    class: Language::P::ParseTree::Number
                     value: 2
                     type: number
+                    flags: 1
                 class: Language::P::ParseTree::Block
                 lines:
-                        class: Language::P::ParseTree::Constant
+                        class: Language::P::ParseTree::Number
                         value: 1
                         type: number
+                        flags: 1
             if
                 class: Language::P::ParseTree::BinOp
                 op: <
@@ -133,20 +142,23 @@ root:
                     name: a
                     sigil: $
                 right:
-                    class: Language::P::ParseTree::Constant
+                    class: Language::P::ParseTree::Number
                     value: 3
                     type: number
+                    flags: 1
                 class: Language::P::ParseTree::Block
                 lines:
-                        class: Language::P::ParseTree::Constant
+                        class: Language::P::ParseTree::Number
                         value: 2
                         type: number
+                        flags: 1
     iffalse:
         else
         undef
             class: Language::P::ParseTree::Block
             lines:
-                    class: Language::P::ParseTree::Constant
+                    class: Language::P::ParseTree::Number
                     value: 3
                     type: number
+                    flags: 1
 EOE

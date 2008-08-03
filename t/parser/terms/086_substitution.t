@@ -93,9 +93,10 @@ root:
                     sigil: $
                     declaration_type: my
                 right:
-                    class: Language::P::ParseTree::Constant
+                    class: Language::P::ParseTree::Number
                     value: 1
                     type: number
+                    flags: 1
                 class: Language::P::ParseTree::LexicalSymbol
                 name: x
                 sigil: $

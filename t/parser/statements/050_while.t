@@ -22,15 +22,17 @@ root:
             name: a
             sigil: $
         right:
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 2
             type: number
+            flags: 1
     block:
         class: Language::P::ParseTree::Block
         lines:
-                class: Language::P::ParseTree::Constant
+                class: Language::P::ParseTree::Number
                 value: 1
                 type: number
+                flags: 1
     block_type: while
 EOE
 
@@ -49,14 +51,16 @@ root:
             name: a
             sigil: $
         right:
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 2
             type: number
+            flags: 1
     block:
         class: Language::P::ParseTree::Block
         lines:
-                class: Language::P::ParseTree::Constant
+                class: Language::P::ParseTree::Number
                 value: 1
                 type: number
+                flags: 1
     block_type: until
 EOE

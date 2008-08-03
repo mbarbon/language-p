@@ -862,9 +862,9 @@ sub _parse_term_terminal {
             die;
         }
     } elsif( $token->[0] eq 'NUMBER' ) {
-        return Language::P::ParseTree::Constant->new( { type  => 'number',
-                                                        value => $token->[1],
-                                                        } );
+        return Language::P::ParseTree::Number->new( { value => $token->[1],
+                                                      flags => $token->[2],
+                                                      } );
     } elsif( $token->[1] eq '$#' || $token->[1] =~ /[\*\$%@&]/ ) {
         return _parse_indirobj_maybe_subscripts( $self, $token );
     } elsif(    $token->[0] eq 'ID' && $token->[2] == T_KEYWORD

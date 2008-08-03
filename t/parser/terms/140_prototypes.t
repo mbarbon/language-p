@@ -17,12 +17,14 @@ root:
             class: Language::P::ParseTree::Builtin
             function: defined
             arguments:
-                    class: Language::P::ParseTree::Constant
+                    class: Language::P::ParseTree::Number
                     value: 1
                     type: number
-            class: Language::P::ParseTree::Constant
+                    flags: 1
+            class: Language::P::ParseTree::Number
             value: 2
             type: number
+            flags: 1
     filehandle: undef
 EOE
 
@@ -36,12 +38,14 @@ root:
             class: Language::P::ParseTree::Overridable
             function: unlink
             arguments:
-                    class: Language::P::ParseTree::Constant
+                    class: Language::P::ParseTree::Number
                     value: 1
                     type: number
-                    class: Language::P::ParseTree::Constant
+                    flags: 1
+                    class: Language::P::ParseTree::Number
                     value: 2
                     type: number
+                    flags: 1
     filehandle: undef
 EOE
 

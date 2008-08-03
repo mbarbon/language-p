@@ -156,9 +156,10 @@ root:
         name: x
         sigil: $
     right:
-        class: Language::P::ParseTree::Constant
+        class: Language::P::ParseTree::Number
         value: 1
         type: number
+        flags: 1
 EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );

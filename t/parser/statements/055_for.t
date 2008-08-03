@@ -22,15 +22,17 @@ root:
             name: i
             sigil: $
         right:
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 10
             type: number
+            flags: 1
     block:
         class: Language::P::ParseTree::Block
         lines:
-                class: Language::P::ParseTree::Constant
+                class: Language::P::ParseTree::Number
                 value: 1
                 type: number
+                flags: 1
     block_type: for
     initializer:
         class: Language::P::ParseTree::BinOp
@@ -41,9 +43,10 @@ root:
             sigil: $
             declaration_type: my
         right:
-            class: Language::P::ParseTree::Constant
+            class: Language::P::ParseTree::Number
             value: 0
             type: number
+            flags: 1
     step:
         class: Language::P::ParseTree::BinOp
         op: =
@@ -59,9 +62,10 @@ root:
                 name: i
                 sigil: $
             right:
-                class: Language::P::ParseTree::Constant
+                class: Language::P::ParseTree::Number
                 value: 1
                 type: number
+                flags: 1
 EOE
 
 parse_and_diff( <<'EOP', <<'EOE' );
@@ -78,9 +82,10 @@ root:
     block:
         class: Language::P::ParseTree::Block
         lines:
-                class: Language::P::ParseTree::Constant
+                class: Language::P::ParseTree::Number
                 value: 1
                 type: number
+                flags: 1
     variable:
         class: Language::P::ParseTree::Symbol
         name: _
@@ -101,9 +106,10 @@ root:
     block:
         class: Language::P::ParseTree::Block
         lines:
-                class: Language::P::ParseTree::Constant
+                class: Language::P::ParseTree::Number
                 value: 1
                 type: number
+                flags: 1
     variable:
         class: Language::P::ParseTree::Symbol
         name: x
@@ -124,9 +130,10 @@ root:
     block:
         class: Language::P::ParseTree::Block
         lines:
-                class: Language::P::ParseTree::Constant
+                class: Language::P::ParseTree::Number
                 value: 1
                 type: number
+                flags: 1
     variable:
         class: Language::P::ParseTree::LexicalDeclaration
         name: x
