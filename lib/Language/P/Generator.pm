@@ -457,12 +457,12 @@ sub _cond_loop {
 sub _cond {
     my( $self, $tree ) = @_;
 
-    die if $tree->iftrues->[0]->[0] ne 'if';
-
     my $end = _new_label;
     foreach my $elsif ( @{$tree->iftrues} ) {
+        my $is_unless = $elsif->[0] eq 'unless';
         my( $true, $false ) = ( _new_label, _new_label );
-        $self->dispatch_cond( $elsif->[1], $true, $false );
+        $self->dispatch_cond( $elsif->[1], $is_unless ? ( $false, $true ) :
+                                                        ( $true, $false ) );
         _set_label( $true, scalar @bytecode );
         $self->dispatch( $elsif->[2] );
         push @bytecode, o( 'jump' );
