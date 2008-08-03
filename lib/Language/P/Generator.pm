@@ -11,6 +11,7 @@ use Language::P::Value::StringNumber;
 use Language::P::Value::Handle;
 use Language::P::Value::ScratchPad;
 use Language::P::Value::Regexp;
+use Language::P::Lexer; # KILLME
 
 # global on purpose
 our %debug_options;
@@ -249,12 +250,15 @@ my %builtins =
   ( print    => 'print',
     return   => 'return',
     unlink   => 'unlink',
+    abs      => 'abs',
     %short_circuit,
     '.'      => 'concat',
     '+'      => 'add',
     '*'      => 'multiply',
     '-'      => 'subtract',
     '='      => 'assign',
+    '<='     => 'compare_i_le_scalar',
+    'le'     => 'compare_s_le_scalar',
     '=='     => 'compare_i_eq_scalar',
     'eq'     => 'compare_s_eq_scalar',
     '!='     => 'compare_i_ne_scalar',
@@ -390,7 +394,22 @@ sub _constant {
     my $v;
 
     if( $type eq 'number' ) {
-        $v = Language::P::Value::StringNumber->new( { integer => $tree->value } );
+        if( $tree->flags == Language::P::Lexer::T_INTEGER ) {
+            $v = Language::P::Value::StringNumber
+                     ->new( { integer => $tree->value } );
+        } elsif( $tree->flags == Language::P::Lexer::T_FLOAT ) {
+            $v = Language::P::Value::StringNumber
+                     ->new( { float => $tree->value } );
+        } elsif( $tree->flags & Language::P::Lexer::T_OCTAL ) {
+            $v = Language::P::Value::StringNumber
+                     ->new( { integer => oct '0' . $tree->value } );
+        } elsif( $tree->flags & Language::P::Lexer::T_HEXADECIMAL ) {
+            $v = Language::P::Value::StringNumber
+                     ->new( { integer => oct '0x' . $tree->value } );
+        } elsif( $tree->flags & Language::P::Lexer::T_BINARY ) {
+            $v = Language::P::Value::StringNumber
+                     ->new( { integer => oct '0b' . $tree->value } );
+        }
     } elsif( $type eq 'string' ) {
         $v = Language::P::Value::StringNumber->new( { string => $tree->value } );
     } else {
