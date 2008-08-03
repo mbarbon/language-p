@@ -16,10 +16,10 @@ our @EXPORT_OK = qw(o);
 sub o {
     my( $name, %args ) = @_;
 
-    die "Invalid opcode '$name'"
+    Carp::confess "Invalid opcode '$name'"
         unless defined $Language::P::Opcodes::{"o_$name"};
     my $fun = *{$Language::P::Opcodes::{"o_$name"}}{CODE};
-    die "Invalid opcode '$name'"
+    Carp::confess "Invalid opcode '$name'"
         unless defined $fun;
 
     return { %args,
