@@ -13,9 +13,20 @@ sub new {
     my $self = $class->SUPER::new( $args );
 
     # for @_
-    $self->{stack_size} = 1;
+    $self->{stack_size} ||= 1;
 
     return $self;
+}
+
+sub call {
+    my( $self, $runtime, $pc ) = @_;
+    my $args = pop @{$runtime->{_stack}};
+
+    $self->SUPER::call( $runtime, $pc );
+
+    my( $stack, $frame ) = ( $runtime->{_stack}, $runtime->{_frame} );
+
+    $stack->[$frame - 3] = $args;
 }
 
 package Language::P::Value::Subroutine::Stub;
