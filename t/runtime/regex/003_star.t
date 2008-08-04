@@ -7,7 +7,7 @@ use Test::Differences;
 
 use Language::P::Runtime;
 use Language::P::Opcodes qw(o);
-use Language::P::Value::Regexp;
+use Language::P::Value::Regex;
 
 my $runtime = Language::P::Runtime->new;
 
@@ -24,7 +24,7 @@ my @re3 =
     # end quantifier
     o( 'rx_accept',      groups   => 1 ),
     );
-my $re3 = Language::P::Value::Regexp->new
+my $re3 = Language::P::Value::Regex->new
               ( { bytecode   => \@re3,
                   stack_size => 0,
                   } );
@@ -44,7 +44,7 @@ my @re7 =
     o( 'rx_capture_end', group    => 1 ),
     o( 'rx_accept',      groups   => 2 ),
     );
-my $re7 = Language::P::Value::Regexp->new
+my $re7 = Language::P::Value::Regex->new
               ( { bytecode   => \@re7,
                   stack_size => 0,
                   } );

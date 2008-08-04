@@ -7,7 +7,7 @@ use Test::Differences;
 
 use Language::P::Runtime;
 use Language::P::Opcodes qw(o);
-use Language::P::Value::Regexp;
+use Language::P::Value::Regex;
 
 my $runtime = Language::P::Runtime->new;
 
@@ -31,7 +31,7 @@ my @re1 =
     o( 'rx_exact',       string   => 'x', length => 1 ),
     o( 'rx_accept',      groups   => 0 ),
     );
-my $re1 = Language::P::Value::Regexp->new
+my $re1 = Language::P::Value::Regex->new
               ( { bytecode   => \@re1,
                   stack_size => 0,
                   } );
