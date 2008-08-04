@@ -138,8 +138,8 @@ sub o_rx_match {
 
 sub o_rx_start_match {
     my( $op, $runtime, $pc ) = @_;
-    my $string = $runtime->{_stack}[-6]; # FIXME offset
-    my $start = $runtime->{_stack}[-7]; # FIXME offset
+    my $string = $runtime->{_stack}[$runtime->{_frame} - 3];
+    my $start = $runtime->{_stack}[$runtime->{_frame} - 4];
     my @stack;
     my $cxt = { string   => $string,
                 pos      => $start,

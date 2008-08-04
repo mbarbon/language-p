@@ -76,8 +76,8 @@ sub push_frame {
     my $last_frame = $self->{_frame};
     my $stack_size = $#{$self->{_stack}};
 
-    $#{$self->{_stack}} = $self->{_frame} = $stack_size + 1 + $size + 1;
-    $self->{_stack}->[-1] = [ $stack_size, $last_frame ];
+    $#{$self->{_stack}} = $self->{_frame} = $stack_size + $size + 1;
+    $self->{_stack}->[$self->{_frame}] = [ $stack_size, $last_frame ];
 
 #    print "Stack size: $stack_size -> $self->{_frame}\n";
 

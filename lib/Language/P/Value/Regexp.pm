@@ -26,7 +26,6 @@ sub match {
     foreach my $i ( 0 .. length( $string ) ) {
         local $SIG{__WARN__} = sub { Carp::confess @_ };
         $runtime->{_stack}[-2] = $i;
-        push @{$runtime->{_stack}}, 'KILLME';
         # print "Start: $i\n";
         $self->call( $runtime, -2 ); # -2 so we can blindly add 1
         $runtime->run;
