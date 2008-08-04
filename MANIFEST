@@ -8,7 +8,7 @@ lib/Language/P.pm
 lib/Language/P/Generator.pm
 lib/Language/P/Lexer.pm
 lib/Language/P/Opcodes.pm
-lib/Language/P/Opcodes/Regexp.pm
+lib/Language/P/Opcodes/Regex.pm
 lib/Language/P/ParseTree.pm
 lib/Language/P/Parser.pm
 lib/Language/P/Parser/Regex.pm
@@ -19,7 +19,7 @@ lib/Language/P/Value/Code.pm
 lib/Language/P/Value/Handle.pm
 lib/Language/P/Value/List.pm
 lib/Language/P/Value/Reference.pm
-lib/Language/P/Value/Regexp.pm
+lib/Language/P/Value/Regex.pm
 lib/Language/P/Value/Scalar.pm
 lib/Language/P/Value/ScratchPad.pm
 lib/Language/P/Value/StringNumber.pm

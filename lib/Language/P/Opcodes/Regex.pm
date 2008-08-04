@@ -1,4 +1,4 @@
-package Language::P::Opcodes::Regexp;
+package Language::P::Opcodes::Regex;
 
 use strict;
 use warnings;

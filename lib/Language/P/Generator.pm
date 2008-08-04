@@ -10,7 +10,7 @@ use Language::P::Opcodes qw(o);
 use Language::P::Value::StringNumber;
 use Language::P::Value::Handle;
 use Language::P::Value::ScratchPad;
-use Language::P::Value::Regexp;
+use Language::P::Value::Regex;
 use Language::P::Lexer; # KILLME
 
 # global on purpose
@@ -95,8 +95,8 @@ sub process_pending {
 }
 
 sub process_regex {
-    my( $self, $regexp ) = @_;
-    my $rx = Language::P::Value::Regexp->new
+    my( $self, $regex ) = @_;
+    my $rx = Language::P::Value::Regex->new
                  ( { bytecode   => [],
                      stack_size => 0,
                      } );
@@ -106,15 +106,15 @@ sub process_regex {
 
     push @bytecode, o( 'rx_start_match' );
 
-    foreach my $e ( @{$regexp->components} ) {
-        $self->dispatch_regexp( $e );
+    foreach my $e ( @{$regex->components} ) {
+        $self->dispatch_regex( $e );
     }
 
     push @bytecode, o( 'rx_accept', groups => $group_count );
 
     $self->pop_code;
 
-    die "Flags not supported" if $regexp->flags;
+    die "Flags not supported" if $regex->flags;
 
     return $rx;
 }
@@ -169,12 +169,12 @@ my %dispatch_cond =
   ( BinOp          => '_binary_op_cond',
     );
 
-my %dispatch_regexp =
-  ( RXQuantifier   => '_regexp_quantifier',
-    RXGroup        => '_regexp_group',
-    Constant       => '_regexp_exact',
-    RXAlternation  => '_regexp_alternate',
-    RXAssertion    => '_regexp_assertion',
+my %dispatch_regex =
+  ( RXQuantifier   => '_regex_quantifier',
+    RXGroup        => '_regex_group',
+    Constant       => '_regex_exact',
+    RXAlternation  => '_regex_alternate',
+    RXAssertion    => '_regex_assertion',
     );
 
 sub dispatch {
@@ -197,10 +197,10 @@ sub dispatch_cond {
     $self->$meth( $tree, $true, $false );
 }
 
-sub dispatch_regexp {
+sub dispatch_regex {
     my( $self, $tree, $true, $false ) = @_;
     ( my $pack = ref $tree ) =~ s/^.*:://;
-    my $meth = $dispatch_regexp{$pack};
+    my $meth = $dispatch_regex{$pack};
 
     Carp::confess( $pack ) unless $meth;
 
@@ -629,21 +629,21 @@ sub _allocate_lexicals {
     }
 }
 
-my %regexp_assertions =
+my %regex_assertions =
   ( START_SPECIAL => 'rx_start_special',
     END_SPECIAL   => 'rx_end_special',
     );
 
-sub _regexp_assertion {
+sub _regex_assertion {
     my( $self, $tree ) = @_;
     my $type = $tree->type;
 
-    die "Unsupported assertion '$type'" unless $regexp_assertions{$type};
+    die "Unsupported assertion '$type'" unless $regex_assertions{$type};
 
-    push @bytecode, o( $regexp_assertions{$type} );
+    push @bytecode, o( $regex_assertions{$type} );
 }
 
-sub _regexp_quantifier {
+sub _regex_quantifier {
     my( $self, $tree ) = @_;
 
     my( $start, $quant ) = ( _new_label, _new_label );
@@ -658,10 +658,10 @@ sub _regexp_quantifier {
 
     if( $capture ) {
         foreach my $c ( @{$tree->node->components} ) {
-            $self->dispatch_regexp( $c );
+            $self->dispatch_regex( $c );
         }
     } else {
-        $self->dispatch_regexp( $tree->node );
+        $self->dispatch_regex( $tree->node );
     }
 
     _set_label( $quant, scalar @bytecode );
@@ -673,7 +673,7 @@ sub _regexp_quantifier {
     _to_label( $start, $bytecode[-1] );
 }
 
-sub _regexp_group {
+sub _regex_group {
     my( $self, $tree ) = @_;
 
     if( $tree->capture ) {
@@ -681,7 +681,7 @@ sub _regexp_group {
     }
 
     foreach my $c ( @{$tree->components} ) {
-        $self->dispatch_regexp( $c );
+        $self->dispatch_regex( $c );
     }
 
     if( $tree->capture ) {
@@ -690,14 +690,14 @@ sub _regexp_group {
     }
 }
 
-sub _regexp_exact {
+sub _regex_exact {
     my( $self, $tree ) = @_;
 
     push @bytecode, o( 'rx_exact', string => $tree->value,
                                    length => length( $tree->value ) );
 }
 
-sub _regexp_alternate {
+sub _regex_alternate {
     my( $self, $tree, $end ) = @_;
     my $is_last = !$tree->right->[0]
                         ->isa( 'Language::P::ParseTree::RXAlternation' );
@@ -708,7 +708,7 @@ sub _regexp_alternate {
     _to_label( $next_l, $bytecode[-1] );
 
     foreach my $c ( @{$tree->left} ) {
-        $self->dispatch_regexp( $c );
+        $self->dispatch_regex( $c );
     }
 
     push @bytecode, o( 'jump' );
@@ -716,10 +716,10 @@ sub _regexp_alternate {
     _set_label( $next_l, scalar @bytecode );
 
     if( !$is_last ) {
-        _regexp_alternate( $self, $tree->right->[0], $end );
+        _regex_alternate( $self, $tree->right->[0], $end );
     } else {
         foreach my $c ( @{$tree->right} ) {
-            $self->dispatch_regexp( $c );
+            $self->dispatch_regex( $c );
         }
 
         _set_label( $end, scalar @bytecode );

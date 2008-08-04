@@ -9,7 +9,7 @@ use Language::P::Value::Reference;
 use Language::P::Value::Array;
 use Language::P::Value::List;
 
-use Language::P::Opcodes::Regexp qw(:opcodes);
+use Language::P::Opcodes::Regex qw(:opcodes);
 
 our @EXPORT_OK = qw(o);
 

@@ -1,4 +1,4 @@
-package Language::P::Value::Regexp;
+package Language::P::Value::Regex;
 
 use strict;
 use warnings;

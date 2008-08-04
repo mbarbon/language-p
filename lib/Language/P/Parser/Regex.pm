@@ -40,7 +40,7 @@ sub _parse {
                                                          } );
         } elsif( $value->[0] eq 'PATTERN' ) {
             if( $value->[1] eq ')' ) {
-                die 'Unmatched ) in regexp' unless $in_group;
+                die 'Unmatched ) in regex' unless $in_group;
 
                 --$in_group;
                 $st = pop @values;
@@ -55,7 +55,7 @@ sub _parse {
                                        } );
                 } else {
                     # remaining (?...) constructs
-                    die "Unhandled (?$type->[1]) in regexp";
+                    die "Unhandled (?$type->[1]) in regex";
                 }
 
                 my $nst = $st->[-1]->components;
@@ -78,7 +78,7 @@ sub _parse {
                 @$st = $alt;
                 $st = $alt->right;
             } elsif( $value->[2]->[0] eq 'QUANTIFIER' ) {
-                die 'Nothing to quantify in regexp' unless @$st;
+                die 'Nothing to quantify in regex' unless @$st;
 
                 if(    $st->[-1]->isa( 'Language::P::ParseTree::Constant' )
                     && length( $st->[-1]->value ) > 1 ) {
@@ -115,7 +115,7 @@ sub _parse {
         }
     }
 
-    die 'Unmatched ( in regexp' if $in_group;
+    die 'Unmatched ( in regex' if $in_group;
 
     return \@values;
 }
