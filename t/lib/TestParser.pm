@@ -6,9 +6,11 @@ use warnings;
 use Exporter 'import';
 
 use Language::P::Parser;
+use Language::P::ParseTree qw(:all);
 use Language::P::Value::SymbolTable;
 
-our @EXPORT_OK = qw(fresh_parser parsed_program parse_and_diff);
+our @EXPORT_OK = qw(fresh_parser parsed_program parse_and_diff
+                    parse_and_diff_yaml);
 our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,
     );
@@ -67,6 +69,28 @@ sub fresh_parser {
 
 sub parsed_program {
     return \@lines;
+}
+
+sub parse_and_diff_yaml {
+    my( $expr, $expected ) = @_;
+
+    $expected =~ s/([A-Z]+_[A-Z_ |]+)/eval $1 or die $@/eg;
+
+    require Language::P::ParseTree::DumpYAML;
+
+    my $parser = fresh_parser();
+    $parser->parse_string( $expr );
+
+    my $got = '';
+    my $dumper = Language::P::ParseTree::DumpYAML->new;
+    foreach my $line ( @{parsed_program()} ) {
+        $got .= $dumper->dump( $line );
+    }
+
+    require Test::Differences;
+
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+    Test::Differences::eq_or_diff( $got, $expected );
 }
 
 sub parse_and_diff {
