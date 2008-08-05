@@ -11,7 +11,7 @@ use Language::P::Value::StringNumber;
 use Language::P::Value::Handle;
 use Language::P::Value::ScratchPad;
 use Language::P::Value::Regex;
-use Language::P::Lexer; # KILLME
+use Language::P::ParseTree qw(:all);
 
 # global on purpose
 our %debug_options;
@@ -394,19 +394,19 @@ sub _constant {
     my $v;
 
     if( $type eq 'number' ) {
-        if( $tree->flags == Language::P::Lexer::T_INTEGER ) {
+        if( $tree->flags == NUM_INTEGER ) {
             $v = Language::P::Value::StringNumber
                      ->new( { integer => $tree->value } );
-        } elsif( $tree->flags == Language::P::Lexer::T_FLOAT ) {
+        } elsif( $tree->flags == NUM_FLOAT ) {
             $v = Language::P::Value::StringNumber
                      ->new( { float => $tree->value } );
-        } elsif( $tree->flags & Language::P::Lexer::T_OCTAL ) {
+        } elsif( $tree->flags & NUM_OCTAL ) {
             $v = Language::P::Value::StringNumber
                      ->new( { integer => oct '0' . $tree->value } );
-        } elsif( $tree->flags & Language::P::Lexer::T_HEXADECIMAL ) {
+        } elsif( $tree->flags & NUM_HEXADECIMAL ) {
             $v = Language::P::Value::StringNumber
                      ->new( { integer => oct '0x' . $tree->value } );
-        } elsif( $tree->flags & Language::P::Lexer::T_BINARY ) {
+        } elsif( $tree->flags & NUM_BINARY ) {
             $v = Language::P::Value::StringNumber
                      ->new( { integer => oct '0b' . $tree->value } );
         }
