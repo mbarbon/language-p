@@ -2,7 +2,7 @@ package Language::P::Generator;
 
 use strict;
 use warnings;
-use base qw(Class::Accessor::Fast);
+use base qw(Language::P::ParseTree::Visitor);
 
 __PACKAGE__->mk_ro_accessors( qw(runtime) );
 
@@ -142,69 +142,58 @@ sub finished {
 }
 
 my %dispatch =
-  ( FunctionCall           => '_function_call',
-    Builtin                => '_function_call',
-    Overridable            => '_function_call',
-    Print                  => '_print',
-    UnOp                   => '_unary_op',
-    BinOp                  => '_binary_op',
-    Constant               => '_constant',
-    Number                 => '_constant',
-    Symbol                 => '_symbol',
-    LexicalDeclaration     => '_lexical_declaration',
-    LexicalSymbol          => '_lexical_declaration',
-    List                   => '_list',
-    Conditional            => '_cond',
-    ConditionalLoop        => '_cond_loop',
-    Ternary                => '_ternary',
-    Block                  => '_block',
-    Subroutine             => '_subroutine',
-    SubroutineDeclaration  => '_subroutine_decl',
-    QuotedString           => '_quoted_string',
-    Subscript              => '_subscript',
-    Pattern                => '_pattern',
+  ( 'Language::P::ParseTree::FunctionCall'           => '_function_call',
+    'Language::P::ParseTree::Builtin'                => '_function_call',
+    'Language::P::ParseTree::Overridable'            => '_function_call',
+    'Language::P::ParseTree::Print'                  => '_print',
+    'Language::P::ParseTree::UnOp'                   => '_unary_op',
+    'Language::P::ParseTree::BinOp'                  => '_binary_op',
+    'Language::P::ParseTree::Constant'               => '_constant',
+    'Language::P::ParseTree::Number'                 => '_constant',
+    'Language::P::ParseTree::Symbol'                 => '_symbol',
+    'Language::P::ParseTree::LexicalDeclaration'     => '_lexical_declaration',
+    'Language::P::ParseTree::LexicalSymbol'          => '_lexical_declaration',
+    'Language::P::ParseTree::List'                   => '_list',
+    'Language::P::ParseTree::Conditional'            => '_cond',
+    'Language::P::ParseTree::ConditionalLoop'        => '_cond_loop',
+    'Language::P::ParseTree::Ternary'                => '_ternary',
+    'Language::P::ParseTree::Block'                  => '_block',
+    'Language::P::ParseTree::Subroutine'             => '_subroutine',
+    'Language::P::ParseTree::SubroutineDeclaration'  => '_subroutine_decl',
+    'Language::P::ParseTree::QuotedString'           => '_quoted_string',
+    'Language::P::ParseTree::Subscript'              => '_subscript',
+    'Language::P::ParseTree::Pattern'                => '_pattern',
     );
 
 my %dispatch_cond =
-  ( BinOp          => '_binary_op_cond',
+  ( 'Language::P::ParseTree::BinOp'          => '_binary_op_cond',
+    'DEFAULT'                                => '_anything_cond',
     );
 
 my %dispatch_regex =
-  ( RXQuantifier   => '_regex_quantifier',
-    RXGroup        => '_regex_group',
-    Constant       => '_regex_exact',
-    RXAlternation  => '_regex_alternate',
-    RXAssertion    => '_regex_assertion',
+  ( 'Language::P::ParseTree::RXQuantifier'   => '_regex_quantifier',
+    'Language::P::ParseTree::RXGroup'        => '_regex_group',
+    'Language::P::ParseTree::Constant'       => '_regex_exact',
+    'Language::P::ParseTree::RXAlternation'  => '_regex_alternate',
+    'Language::P::ParseTree::RXAssertion'    => '_regex_assertion',
     );
 
 sub dispatch {
     my( $self, $tree, @args ) = @_;
-    ( my $pack = ref $tree ) =~ s/^.*:://;
-    my $meth = $dispatch{$pack};
 
-    Carp::confess( $pack ) unless $meth;
-
-    $self->$meth( $tree, @args );
+    return $self->visit_map( \%dispatch, $tree, @args );
 }
 
 sub dispatch_cond {
     my( $self, $tree, $true, $false ) = @_;
-    ( my $pack = ref $tree ) =~ s/^.*:://;
-    my $meth = $dispatch_cond{$pack} || '_anything_cond';
 
-    Carp::confess( $pack ) unless $meth;
-
-    $self->$meth( $tree, $true, $false );
+    return $self->visit_map( \%dispatch_cond, $tree, $true, $false );
 }
 
 sub dispatch_regex {
     my( $self, $tree, $true, $false ) = @_;
-    ( my $pack = ref $tree ) =~ s/^.*:://;
-    my $meth = $dispatch_regex{$pack};
 
-    Carp::confess( $pack ) unless $meth;
-
-    $self->$meth( $tree, $true, $false );
+    return $self->visit_map( \%dispatch_regex, $tree, $true, $false );
 }
 
 my %reverse_conditionals =
