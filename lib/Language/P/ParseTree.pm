@@ -255,7 +255,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(subscripted subscript type);
+our @FIELDS = qw(subscripted subscript type reference);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 

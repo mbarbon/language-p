@@ -91,40 +91,42 @@ EOE
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $foo->()
 EOP
---- !parsetree:Subscript
-reference: 1
-subscript: ~
-subscripted: !parsetree:Symbol
-  name: foo
-  sigil: $
-type: (
+--- !parsetree:FunctionCall
+arguments: ~
+function: !parsetree:UnOp
+  left: !parsetree:Symbol
+    name: foo
+    sigil: $
+  op: '&'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $foo->( 1 + 2 )
 EOP
---- !parsetree:Subscript
-reference: 1
-subscript: !parsetree:BinOp
-  left: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
-    value: 1
-  op: +
-  right: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
-    value: 2
-subscripted: !parsetree:Symbol
-  name: foo
-  sigil: $
-type: (
+--- !parsetree:FunctionCall
+arguments:
+  - !parsetree:BinOp
+    left: !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 1
+    op: +
+    right: !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 2
+function: !parsetree:UnOp
+  left: !parsetree:Symbol
+    name: foo
+    sigil: $
+  op: '&'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 @foo[ 1, "xx", 3 + 4 ]
 EOP
 --- !parsetree:Slice
+reference: 0
 subscript: !parsetree:List
   expressions:
     - !parsetree:Number
@@ -154,6 +156,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 @foo{ 1, "xx", 3 + 4 }
 EOP
 --- !parsetree:Slice
+reference: 0
 subscript: !parsetree:List
   expressions:
     - !parsetree:Number
@@ -182,60 +185,61 @@ EOE
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $foo[1]{2}->()[3]{5}( 1 + 2 + 3 );
 EOP
---- !parsetree:Subscript
-reference: 1
-subscript: !parsetree:BinOp
-  left: !parsetree:BinOp
-    left: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
-      value: 1
+--- !parsetree:FunctionCall
+arguments:
+  - !parsetree:BinOp
+    left: !parsetree:BinOp
+      left: !parsetree:Number
+        flags: NUM_INTEGER
+        type: number
+        value: 1
+      op: +
+      right: !parsetree:Number
+        flags: NUM_INTEGER
+        type: number
+        value: 2
     op: +
     right: !parsetree:Number
       flags: NUM_INTEGER
       type: number
-      value: 2
-  op: +
-  right: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
-    value: 3
-subscripted: !parsetree:Subscript
-  reference: 1
-  subscript: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
-    value: 5
-  subscripted: !parsetree:Subscript
+      value: 3
+function: !parsetree:UnOp
+  left: !parsetree:Subscript
     reference: 1
     subscript: !parsetree:Number
       flags: NUM_INTEGER
       type: number
-      value: 3
+      value: 5
     subscripted: !parsetree:Subscript
       reference: 1
-      subscript: ~
-      subscripted: !parsetree:Subscript
-        reference: 1
-        subscript: !parsetree:Number
-          flags: NUM_INTEGER
-          type: number
-          value: 2
-        subscripted: !parsetree:Subscript
-          reference: 0
-          subscript: !parsetree:Number
-            flags: NUM_INTEGER
-            type: number
-            value: 1
-          subscripted: !parsetree:Symbol
-            name: foo
-            sigil: '@'
-          type: '['
-        type: '{'
-      type: (
-    type: '['
-  type: '{'
-type: (
+      subscript: !parsetree:Number
+        flags: NUM_INTEGER
+        type: number
+        value: 3
+      subscripted: !parsetree:FunctionCall
+        arguments: ~
+        function: !parsetree:UnOp
+          left: !parsetree:Subscript
+            reference: 1
+            subscript: !parsetree:Number
+              flags: NUM_INTEGER
+              type: number
+              value: 2
+            subscripted: !parsetree:Subscript
+              reference: 0
+              subscript: !parsetree:Number
+                flags: NUM_INTEGER
+                type: number
+                value: 1
+              subscripted: !parsetree:Symbol
+                name: foo
+                sigil: '@'
+              type: '['
+            type: '{'
+          op: '&'
+      type: '['
+    type: '{'
+  op: '&'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -257,7 +261,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 ${foo() . "x"}[1]
 EOP
 --- !parsetree:Subscript
-reference: 0
+reference: 1
 subscript: !parsetree:Number
   flags: NUM_INTEGER
   type: number

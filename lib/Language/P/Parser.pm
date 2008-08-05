@@ -530,6 +530,7 @@ sub _parse_maybe_subscripts {
                    ( { subscripted => $subscripted,
                        subscript   => $subscript,
                        type        => $next->[1],
+                       reference   => $subscripted->isa( 'Language::P::ParseTree::Symbol' ) ? 0 : 1,
                        } );
     }
 
@@ -552,7 +553,7 @@ sub _parse_maybe_subscripts {
                        ( { subscripted => $subscripted,
                            subscript   => $subscript,
                            type        => $next->[1],
-                           reference   => 0,
+                           reference   => $subscripted->isa( 'Language::P::ParseTree::Symbol' ) ? 0 : 1,
                            } );
 
         return _parse_maybe_subscript_rest( $self, $term );
@@ -575,35 +576,46 @@ sub _parse_maybe_subscript_rest {
         if(    $bracket->[0] eq 'OPPAR'
             || $bracket->[0] eq 'OPSQ'
             || $bracket->[0] eq 'OPBRK' ) {
-            my( undef, $subscript ) = _parse_bracketed_expr( $self, $bracket->[0] );
-
-            my $term = Language::P::ParseTree::Subscript->new
-                           ( { subscripted => $subscripted,
-                               subscript   => $subscript,
-                               type        => $bracket->[1],
-                               reference   => 1,
-                               } );
-
-            return _parse_maybe_subscript_rest( $self, $term );
+            return _parse_dereference_rest( $self, $subscripted, $bracket );
         } else {
             return _parse_maybe_direct_method_call( $self, $subscripted );
         }
     } elsif(    $next->[0] eq 'OPPAR'
              || $next->[0] eq 'OPSQ'
              || $next->[0] eq 'OPBRK' ) {
-        my( undef, $subscript ) = _parse_bracketed_expr( $self, $next->[0] );
-
-        my $term = Language::P::ParseTree::Subscript->new
-                       ( { subscripted => $subscripted,
-                           subscript   => $subscript,
-                           type        => $next->[1],
-                           reference   => 1,
-                           } );
-
-        return _parse_maybe_subscript_rest( $self, $term );
+        return _parse_dereference_rest( $self, $subscripted, $next );
     } else {
         return $subscripted;
     }
+}
+
+sub _parse_dereference_rest {
+    my( $self, $subscripted, $bracket ) = @_;
+    my $term;
+
+    if( $bracket->[0] eq 'OPPAR' ) {
+        _lex_token( $self, 'OPPAR' );
+        ( my $args, undef ) = _parse_arglist( $self, PREC_LOWEST, [-1, -1, '@'], 0 );
+        _lex_token( $self, 'CLPAR' );
+        my $func = Language::P::ParseTree::UnOp->new
+                       ( { left => $subscripted,
+                           op   => '&',
+                           } );
+        $term = Language::P::ParseTree::FunctionCall->new
+                    ( { function    => $func,
+                        arguments   => $args,
+                        } );
+    } else {
+        my( undef, $subscript ) = _parse_bracketed_expr( $self, $bracket->[0] );
+        $term = Language::P::ParseTree::Subscript->new
+                    ( { subscripted => $subscripted,
+                        subscript   => $subscript,
+                        type        => $bracket->[1],
+                        reference   => 1,
+                        } );
+    }
+
+    return _parse_maybe_subscript_rest( $self, $term );
 }
 
 sub _parse_bracketed_expr {
@@ -1107,7 +1119,7 @@ sub _parse_indirobj {
     my $token = $self->lexer->lex( X_TERM );
 
     if( $token->[0] eq 'OPBRK' ) {
-        my $block = _parse_block_rest( $self, 0 );
+        my $block = _parse_block_rest( $self, 1 );
 
         return $block;
     } elsif( $token->[0] eq 'DOLLAR' ) {
