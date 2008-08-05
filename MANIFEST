@@ -10,6 +10,8 @@ lib/Language/P/Lexer.pm
 lib/Language/P/Opcodes.pm
 lib/Language/P/Opcodes/Regex.pm
 lib/Language/P/ParseTree.pm
+lib/Language/P/ParseTree/DumpYAML.pm
+lib/Language/P/ParseTree/Visitor.pm
 lib/Language/P/Parser.pm
 lib/Language/P/Parser/Regex.pm
 lib/Language/P/Runtime.pm
