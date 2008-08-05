@@ -2,19 +2,20 @@ package Language::P::ParseTree;
 
 use strict;
 use warnings;
+use Exporter 'import';
 
-sub import {
-    my( $class, @args );
-    my( $package ) = caller;
+our @EXPORT_OK = qw(NUM_INTEGER NUM_FLOAT NUM_HEXADECIMAL NUM_OCTAL NUM_BINARY);
+our %EXPORT_TAGS =
+  ( all => \@EXPORT_OK,
+    );
 
-}
-
-my %new_map;
-our $AUTOLOAD;
-
-sub AUTOLOAD {
-    die unless $AUTOLOAD;
-}
+use constant
+  { NUM_INTEGER        => 1,
+    NUM_FLOAT          => 2,
+    NUM_HEXADECIMAL    => 4,
+    NUM_OCTAL          => 8,
+    NUM_BINARY         => 16,
+    };
 
 package Language::P::ParseTree::Node;
 

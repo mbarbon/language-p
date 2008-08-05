@@ -8,6 +8,8 @@ __PACKAGE__->mk_ro_accessors( qw(stream buffer tokens
                                  ) );
 __PACKAGE__->mk_accessors( qw(quote) );
 
+use Language::P::ParseTree qw(:all);
+
 use constant
   { X_NOTHING  => 0,
     X_STATE    => 1,
@@ -20,12 +22,6 @@ use constant
     T_ID          => 1,
     T_KEYWORD     => 2,
     T_OVERRIDABLE => 3,
-
-    T_INTEGER     => 1,
-    T_FLOAT       => 2,
-    T_HEXADECIMAL => 4,
-    T_OCTAL       => 8,
-    T_BINARY      => 16,
     };
 
 use Exporter qw(import);
@@ -33,7 +29,7 @@ use Exporter qw(import);
 our @EXPORT_OK =
   qw(X_NOTHING X_STATE X_TERM X_OPERATOR
      T_ID T_SPECIAL T_NUMBER T_STRING T_KEYWORD T_OVERRIDABLE
-     T_INTEGER T_FLOAT T_HEXADECIMAL T_OCTAL T_BINARY);
+     );
 our %EXPORT_TAGS =
   ( all  => \@EXPORT_OK,
     );
@@ -353,7 +349,7 @@ sub lex_number {
         if( $1 eq 'b' ) {
             # binary number
             if( $$_ =~ s/^([01]+)// ) {
-                $flags = T_BINARY | T_INTEGER;
+                $flags = NUM_BINARY | NUM_INTEGER;
                 $num .= $1;
 
                 return [ 'NUMBER', $num, $flags ];
@@ -363,7 +359,7 @@ sub lex_number {
         } elsif( $1 eq 'x' ) {
             # hexadecimal number
             if( $$_ =~ s/^([0-9a-fA-F]+)// ) {
-                $flags = T_HEXADECIMAL | T_INTEGER;
+                $flags = NUM_HEXADECIMAL | NUM_INTEGER;
                 $num .= $1;
 
                 return [ 'NUMBER', $num, $flags ];
@@ -373,30 +369,30 @@ sub lex_number {
         } else {
             # maybe octal number
             if( $$_ =~ s/^([0-7]+)// ) {
-                $flags = T_OCTAL | T_INTEGER;
+                $flags = NUM_OCTAL | NUM_INTEGER;
                 $num .= $1;
                 $$_ =~ /^[89]/ and die "Invalid octal digit";
 
                 return [ 'NUMBER', $num, $flags ];
             } else {
-                $flags = T_INTEGER;
+                $flags = NUM_INTEGER;
                 $num = '0'
             }
         }
     };
     $$_ =~ s/^(\d+)//x and do {
-        $flags = T_INTEGER;
+        $flags = NUM_INTEGER;
         $num .= $1;
     };
     # '..' operator (es. 12..15)
     $$_ =~ /^\.\./ and return [ 'NUMBER', $num, $flags ];
     $$_ =~ s/^\.(\d*)//x and do {
-        $flags = T_FLOAT;
+        $flags = NUM_FLOAT;
         $num = '0' unless length $num;
         $num .= ".$1" if length $1;
     };
     $$_ =~ s/^[eE]([+-]?\d+)//x and do {
-        $flags = T_FLOAT;
+        $flags = NUM_FLOAT;
         $num .= "e$1";
     };
 
