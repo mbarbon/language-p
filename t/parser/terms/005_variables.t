@@ -7,83 +7,74 @@ use Test::More tests => 9;
 use lib 't/lib';
 use TestParser qw(:all);
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 @foo
 EOP
-root:
-    class: Language::P::ParseTree::Symbol
-    name: foo
-    sigil: @
+--- !parsetree:Symbol
+name: foo
+sigil: '@'
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $#foo
 EOP
-root:
-    class: Language::P::ParseTree::Symbol
-    name: foo
-    sigil: $#
+--- !parsetree:Symbol
+name: foo
+sigil: $#
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 %foo
 EOP
-root:
-    class: Language::P::ParseTree::Symbol
-    name: foo
-    sigil: %
+--- !parsetree:Symbol
+name: foo
+sigil: '%'
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 *foo
 EOP
-root:
-    class: Language::P::ParseTree::Symbol
-    name: foo
-    sigil: *
+--- !parsetree:Symbol
+name: foo
+sigil: '*'
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $_
 EOP
-root:
-    class: Language::P::ParseTree::Symbol
-    name: _
-    sigil: $
+--- !parsetree:Symbol
+name: _
+sigil: $
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $#
 EOP
-root:
-    class: Language::P::ParseTree::Symbol
-    name: #
-    sigil: $
+--- !parsetree:Symbol
+name: '#'
+sigil: $
 EOE
 
-parse_and_diff( <<'EOP', <<"EOE" );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $^E
 EOP
-root:
-    class: Language::P::ParseTree::Symbol
-    name: \x05
-    sigil: \$
+--- !parsetree:Symbol
+name: "\x05"
+sigil: $
 EOE
 
-parse_and_diff( <<'EOP', <<"EOE" );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 ${^F}
 EOP
-root:
-    class: Language::P::ParseTree::Symbol
-    name: \x06
-    sigil: \$
+--- !parsetree:Symbol
+name: "\x06"
+sigil: $
 EOE
 
-parse_and_diff( <<'EOP', <<"EOE" );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 ${^Foo}
 EOP
-root:
-    class: Language::P::ParseTree::Symbol
-    name: \x06oo
-    sigil: \$
+--- !parsetree:Symbol
+name: "\x06oo"
+sigil: $
 EOE

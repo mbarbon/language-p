@@ -7,331 +7,272 @@ use Test::More tests => 12;
 use lib 't/lib';
 use TestParser qw(:all);
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $#[1]
 EOP
-root:
-    class: Language::P::ParseTree::Subscript
-    subscripted:
-        class: Language::P::ParseTree::Symbol
-        name: #
-        sigil: @
-    subscript:
-        class: Language::P::ParseTree::Number
-        value: 1
-        type: number
-        flags: 1
-    type: [
-    reference: 0
+--- !parsetree:Subscript
+reference: 0
+subscript: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 1
+subscripted: !parsetree:Symbol
+  name: '#'
+  sigil: '@'
+type: '['
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $_[1]
 EOP
-root:
-    class: Language::P::ParseTree::Subscript
-    subscripted:
-        class: Language::P::ParseTree::Symbol
-        name: _
-        sigil: @
-    subscript:
-        class: Language::P::ParseTree::Number
-        value: 1
-        type: number
-        flags: 1
-    type: [
-    reference: 0
+--- !parsetree:Subscript
+reference: 0
+subscript: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 1
+subscripted: !parsetree:Symbol
+  name: _
+  sigil: '@'
+type: '['
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $foo[1]
 EOP
-root:
-    class: Language::P::ParseTree::Subscript
-    subscripted:
-        class: Language::P::ParseTree::Symbol
-        name: foo
-        sigil: @
-    subscript:
-        class: Language::P::ParseTree::Number
-        value: 1
-        type: number
-        flags: 1
-    type: [
-    reference: 0
+--- !parsetree:Subscript
+reference: 0
+subscript: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 1
+subscripted: !parsetree:Symbol
+  name: foo
+  sigil: '@'
+type: '['
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $foo{2}
 EOP
-root:
-    class: Language::P::ParseTree::Subscript
-    subscripted:
-        class: Language::P::ParseTree::Symbol
-        name: foo
-        sigil: %
-    subscript:
-        class: Language::P::ParseTree::Number
-        value: 2
-        type: number
-        flags: 1
-    type: {
-    reference: 0
+--- !parsetree:Subscript
+reference: 0
+subscript: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 2
+subscripted: !parsetree:Symbol
+  name: foo
+  sigil: '%'
+type: '{'
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $foo{2 + 3}
 EOP
-root:
-    class: Language::P::ParseTree::Subscript
-    subscripted:
-        class: Language::P::ParseTree::Symbol
-        name: foo
-        sigil: %
-    subscript:
-        class: Language::P::ParseTree::BinOp
-        op: +
-        left:
-            class: Language::P::ParseTree::Number
-            value: 2
-            type: number
-            flags: 1
-        right:
-            class: Language::P::ParseTree::Number
-            value: 3
-            type: number
-            flags: 1
-    type: {
-    reference: 0
+--- !parsetree:Subscript
+reference: 0
+subscript: !parsetree:BinOp
+  left: !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 2
+  op: +
+  right: !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 3
+subscripted: !parsetree:Symbol
+  name: foo
+  sigil: '%'
+type: '{'
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $foo->()
 EOP
-root:
-    class: Language::P::ParseTree::Subscript
-    subscripted:
-        class: Language::P::ParseTree::Symbol
-        name: foo
-        sigil: $
-    subscript: undef
-    type: (
-    reference: 1
+--- !parsetree:Subscript
+reference: 1
+subscript: ~
+subscripted: !parsetree:Symbol
+  name: foo
+  sigil: $
+type: (
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $foo->( 1 + 2 )
 EOP
-root:
-    class: Language::P::ParseTree::Subscript
-    subscripted:
-        class: Language::P::ParseTree::Symbol
-        name: foo
-        sigil: $
-    subscript:
-        class: Language::P::ParseTree::BinOp
-        op: +
-        left:
-            class: Language::P::ParseTree::Number
-            value: 1
-            type: number
-            flags: 1
-        right:
-            class: Language::P::ParseTree::Number
-            value: 2
-            type: number
-            flags: 1
-    type: (
-    reference: 1
+--- !parsetree:Subscript
+reference: 1
+subscript: !parsetree:BinOp
+  left: !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 1
+  op: +
+  right: !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 2
+subscripted: !parsetree:Symbol
+  name: foo
+  sigil: $
+type: (
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 @foo[ 1, "xx", 3 + 4 ]
 EOP
-root:
-    class: Language::P::ParseTree::Slice
-    subscripted:
-        class: Language::P::ParseTree::Symbol
-        name: foo
-        sigil: @
-    subscript:
-        class: Language::P::ParseTree::List
-        expressions:
-                class: Language::P::ParseTree::Number
-                value: 1
-                type: number
-                flags: 1
-                class: Language::P::ParseTree::Constant
-                value: xx
-                type: string
-                class: Language::P::ParseTree::BinOp
-                op: +
-                left:
-                    class: Language::P::ParseTree::Number
-                    value: 3
-                    type: number
-                    flags: 1
-                right:
-                    class: Language::P::ParseTree::Number
-                    value: 4
-                    type: number
-                    flags: 1
-    type: [
+--- !parsetree:Slice
+subscript: !parsetree:List
+  expressions:
+    - !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 1
+    - !parsetree:Constant
+      type: string
+      value: xx
+    - !parsetree:BinOp
+      left: !parsetree:Number
+        flags: NUM_INTEGER
+        type: number
+        value: 3
+      op: +
+      right: !parsetree:Number
+        flags: NUM_INTEGER
+        type: number
+        value: 4
+subscripted: !parsetree:Symbol
+  name: foo
+  sigil: '@'
+type: '['
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 @foo{ 1, "xx", 3 + 4 }
 EOP
-root:
-    class: Language::P::ParseTree::Slice
-    subscripted:
-        class: Language::P::ParseTree::Symbol
-        name: foo
-        sigil: %
-    subscript:
-        class: Language::P::ParseTree::List
-        expressions:
-                class: Language::P::ParseTree::Number
-                value: 1
-                type: number
-                flags: 1
-                class: Language::P::ParseTree::Constant
-                value: xx
-                type: string
-                class: Language::P::ParseTree::BinOp
-                op: +
-                left:
-                    class: Language::P::ParseTree::Number
-                    value: 3
-                    type: number
-                    flags: 1
-                right:
-                    class: Language::P::ParseTree::Number
-                    value: 4
-                    type: number
-                    flags: 1
-    type: {
+--- !parsetree:Slice
+subscript: !parsetree:List
+  expressions:
+    - !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 1
+    - !parsetree:Constant
+      type: string
+      value: xx
+    - !parsetree:BinOp
+      left: !parsetree:Number
+        flags: NUM_INTEGER
+        type: number
+        value: 3
+      op: +
+      right: !parsetree:Number
+        flags: NUM_INTEGER
+        type: number
+        value: 4
+subscripted: !parsetree:Symbol
+  name: foo
+  sigil: '%'
+type: '{'
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $foo[1]{2}->()[3]{5}( 1 + 2 + 3 );
 EOP
-root:
-    class: Language::P::ParseTree::Subscript
-    subscripted:
-        class: Language::P::ParseTree::Subscript
-        subscripted:
-            class: Language::P::ParseTree::Subscript
-            subscripted:
-                class: Language::P::ParseTree::Subscript
-                subscripted:
-                    class: Language::P::ParseTree::Subscript
-                    subscripted:
-                        class: Language::P::ParseTree::Subscript
-                        subscripted:
-                            class: Language::P::ParseTree::Symbol
-                            name: foo
-                            sigil: @
-                        subscript:
-                            class: Language::P::ParseTree::Number
-                            value: 1
-                            type: number
-                            flags: 1
-                        type: [
-                        reference: 0
-                    subscript:
-                        class: Language::P::ParseTree::Number
-                        value: 2
-                        type: number
-                        flags: 1
-                    type: {
-                    reference: 1
-                subscript: undef
-                type: (
-                reference: 1
-            subscript:
-                class: Language::P::ParseTree::Number
-                value: 3
-                type: number
-                flags: 1
-            type: [
-            reference: 1
-        subscript:
-            class: Language::P::ParseTree::Number
-            value: 5
-            type: number
-            flags: 1
-        type: {
-        reference: 1
-    subscript:
-        class: Language::P::ParseTree::BinOp
-        op: +
-        left:
-            class: Language::P::ParseTree::BinOp
-            op: +
-            left:
-                class: Language::P::ParseTree::Number
-                value: 1
-                type: number
-                flags: 1
-            right:
-                class: Language::P::ParseTree::Number
-                value: 2
-                type: number
-                flags: 1
-        right:
-            class: Language::P::ParseTree::Number
-            value: 3
-            type: number
-            flags: 1
-    type: (
+--- !parsetree:Subscript
+reference: 1
+subscript: !parsetree:BinOp
+  left: !parsetree:BinOp
+    left: !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 1
+    op: +
+    right: !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 2
+  op: +
+  right: !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 3
+subscripted: !parsetree:Subscript
+  reference: 1
+  subscript: !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 5
+  subscripted: !parsetree:Subscript
     reference: 1
+    subscript: !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 3
+    subscripted: !parsetree:Subscript
+      reference: 1
+      subscript: ~
+      subscripted: !parsetree:Subscript
+        reference: 1
+        subscript: !parsetree:Number
+          flags: NUM_INTEGER
+          type: number
+          value: 2
+        subscripted: !parsetree:Subscript
+          reference: 0
+          subscript: !parsetree:Number
+            flags: NUM_INTEGER
+            type: number
+            value: 1
+          subscripted: !parsetree:Symbol
+            name: foo
+            sigil: '@'
+          type: '['
+        type: '{'
+      type: (
+    type: '['
+  type: '{'
+type: (
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 ${foo}[1]
 EOP
-root:
-    class: Language::P::ParseTree::Subscript
-    subscripted:
-        class: Language::P::ParseTree::Symbol
-        name: foo
-        sigil: @
-    subscript:
-        class: Language::P::ParseTree::Number
-        value: 1
-        type: number
-        flags: 1
-    type: [
-    reference: 0
+--- !parsetree:Subscript
+reference: 0
+subscript: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 1
+subscripted: !parsetree:Symbol
+  name: foo
+  sigil: '@'
+type: '['
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 ${foo() . "x"}[1]
 EOP
-root:
-    class: Language::P::ParseTree::Subscript
-    subscripted:
-        class: Language::P::ParseTree::UnOp
-        op: $
-        left:
-            class: Language::P::ParseTree::Block
-            lines:
-                    class: Language::P::ParseTree::BinOp
-                    op: .
-                    left:
-                        class: Language::P::ParseTree::FunctionCall
-                        function: foo
-                        arguments: undef
-                    right:
-                        class: Language::P::ParseTree::Constant
-                        value: x
-                        type: string
-    subscript:
-        class: Language::P::ParseTree::Number
-        value: 1
-        type: number
-        flags: 1
-    type: [
-    reference: 0
+--- !parsetree:Subscript
+reference: 0
+subscript: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 1
+subscripted: !parsetree:UnOp
+  left: !parsetree:Block
+    lines:
+      - !parsetree:BinOp
+        left: !parsetree:FunctionCall
+          arguments: ~
+          function: foo
+        op: .
+        right: !parsetree:Constant
+          type: string
+          value: x
+  op: $
+type: '['
 EOE

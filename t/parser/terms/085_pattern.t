@@ -7,307 +7,282 @@ use Test::More tests => 12;
 use lib 't/lib';
 use TestParser qw(:all);
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 /^test$/;
 EOP
-root:
-    class: Language::P::ParseTree::Pattern
-    op: m
-    components:
-            class: Language::P::ParseTree::RXAssertion
-            type: START_SPECIAL
-            class: Language::P::ParseTree::Constant
-            value: test
-            type: string
-            class: Language::P::ParseTree::RXAssertion
-            type: END_SPECIAL
-    flags: undef
+--- !parsetree:Pattern
+components:
+  - !parsetree:RXAssertion
+    type: START_SPECIAL
+  - !parsetree:Constant
+    type: string
+    value: test
+  - !parsetree:RXAssertion
+    type: END_SPECIAL
+flags: ~
+op: m
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 m/^\ntest\w/;
 EOP
-root:
-    class: Language::P::ParseTree::Pattern
-    op: m
-    components:
-            class: Language::P::ParseTree::RXAssertion
-            type: START_SPECIAL
-            class: Language::P::ParseTree::Constant
-            value: 
-test
-            type: string
-            class: Language::P::ParseTree::RXClass
-            elements: WORDS
-    flags: undef
+--- !parsetree:Pattern
+components:
+  - !parsetree:RXAssertion
+    type: START_SPECIAL
+  - !parsetree:Constant
+    type: string
+    value: "\ntest"
+  - !parsetree:RXClass
+    elements: WORDS
+flags: ~
+op: m
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $a =~ /^test/;
 EOP
-root:
-    class: Language::P::ParseTree::BinOp
-    op: =~
-    left:
-        class: Language::P::ParseTree::Symbol
-        name: a
-        sigil: $
-    right:
-        class: Language::P::ParseTree::Pattern
-        op: m
-        components:
-                class: Language::P::ParseTree::RXAssertion
-                type: START_SPECIAL
-                class: Language::P::ParseTree::Constant
-                value: test
-                type: string
-        flags: undef
+--- !parsetree:BinOp
+left: !parsetree:Symbol
+  name: a
+  sigil: $
+op: =~
+right: !parsetree:Pattern
+  components:
+    - !parsetree:RXAssertion
+      type: START_SPECIAL
+    - !parsetree:Constant
+      type: string
+      value: test
+  flags: ~
+  op: m
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 //ms;
 EOP
-root:
-    class: Language::P::ParseTree::Pattern
-    op: m
-    components:
-    flags:
-        m
-        s
+--- !parsetree:Pattern
+components: []
+flags:
+  - m
+  - s
+op: m
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 /a*b+c?d*?b+?c??/;
 EOP
-root:
-    class: Language::P::ParseTree::Pattern
-    op: m
-    components:
-            class: Language::P::ParseTree::RXQuantifier
-            node:
-                class: Language::P::ParseTree::Constant
-                value: a
-                type: string
-            min: 0
-            max: -1
-            greedy: 1
-            class: Language::P::ParseTree::RXQuantifier
-            node:
-                class: Language::P::ParseTree::Constant
-                value: b
-                type: string
-            min: 1
-            max: -1
-            greedy: 1
-            class: Language::P::ParseTree::RXQuantifier
-            node:
-                class: Language::P::ParseTree::Constant
-                value: c
-                type: string
-            min: 0
-            max: 1
-            greedy: 1
-            class: Language::P::ParseTree::RXQuantifier
-            node:
-                class: Language::P::ParseTree::Constant
-                value: d
-                type: string
-            min: 0
-            max: -1
-            greedy: 0
-            class: Language::P::ParseTree::RXQuantifier
-            node:
-                class: Language::P::ParseTree::Constant
-                value: b
-                type: string
-            min: 1
-            max: -1
-            greedy: 0
-            class: Language::P::ParseTree::RXQuantifier
-            node:
-                class: Language::P::ParseTree::Constant
-                value: c
-                type: string
-            min: 0
-            max: 1
-            greedy: 0
-    flags: undef
+--- !parsetree:Pattern
+components:
+  - !parsetree:RXQuantifier
+    greedy: 1
+    max: -1
+    min: 0
+    node: !parsetree:Constant
+      type: string
+      value: a
+  - !parsetree:RXQuantifier
+    greedy: 1
+    max: -1
+    min: 1
+    node: !parsetree:Constant
+      type: string
+      value: b
+  - !parsetree:RXQuantifier
+    greedy: 1
+    max: 1
+    min: 0
+    node: !parsetree:Constant
+      type: string
+      value: c
+  - !parsetree:RXQuantifier
+    greedy: 0
+    max: -1
+    min: 0
+    node: !parsetree:Constant
+      type: string
+      value: d
+  - !parsetree:RXQuantifier
+    greedy: 0
+    max: -1
+    min: 1
+    node: !parsetree:Constant
+      type: string
+      value: b
+  - !parsetree:RXQuantifier
+    greedy: 0
+    max: 1
+    min: 0
+    node: !parsetree:Constant
+      type: string
+      value: c
+flags: ~
+op: m
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 /(a(cbc)??w)*/;
 EOP
-root:
-    class: Language::P::ParseTree::Pattern
-    op: m
-    components:
-            class: Language::P::ParseTree::RXQuantifier
-            node:
-                class: Language::P::ParseTree::RXGroup
-                components:
-                        class: Language::P::ParseTree::Constant
-                        value: a
-                        type: string
-                        class: Language::P::ParseTree::RXQuantifier
-                        node:
-                            class: Language::P::ParseTree::RXGroup
-                            components:
-                                    class: Language::P::ParseTree::Constant
-                                    value: cbc
-                                    type: string
-                            capture: 1
-                        min: 0
-                        max: 1
-                        greedy: 0
-                        class: Language::P::ParseTree::Constant
-                        value: w
-                        type: string
-                capture: 1
-            min: 0
-            max: -1
-            greedy: 1
-    flags: undef
+--- !parsetree:Pattern
+components:
+  - !parsetree:RXQuantifier
+    greedy: 1
+    max: -1
+    min: 0
+    node: !parsetree:RXGroup
+      capture: 1
+      components:
+        - !parsetree:Constant
+          type: string
+          value: a
+        - !parsetree:RXQuantifier
+          greedy: 0
+          max: 1
+          min: 0
+          node: !parsetree:RXGroup
+            capture: 1
+            components:
+              - !parsetree:Constant
+                type: string
+                value: cbc
+        - !parsetree:Constant
+          type: string
+          value: w
+flags: ~
+op: m
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 qr/^test/;
 EOP
-root:
-    class: Language::P::ParseTree::Pattern
-    op: qr
-    components:
-            class: Language::P::ParseTree::RXAssertion
-            type: START_SPECIAL
-            class: Language::P::ParseTree::Constant
-            value: test
-            type: string
-    flags: undef
+--- !parsetree:Pattern
+components:
+  - !parsetree:RXAssertion
+    type: START_SPECIAL
+  - !parsetree:Constant
+    type: string
+    value: test
+flags: ~
+op: qr
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 m/^${foo}aaa/;
 EOP
-root:
-    class: Language::P::ParseTree::InterpolatedPattern
-    op: m
-    string:
-        class: Language::P::ParseTree::QuotedString
-        components:
-                class: Language::P::ParseTree::Constant
-                value: ^
-                type: string
-                class: Language::P::ParseTree::Symbol
-                name: foo
-                sigil: $
-                class: Language::P::ParseTree::Constant
-                value: aaa
-                type: string
-    flags: undef
+--- !parsetree:InterpolatedPattern
+flags: ~
+op: m
+string: !parsetree:QuotedString
+  components:
+    - !parsetree:Constant
+      type: string
+      value: '^'
+    - !parsetree:Symbol
+      name: foo
+      sigil: $
+    - !parsetree:Constant
+      type: string
+      value: aaa
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 m'^${foo}aaa';
 EOP
-root:
-    class: Language::P::ParseTree::Pattern
-    op: m
-    components:
-            class: Language::P::ParseTree::RXAssertion
-            type: START_SPECIAL
-            class: Language::P::ParseTree::RXAssertion
-            type: END_SPECIAL
-            class: Language::P::ParseTree::Constant
-            value: {foo}aaa
-            type: string
-    flags: undef
+--- !parsetree:Pattern
+components:
+  - !parsetree:RXAssertion
+    type: START_SPECIAL
+  - !parsetree:RXAssertion
+    type: END_SPECIAL
+  - !parsetree:Constant
+    type: string
+    value: '{foo}aaa'
+flags: ~
+op: m
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 /^t|es|t$/;
 EOP
-root:
-    class: Language::P::ParseTree::Pattern
-    op: m
-    components:
-            class: Language::P::ParseTree::RXAlternation
-            left:
-                    class: Language::P::ParseTree::RXAssertion
-                    type: START_SPECIAL
-                    class: Language::P::ParseTree::Constant
-                    value: t
-                    type: string
-            right:
-                    class: Language::P::ParseTree::RXAlternation
-                    left:
-                            class: Language::P::ParseTree::Constant
-                            value: es
-                            type: string
-                    right:
-                            class: Language::P::ParseTree::Constant
-                            value: t
-                            type: string
-                            class: Language::P::ParseTree::RXAssertion
-                            type: END_SPECIAL
-    flags: undef
+--- !parsetree:Pattern
+components:
+  - !parsetree:RXAlternation
+    left:
+      - !parsetree:RXAssertion
+        type: START_SPECIAL
+      - !parsetree:Constant
+        type: string
+        value: t
+    right:
+      - !parsetree:RXAlternation
+        left:
+          - !parsetree:Constant
+            type: string
+            value: es
+        right:
+          - !parsetree:Constant
+            type: string
+            value: t
+          - !parsetree:RXAssertion
+            type: END_SPECIAL
+flags: ~
+op: m
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 /a+(a|b|c)/;
 EOP
-root:
-    class: Language::P::ParseTree::Pattern
-    op: m
+--- !parsetree:Pattern
+components:
+  - !parsetree:RXQuantifier
+    greedy: 1
+    max: -1
+    min: 1
+    node: !parsetree:Constant
+      type: string
+      value: a
+  - !parsetree:RXGroup
+    capture: 1
     components:
-            class: Language::P::ParseTree::RXQuantifier
-            node:
-                class: Language::P::ParseTree::Constant
-                value: a
+      - !parsetree:RXAlternation
+        left:
+          - !parsetree:Constant
+            type: string
+            value: a
+        right:
+          - !parsetree:RXAlternation
+            left:
+              - !parsetree:Constant
                 type: string
-            min: 1
-            max: -1
-            greedy: 1
-            class: Language::P::ParseTree::RXGroup
-            components:
-                    class: Language::P::ParseTree::RXAlternation
-                    left:
-                            class: Language::P::ParseTree::Constant
-                            value: a
-                            type: string
-                    right:
-                            class: Language::P::ParseTree::RXAlternation
-                            left:
-                                    class: Language::P::ParseTree::Constant
-                                    value: b
-                                    type: string
-                            right:
-                                    class: Language::P::ParseTree::Constant
-                                    value: c
-                                    type: string
-            capture: 1
-    flags: undef
+                value: b
+            right:
+              - !parsetree:Constant
+                type: string
+                value: c
+flags: ~
+op: m
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 /a(?:a)(a)/;
 EOP
-root:
-    class: Language::P::ParseTree::Pattern
-    op: m
+--- !parsetree:Pattern
+components:
+  - !parsetree:Constant
+    type: string
+    value: a
+  - !parsetree:RXGroup
+    capture: 0
     components:
-            class: Language::P::ParseTree::Constant
-            value: a
-            type: string
-            class: Language::P::ParseTree::RXGroup
-            components:
-                    class: Language::P::ParseTree::Constant
-                    value: a
-                    type: string
-            capture: 0
-            class: Language::P::ParseTree::RXGroup
-            components:
-                    class: Language::P::ParseTree::Constant
-                    value: a
-                    type: string
-            capture: 1
-    flags: undef
+      - !parsetree:Constant
+        type: string
+        value: a
+  - !parsetree:RXGroup
+    capture: 1
+    components:
+      - !parsetree:Constant
+        type: string
+        value: a
+flags: ~
+op: m
 EOE

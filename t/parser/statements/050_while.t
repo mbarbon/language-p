@@ -7,60 +7,50 @@ use Test::More tests => 2;
 use lib 't/lib';
 use TestParser qw(:all);
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 while( $a > 2 ) {
     1;
 }
 EOP
-root:
-    class: Language::P::ParseTree::ConditionalLoop
-    condition:
-        class: Language::P::ParseTree::BinOp
-        op: >
-        left:
-            class: Language::P::ParseTree::Symbol
-            name: a
-            sigil: $
-        right:
-            class: Language::P::ParseTree::Number
-            value: 2
-            type: number
-            flags: 1
-    block:
-        class: Language::P::ParseTree::Block
-        lines:
-                class: Language::P::ParseTree::Number
-                value: 1
-                type: number
-                flags: 1
-    block_type: while
+--- !parsetree:ConditionalLoop
+block: !parsetree:Block
+  lines:
+    - !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 1
+block_type: while
+condition: !parsetree:BinOp
+  left: !parsetree:Symbol
+    name: a
+    sigil: $
+  op: '>'
+  right: !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 2
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 until( $a < 2 ) {
     1;
 }
 EOP
-root:
-    class: Language::P::ParseTree::ConditionalLoop
-    condition:
-        class: Language::P::ParseTree::BinOp
-        op: <
-        left:
-            class: Language::P::ParseTree::Symbol
-            name: a
-            sigil: $
-        right:
-            class: Language::P::ParseTree::Number
-            value: 2
-            type: number
-            flags: 1
-    block:
-        class: Language::P::ParseTree::Block
-        lines:
-                class: Language::P::ParseTree::Number
-                value: 1
-                type: number
-                flags: 1
-    block_type: until
+--- !parsetree:ConditionalLoop
+block: !parsetree:Block
+  lines:
+    - !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 1
+block_type: until
+condition: !parsetree:BinOp
+  left: !parsetree:Symbol
+    name: a
+    sigil: $
+  op: <
+  right: !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 2
 EOE

@@ -7,35 +7,30 @@ use Test::More tests => 1;
 use lib 't/lib';
 use TestParser qw(:all);
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 {
     $x = 1;
     $y = 2
 }
 EOP
-root:
-    class: Language::P::ParseTree::Block
-    lines:
-            class: Language::P::ParseTree::BinOp
-            op: =
-            left:
-                class: Language::P::ParseTree::Symbol
-                name: x
-                sigil: $
-            right:
-                class: Language::P::ParseTree::Number
-                value: 1
-                type: number
-                flags: 1
-            class: Language::P::ParseTree::BinOp
-            op: =
-            left:
-                class: Language::P::ParseTree::Symbol
-                name: y
-                sigil: $
-            right:
-                class: Language::P::ParseTree::Number
-                value: 2
-                type: number
-                flags: 1
+--- !parsetree:Block
+lines:
+  - !parsetree:BinOp
+    left: !parsetree:Symbol
+      name: x
+      sigil: $
+    op: =
+    right: !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 1
+  - !parsetree:BinOp
+    left: !parsetree:Symbol
+      name: y
+      sigil: $
+    op: =
+    right: !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 2
 EOE

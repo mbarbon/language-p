@@ -7,27 +7,24 @@ use Test::More tests => 1;
 use lib 't/lib';
 use TestParser qw(:all);
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 print 1, 2 or die;
 EOP
-root:
-    class: Language::P::ParseTree::BinOp
-    op: or
-    left:
-        class: Language::P::ParseTree::Print
-        function: print
-        arguments:
-                class: Language::P::ParseTree::Number
-                value: 1
-                type: number
-                flags: 1
-                class: Language::P::ParseTree::Number
-                value: 2
-                type: number
-                flags: 1
-        filehandle: undef
-    right:
-        class: Language::P::ParseTree::Overridable
-        function: die
-        arguments: undef
+--- !parsetree:BinOp
+left: !parsetree:Print
+  arguments:
+    - !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 1
+    - !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 2
+  filehandle: ~
+  function: print
+op: or
+right: !parsetree:Overridable
+  arguments: ~
+  function: die
 EOE
