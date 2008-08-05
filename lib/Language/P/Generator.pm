@@ -178,13 +178,13 @@ my %dispatch_regex =
     );
 
 sub dispatch {
-    my( $self, $tree ) = @_;
+    my( $self, $tree, @args ) = @_;
     ( my $pack = ref $tree ) =~ s/^.*:://;
     my $meth = $dispatch{$pack};
 
     Carp::confess( $pack ) unless $meth;
 
-    $self->$meth( $tree );
+    $self->$meth( $tree, @args );
 }
 
 sub dispatch_cond {
@@ -256,6 +256,7 @@ my %builtins =
     '+'      => 'add',
     '*'      => 'multiply',
     '-'      => 'subtract',
+    '=~'     => 'rx_match',
     '='      => 'assign',
     '<='     => 'compare_i_le_scalar',
     'le'     => 'compare_s_le_scalar',
@@ -353,7 +354,7 @@ sub _binary_op {
 
         _set_label( $end, scalar @bytecode );
     } else {
-        $self->dispatch( $tree->right );
+        $self->dispatch( $tree->right, $tree->op eq '=~' ? 1 : 0 );
         $self->dispatch( $tree->left );
 
         push @bytecode, o( $builtins{$tree->op} );
@@ -585,16 +586,10 @@ sub _subscript {
 sub _pattern {
     my( $self, $tree, $explicit_bind ) = @_;
 
+    die "Pattern not bound by match operator" unless $explicit_bind;
+
     my $re = $self->process_regex( $tree );
     push @bytecode, o( 'constant', value => $re );
-
-    if( !$explicit_bind ) {
-        push @bytecode,
-             o( 'glob',             name => '_', create => 1 ),
-             o( 'glob_slot_create', slot => 'scalar' );
-    }
-
-    push @bytecode, o( 'rx_match' );
 }
 
 sub _allocate_lexicals {

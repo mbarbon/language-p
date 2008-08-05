@@ -824,7 +824,7 @@ sub _parse_string_rest {
 }
 
 sub _parse_term_terminal {
-    my( $self, $token ) = @_;
+    my( $self, $token, $is_bind ) = @_;
 
     if( $token->[0] eq 'QUOTE' ) {
         my $qstring = _parse_string_rest( $self, $token );
@@ -866,13 +866,24 @@ sub _parse_term_terminal {
 
         return $qstring;
     } elsif( $token->[0] eq 'PATTERN' ) {
+        my $pattern;
         if( $token->[1] eq 'm' || $token->[1] eq 'qr' ) {
-            return _parse_match( $self, $token );
+            $pattern = _parse_match( $self, $token );
         } elsif( $token->[1] eq 's' ) {
-            return _parse_substitution( $self, $token );
+            $pattern = _parse_substitution( $self, $token );
         } else {
             die;
         }
+
+        if( !$is_bind && $token->[1] ne 'qr' ) {
+            $pattern = Language::P::ParseTree::BinOp->new
+                           ( { op    => '=~',
+                               left  => _find_symbol( $self, '$', '_' ),
+                               right => $pattern,
+                               } );
+        }
+
+        return $pattern;
     } elsif( $token->[0] eq 'NUMBER' ) {
         return Language::P::ParseTree::Number->new( { value => $token->[1],
                                                       flags => $token->[2],
@@ -978,8 +989,8 @@ sub _parse_lexical_variable {
 }
 
 sub _parse_term_p {
-    my( $self, $prec, $token, $lookahead ) = @_;
-    my $terminal = _parse_term_terminal( $self, $token );
+    my( $self, $prec, $token, $lookahead, $is_bind ) = @_;
+    my $terminal = _parse_term_terminal( $self, $token, $is_bind );
 
     return $terminal if $terminal && !$lookahead;
 
@@ -1032,11 +1043,11 @@ sub _parse_ternary {
 }
 
 sub _parse_term_n {
-    my( $self, $prec, $terminal ) = @_;
+    my( $self, $prec, $terminal, $is_bind ) = @_;
 
     if( !$terminal ) {
         my $token = $self->lexer->lex( X_TERM );
-        $terminal = _parse_term_p( $self, $prec, $token );
+        $terminal = _parse_term_p( $self, $prec, $token, undef, $is_bind );
 
         if( !$terminal ) {
             $self->lexer->unlex( $token );
@@ -1058,7 +1069,9 @@ sub _parse_term_n {
                 if $token->[0] eq 'COLON';
 
             my $q = $bin->[1] eq 'RIGHT' ? $bin->[0] : $bin->[0] - 1;
-            my $rterm = _parse_term_n( $self, $q );
+            my $rterm = _parse_term_n( $self, $q, undef,
+                                       (    $token->[0] eq 'MATCH'
+                                         || $token->[0] eq 'NOMATCH' ) );
 
             $terminal = Language::P::ParseTree::BinOp->new
                             ( { op    => $token->[1],
@@ -1074,7 +1087,7 @@ sub _parse_term_n {
 sub _parse_term {
     my( $self, $prec ) = @_;
     my $token = $self->lexer->lex( X_TERM );
-    my $terminal = _parse_term_p( $self, $prec, $token, 1 );
+    my $terminal = _parse_term_p( $self, $prec, $token, 1, 0 );
 
     if( $terminal ) {
         $terminal = _parse_term_n( $self, $prec, $terminal );
