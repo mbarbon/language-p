@@ -7,104 +7,98 @@ use Test::More tests => 4;
 use lib 't/lib';
 use TestParser qw(:all);
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 if( $a > 2 ) {
     1;
 }
 EOP
-root:
-    class: Language::P::ParseTree::Conditional
-    iftrues:
-            if
-                class: Language::P::ParseTree::BinOp
-                op: >
-                left:
-                    class: Language::P::ParseTree::Symbol
-                    name: a
-                    sigil: $
-                right:
-                    class: Language::P::ParseTree::Number
-                    value: 2
-                    type: number
-                    flags: 1
-                class: Language::P::ParseTree::Block
-                lines:
-                        class: Language::P::ParseTree::Number
-                        value: 1
-                        type: number
-                        flags: 1
-    iffalse: undef
+--- !parsetree:Conditional
+iffalse: ~
+iftrues:
+  -
+    - if
+    - !parsetree:BinOp
+      left: !parsetree:Symbol
+        name: a
+        sigil: $
+      op: '>'
+      right: !parsetree:Number
+        flags: NUM_INTEGER
+        type: number
+        value: 2
+    - !parsetree:Block
+      lines:
+        - !parsetree:Number
+          flags: NUM_INTEGER
+          type: number
+          value: 1
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 unless( $a > 2 ) {
     1;
 }
 EOP
-root:
-    class: Language::P::ParseTree::Conditional
-    iftrues:
-            unless
-                class: Language::P::ParseTree::BinOp
-                op: >
-                left:
-                    class: Language::P::ParseTree::Symbol
-                    name: a
-                    sigil: $
-                right:
-                    class: Language::P::ParseTree::Number
-                    value: 2
-                    type: number
-                    flags: 1
-                class: Language::P::ParseTree::Block
-                lines:
-                        class: Language::P::ParseTree::Number
-                        value: 1
-                        type: number
-                        flags: 1
-    iffalse: undef
+--- !parsetree:Conditional
+iffalse: ~
+iftrues:
+  -
+    - unless
+    - !parsetree:BinOp
+      left: !parsetree:Symbol
+        name: a
+        sigil: $
+      op: '>'
+      right: !parsetree:Number
+        flags: NUM_INTEGER
+        type: number
+        value: 2
+    - !parsetree:Block
+      lines:
+        - !parsetree:Number
+          flags: NUM_INTEGER
+          type: number
+          value: 1
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 if( $a < 2 ) {
     1;
 } else {
     3;
 }
 EOP
-root:
-    class: Language::P::ParseTree::Conditional
-    iftrues:
-            if
-                class: Language::P::ParseTree::BinOp
-                op: <
-                left:
-                    class: Language::P::ParseTree::Symbol
-                    name: a
-                    sigil: $
-                right:
-                    class: Language::P::ParseTree::Number
-                    value: 2
-                    type: number
-                    flags: 1
-                class: Language::P::ParseTree::Block
-                lines:
-                        class: Language::P::ParseTree::Number
-                        value: 1
-                        type: number
-                        flags: 1
-    iffalse:
-        else
-        undef
-            class: Language::P::ParseTree::Block
-            lines:
-                    class: Language::P::ParseTree::Number
-                    value: 3
-                    type: number
-                    flags: 1
+--- !parsetree:Conditional
+iffalse:
+  - else
+  - ~
+  - !parsetree:Block
+    lines:
+      - !parsetree:Number
+        flags: NUM_INTEGER
+        type: number
+        value: 3
+iftrues:
+  -
+    - if
+    - !parsetree:BinOp
+      left: !parsetree:Symbol
+        name: a
+        sigil: $
+      op: <
+      right: !parsetree:Number
+        flags: NUM_INTEGER
+        type: number
+        value: 2
+    - !parsetree:Block
+      lines:
+        - !parsetree:Number
+          flags: NUM_INTEGER
+          type: number
+          value: 1
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 if( $a < 2 ) {
     1;
 } elsif( $a < 3 ) {
@@ -113,52 +107,49 @@ if( $a < 2 ) {
     3;
 }
 EOP
-root:
-    class: Language::P::ParseTree::Conditional
-    iftrues:
-            if
-                class: Language::P::ParseTree::BinOp
-                op: <
-                left:
-                    class: Language::P::ParseTree::Symbol
-                    name: a
-                    sigil: $
-                right:
-                    class: Language::P::ParseTree::Number
-                    value: 2
-                    type: number
-                    flags: 1
-                class: Language::P::ParseTree::Block
-                lines:
-                        class: Language::P::ParseTree::Number
-                        value: 1
-                        type: number
-                        flags: 1
-            if
-                class: Language::P::ParseTree::BinOp
-                op: <
-                left:
-                    class: Language::P::ParseTree::Symbol
-                    name: a
-                    sigil: $
-                right:
-                    class: Language::P::ParseTree::Number
-                    value: 3
-                    type: number
-                    flags: 1
-                class: Language::P::ParseTree::Block
-                lines:
-                        class: Language::P::ParseTree::Number
-                        value: 2
-                        type: number
-                        flags: 1
-    iffalse:
-        else
-        undef
-            class: Language::P::ParseTree::Block
-            lines:
-                    class: Language::P::ParseTree::Number
-                    value: 3
-                    type: number
-                    flags: 1
+--- !parsetree:Conditional
+iffalse:
+  - else
+  - ~
+  - !parsetree:Block
+    lines:
+      - !parsetree:Number
+        flags: NUM_INTEGER
+        type: number
+        value: 3
+iftrues:
+  -
+    - if
+    - !parsetree:BinOp
+      left: !parsetree:Symbol
+        name: a
+        sigil: $
+      op: <
+      right: !parsetree:Number
+        flags: NUM_INTEGER
+        type: number
+        value: 2
+    - !parsetree:Block
+      lines:
+        - !parsetree:Number
+          flags: NUM_INTEGER
+          type: number
+          value: 1
+  -
+    - if
+    - !parsetree:BinOp
+      left: !parsetree:Symbol
+        name: a
+        sigil: $
+      op: <
+      right: !parsetree:Number
+        flags: NUM_INTEGER
+        type: number
+        value: 3
+    - !parsetree:Block
+      lines:
+        - !parsetree:Number
+          flags: NUM_INTEGER
+          type: number
+          value: 2
 EOE

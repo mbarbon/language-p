@@ -7,130 +7,116 @@ use Test::More tests => 12;
 use lib 't/lib';
 use TestParser qw(:all);
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1725272
 EOP
-root:
-    class: Language::P::ParseTree::Number
-    value: 1725272
-    type: number
-    flags: 1
+--- !parsetree:Number
+flags: NUM_INTEGER
+type: number
+value: 1725272
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 0b101010
 EOP
-root:
-    class: Language::P::ParseTree::Number
-    value: 101010
-    type: number
-    flags: 17
+--- !parsetree:Number
+flags: NUM_INTEGER|NUM_BINARY
+type: number
+value: 101010
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 0xffa1345
 EOP
-root:
-    class: Language::P::ParseTree::Number
-    value: ffa1345
-    type: number
-    flags: 5
+--- !parsetree:Number
+flags: NUM_INTEGER|NUM_HEXADECIMAL
+type: number
+value: ffa1345
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 0
 EOP
-root:
-    class: Language::P::ParseTree::Number
-    value: 0
-    type: number
-    flags: 1
+--- !parsetree:Number
+flags: NUM_INTEGER
+type: number
+value: 0
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 0755
 EOP
-root:
-    class: Language::P::ParseTree::Number
-    value: 755
-    type: number
-    flags: 9
+--- !parsetree:Number
+flags: NUM_INTEGER|NUM_OCTAL
+type: number
+value: 755
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1.2
 EOP
-root:
-    class: Language::P::ParseTree::Number
-    value: 1.2
-    type: number
-    flags: 2
+--- !parsetree:Number
+flags: NUM_FLOAT
+type: number
+value: 1.2
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 173.
 EOP
-root:
-    class: Language::P::ParseTree::Number
-    value: 173
-    type: number
-    flags: 2
+--- !parsetree:Number
+flags: NUM_FLOAT
+type: number
+value: 173
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 .0123
 EOP
-root:
-    class: Language::P::ParseTree::Number
-    value: 0.0123
-    type: number
-    flags: 2
+--- !parsetree:Number
+flags: NUM_FLOAT
+type: number
+value: 0.0123
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1E7
 EOP
-root:
-    class: Language::P::ParseTree::Number
-    value: 1e7
-    type: number
-    flags: 2
+--- !parsetree:Number
+flags: NUM_FLOAT
+type: number
+value: 1e7
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1e+07
 EOP
-root:
-    class: Language::P::ParseTree::Number
-    value: 1e+07
-    type: number
-    flags: 2
+--- !parsetree:Number
+flags: NUM_FLOAT
+type: number
+value: 1e+07
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 12.7e-3
 EOP
-root:
-    class: Language::P::ParseTree::Number
-    value: 12.7e-3
-    type: number
-    flags: 2
+--- !parsetree:Number
+flags: NUM_FLOAT
+type: number
+value: 12.7e-3
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 12..15
 EOP
-root:
-    class: Language::P::ParseTree::BinOp
-    op: ..
-    left:
-        class: Language::P::ParseTree::Number
-        value: 12
-        type: number
-        flags: 1
-    right:
-        class: Language::P::ParseTree::Number
-        value: 15
-        type: number
-        flags: 1
+--- !parsetree:BinOp
+left: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 12
+op: ..
+right: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 15
 EOE

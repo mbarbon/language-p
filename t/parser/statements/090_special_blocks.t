@@ -7,47 +7,44 @@ use Test::More tests => 3;
 use lib 't/lib';
 use TestParser qw(:all);
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 BEGIN {
     1
 }
 EOP
-root:
-    class: Language::P::ParseTree::Subroutine
-    name: BEGIN
-    lines:
-            class: Language::P::ParseTree::Number
-            value: 1
-            type: number
-            flags: 1
+--- !parsetree:Subroutine
+lines:
+  - !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 1
+name: BEGIN
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 sub END {
     1
 }
 EOP
-root:
-    class: Language::P::ParseTree::Subroutine
-    name: END
-    lines:
-            class: Language::P::ParseTree::Number
-            value: 1
-            type: number
-            flags: 1
+--- !parsetree:Subroutine
+lines:
+  - !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 1
+name: END
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 END {
     1
 }
 EOP
-root:
-    class: Language::P::ParseTree::Subroutine
-    name: END
-    lines:
-            class: Language::P::ParseTree::Number
-            value: 1
-            type: number
-            flags: 1
+--- !parsetree:Subroutine
+lines:
+  - !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 1
+name: END
 EOE

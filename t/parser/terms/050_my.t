@@ -7,84 +7,76 @@ use Test::More tests => 4;
 use lib 't/lib';
 use TestParser qw(:all);
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 my $foo;
 EOP
-root:
-    class: Language::P::ParseTree::LexicalDeclaration
-    name: foo
-    sigil: $
-    declaration_type: my
+--- !parsetree:LexicalDeclaration
+declaration_type: my
+name: foo
+sigil: $
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 my $foo = 1;
 EOP
-root:
-    class: Language::P::ParseTree::BinOp
-    op: =
-    left:
-        class: Language::P::ParseTree::LexicalDeclaration
-        name: foo
-        sigil: $
-        declaration_type: my
-    right:
-        class: Language::P::ParseTree::Number
-        value: 1
-        type: number
-        flags: 1
+--- !parsetree:BinOp
+left: !parsetree:LexicalDeclaration
+  declaration_type: my
+  name: foo
+  sigil: $
+op: =
+right: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 1
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 my( $foo, @bar ) = ( 1, 2, 3 );
 EOP
-root:
-    class: Language::P::ParseTree::BinOp
-    op: =
-    left:
-        class: Language::P::ParseTree::List
-        expressions:
-                class: Language::P::ParseTree::LexicalDeclaration
-                name: foo
-                sigil: $
-                declaration_type: my
-                class: Language::P::ParseTree::LexicalDeclaration
-                name: bar
-                sigil: @
-                declaration_type: my
-    right:
-        class: Language::P::ParseTree::List
-        expressions:
-                class: Language::P::ParseTree::Number
-                value: 1
-                type: number
-                flags: 1
-                class: Language::P::ParseTree::Number
-                value: 2
-                type: number
-                flags: 1
-                class: Language::P::ParseTree::Number
-                value: 3
-                type: number
-                flags: 1
+--- !parsetree:BinOp
+left: !parsetree:List
+  expressions:
+    - !parsetree:LexicalDeclaration
+      declaration_type: my
+      name: foo
+      sigil: $
+    - !parsetree:LexicalDeclaration
+      declaration_type: my
+      name: bar
+      sigil: '@'
+op: =
+right: !parsetree:List
+  expressions:
+    - !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 1
+    - !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 2
+    - !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 3
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 my( ${foo}, @{b}, $x );
 EOP
-root:
-    class: Language::P::ParseTree::List
-    expressions:
-            class: Language::P::ParseTree::LexicalDeclaration
-            name: foo
-            sigil: $
-            declaration_type: my
-            class: Language::P::ParseTree::LexicalDeclaration
-            name: b
-            sigil: @
-            declaration_type: my
-            class: Language::P::ParseTree::LexicalDeclaration
-            name: x
-            sigil: $
-            declaration_type: my
+--- !parsetree:List
+expressions:
+  - !parsetree:LexicalDeclaration
+    declaration_type: my
+    name: foo
+    sigil: $
+  - !parsetree:LexicalDeclaration
+    declaration_type: my
+    name: b
+    sigil: '@'
+  - !parsetree:LexicalDeclaration
+    declaration_type: my
+    name: x
+    sigil: $
 EOE

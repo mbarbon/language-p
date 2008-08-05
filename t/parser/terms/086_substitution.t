@@ -7,141 +7,120 @@ use Test::More tests => 6;
 use lib 't/lib';
 use TestParser qw(:all);
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 s/foo/bar/g;
 EOP
-root:
-    class: Language::P::ParseTree::Substitution
-    pattern:
-        class: Language::P::ParseTree::Pattern
-        op: s
-        components:
-                class: Language::P::ParseTree::Constant
-                value: foo
-                type: string
-        flags:
-            g
-    replacement:
-        class: Language::P::ParseTree::Constant
-        value: bar
-        type: string
+--- !parsetree:Substitution
+pattern: !parsetree:Pattern
+  components:
+    - !parsetree:Constant
+      type: string
+      value: foo
+  flags:
+    - g
+  op: s
+replacement: !parsetree:Constant
+  type: string
+  value: bar
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 s{foo}[$1];
 EOP
-root:
-    class: Language::P::ParseTree::Substitution
-    pattern:
-        class: Language::P::ParseTree::Pattern
-        op: s
-        components:
-                class: Language::P::ParseTree::Constant
-                value: foo
-                type: string
-        flags: undef
-    replacement:
-        class: Language::P::ParseTree::QuotedString
-        components:
-                class: Language::P::ParseTree::Symbol
-                name: 1
-                sigil: $
+--- !parsetree:Substitution
+pattern: !parsetree:Pattern
+  components:
+    - !parsetree:Constant
+      type: string
+      value: foo
+  flags: ~
+  op: s
+replacement: !parsetree:QuotedString
+  components:
+    - !parsetree:Symbol
+      name: 1
+      sigil: $
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 s{foo}'$1';
 EOP
-root:
-    class: Language::P::ParseTree::Substitution
-    pattern:
-        class: Language::P::ParseTree::Pattern
-        op: s
-        components:
-                class: Language::P::ParseTree::Constant
-                value: foo
-                type: string
-        flags: undef
-    replacement:
-        class: Language::P::ParseTree::Constant
-        value: $1
-        type: string
+--- !parsetree:Substitution
+pattern: !parsetree:Pattern
+  components:
+    - !parsetree:Constant
+      type: string
+      value: foo
+  flags: ~
+  op: s
+replacement: !parsetree:Constant
+  type: string
+  value: $1
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 s/foo/my $x = 1; $x/ge;
 EOP
-root:
-    class: Language::P::ParseTree::Substitution
-    pattern:
-        class: Language::P::ParseTree::Pattern
-        op: s
-        components:
-                class: Language::P::ParseTree::Constant
-                value: foo
-                type: string
-        flags:
-            g
-            e
-    replacement:
-        class: Language::P::ParseTree::Block
-        lines:
-                class: Language::P::ParseTree::BinOp
-                op: =
-                left:
-                    class: Language::P::ParseTree::LexicalDeclaration
-                    name: x
-                    sigil: $
-                    declaration_type: my
-                right:
-                    class: Language::P::ParseTree::Number
-                    value: 1
-                    type: number
-                    flags: 1
-                class: Language::P::ParseTree::LexicalSymbol
-                name: x
-                sigil: $
+--- !parsetree:Substitution
+pattern: !parsetree:Pattern
+  components:
+    - !parsetree:Constant
+      type: string
+      value: foo
+  flags:
+    - g
+    - e
+  op: s
+replacement: !parsetree:Block
+  lines:
+    - !parsetree:BinOp
+      left: !parsetree:LexicalDeclaration
+        declaration_type: my
+        name: x
+        sigil: $
+      op: =
+      right: !parsetree:Number
+        flags: NUM_INTEGER
+        type: number
+        value: 1
+    - !parsetree:LexicalSymbol
+      name: x
+      sigil: $
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 s/$foo/bar/g;
 EOP
-root:
-    class: Language::P::ParseTree::Substitution
-    pattern:
-        class: Language::P::ParseTree::InterpolatedPattern
-        op: s
-        string:
-            class: Language::P::ParseTree::QuotedString
-            components:
-                    class: Language::P::ParseTree::Symbol
-                    name: foo
-                    sigil: $
-        flags:
-            g
-    replacement:
-        class: Language::P::ParseTree::Constant
-        value: bar
-        type: string
+--- !parsetree:Substitution
+pattern: !parsetree:InterpolatedPattern
+  flags:
+    - g
+  op: s
+  string: !parsetree:QuotedString
+    components:
+      - !parsetree:Symbol
+        name: foo
+        sigil: $
+replacement: !parsetree:Constant
+  type: string
+  value: bar
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 s'$foo'bar'g;
 EOP
-root:
-    class: Language::P::ParseTree::Substitution
-    pattern:
-        class: Language::P::ParseTree::Pattern
-        op: s
-        components:
-                class: Language::P::ParseTree::RXAssertion
-                type: END_SPECIAL
-                class: Language::P::ParseTree::Constant
-                value: foo
-                type: string
-        flags:
-            g
-    replacement:
-        class: Language::P::ParseTree::Constant
-        value: bar
-        type: string
+--- !parsetree:Substitution
+pattern: !parsetree:Pattern
+  components:
+    - !parsetree:RXAssertion
+      type: END_SPECIAL
+    - !parsetree:Constant
+      type: string
+      value: foo
+  flags:
+    - g
+  op: s
+replacement: !parsetree:Constant
+  type: string
+  value: bar
 EOE

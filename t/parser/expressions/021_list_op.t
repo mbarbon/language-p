@@ -7,113 +7,106 @@ use Test::More tests => 5;
 use lib 't/lib';
 use TestParser qw(:all);
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 x( 1, 2 );
 EOP
-root:
-    class: Language::P::ParseTree::FunctionCall
-    function: x
-    arguments:
-            class: Language::P::ParseTree::Number
-            value: 1
-            type: number
-            flags: 1
-            class: Language::P::ParseTree::Number
-            value: 2
-            type: number
-            flags: 1
+--- !parsetree:FunctionCall
+arguments:
+  - !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 1
+  - !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 2
+function: x
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 sub x;
 
 x 1, 2;
 EOP
-root:
-    class: Language::P::ParseTree::SubroutineDeclaration
-    name: x
-root:
-    class: Language::P::ParseTree::FunctionCall
-    function: x
-    arguments:
-            class: Language::P::ParseTree::Number
-            value: 1
-            type: number
-            flags: 1
-            class: Language::P::ParseTree::Number
-            value: 2
-            type: number
-            flags: 1
+--- !parsetree:SubroutineDeclaration
+name: x
+--- !parsetree:FunctionCall
+arguments:
+  - !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 1
+  - !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 2
+function: x
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 sub x { };
 
 x 1, 2;
 EOP
-root:
-    class: Language::P::ParseTree::Subroutine
-    name: x
-    lines:
-root:
-    class: Language::P::ParseTree::FunctionCall
-    function: x
-    arguments:
-            class: Language::P::ParseTree::Number
-            value: 1
-            type: number
-            flags: 1
-            class: Language::P::ParseTree::Number
-            value: 2
-            type: number
-            flags: 1
+--- !parsetree:Subroutine
+lines: []
+name: x
+--- !parsetree:FunctionCall
+arguments:
+  - !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 1
+  - !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 2
+function: x
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 print, 1,
 print, 1;
 EOP
-root:
-    class: Language::P::ParseTree::List
-    expressions:
-            class: Language::P::ParseTree::Print
-            function: print
-            arguments: undef
-            filehandle: undef
-            class: Language::P::ParseTree::Number
-            value: 1
-            type: number
-            flags: 1
-            class: Language::P::ParseTree::Print
-            function: print
-            arguments: undef
-            filehandle: undef
-            class: Language::P::ParseTree::Number
-            value: 1
-            type: number
-            flags: 1
+--- !parsetree:List
+expressions:
+  - !parsetree:Print
+    arguments: ~
+    filehandle: ~
+    function: print
+  - !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 1
+  - !parsetree:Print
+    arguments: ~
+    filehandle: ~
+    function: print
+  - !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 1
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 print, 1,
 print => 1;
 EOP
-root:
-    class: Language::P::ParseTree::List
-    expressions:
-            class: Language::P::ParseTree::Print
-            function: print
-            arguments: undef
-            filehandle: undef
-            class: Language::P::ParseTree::Number
-            value: 1
-            type: number
-            flags: 1
-            class: Language::P::ParseTree::Constant
-            value: print
-            type: string
-            class: Language::P::ParseTree::Number
-            value: 1
-            type: number
-            flags: 1
+--- !parsetree:List
+expressions:
+  - !parsetree:Print
+    arguments: ~
+    filehandle: ~
+    function: print
+  - !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 1
+  - !parsetree:Constant
+    type: string
+    value: print
+  - !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 1
 EOE

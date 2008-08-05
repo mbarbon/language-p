@@ -74,7 +74,7 @@ sub parsed_program {
 sub parse_and_diff_yaml {
     my( $expr, $expected ) = @_;
 
-    $expected =~ s/([A-Z]+_[A-Z_ |]+)/eval $1 or die $@/eg;
+    $expected =~ s/ ((?:NUM)_[A-Z_ \|]+)/" " . eval $1 or die $@/eg;
 
     require Language::P::ParseTree::DumpYAML;
 
@@ -85,23 +85,6 @@ sub parse_and_diff_yaml {
     my $dumper = Language::P::ParseTree::DumpYAML->new;
     foreach my $line ( @{parsed_program()} ) {
         $got .= $dumper->dump( $line );
-    }
-
-    require Test::Differences;
-
-    local $Test::Builder::Level = $Test::Builder::Level + 1;
-    Test::Differences::eq_or_diff( $got, $expected );
-}
-
-sub parse_and_diff {
-    my( $expr, $expected ) = @_;
-
-    my $parser = fresh_parser();
-    $parser->parse_string( $expr );
-
-    my $got = '';
-    foreach my $line ( @{parsed_program()} ) {
-        $got .= $line->pretty_print;
     }
 
     require Test::Differences;

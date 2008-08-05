@@ -7,271 +7,246 @@ use Test::More tests => 18;
 use lib 't/lib';
 use TestParser qw(:all);
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 "";
 EOP
-root:
-    class: Language::P::ParseTree::Constant
-    value: 
-    type: string
+--- !parsetree:Constant
+type: string
+value: ''
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 "\"";
 EOP
-root:
-    class: Language::P::ParseTree::Constant
-    value: "
-    type: string
+--- !parsetree:Constant
+type: string
+value: '"'
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 '\'';
 EOP
-root:
-    class: Language::P::ParseTree::Constant
-    value: '
-    type: string
+--- !parsetree:Constant
+type: string
+value: "'"
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 '\n';
 EOP
-root:
-    class: Language::P::ParseTree::Constant
-    value: \n
-    type: string
+--- !parsetree:Constant
+type: string
+value: \n
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 "abcdefg";
 EOP
-root:
-    class: Language::P::ParseTree::Constant
-    value: abcdefg
-    type: string
+--- !parsetree:Constant
+type: string
+value: abcdefg
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 "x\n";
 EOP
-root:
-    class: Language::P::ParseTree::Constant
-    value: x
-
-    type: string
+--- !parsetree:Constant
+type: string
+value: "x\n"
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 "ab$a $b";
 EOP
-root:
-    class: Language::P::ParseTree::QuotedString
-    components:
-            class: Language::P::ParseTree::Constant
-            value: ab
-            type: string
-            class: Language::P::ParseTree::Symbol
-            name: a
-            sigil: $
-            class: Language::P::ParseTree::Constant
-            value:  
-            type: string
-            class: Language::P::ParseTree::Symbol
-            name: b
-            sigil: $
+--- !parsetree:QuotedString
+components:
+  - !parsetree:Constant
+    type: string
+    value: ab
+  - !parsetree:Symbol
+    name: a
+    sigil: $
+  - !parsetree:Constant
+    type: string
+    value: ' '
+  - !parsetree:Symbol
+    name: b
+    sigil: $
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 "ab${a}cd";
 EOP
-root:
-    class: Language::P::ParseTree::QuotedString
-    components:
-            class: Language::P::ParseTree::Constant
-            value: ab
-            type: string
-            class: Language::P::ParseTree::Symbol
-            name: a
-            sigil: $
-            class: Language::P::ParseTree::Constant
-            value: cd
-            type: string
+--- !parsetree:QuotedString
+components:
+  - !parsetree:Constant
+    type: string
+    value: ab
+  - !parsetree:Symbol
+    name: a
+    sigil: $
+  - !parsetree:Constant
+    type: string
+    value: cd
 EOE
 
-parse_and_diff( <<'EOP', <<"EOE" );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 "a$^E b";
 EOP
-root:
-    class: Language::P::ParseTree::QuotedString
-    components:
-            class: Language::P::ParseTree::Constant
-            value: a
-            type: string
-            class: Language::P::ParseTree::Symbol
-            name: \x05
-            sigil: \$
-            class: Language::P::ParseTree::Constant
-            value:  b
-            type: string
+--- !parsetree:QuotedString
+components:
+  - !parsetree:Constant
+    type: string
+    value: a
+  - !parsetree:Symbol
+    name: "\x05"
+    sigil: $
+  - !parsetree:Constant
+    type: string
+    value: ' b'
 EOE
 
-parse_and_diff( <<'EOP', <<"EOE" );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 "a${^Foo} b";
 EOP
-root:
-    class: Language::P::ParseTree::QuotedString
-    components:
-            class: Language::P::ParseTree::Constant
-            value: a
-            type: string
-            class: Language::P::ParseTree::Symbol
-            name: \x06oo
-            sigil: \$
-            class: Language::P::ParseTree::Constant
-            value:  b
-            type: string
+--- !parsetree:QuotedString
+components:
+  - !parsetree:Constant
+    type: string
+    value: a
+  - !parsetree:Symbol
+    name: "\x06oo"
+    sigil: $
+  - !parsetree:Constant
+    type: string
+    value: ' b'
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $x = "1";
 $x = 1;
 EOP
-root:
-    class: Language::P::ParseTree::BinOp
-    op: =
-    left:
-        class: Language::P::ParseTree::Symbol
-        name: x
-        sigil: $
-    right:
-        class: Language::P::ParseTree::Constant
-        value: 1
-        type: string
-root:
-    class: Language::P::ParseTree::BinOp
-    op: =
-    left:
-        class: Language::P::ParseTree::Symbol
-        name: x
-        sigil: $
-    right:
-        class: Language::P::ParseTree::Number
-        value: 1
-        type: number
-        flags: 1
+--- !parsetree:BinOp
+left: !parsetree:Symbol
+  name: x
+  sigil: $
+op: =
+right: !parsetree:Constant
+  type: string
+  value: 1
+--- !parsetree:BinOp
+left: !parsetree:Symbol
+  name: x
+  sigil: $
+op: =
+right: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 1
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 `ab${a}cd`;
 EOP
-root:
-    class: Language::P::ParseTree::UnOp
-    op: backtick
-    left:
-        class: Language::P::ParseTree::QuotedString
-        components:
-                class: Language::P::ParseTree::Constant
-                value: ab
-                type: string
-                class: Language::P::ParseTree::Symbol
-                name: a
-                sigil: $
-                class: Language::P::ParseTree::Constant
-                value: cd
-                type: string
+--- !parsetree:UnOp
+left: !parsetree:QuotedString
+  components:
+    - !parsetree:Constant
+      type: string
+      value: ab
+    - !parsetree:Symbol
+      name: a
+      sigil: $
+    - !parsetree:Constant
+      type: string
+      value: cd
+op: backtick
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 <$x $y>;
 EOP
-root:
-    class: Language::P::ParseTree::Glob
-    function: glob
-    arguments:
-            class: Language::P::ParseTree::QuotedString
-            components:
-                    class: Language::P::ParseTree::Symbol
-                    name: x
-                    sigil: $
-                    class: Language::P::ParseTree::Constant
-                    value:  
-                    type: string
-                    class: Language::P::ParseTree::Symbol
-                    name: y
-                    sigil: $
+--- !parsetree:Glob
+arguments:
+  - !parsetree:QuotedString
+    components:
+      - !parsetree:Symbol
+        name: x
+        sigil: $
+      - !parsetree:Constant
+        type: string
+        value: ' '
+      - !parsetree:Symbol
+        name: y
+        sigil: $
+function: glob
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 <foo>;
 EOP
-root:
-    class: Language::P::ParseTree::Overridable
-    function: readline
-    arguments:
-            class: Language::P::ParseTree::Symbol
-            name: foo
-            sigil: *
+--- !parsetree:Overridable
+arguments:
+  - !parsetree:Symbol
+    name: foo
+    sigil: '*'
+function: readline
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 <foo >;
 EOP
-root:
-    class: Language::P::ParseTree::Glob
-    function: glob
-    arguments:
-            class: Language::P::ParseTree::Constant
-            value: foo 
-            type: string
+--- !parsetree:Glob
+arguments:
+  - !parsetree:Constant
+    type: string
+    value: 'foo '
+function: glob
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 <$x>;
 EOP
-root:
-    class: Language::P::ParseTree::Overridable
-    function: readline
-    arguments:
-            class: Language::P::ParseTree::Symbol
-            name: x
-            sigil: $
+--- !parsetree:Overridable
+arguments:
+  - !parsetree:Symbol
+    name: x
+    sigil: $
+function: readline
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 <${x}>;
 EOP
-root:
-    class: Language::P::ParseTree::Overridable
-    function: readline
-    arguments:
-            class: Language::P::ParseTree::Symbol
-            name: x
-            sigil: $
+--- !parsetree:Overridable
+arguments:
+  - !parsetree:Symbol
+    name: x
+    sigil: $
+function: readline
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 <'$x $y'>;
 EOP
-root:
-    class: Language::P::ParseTree::Glob
-    function: glob
-    arguments:
-            class: Language::P::ParseTree::QuotedString
-            components:
-                    class: Language::P::ParseTree::Constant
-                    value: '
-                    type: string
-                    class: Language::P::ParseTree::Symbol
-                    name: x
-                    sigil: $
-                    class: Language::P::ParseTree::Constant
-                    value:  
-                    type: string
-                    class: Language::P::ParseTree::Symbol
-                    name: y
-                    sigil: $
-                    class: Language::P::ParseTree::Constant
-                    value: '
-                    type: string
+--- !parsetree:Glob
+arguments:
+  - !parsetree:QuotedString
+    components:
+      - !parsetree:Constant
+        type: string
+        value: "'"
+      - !parsetree:Symbol
+        name: x
+        sigil: $
+      - !parsetree:Constant
+        type: string
+        value: ' '
+      - !parsetree:Symbol
+        name: y
+        sigil: $
+      - !parsetree:Constant
+        type: string
+        value: "'"
+function: glob
 EOE

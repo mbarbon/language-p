@@ -7,74 +7,62 @@ use Test::More tests => 4;
 use lib 't/lib';
 use TestParser qw(:all);
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1 < 2
 EOP
-root:
-    class: Language::P::ParseTree::BinOp
-    op: <
-    left:
-        class: Language::P::ParseTree::Number
-        value: 1
-        type: number
-        flags: 1
-    right:
-        class: Language::P::ParseTree::Number
-        value: 2
-        type: number
-        flags: 1
+--- !parsetree:BinOp
+left: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 1
+op: <
+right: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 2
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1 > 2
 EOP
-root:
-    class: Language::P::ParseTree::BinOp
-    op: >
-    left:
-        class: Language::P::ParseTree::Number
-        value: 1
-        type: number
-        flags: 1
-    right:
-        class: Language::P::ParseTree::Number
-        value: 2
-        type: number
-        flags: 1
+--- !parsetree:BinOp
+left: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 1
+op: '>'
+right: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 2
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1 >= 2
 EOP
-root:
-    class: Language::P::ParseTree::BinOp
-    op: >=
-    left:
-        class: Language::P::ParseTree::Number
-        value: 1
-        type: number
-        flags: 1
-    right:
-        class: Language::P::ParseTree::Number
-        value: 2
-        type: number
-        flags: 1
+--- !parsetree:BinOp
+left: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 1
+op: '>='
+right: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 2
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1 <= 2
 EOP
-root:
-    class: Language::P::ParseTree::BinOp
-    op: <=
-    left:
-        class: Language::P::ParseTree::Number
-        value: 1
-        type: number
-        flags: 1
-    right:
-        class: Language::P::ParseTree::Number
-        value: 2
-        type: number
-        flags: 1
+--- !parsetree:BinOp
+left: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 1
+op: <=
+right: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 2
 EOE

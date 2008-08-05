@@ -7,141 +7,111 @@ use Test::More tests => 4;
 use lib 't/lib';
 use TestParser qw(:all);
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1 ? 2 : 3
 EOP
-root:
-    class: Language::P::ParseTree::Ternary
-    condition:
-        class: Language::P::ParseTree::Number
-        value: 1
-        type: number
-        flags: 1
-    iftrue:
-        class: Language::P::ParseTree::Number
-        value: 2
-        type: number
-        flags: 1
-    iffalse:
-        class: Language::P::ParseTree::Number
-        value: 3
-        type: number
-        flags: 1
+--- !parsetree:Ternary
+condition: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 1
+iffalse: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 3
+iftrue: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 2
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $a = 1 ? 2 : 3
 EOP
-root:
-    class: Language::P::ParseTree::BinOp
-    op: =
-    left:
-        class: Language::P::ParseTree::Symbol
-        name: a
-        sigil: $
-    right:
-        class: Language::P::ParseTree::Ternary
-        condition:
-            class: Language::P::ParseTree::Number
-            value: 1
-            type: number
-            flags: 1
-        iftrue:
-            class: Language::P::ParseTree::Number
-            value: 2
-            type: number
-            flags: 1
-        iffalse:
-            class: Language::P::ParseTree::Number
-            value: 3
-            type: number
-            flags: 1
+--- !parsetree:BinOp
+left: !parsetree:Symbol
+  name: a
+  sigil: $
+op: =
+right: !parsetree:Ternary
+  condition: !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 1
+  iffalse: !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 3
+  iftrue: !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 2
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $a = 1 < 2 ? 2 + 3 : 3 + 4
 EOP
-root:
-    class: Language::P::ParseTree::BinOp
-    op: =
-    left:
-        class: Language::P::ParseTree::Symbol
-        name: a
-        sigil: $
-    right:
-        class: Language::P::ParseTree::Ternary
-        condition:
-            class: Language::P::ParseTree::BinOp
-            op: <
-            left:
-                class: Language::P::ParseTree::Number
-                value: 1
-                type: number
-                flags: 1
-            right:
-                class: Language::P::ParseTree::Number
-                value: 2
-                type: number
-                flags: 1
-        iftrue:
-            class: Language::P::ParseTree::BinOp
-            op: +
-            left:
-                class: Language::P::ParseTree::Number
-                value: 2
-                type: number
-                flags: 1
-            right:
-                class: Language::P::ParseTree::Number
-                value: 3
-                type: number
-                flags: 1
-        iffalse:
-            class: Language::P::ParseTree::BinOp
-            op: +
-            left:
-                class: Language::P::ParseTree::Number
-                value: 3
-                type: number
-                flags: 1
-            right:
-                class: Language::P::ParseTree::Number
-                value: 4
-                type: number
-                flags: 1
+--- !parsetree:BinOp
+left: !parsetree:Symbol
+  name: a
+  sigil: $
+op: =
+right: !parsetree:Ternary
+  condition: !parsetree:BinOp
+    left: !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 1
+    op: <
+    right: !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 2
+  iffalse: !parsetree:BinOp
+    left: !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 3
+    op: +
+    right: !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 4
+  iftrue: !parsetree:BinOp
+    left: !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 2
+    op: +
+    right: !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 3
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $x ? $a = 1 : $b = 2;
 EOP
-root:
-    class: Language::P::ParseTree::BinOp
+--- !parsetree:BinOp
+left: !parsetree:Ternary
+  condition: !parsetree:Symbol
+    name: x
+    sigil: $
+  iffalse: !parsetree:Symbol
+    name: b
+    sigil: $
+  iftrue: !parsetree:BinOp
+    left: !parsetree:Symbol
+      name: a
+      sigil: $
     op: =
-    left:
-        class: Language::P::ParseTree::Ternary
-        condition:
-            class: Language::P::ParseTree::Symbol
-            name: x
-            sigil: $
-        iftrue:
-            class: Language::P::ParseTree::BinOp
-            op: =
-            left:
-                class: Language::P::ParseTree::Symbol
-                name: a
-                sigil: $
-            right:
-                class: Language::P::ParseTree::Number
-                value: 1
-                type: number
-                flags: 1
-        iffalse:
-            class: Language::P::ParseTree::Symbol
-            name: b
-            sigil: $
-    right:
-        class: Language::P::ParseTree::Number
-        value: 2
-        type: number
-        flags: 1
+    right: !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 1
+op: =
+right: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 2
 EOE

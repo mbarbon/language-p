@@ -7,78 +7,66 @@ use Test::More tests => 6;
 use lib 't/lib';
 use TestParser qw(:all);
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 +12
 EOP
-root:
-    class: Language::P::ParseTree::UnOp
-    op: +
-    left:
-        class: Language::P::ParseTree::Number
-        value: 12
-        type: number
-        flags: 1
+--- !parsetree:UnOp
+left: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 12
+op: +
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 -12
 EOP
-root:
-    class: Language::P::ParseTree::UnOp
-    op: -
-    left:
-        class: Language::P::ParseTree::Number
-        value: 12
-        type: number
-        flags: 1
+--- !parsetree:UnOp
+left: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 12
+op: -
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 -( 1 )
 EOP
-root:
-    class: Language::P::ParseTree::UnOp
-    op: -
-    left:
-        class: Language::P::ParseTree::Number
-        value: 1
-        type: number
-        flags: 1
+--- !parsetree:UnOp
+left: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 1
+op: -
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 -$x
 EOP
-root:
-    class: Language::P::ParseTree::UnOp
-    op: -
-    left:
-        class: Language::P::ParseTree::Symbol
-        name: x
-        sigil: $
+--- !parsetree:UnOp
+left: !parsetree:Symbol
+  name: x
+  sigil: $
+op: -
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 \1
 EOP
-root:
-    class: Language::P::ParseTree::UnOp
-    op: \
-    left:
-        class: Language::P::ParseTree::Number
-        value: 1
-        type: number
-        flags: 1
+--- !parsetree:UnOp
+left: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 1
+op: \
 EOE
 
-parse_and_diff( <<'EOP', <<'EOE' );
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 \$a
 EOP
-root:
-    class: Language::P::ParseTree::UnOp
-    op: \
-    left:
-        class: Language::P::ParseTree::Symbol
-        name: a
-        sigil: $
+--- !parsetree:UnOp
+left: !parsetree:Symbol
+  name: a
+  sigil: $
+op: \
 EOE
