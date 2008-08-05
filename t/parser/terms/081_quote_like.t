@@ -40,6 +40,7 @@ components:
     type: string
     value: ab
   - !parsetree:Symbol
+    context: CXT_SCALAR
     name: e
     sigil: $
   - !parsetree:Constant
@@ -56,6 +57,7 @@ components:
     type: string
     value: a(
   - !parsetree:Symbol
+    context: CXT_SCALAR
     name: e
     sigil: $
   - !parsetree:Constant
@@ -69,6 +71,7 @@ EOP
 --- !parsetree:QuotedString
 components:
   - !parsetree:Symbol
+    context: CXT_SCALAR
     name: e
     sigil: $
 EOE
@@ -77,9 +80,11 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 qx($e);
 EOP
 --- !parsetree:UnOp
+context: CXT_VOID
 left: !parsetree:QuotedString
   components:
     - !parsetree:Symbol
+      context: CXT_SCALAR
       name: e
       sigil: $
 op: backtick
@@ -90,6 +95,7 @@ qx  # test
 '$e';
 EOP
 --- !parsetree:UnOp
+context: CXT_VOID
 left: !parsetree:Constant
   type: string
   value: $e
@@ -100,9 +106,11 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 qx#$e#;
 EOP
 --- !parsetree:UnOp
+context: CXT_VOID
 left: !parsetree:QuotedString
   components:
     - !parsetree:Symbol
+      context: CXT_SCALAR
       name: e
       sigil: $
 op: backtick

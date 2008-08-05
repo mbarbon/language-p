@@ -11,7 +11,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 s/foo/bar/g;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: _
   sigil: $
 op: =~
@@ -33,7 +35,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 s{foo}[$1];
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: _
   sigil: $
 op: =~
@@ -48,6 +52,7 @@ right: !parsetree:Substitution
   replacement: !parsetree:QuotedString
     components:
       - !parsetree:Symbol
+        context: CXT_SCALAR
         name: 1
         sigil: $
 EOE
@@ -56,7 +61,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 s{foo}'$1';
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: _
   sigil: $
 op: =~
@@ -77,7 +84,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 s/foo/my $x = 1; $x/ge;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: _
   sigil: $
 op: =~
@@ -94,7 +103,9 @@ right: !parsetree:Substitution
   replacement: !parsetree:Block
     lines:
       - !parsetree:BinOp
+        context: CXT_VOID
         left: !parsetree:LexicalDeclaration
+          context: CXT_SCALAR|CXT_LVALUE
           declaration_type: my
           name: x
           sigil: $
@@ -104,6 +115,7 @@ right: !parsetree:Substitution
           type: number
           value: 1
       - !parsetree:LexicalSymbol
+        context: CXT_SCALAR
         name: x
         sigil: $
 EOE
@@ -112,7 +124,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 s/$foo/bar/g;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: _
   sigil: $
 op: =~
@@ -124,6 +138,7 @@ right: !parsetree:Substitution
     string: !parsetree:QuotedString
       components:
         - !parsetree:Symbol
+          context: CXT_SCALAR
           name: foo
           sigil: $
   replacement: !parsetree:Constant
@@ -135,7 +150,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 s'$foo'bar'g;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: _
   sigil: $
 op: =~

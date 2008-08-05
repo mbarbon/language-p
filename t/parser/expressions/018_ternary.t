@@ -15,6 +15,7 @@ condition: !parsetree:Number
   flags: NUM_INTEGER
   type: number
   value: 1
+context: CXT_VOID
 iffalse: !parsetree:Number
   flags: NUM_INTEGER
   type: number
@@ -29,7 +30,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $a = 1 ? 2 : 3
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR|CXT_LVALUE
   name: a
   sigil: $
 op: =
@@ -38,6 +41,7 @@ right: !parsetree:Ternary
     flags: NUM_INTEGER
     type: number
     value: 1
+  context: CXT_SCALAR
   iffalse: !parsetree:Number
     flags: NUM_INTEGER
     type: number
@@ -52,12 +56,15 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $a = 1 < 2 ? 2 + 3 : 3 + 4
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR|CXT_LVALUE
   name: a
   sigil: $
 op: =
 right: !parsetree:Ternary
   condition: !parsetree:BinOp
+    context: CXT_SCALAR
     left: !parsetree:Number
       flags: NUM_INTEGER
       type: number
@@ -67,7 +74,9 @@ right: !parsetree:Ternary
       flags: NUM_INTEGER
       type: number
       value: 2
+  context: CXT_SCALAR
   iffalse: !parsetree:BinOp
+    context: CXT_SCALAR
     left: !parsetree:Number
       flags: NUM_INTEGER
       type: number
@@ -78,6 +87,7 @@ right: !parsetree:Ternary
       type: number
       value: 4
   iftrue: !parsetree:BinOp
+    context: CXT_SCALAR
     left: !parsetree:Number
       flags: NUM_INTEGER
       type: number
@@ -93,15 +103,21 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $x ? $a = 1 : $b = 2;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Ternary
   condition: !parsetree:Symbol
+    context: CXT_SCALAR
     name: x
     sigil: $
+  context: CXT_SCALAR|CXT_LVALUE
   iffalse: !parsetree:Symbol
+    context: CXT_SCALAR|CXT_LVALUE
     name: b
     sigil: $
   iftrue: !parsetree:BinOp
+    context: CXT_SCALAR|CXT_LVALUE
     left: !parsetree:Symbol
+      context: CXT_SCALAR|CXT_LVALUE
       name: a
       sigil: $
     op: =

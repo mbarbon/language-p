@@ -18,11 +18,13 @@ arguments:
         flags: NUM_INTEGER
         type: number
         value: 1
+    context: CXT_LIST
     function: defined
   - !parsetree:Number
     flags: NUM_INTEGER
     type: number
     value: 2
+context: CXT_VOID
 filehandle: ~
 function: print
 EOE
@@ -42,7 +44,9 @@ arguments:
         flags: NUM_INTEGER
         type: number
         value: 2
+    context: CXT_LIST
     function: unlink
+context: CXT_VOID
 filehandle: ~
 function: print
 EOE
@@ -51,14 +55,17 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 open FILE, ">foo" or die "error";
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Overridable
   arguments:
     - !parsetree:Symbol
+      context: CXT_SCALAR
       name: FILE
       sigil: '*'
     - !parsetree:Constant
       type: string
       value: '>foo'
+  context: CXT_SCALAR
   function: open
 op: or
 right: !parsetree:Overridable
@@ -66,6 +73,7 @@ right: !parsetree:Overridable
     - !parsetree:Constant
       type: string
       value: error
+  context: CXT_VOID
   function: die
 EOE
 
@@ -75,9 +83,12 @@ EOP
 --- !parsetree:Print
 arguments:
   - !parsetree:Symbol
+    context: CXT_SCALAR
     name: stuff
     sigil: $
+context: CXT_VOID
 filehandle: !parsetree:Symbol
+  context: CXT_SCALAR
   name: FILE
   sigil: '*'
 function: print
@@ -89,10 +100,13 @@ EOP
 --- !parsetree:Overridable
 arguments:
   - !parsetree:Symbol
+    context: CXT_SCALAR
     name: foo
     sigil: $
   - !parsetree:Symbol
+    context: CXT_SCALAR
     name: FILE
     sigil: '*'
+context: CXT_VOID
 function: pipe
 EOE

@@ -18,7 +18,9 @@ iftrues:
   -
     - if
     - !parsetree:BinOp
+      context: CXT_SCALAR
       left: !parsetree:Symbol
+        context: CXT_SCALAR
         name: a
         sigil: $
       op: '>'
@@ -45,7 +47,9 @@ iftrues:
   -
     - unless
     - !parsetree:BinOp
+      context: CXT_SCALAR
       left: !parsetree:Symbol
+        context: CXT_SCALAR
         name: a
         sigil: $
       op: '>'
@@ -82,7 +86,9 @@ iftrues:
   -
     - if
     - !parsetree:BinOp
+      context: CXT_SCALAR
       left: !parsetree:Symbol
+        context: CXT_SCALAR
         name: a
         sigil: $
       op: <
@@ -121,7 +127,9 @@ iftrues:
   -
     - if
     - !parsetree:BinOp
+      context: CXT_SCALAR
       left: !parsetree:Symbol
+        context: CXT_SCALAR
         name: a
         sigil: $
       op: <
@@ -138,7 +146,9 @@ iftrues:
   -
     - if
     - !parsetree:BinOp
+      context: CXT_SCALAR
       left: !parsetree:Symbol
+        context: CXT_SCALAR
         name: a
         sigil: $
       op: <

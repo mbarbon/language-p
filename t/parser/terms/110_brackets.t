@@ -11,12 +11,14 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $#[1]
 EOP
 --- !parsetree:Subscript
+context: CXT_VOID
 reference: 0
 subscript: !parsetree:Number
   flags: NUM_INTEGER
   type: number
   value: 1
 subscripted: !parsetree:Symbol
+  context: CXT_LIST
   name: '#'
   sigil: '@'
 type: '['
@@ -26,12 +28,14 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $_[1]
 EOP
 --- !parsetree:Subscript
+context: CXT_VOID
 reference: 0
 subscript: !parsetree:Number
   flags: NUM_INTEGER
   type: number
   value: 1
 subscripted: !parsetree:Symbol
+  context: CXT_LIST
   name: _
   sigil: '@'
 type: '['
@@ -41,12 +45,14 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $foo[1]
 EOP
 --- !parsetree:Subscript
+context: CXT_VOID
 reference: 0
 subscript: !parsetree:Number
   flags: NUM_INTEGER
   type: number
   value: 1
 subscripted: !parsetree:Symbol
+  context: CXT_LIST
   name: foo
   sigil: '@'
 type: '['
@@ -56,12 +62,14 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $foo{2}
 EOP
 --- !parsetree:Subscript
+context: CXT_VOID
 reference: 0
 subscript: !parsetree:Number
   flags: NUM_INTEGER
   type: number
   value: 2
 subscripted: !parsetree:Symbol
+  context: CXT_LIST
   name: foo
   sigil: '%'
 type: '{'
@@ -71,8 +79,10 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $foo{2 + 3}
 EOP
 --- !parsetree:Subscript
+context: CXT_VOID
 reference: 0
 subscript: !parsetree:BinOp
+  context: CXT_SCALAR
   left: !parsetree:Number
     flags: NUM_INTEGER
     type: number
@@ -83,6 +93,7 @@ subscript: !parsetree:BinOp
     type: number
     value: 3
 subscripted: !parsetree:Symbol
+  context: CXT_LIST
   name: foo
   sigil: '%'
 type: '{'
@@ -93,8 +104,11 @@ $foo->()
 EOP
 --- !parsetree:FunctionCall
 arguments: ~
+context: CXT_VOID
 function: !parsetree:UnOp
+  context: CXT_SCALAR
   left: !parsetree:Symbol
+    context: CXT_SCALAR
     name: foo
     sigil: $
   op: '&'
@@ -106,6 +120,7 @@ EOP
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:BinOp
+    context: CXT_LIST
     left: !parsetree:Number
       flags: NUM_INTEGER
       type: number
@@ -115,8 +130,11 @@ arguments:
       flags: NUM_INTEGER
       type: number
       value: 2
+context: CXT_VOID
 function: !parsetree:UnOp
+  context: CXT_SCALAR
   left: !parsetree:Symbol
+    context: CXT_SCALAR
     name: foo
     sigil: $
   op: '&'
@@ -126,6 +144,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 @foo[ 1, "xx", 3 + 4 ]
 EOP
 --- !parsetree:Slice
+context: CXT_VOID
 reference: 0
 subscript: !parsetree:List
   expressions:
@@ -137,6 +156,7 @@ subscript: !parsetree:List
       type: string
       value: xx
     - !parsetree:BinOp
+      context: CXT_LIST
       left: !parsetree:Number
         flags: NUM_INTEGER
         type: number
@@ -147,6 +167,7 @@ subscript: !parsetree:List
         type: number
         value: 4
 subscripted: !parsetree:Symbol
+  context: CXT_LIST
   name: foo
   sigil: '@'
 type: '['
@@ -156,6 +177,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 @foo{ 1, "xx", 3 + 4 }
 EOP
 --- !parsetree:Slice
+context: CXT_VOID
 reference: 0
 subscript: !parsetree:List
   expressions:
@@ -167,6 +189,7 @@ subscript: !parsetree:List
       type: string
       value: xx
     - !parsetree:BinOp
+      context: CXT_LIST
       left: !parsetree:Number
         flags: NUM_INTEGER
         type: number
@@ -177,6 +200,7 @@ subscript: !parsetree:List
         type: number
         value: 4
 subscripted: !parsetree:Symbol
+  context: CXT_LIST
   name: foo
   sigil: '%'
 type: '{'
@@ -188,7 +212,9 @@ EOP
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:BinOp
+    context: CXT_LIST
     left: !parsetree:BinOp
+      context: CXT_SCALAR
       left: !parsetree:Number
         flags: NUM_INTEGER
         type: number
@@ -203,14 +229,18 @@ arguments:
       flags: NUM_INTEGER
       type: number
       value: 3
+context: CXT_VOID
 function: !parsetree:UnOp
+  context: CXT_SCALAR
   left: !parsetree:Subscript
+    context: CXT_SCALAR
     reference: 1
     subscript: !parsetree:Number
       flags: NUM_INTEGER
       type: number
       value: 5
     subscripted: !parsetree:Subscript
+      context: CXT_SCALAR|CXT_LVALUE
       reference: 1
       subscript: !parsetree:Number
         flags: NUM_INTEGER
@@ -218,20 +248,25 @@ function: !parsetree:UnOp
         value: 3
       subscripted: !parsetree:FunctionCall
         arguments: ~
+        context: CXT_SCALAR|CXT_LVALUE
         function: !parsetree:UnOp
+          context: CXT_SCALAR
           left: !parsetree:Subscript
+            context: CXT_SCALAR
             reference: 1
             subscript: !parsetree:Number
               flags: NUM_INTEGER
               type: number
               value: 2
             subscripted: !parsetree:Subscript
+              context: CXT_SCALAR|CXT_LVALUE
               reference: 0
               subscript: !parsetree:Number
                 flags: NUM_INTEGER
                 type: number
                 value: 1
               subscripted: !parsetree:Symbol
+                context: CXT_LIST
                 name: foo
                 sigil: '@'
               type: '['
@@ -246,12 +281,14 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 ${foo}[1]
 EOP
 --- !parsetree:Subscript
+context: CXT_VOID
 reference: 0
 subscript: !parsetree:Number
   flags: NUM_INTEGER
   type: number
   value: 1
 subscripted: !parsetree:Symbol
+  context: CXT_LIST
   name: foo
   sigil: '@'
 type: '['
@@ -261,17 +298,21 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 ${foo() . "x"}[1]
 EOP
 --- !parsetree:Subscript
+context: CXT_VOID
 reference: 1
 subscript: !parsetree:Number
   flags: NUM_INTEGER
   type: number
   value: 1
 subscripted: !parsetree:UnOp
+  context: CXT_SCALAR|CXT_LVALUE
   left: !parsetree:Block
     lines:
       - !parsetree:BinOp
+        context: CXT_SCALAR
         left: !parsetree:FunctionCall
           arguments: ~
+          context: CXT_SCALAR
           function: foo
         op: .
         right: !parsetree:Constant

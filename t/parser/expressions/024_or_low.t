@@ -11,6 +11,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 print 1, 2 or die;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Print
   arguments:
     - !parsetree:Number
@@ -21,10 +22,12 @@ left: !parsetree:Print
       flags: NUM_INTEGER
       type: number
       value: 2
+  context: CXT_SCALAR
   filehandle: ~
   function: print
 op: or
 right: !parsetree:Overridable
   arguments: ~
+  context: CXT_VOID
   function: die
 EOE

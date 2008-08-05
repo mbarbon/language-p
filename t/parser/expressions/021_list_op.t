@@ -20,6 +20,7 @@ arguments:
     flags: NUM_INTEGER
     type: number
     value: 2
+context: CXT_VOID
 function: x
 EOE
 
@@ -40,6 +41,7 @@ arguments:
     flags: NUM_INTEGER
     type: number
     value: 2
+context: CXT_VOID
 function: x
 EOE
 
@@ -61,6 +63,7 @@ arguments:
     flags: NUM_INTEGER
     type: number
     value: 2
+context: CXT_VOID
 function: x
 EOE
 
@@ -72,6 +75,7 @@ EOP
 expressions:
   - !parsetree:Print
     arguments: ~
+    context: CXT_VOID
     filehandle: ~
     function: print
   - !parsetree:Number
@@ -80,6 +84,7 @@ expressions:
     value: 1
   - !parsetree:Print
     arguments: ~
+    context: CXT_VOID
     filehandle: ~
     function: print
   - !parsetree:Number
@@ -96,6 +101,7 @@ EOP
 expressions:
   - !parsetree:Print
     arguments: ~
+    context: CXT_VOID
     filehandle: ~
     function: print
   - !parsetree:Number

@@ -21,7 +21,9 @@ block: !parsetree:Block
       value: 1
 block_type: for
 condition: !parsetree:BinOp
+  context: CXT_SCALAR
   left: !parsetree:LexicalSymbol
+    context: CXT_SCALAR
     name: i
     sigil: $
   op: <
@@ -30,7 +32,9 @@ condition: !parsetree:BinOp
     type: number
     value: 10
 initializer: !parsetree:BinOp
+  context: CXT_VOID
   left: !parsetree:LexicalDeclaration
+    context: CXT_SCALAR|CXT_LVALUE
     declaration_type: my
     name: i
     sigil: $
@@ -40,12 +44,16 @@ initializer: !parsetree:BinOp
     type: number
     value: 0
 step: !parsetree:BinOp
+  context: CXT_VOID
   left: !parsetree:LexicalSymbol
+    context: CXT_SCALAR|CXT_LVALUE
     name: i
     sigil: $
   op: =
   right: !parsetree:BinOp
+    context: CXT_SCALAR
     left: !parsetree:LexicalSymbol
+      context: CXT_SCALAR
       name: i
       sigil: $
     op: +
@@ -68,9 +76,11 @@ block: !parsetree:Block
       type: number
       value: 1
 expression: !parsetree:Symbol
+  context: CXT_LIST
   name: a
   sigil: '@'
 variable: !parsetree:Symbol
+  context: CXT_SCALAR
   name: _
   sigil: $
 EOE
@@ -88,9 +98,11 @@ block: !parsetree:Block
       type: number
       value: 1
 expression: !parsetree:Symbol
+  context: CXT_LIST
   name: a
   sigil: '@'
 variable: !parsetree:Symbol
+  context: CXT_SCALAR
   name: x
   sigil: $
 EOE
@@ -108,9 +120,11 @@ block: !parsetree:Block
       type: number
       value: 1
 expression: !parsetree:Symbol
+  context: CXT_LIST
   name: a
   sigil: '@'
 variable: !parsetree:LexicalDeclaration
+  context: CXT_SCALAR
   declaration_type: my
   name: x
   sigil: $

@@ -21,7 +21,9 @@ block: !parsetree:Block
       value: 1
 block_type: while
 condition: !parsetree:BinOp
+  context: CXT_SCALAR
   left: !parsetree:Symbol
+    context: CXT_SCALAR
     name: a
     sigil: $
   op: '>'
@@ -45,7 +47,9 @@ block: !parsetree:Block
       value: 1
 block_type: until
 condition: !parsetree:BinOp
+  context: CXT_SCALAR
   left: !parsetree:Symbol
+    context: CXT_SCALAR
     name: a
     sigil: $
   op: <

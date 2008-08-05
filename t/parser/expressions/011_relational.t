@@ -11,6 +11,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1 < 2
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Number
   flags: NUM_INTEGER
   type: number
@@ -26,6 +27,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1 > 2
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Number
   flags: NUM_INTEGER
   type: number
@@ -41,6 +43,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1 >= 2
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Number
   flags: NUM_INTEGER
   type: number
@@ -56,6 +59,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1 <= 2
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Number
   flags: NUM_INTEGER
   type: number

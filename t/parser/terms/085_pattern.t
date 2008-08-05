@@ -11,7 +11,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 /^test$/;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: _
   sigil: $
 op: =~
@@ -32,7 +34,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 m/^\ntest\w/;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: _
   sigil: $
 op: =~
@@ -53,7 +57,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $a =~ /^test/;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: a
   sigil: $
 op: =~
@@ -72,7 +78,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 //ms;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: _
   sigil: $
 op: =~
@@ -88,7 +96,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 /a*b+c?d*?b+?c??/;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: _
   sigil: $
 op: =~
@@ -144,7 +154,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 /(a(cbc)??w)*/;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: _
   sigil: $
 op: =~
@@ -195,7 +207,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 m/^${foo}aaa/;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: _
   sigil: $
 op: =~
@@ -208,6 +222,7 @@ right: !parsetree:InterpolatedPattern
         type: string
         value: '^'
       - !parsetree:Symbol
+        context: CXT_SCALAR
         name: foo
         sigil: $
       - !parsetree:Constant
@@ -219,7 +234,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 m'^${foo}aaa';
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: _
   sigil: $
 op: =~
@@ -240,7 +257,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 /^t|es|t$/;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: _
   sigil: $
 op: =~
@@ -273,7 +292,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 /a+(a|b|c)/;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: _
   sigil: $
 op: =~
@@ -312,7 +333,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 /a(?:a)(a)/;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: _
   sigil: $
 op: =~

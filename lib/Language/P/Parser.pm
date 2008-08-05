@@ -5,14 +5,15 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 use Language::P::Lexer qw(:all);
-use Language::P::ParseTree;
+use Language::P::ParseTree qw(:all);
 use Language::P::Parser::Regex;
 use Language::P::Value::ScratchPad;
 use Language::P::Value::Code;
+use Language::P::ParseTree::PropagateContext;
 
 __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime) );
 __PACKAGE__->mk_accessors( qw(_package _lexicals _pending_lexicals
-                              _current_sub) );
+                              _current_sub _propagate_context) );
 
 use constant
   { PREC_HIGHEST       => 0,
@@ -101,6 +102,7 @@ sub parse_stream {
 sub _parse {
     my( $self ) = @_;
 
+    $self->_propagate_context( Language::P::ParseTree::PropagateContext->new );
     $self->_pending_lexicals( [] );
     $self->_lexicals( undef );
     $self->_enter_scope( 0 , 1 ); # FIXME eval
@@ -111,6 +113,7 @@ sub _parse {
     $self->_current_sub( $code );
 
     while( my $line = _parse_line( $self ) ) {
+        $self->_propagate_context->visit( $line, CXT_VOID );
         $self->generator->process( $line );
     }
     $self->_lexicals->keep_all_in_pad;
@@ -271,6 +274,8 @@ sub _parse_sub {
     $sub->{lines} = $block->{lines}; # FIXME encapsulation
     $self->_leave_scope;
     $self->_current_sub( $sub->outer );
+
+    $self->_propagate_context->visit( $sub, CXT_CALLER );
 
     # add a subroutine declaration, the generator might
     # not create it until later

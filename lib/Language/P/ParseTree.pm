@@ -4,7 +4,9 @@ use strict;
 use warnings;
 use Exporter 'import';
 
-our @EXPORT_OK = qw(NUM_INTEGER NUM_FLOAT NUM_HEXADECIMAL NUM_OCTAL NUM_BINARY);
+our @EXPORT_OK = qw(NUM_INTEGER NUM_FLOAT NUM_HEXADECIMAL NUM_OCTAL NUM_BINARY
+                    CXT_CALLER CXT_VOID CXT_SCALAR CXT_LIST CXT_LVALUE
+                    );
 our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,
     );
@@ -15,6 +17,12 @@ use constant
     NUM_HEXADECIMAL    => 4,
     NUM_OCTAL          => 8,
     NUM_BINARY         => 16,
+
+    CXT_CALLER         => 1,
+    CXT_VOID           => 2,
+    CXT_SCALAR         => 4,
+    CXT_LIST           => 8,
+    CXT_LVALUE         => 16,
     };
 
 package Language::P::ParseTree::Node;
@@ -24,6 +32,7 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 sub is_bareword { 0 }
+sub lvalue_context { Language::P::ParseTree::CXT_SCALAR }
 
 sub _fields {
     no strict 'refs';
@@ -141,7 +150,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(function arguments);
+our @FIELDS = qw(function arguments context);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -153,37 +162,49 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(invocant method arguments indirect);
+our @FIELDS = qw(invocant method arguments indirect context);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
+
+package Language::P::ParseTree::Identifier;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(name sigil context);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
+sub lvalue_context {
+    my( $self ) = @_;
+
+    return $self->sigil eq '%' || $self->sigil eq '%' ?
+               Language::P::ParseTree::CXT_LIST :
+               Language::P::ParseTree::CXT_SCALAR;
+}
 
 package Language::P::ParseTree::Symbol;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
-
-our @FIELDS = qw(name sigil);
-
-__PACKAGE__->mk_ro_accessors( @FIELDS );
+use base qw(Language::P::ParseTree::Identifier);
 
 package Language::P::ParseTree::LexicalSymbol;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use base qw(Language::P::ParseTree::Identifier);
 
-our @FIELDS = qw(name sigil);
-
-__PACKAGE__->mk_ro_accessors( @FIELDS, qw(slot) );
+__PACKAGE__->mk_ro_accessors( qw(slot) );
 
 package Language::P::ParseTree::LexicalDeclaration;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use base qw(Language::P::ParseTree::Identifier);
 
-our @FIELDS = qw(name sigil declaration_type);
+our @FIELDS = qw(declaration_type);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -225,7 +246,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(op left right);
+our @FIELDS = qw(op left right context);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -235,7 +256,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(op left);
+our @FIELDS = qw(op left context);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -249,15 +270,19 @@ our @FIELDS = qw(expressions);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub lvalue_context { Language::P::ParseTree::CXT_LIST }
+
 package Language::P::ParseTree::Slice;
 
 use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(subscripted subscript type reference);
+our @FIELDS = qw(subscripted subscript type reference context);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
+
+sub lvalue_context { Language::P::ParseTree::CXT_LIST }
 
 package Language::P::ParseTree::Subscript;
 
@@ -265,7 +290,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(subscripted subscript type reference);
+our @FIELDS = qw(subscripted subscript type reference context);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -321,9 +346,19 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(condition iftrue iffalse);
+our @FIELDS = qw(condition iftrue iffalse context);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
+
+sub lvalue_context {
+    my( $self ) = @_;
+    my $l = $self->iftrue->lvalue_context;
+    my $r = $self->iffalse->lvalue_context;
+
+    Carp::confess( "Assigning to both scalar and array" ) unless $r == $l;
+
+    return $r;
+}
 
 package Language::P::ParseTree::Builtin;
 

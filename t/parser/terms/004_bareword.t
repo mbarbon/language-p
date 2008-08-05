@@ -11,6 +11,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 moo.boo
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Bareword
   type: string
   value: moo

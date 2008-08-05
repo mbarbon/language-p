@@ -17,6 +17,7 @@ block: !parsetree:Number
   value: 1
 block_type: while
 condition: !parsetree:BinOp
+  context: CXT_SCALAR
   left: !parsetree:Number
     flags: NUM_INTEGER
     type: number
@@ -33,6 +34,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:ConditionalLoop
 block: !parsetree:BinOp
+  context: CXT_VOID
   left: !parsetree:Number
     flags: NUM_INTEGER
     type: number
@@ -62,6 +64,7 @@ iftrues:
       type: number
       value: 1
     - !parsetree:BinOp
+      context: CXT_VOID
       left: !parsetree:Number
         flags: NUM_INTEGER
         type: number
@@ -86,6 +89,7 @@ iftrues:
       type: number
       value: 1
     - !parsetree:BinOp
+      context: CXT_VOID
       left: !parsetree:Number
         flags: NUM_INTEGER
         type: number
@@ -116,6 +120,7 @@ expression: !parsetree:List
       type: number
       value: 2
 variable: !parsetree:Symbol
+  context: CXT_SCALAR
   name: _
   sigil: $
 EOE

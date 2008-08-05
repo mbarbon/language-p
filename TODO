@@ -1,5 +1,8 @@
 Parsing:
 - scalar/array/void context
+  - some binary operators do not force scalar context (assignment)
+  - prototypes
+  - splice/substr/lvalue subroutines
 - stashes
 - global variables/symbols (STDOUT!)
 - local variables
@@ -11,6 +14,8 @@ Parsing:
 - garbage collection
 - labels
 - subroutine prototypes
+  - parsing
+  - context propagation
 - scope handling of conditional/while/continue
 - handle errors
 - handling of parse errors with recovery
@@ -57,6 +62,7 @@ Runtime:
 - multiple dispatch operators
 - array/list/hash assignment
   - optimize lists with common assignments
+  - check mixed assignments
 
 Refactoring:
 - check offsets for call sequence, refactor stack handling
