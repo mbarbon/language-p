@@ -11,6 +11,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 my $foo;
 EOP
 --- !parsetree:LexicalDeclaration
+context: CXT_VOID
 declaration_type: my
 name: foo
 sigil: $
@@ -20,7 +21,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 my $foo = 1;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:LexicalDeclaration
+  context: CXT_SCALAR|CXT_LVALUE
   declaration_type: my
   name: foo
   sigil: $
@@ -35,13 +38,16 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 my( $foo, @bar ) = ( 1, 2, 3 );
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:List
   expressions:
     - !parsetree:LexicalDeclaration
+      context: CXT_SCALAR|CXT_LVALUE
       declaration_type: my
       name: foo
       sigil: $
     - !parsetree:LexicalDeclaration
+      context: CXT_LIST|CXT_LVALUE
       declaration_type: my
       name: bar
       sigil: '@'
@@ -68,14 +74,17 @@ EOP
 --- !parsetree:List
 expressions:
   - !parsetree:LexicalDeclaration
+    context: CXT_VOID
     declaration_type: my
     name: foo
     sigil: $
   - !parsetree:LexicalDeclaration
+    context: CXT_VOID
     declaration_type: my
     name: b
     sigil: '@'
   - !parsetree:LexicalDeclaration
+    context: CXT_VOID
     declaration_type: my
     name: x
     sigil: $

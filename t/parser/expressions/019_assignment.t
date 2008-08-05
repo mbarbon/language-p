@@ -11,7 +11,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $x = 1;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR|CXT_LVALUE
   name: x
   sigil: $
 op: =
@@ -25,7 +27,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $x = 'test';
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR|CXT_LVALUE
   name: x
   sigil: $
 op: =

@@ -110,6 +110,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 12..15
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Number
   flags: NUM_INTEGER
   type: number

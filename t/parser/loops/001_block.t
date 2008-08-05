@@ -16,7 +16,9 @@ EOP
 --- !parsetree:Block
 lines:
   - !parsetree:BinOp
+    context: CXT_VOID
     left: !parsetree:Symbol
+      context: CXT_SCALAR|CXT_LVALUE
       name: x
       sigil: $
     op: =
@@ -25,7 +27,9 @@ lines:
       type: number
       value: 1
   - !parsetree:BinOp
+    context: CXT_VOID
     left: !parsetree:Symbol
+      context: CXT_SCALAR|CXT_LVALUE
       name: y
       sigil: $
     op: =

@@ -64,12 +64,14 @@ components:
     type: string
     value: ab
   - !parsetree:Symbol
+    context: CXT_SCALAR
     name: a
     sigil: $
   - !parsetree:Constant
     type: string
     value: ' '
   - !parsetree:Symbol
+    context: CXT_SCALAR
     name: b
     sigil: $
 EOE
@@ -83,6 +85,7 @@ components:
     type: string
     value: ab
   - !parsetree:Symbol
+    context: CXT_SCALAR
     name: a
     sigil: $
   - !parsetree:Constant
@@ -99,6 +102,7 @@ components:
     type: string
     value: a
   - !parsetree:Symbol
+    context: CXT_SCALAR
     name: "\x05"
     sigil: $
   - !parsetree:Constant
@@ -115,6 +119,7 @@ components:
     type: string
     value: a
   - !parsetree:Symbol
+    context: CXT_SCALAR
     name: "\x06oo"
     sigil: $
   - !parsetree:Constant
@@ -127,7 +132,9 @@ $x = "1";
 $x = 1;
 EOP
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR|CXT_LVALUE
   name: x
   sigil: $
 op: =
@@ -135,7 +142,9 @@ right: !parsetree:Constant
   type: string
   value: 1
 --- !parsetree:BinOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR|CXT_LVALUE
   name: x
   sigil: $
 op: =
@@ -149,12 +158,14 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 `ab${a}cd`;
 EOP
 --- !parsetree:UnOp
+context: CXT_VOID
 left: !parsetree:QuotedString
   components:
     - !parsetree:Constant
       type: string
       value: ab
     - !parsetree:Symbol
+      context: CXT_SCALAR
       name: a
       sigil: $
     - !parsetree:Constant
@@ -171,14 +182,17 @@ arguments:
   - !parsetree:QuotedString
     components:
       - !parsetree:Symbol
+        context: CXT_SCALAR
         name: x
         sigil: $
       - !parsetree:Constant
         type: string
         value: ' '
       - !parsetree:Symbol
+        context: CXT_SCALAR
         name: y
         sigil: $
+context: CXT_VOID
 function: glob
 EOE
 
@@ -188,8 +202,10 @@ EOP
 --- !parsetree:Overridable
 arguments:
   - !parsetree:Symbol
+    context: CXT_SCALAR
     name: foo
     sigil: '*'
+context: CXT_VOID
 function: readline
 EOE
 
@@ -201,6 +217,7 @@ arguments:
   - !parsetree:Constant
     type: string
     value: 'foo '
+context: CXT_VOID
 function: glob
 EOE
 
@@ -210,8 +227,10 @@ EOP
 --- !parsetree:Overridable
 arguments:
   - !parsetree:Symbol
+    context: CXT_SCALAR
     name: x
     sigil: $
+context: CXT_VOID
 function: readline
 EOE
 
@@ -221,8 +240,10 @@ EOP
 --- !parsetree:Overridable
 arguments:
   - !parsetree:Symbol
+    context: CXT_SCALAR
     name: x
     sigil: $
+context: CXT_VOID
 function: readline
 EOE
 
@@ -237,16 +258,19 @@ arguments:
         type: string
         value: "'"
       - !parsetree:Symbol
+        context: CXT_SCALAR
         name: x
         sigil: $
       - !parsetree:Constant
         type: string
         value: ' '
       - !parsetree:Symbol
+        context: CXT_SCALAR
         name: y
         sigil: $
       - !parsetree:Constant
         type: string
         value: "'"
+context: CXT_VOID
 function: glob
 EOE

@@ -11,6 +11,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 +12
 EOP
 --- !parsetree:UnOp
+context: CXT_VOID
 left: !parsetree:Number
   flags: NUM_INTEGER
   type: number
@@ -22,6 +23,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 -12
 EOP
 --- !parsetree:UnOp
+context: CXT_VOID
 left: !parsetree:Number
   flags: NUM_INTEGER
   type: number
@@ -33,6 +35,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 -( 1 )
 EOP
 --- !parsetree:UnOp
+context: CXT_VOID
 left: !parsetree:Number
   flags: NUM_INTEGER
   type: number
@@ -44,7 +47,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 -$x
 EOP
 --- !parsetree:UnOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: x
   sigil: $
 op: -
@@ -54,6 +59,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 \1
 EOP
 --- !parsetree:UnOp
+context: CXT_VOID
 left: !parsetree:Number
   flags: NUM_INTEGER
   type: number
@@ -65,7 +71,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 \$a
 EOP
 --- !parsetree:UnOp
+context: CXT_VOID
 left: !parsetree:Symbol
+  context: CXT_SCALAR
   name: a
   sigil: $
 op: \

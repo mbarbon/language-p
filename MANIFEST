@@ -11,6 +11,7 @@ lib/Language/P/Opcodes.pm
 lib/Language/P/Opcodes/Regex.pm
 lib/Language/P/ParseTree.pm
 lib/Language/P/ParseTree/DumpYAML.pm
+lib/Language/P/ParseTree/PropagateContext.pm
 lib/Language/P/ParseTree/Visitor.pm
 lib/Language/P/Parser.pm
 lib/Language/P/Parser/Regex.pm
@@ -35,6 +36,7 @@ t/parser/expressions/005_unary.t
 t/parser/expressions/011_relational.t
 t/parser/expressions/018_ternary.t
 t/parser/expressions/019_assignment.t
+t/parser/expressions/020_sequence.t
 t/parser/expressions/021_list_op.t
 t/parser/expressions/024_or_low.t
 t/parser/loops/001_block.t
