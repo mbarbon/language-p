@@ -33,6 +33,7 @@ t/lib/TestParser.pm
 t/lib/TestRegex.pm
 t/parser/001_load.t
 t/parser/expressions/005_unary.t
+t/parser/expressions/010_named_unary.t
 t/parser/expressions/011_relational.t
 t/parser/expressions/018_ternary.t
 t/parser/expressions/019_assignment.t
