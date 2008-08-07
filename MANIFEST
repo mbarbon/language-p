@@ -62,6 +62,7 @@ t/run/006_brackets.t
 t/run/007_if.t
 t/run/008_while.t
 t/run/010_arithmetic.t
+t/run/015_defined.t
 t/run/080_recursion.t
 t/runtime/001_load.t
 t/runtime/002_base.t
