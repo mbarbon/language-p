@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 13;
+use Test::More tests => 14;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -72,6 +72,22 @@ subscripted: !parsetree:Symbol
   context: CXT_LIST
   name: foo
   sigil: '%'
+type: '{'
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+*foo{HASH}
+EOP
+--- !parsetree:Subscript
+context: CXT_VOID
+reference: 0
+subscript: !parsetree:Bareword
+  type: string
+  value: HASH
+subscripted: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: foo
+  sigil: '*'
 type: '{'
 EOE
 
