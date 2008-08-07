@@ -15,11 +15,17 @@ expressions:
   - !parsetree:FunctionCall
     arguments: ~
     context: CXT_VOID
-    function: foo
+    function: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: foo
+      sigil: '&'
   - !parsetree:FunctionCall
     arguments: ~
     context: CXT_VOID
-    function: boo
+    function: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: boo
+      sigil: '&'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -33,11 +39,17 @@ subscript: !parsetree:List
     - !parsetree:FunctionCall
       arguments: ~
       context: CXT_VOID
-      function: foo
+      function: !parsetree:Symbol
+        context: CXT_SCALAR
+        name: foo
+        sigil: '&'
     - !parsetree:FunctionCall
       arguments: ~
       context: CXT_SCALAR
-      function: boo
+      function: !parsetree:Symbol
+        context: CXT_SCALAR
+        name: boo
+        sigil: '&'
 subscripted: !parsetree:Symbol
   context: CXT_SCALAR|CXT_VIVIFY
   name: a
@@ -53,11 +65,20 @@ arguments:
   - !parsetree:FunctionCall
     arguments: ~
     context: CXT_LIST
-    function: foo
+    function: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: foo
+      sigil: '&'
   - !parsetree:FunctionCall
     arguments: ~
     context: CXT_LIST
-    function: boo
+    function: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: boo
+      sigil: '&'
 context: CXT_VOID
-function: foo
+function: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: foo
+  sigil: '&'
 EOE

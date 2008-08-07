@@ -21,7 +21,10 @@ arguments:
     type: number
     value: 2
 context: CXT_VOID
-function: x
+function: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: x
+  sigil: '&'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -42,7 +45,10 @@ arguments:
     type: number
     value: 2
 context: CXT_VOID
-function: x
+function: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: x
+  sigil: '&'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -64,7 +70,10 @@ arguments:
     type: number
     value: 2
 context: CXT_VOID
-function: x
+function: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: x
+  sigil: '&'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

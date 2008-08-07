@@ -3,6 +3,12 @@ Parsing:
   - some binary operators do not force scalar context (assignment)
   - prototypes
   - splice/substr/lvalue subroutines
+- &foo; vs. &foo() vs. foo()
+  - show the difference in syntax tree
+  - &foo passes @_ to callee
+  - &foo() bypasses prototype
+  - foo() is plain call
+  - &$foo() is plain call (just with deref)
 - stashes
 - global variables/symbols (STDOUT!)
 - local variables
@@ -77,3 +83,4 @@ Refactoring:
 - separate compile-time lexicals from run-time scratchpads
 - make regexp parser a full blown parser, not the hack it is;
   add a lexer subclass for parsing patterns
+- fold _parse_maybe_subscripts into its only caller

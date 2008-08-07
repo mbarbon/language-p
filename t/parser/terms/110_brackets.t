@@ -233,7 +233,10 @@ subscripted: !parsetree:Block
       left: !parsetree:FunctionCall
         arguments: ~
         context: CXT_SCALAR
-        function: foo
+        function: !parsetree:Symbol
+          context: CXT_SCALAR
+          name: foo
+          sigil: '&'
       op: .
       right: !parsetree:Constant
         type: string
@@ -346,7 +349,10 @@ subscripted: !parsetree:Block
       left: !parsetree:FunctionCall
         arguments: ~
         context: CXT_SCALAR
-        function: foo
+        function: !parsetree:Symbol
+          context: CXT_SCALAR
+          name: foo
+          sigil: '&'
       op: .
       right: !parsetree:Constant
         type: string
