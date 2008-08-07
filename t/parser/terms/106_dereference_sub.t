@@ -55,9 +55,10 @@ EOE
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 &$print;
 EOP
---- !parsetree:FunctionCall
+--- !parsetree:SpecialFunctionCall
 arguments: ~
 context: CXT_VOID
+flags: FLAG_IMPLICITARGUMENTS
 function: !parsetree:Dereference
   context: CXT_SCALAR
   left: !parsetree:Symbol
