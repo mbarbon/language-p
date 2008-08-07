@@ -21,6 +21,37 @@ function: defined
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
+defined &foo;
+EOP
+--- !parsetree:Builtin
+arguments:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: foo
+    sigil: '&'
+context: CXT_VOID
+function: defined
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+defined &{$foo;};
+EOP
+--- !parsetree:Builtin
+arguments:
+  - !parsetree:Dereference
+    context: CXT_LIST
+    left: !parsetree:Block
+      lines:
+        - !parsetree:Symbol
+          context: CXT_SCALAR
+          name: foo
+          sigil: $
+    op: '&'
+context: CXT_VOID
+function: defined
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 defined $a ? $b : $c;
 EOP
 --- !parsetree:Ternary

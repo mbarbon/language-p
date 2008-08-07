@@ -558,7 +558,7 @@ sub _parse_indirect_function_call {
     }
 
     # treat &foo; separately from all other cases
-    if( $ampersand && !$with_arguments && $subscripted->is_symbol ) {
+    if( $ampersand && !$with_arguments ) {
         return Language::P::ParseTree::SpecialFunctionCall->new
                    ( { function    => $subscripted,
                        flags       => FLAG_IMPLICITARGUMENTS,
@@ -1278,10 +1278,8 @@ sub _parse_listop {
     if( $next->[0] eq 'OPPAR' ) {
         $self->lexer->lex; # comsume token
         ( $args, $fh ) = _parse_arglist( $self, PREC_LOWEST, $proto, 0 );
-        my $cl = $self->lexer->lex( X_OPERATOR );
-
-        die $cl->[0], ' ', $cl->[1] unless $cl->[0] eq 'CLPAR';
-    } elsif( $proto->[1] == 1 && $proto->[2] eq '$' ) {
+        _lex_token( $self, 'CLPAR' );
+    } elsif( $proto->[1] == 1 ) {
         ( $args, $fh ) = _parse_arglist( $self, PREC_NAMED_UNOP, $proto, 0 );
     } elsif( $proto->[1] != 0 ) {
         Carp::confess( "Undeclared identifier '$op->[1]'" ) unless $declared;
@@ -1299,8 +1297,12 @@ sub _parse_arglist {
     my $la = $self->lexer->peek( X_TERM );
 
     my $term;
-    my $indirect_filehandle = $index == 0 && $proto->[2] eq '!';
-    ++$index if $indirect_filehandle;
+    my $proto_char = $proto->[2 + $index];
+    my $indirect_filehandle = $proto_char eq '!';
+    if( $indirect_filehandle ) {
+        ++$index;
+        $proto_char = $proto->[2 + $index];
+    }
     if( $la->[0] eq 'ID' && $indirect_filehandle ) {
         my( $call, $declared ) = _declared_id( $self, $la );
 
@@ -1324,6 +1326,14 @@ sub _parse_arglist {
     }
 
     return unless $term;
+
+    # special case for defined/exists &foo
+    if( $proto_char eq '#' ) {
+        if(    $term->isa( 'Language::P::ParseTree::SpecialFunctionCall' )
+            && $term->flags & FLAG_IMPLICITARGUMENTS ) {
+            $term = $term->function;
+        }
+    }
     return [ $term ] if $proto->[1] == $index;
 
     if( $indirect_filehandle ) {
