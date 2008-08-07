@@ -290,13 +290,14 @@ sub _function_call {
         push @bytecode, o( 'push_scalar' );
     }
 
-    if( $builtins{$tree->function} ) {
-        push @bytecode, o( $builtins{$tree->function} );
+    Carp::confess( "Unknown '" . $tree->function . "'" )
+        unless ref( $tree->function ) || $builtins{$tree->function};
+
+    if( ref( $tree->function ) ) {
+        $self->dispatch( $tree->function );
+        push @bytecode, o( 'call' );
     } else {
-        push @bytecode,
-             o( 'glob',      name => $tree->function, create => 1 ),
-             o( 'glob_slot', slot => 'subroutine' ),
-             o( 'call' );
+        push @bytecode, o( $builtins{$tree->function} );
     }
 }
 

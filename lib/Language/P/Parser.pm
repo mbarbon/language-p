@@ -1249,8 +1249,12 @@ sub _parse_listop {
             return _parse_maybe_indirect_method_call( $self, $op, $next );
         }
 
+        my $symbol = Language::P::ParseTree::Symbol->new
+                         ( { name   => $op->[1],
+                             sigil => '&',
+                             } );
         $call = Language::P::ParseTree::FunctionCall->new
-                    ( { function  => $op->[1],
+                    ( { function  => $symbol,
                         arguments => undef,
                         } );
     }
