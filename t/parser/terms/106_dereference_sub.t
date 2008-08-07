@@ -102,10 +102,10 @@ function: !parsetree:Dereference
     lines:
       - !parsetree:SpecialFunctionCall
         arguments: ~
-        context: 4
+        context: CXT_SCALAR
         flags: FLAG_IMPLICITARGUMENTS
         function: !parsetree:Symbol
-          context: 4
+          context: CXT_SCALAR
           name: print
           sigil: '&'
   op: '&'

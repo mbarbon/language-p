@@ -44,7 +44,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $$a = 1;
 EOP
 --- !parsetree:BinOp
-context: 2
+context: CXT_VOID
 left: !parsetree:Dereference
   context: CXT_SCALAR|CXT_LVALUE|CXT_VIVIFY
   left: !parsetree:Symbol
