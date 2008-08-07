@@ -480,7 +480,7 @@ sub _parse_expr {
 
     if( $la->[0] eq 'COMMA' ) {
         my $terms = _parse_cslist_rest( $self, PREC_LOWEST,
-                                        [ -1, -1, '@' ], 0, $expr );
+                                        PROTO_DEFAULT, 0, $expr );
 
         return Language::P::ParseTree::List->new( { expressions => $terms } );
     }
@@ -516,7 +516,7 @@ sub _parse_maybe_subscripts {
     my( $self, $sigil, $is_id, $token ) = @_;
 
     # can't be slice/element
-    if( $is_id  && $sigil ne '@' && $sigil ne '$' ) {
+    if( $is_id && $sigil ne '@' && $sigil ne '$' && $sigil ne '&' ) {
         return _find_symbol( $self, $sigil, $token->[1] );
     }
 
@@ -540,6 +540,13 @@ sub _parse_maybe_subscripts {
                        type        => $next->[1],
                        reference   => $is_reference,
                        } );
+    } elsif( $sigil eq '&' ) {
+        my $subscripted = $is_id ? _find_symbol( $self, '&',
+                                                 $token->[1] ) :
+                                   $token;
+
+        return _parse_indirect_function_call( $self, $subscripted,
+                                              $next->[0] eq 'OPPAR', 1 );
     }
 
     if( $next->[0] eq 'ARROW' ) {
@@ -600,22 +607,44 @@ sub _parse_maybe_subscript_rest {
     }
 }
 
+sub _parse_indirect_function_call {
+    my( $self, $subscripted, $with_arguments, $ampersand ) = @_;
+
+    my $args;
+    if( $with_arguments ) {
+        _lex_token( $self, 'OPPAR' );
+        ( $args, undef ) = _parse_arglist( $self, PREC_LOWEST, PROTO_DEFAULT, 0 );
+        _lex_token( $self, 'CLPAR' );
+    }
+
+    # $foo->() requires an additional dereference, while
+    # &{...}(...) does construct a reference  but might need it
+    if( !$subscripted->isa( 'Language::P::ParseTree::Symbol' ) || $subscripted->sigil ne '&' ) {
+        $subscripted = Language::P::ParseTree::Dereference->new
+                           ( { left => $subscripted,
+                               op   => '&',
+                               } );
+    }
+
+    if( $ampersand && !$with_arguments && $subscripted->isa( 'Language::P::ParseTree::Symbol' ) ) {
+        return Language::P::ParseTree::SpecialFunctionCall->new
+                   ( { function    => $subscripted,
+                       flags       => FLAG_IMPLICITARGUMENTS,
+                       } );
+    } else {
+        return Language::P::ParseTree::FunctionCall->new
+                   ( { function    => $subscripted,
+                       arguments   => $args,
+                       } );
+    }
+}
+
 sub _parse_dereference_rest {
     my( $self, $subscripted, $bracket ) = @_;
     my $term;
 
     if( $bracket->[0] eq 'OPPAR' ) {
-        _lex_token( $self, 'OPPAR' );
-        ( my $args, undef ) = _parse_arglist( $self, PREC_LOWEST, [-1, -1, '@'], 0 );
-        _lex_token( $self, 'CLPAR' );
-        my $func = Language::P::ParseTree::Dereference->new
-                       ( { left => $subscripted,
-                           op   => '&',
-                           } );
-        $term = Language::P::ParseTree::FunctionCall->new
-                    ( { function    => $func,
-                        arguments   => $args,
-                        } );
+        $term = _parse_indirect_function_call( $self, $subscripted, 1, 0 );
     } else {
         my( undef, $subscript ) = _parse_bracketed_expr( $self, $bracket->[0] );
         $term = Language::P::ParseTree::Subscript->new
@@ -929,10 +958,11 @@ sub _parse_indirobj_maybe_subscripts {
     if( ref( $indir ) eq 'ARRAY' && $indir->[0] eq 'ID' ) {
         return _parse_maybe_subscripts( $self, $token->[1], 1, $indir );
     } else {
-        my $deref = Language::P::ParseTree::Dereference->new
-                        ( { left  => $indir,
-                            op    => $token->[1],
-                            } );
+        my $deref = $token->[1] eq '*' || $token->[1] eq '&' ? $indir :
+                        Language::P::ParseTree::Dereference->new
+                            ( { left  => $indir,
+                                op    => $token->[1],
+                                } );
 
         return _parse_maybe_subscripts( $self, $token->[1], 0, $deref );
     }

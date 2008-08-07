@@ -8,6 +8,10 @@ our @EXPORT_OK = qw(NUM_INTEGER NUM_FLOAT NUM_HEXADECIMAL NUM_OCTAL NUM_BINARY
 
                     CXT_CALLER CXT_VOID CXT_SCALAR CXT_LIST CXT_LVALUE
                     CXT_VIVIFY
+
+                    PROTO_DEFAULT
+
+                    FLAG_IMPLICITARGUMENTS FLAG_ERASEFRAME
                     );
 our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,
@@ -26,6 +30,12 @@ use constant
     CXT_LIST           => 8,
     CXT_LVALUE         => 16,
     CXT_VIVIFY         => 32,
+
+    PROTO_DEFAULT      => [ -1, -1, '@' ],
+
+    # function calls
+    FLAG_IMPLICITARGUMENTS => 1,
+    FLAG_ERASEFRAME        => 2,
     };
 
 package Language::P::ParseTree::Node;
@@ -157,7 +167,17 @@ our @FIELDS = qw(function arguments context);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
-sub parsing_prototype { return [ -1, -1, '@' ] }
+sub parsing_prototype { return Language::P::ParseTree::PROTO_DEFAULT }
+
+package Language::P::ParseTree::SpecialFunctionCall;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::FunctionCall);
+
+our @FIELDS = qw(flags);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
 
 package Language::P::ParseTree::MethodCall;
 
