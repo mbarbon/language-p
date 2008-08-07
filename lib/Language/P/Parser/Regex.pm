@@ -80,7 +80,7 @@ sub _parse {
             } elsif( $value->[2]->[0] eq 'QUANTIFIER' ) {
                 die 'Nothing to quantify in regex' unless @$st;
 
-                if(    $st->[-1]->isa( 'Language::P::ParseTree::Constant' )
+                if(    $st->[-1]->is_constant
                     && length( $st->[-1]->value ) > 1 ) {
                     my $last = chop $st->[-1]->{value}; # XXX
 
