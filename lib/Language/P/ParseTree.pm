@@ -5,7 +5,9 @@ use warnings;
 use Exporter 'import';
 
 our @EXPORT_OK = qw(NUM_INTEGER NUM_FLOAT NUM_HEXADECIMAL NUM_OCTAL NUM_BINARY
+
                     CXT_CALLER CXT_VOID CXT_SCALAR CXT_LIST CXT_LVALUE
+                    CXT_VIVIFY
                     );
 our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,
@@ -23,6 +25,7 @@ use constant
     CXT_SCALAR         => 4,
     CXT_LIST           => 8,
     CXT_LVALUE         => 16,
+    CXT_VIVIFY         => 32,
     };
 
 package Language::P::ParseTree::Node;
@@ -259,6 +262,12 @@ use base qw(Language::P::ParseTree::Node);
 our @FIELDS = qw(op left context);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
+
+package Language::P::ParseTree::Dereference;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::UnOp);
 
 package Language::P::ParseTree::List;
 
