@@ -512,76 +512,6 @@ sub _find_symbol {
                                                   } );
 }
 
-sub _parse_maybe_subscripts {
-    my( $self, $sigil, $is_id, $token ) = @_;
-
-    # can't be slice/element/sub call
-    if( $is_id && $sigil ne '@' && $sigil ne '$' && $sigil ne '&' ) {
-        return _find_symbol( $self, $sigil, $token->[1] );
-    }
-
-    my $next = $self->lexer->peek( X_OPERATOR );
-
-    # array/hash slice
-    if( $sigil eq '@' && ( $next->[0] eq 'OPBRK' || $next->[0] eq 'OPSQ' ) ) {
-        my( undef, $subscript ) = _parse_bracketed_expr( $self, $next->[0] );
-
-        my $sym_sigil = $next->[0] eq 'OPBRK' ? '%' : '@';
-        my $subscripted = $is_id ? _find_symbol( $self, $sym_sigil,
-                                                 $token->[1] ) :
-                                   $token;
-        # @{...}[...] if parsed as a dereference + slice; correct it
-        my $is_reference = $subscripted->is_symbol ? 0 : 1;
-        $subscripted = $subscripted->left if $subscripted->isa( 'Language::P::ParseTree::Dereference' ) && $subscripted->op eq '@';
-
-        return Language::P::ParseTree::Slice->new
-                   ( { subscripted => $subscripted,
-                       subscript   => $subscript,
-                       type        => $next->[1],
-                       reference   => $is_reference,
-                       } );
-    } elsif( $sigil eq '&' ) {
-        my $subscripted = $is_id ? _find_symbol( $self, '&',
-                                                 $token->[1] ) :
-                                   $token;
-
-        return _parse_indirect_function_call( $self, $subscripted,
-                                              $next->[0] eq 'OPPAR', 1 );
-    }
-
-    if( $next->[0] eq 'ARROW' ) {
-        my $subscripted = $is_id ? _find_symbol( $self, $sigil, $token->[1] ) :
-                                   $token;
-
-        return _parse_maybe_subscript_rest( $self, $subscripted );
-    } elsif(    $sigil eq '$'
-             && (    $next->[0] eq 'OPBRK'
-                  || $next->[0] eq 'OPSQ' ) ) {
-        my( undef, $subscript ) = _parse_bracketed_expr( $self, $next->[0] );
-
-        my $sym_sigil = $next->[0] eq 'OPBRK' ? '%' : '@';
-        my $subscripted = $is_id ? _find_symbol( $self, $sym_sigil,
-                                                 $token->[1] ) :
-                                   $token;
-        # ${...}[...] if parsed as a dereference + subscript; correct it
-        my $is_reference = $subscripted->is_symbol ? 0 : 1;
-        $subscripted = $subscripted->left if $subscripted->isa( 'Language::P::ParseTree::Dereference' ) && $subscripted->op eq '$';
-
-        my $term = Language::P::ParseTree::Subscript->new
-                       ( { subscripted => $subscripted,
-                           subscript   => $subscript,
-                           type        => $next->[1],
-                           reference   => $is_reference,
-                           } );
-
-        return _parse_maybe_subscript_rest( $self, $term );
-    }
-
-    # not a subscripted expression, just return the token
-    return $is_id ? _find_symbol( $self, $sigil, $token->[1] ) :
-                    $token;
-}
-
 sub _parse_maybe_subscript_rest {
     my( $self, $subscripted ) = @_;
     my $next = $self->lexer->peek( X_OPERATOR );
@@ -952,17 +882,73 @@ sub _parse_term_terminal {
 sub _parse_indirobj_maybe_subscripts {
     my( $self, $token ) = @_;
     my $indir = _parse_indirobj( $self, 0 );
+    my $sigil = $token->[1];
+    my $is_id = ref( $indir ) eq 'ARRAY' && $indir->[0] eq 'ID';
 
-    if( ref( $indir ) eq 'ARRAY' && $indir->[0] eq 'ID' ) {
-        return _parse_maybe_subscripts( $self, $token->[1], 1, $indir );
+    # no subscripting/slicing possible for '%'
+    if( $sigil eq '%' ) {
+        return $is_id ? _find_symbol( $self, $sigil, $indir->[1] ) :
+                         Language::P::ParseTree::Dereference->new
+                             ( { left  => $indir,
+                                 op    => $sigil,
+                                 } );
+    }
+
+    my $next = $self->lexer->peek( X_OPERATOR );
+
+    if( $sigil eq '&' ) {
+        my $deref = $is_id ? _find_symbol( $self, $sigil, $indir->[1] ) :
+                             $indir;
+
+        return _parse_indirect_function_call( $self, $deref,
+                                              $next->[0] eq 'OPPAR', 1 );
+    }
+
+    if( $next->[0] eq 'ARROW' ) {
+        my $deref = $is_id ? _find_symbol( $self, $sigil, $indir->[1] ) :
+                             Language::P::ParseTree::Dereference->new
+                                 ( { left  => $indir,
+                                     op    => $sigil,
+                                     } );
+
+        return _parse_maybe_subscript_rest( $self, $deref );
+    }
+
+    my( $is_slice, $sym_sigil );
+    if(    ( $sigil eq '@' || $sigil eq '$' )
+        && ( $next->[0] eq 'OPSQ' || $next->[0] eq 'OPBRK' ) ) {
+        $sym_sigil = $next->[0] eq 'OPBRK' ? '%' : '@';
+        $is_slice = $sigil eq '@';
+    } elsif( $sigil eq '*' && $next->[0] eq 'OPBRK' ) {
+        $sym_sigil = '*';
     } else {
-        my $deref = $token->[1] eq '*' || $token->[1] eq '&' ? $indir :
-                        Language::P::ParseTree::Dereference->new
-                            ( { left  => $indir,
-                                op    => $token->[1],
-                                } );
+        return $is_id ? _find_symbol( $self, $sigil, $indir->[1] ) :
+                         Language::P::ParseTree::Dereference->new
+                             ( { left  => $indir,
+                                 op    => $sigil,
+                                 } );
+    }
 
-        return _parse_maybe_subscripts( $self, $token->[1], 0, $deref );
+    my( undef, $subscript ) = _parse_bracketed_expr( $self, $next->[0] );
+    my $subscripted = $is_id ? _find_symbol( $self, $sym_sigil, $indir->[1] ) :
+                               $indir;
+
+    if( $is_slice ) {
+        return Language::P::ParseTree::Slice->new
+                   ( { subscripted => $subscripted,
+                       subscript   => $subscript,
+                       type        => $next->[1],
+                       reference   => $is_id ? 0 : 1,
+                       } );
+    } else {
+        my $term = Language::P::ParseTree::Subscript->new
+                       ( { subscripted => $subscripted,
+                           subscript   => $subscript,
+                           type        => $next->[1],
+                           reference   => $is_id ? 0 : 1,
+                           } );
+
+        return _parse_maybe_subscript_rest( $self, $term );
     }
 }
 

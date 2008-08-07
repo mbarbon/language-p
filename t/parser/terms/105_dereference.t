@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 4;
+use Test::More tests => 6;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -78,4 +78,28 @@ right: !parsetree:Number
   flags: NUM_INTEGER
   type: number
   value: 1
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+%$a
+EOP
+--- !parsetree:Dereference
+context: CXT_VOID
+left: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: a
+  sigil: $
+op: '%'
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+*$a
+EOP
+--- !parsetree:Dereference
+context: CXT_VOID
+left: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: a
+  sigil: $
+op: '*'
 EOE
