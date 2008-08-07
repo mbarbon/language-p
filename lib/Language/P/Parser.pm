@@ -515,7 +515,7 @@ sub _find_symbol {
 sub _parse_maybe_subscripts {
     my( $self, $sigil, $is_id, $token ) = @_;
 
-    # can't be slice/element
+    # can't be slice/element/sub call
     if( $is_id && $sigil ne '@' && $sigil ne '$' && $sigil ne '&' ) {
         return _find_symbol( $self, $sigil, $token->[1] );
     }
@@ -531,7 +531,7 @@ sub _parse_maybe_subscripts {
                                                  $token->[1] ) :
                                    $token;
         # @{...}[...] if parsed as a dereference + slice; correct it
-        my $is_reference = $subscripted->isa( 'Language::P::ParseTree::Symbol' ) ? 0 : 1;
+        my $is_reference = $subscripted->is_symbol ? 0 : 1;
         $subscripted = $subscripted->left if $subscripted->isa( 'Language::P::ParseTree::Dereference' ) && $subscripted->op eq '@';
 
         return Language::P::ParseTree::Slice->new
@@ -564,7 +564,7 @@ sub _parse_maybe_subscripts {
                                                  $token->[1] ) :
                                    $token;
         # ${...}[...] if parsed as a dereference + subscript; correct it
-        my $is_reference = $subscripted->isa( 'Language::P::ParseTree::Symbol' ) ? 0 : 1;
+        my $is_reference = $subscripted->is_symbol ? 0 : 1;
         $subscripted = $subscripted->left if $subscripted->isa( 'Language::P::ParseTree::Dereference' ) && $subscripted->op eq '$';
 
         my $term = Language::P::ParseTree::Subscript->new
@@ -618,15 +618,16 @@ sub _parse_indirect_function_call {
     }
 
     # $foo->() requires an additional dereference, while
-    # &{...}(...) does construct a reference  but might need it
-    if( !$subscripted->isa( 'Language::P::ParseTree::Symbol' ) || $subscripted->sigil ne '&' ) {
+    # &{...}(...) does not construct a reference but might need it
+    if( !$subscripted->is_symbol || $subscripted->sigil ne '&' ) {
         $subscripted = Language::P::ParseTree::Dereference->new
                            ( { left => $subscripted,
                                op   => '&',
                                } );
     }
 
-    if( $ampersand && !$with_arguments && $subscripted->isa( 'Language::P::ParseTree::Symbol' ) ) {
+    # treat &foo; separately from all other cases
+    if( $ampersand && !$with_arguments && $subscripted->is_symbol ) {
         return Language::P::ParseTree::SpecialFunctionCall->new
                    ( { function    => $subscripted,
                        flags       => FLAG_IMPLICITARGUMENTS,
@@ -829,9 +830,7 @@ sub _parse_string_rest {
     $self->lexer->quote( undef );
 
     my $string;
-    if(    @values == 1
-        && $values[0]->isa( 'Language::P::ParseTree::Constant' ) ) {
-
+    if( @values == 1 && $values[0]->is_constant ) {
         $string = $values[0];
     } elsif( @values == 0 ) {
         $string = Language::P::ParseTree::Constant->new( { value => "",
@@ -873,12 +872,11 @@ sub _parse_term_terminal {
             # simple scalar: readline, anything else: glob
             if(    $qstring->isa( 'Language::P::ParseTree::QuotedString' )
                 && $#{$qstring->components} == 0
-                && $qstring->components->[0]
-                           ->isa( 'Language::P::ParseTree::Symbol' ) ) {
+                && $qstring->components->[0]->is_symbol ) {
                 return Language::P::ParseTree::Overridable
                            ->new( { function  => 'readline',
                                     arguments => [ $qstring->components->[0] ] } );
-            } elsif( $qstring->isa( 'Language::P::ParseTree::Constant' ) ) {
+            } elsif( $qstring->is_constant ) {
                 if( $qstring->value =~ /^[a-zA-Z_]/ ) {
                     # FIXME simpler method, make lex_identifier static
                     my $lexer = Language::P::Lexer->new

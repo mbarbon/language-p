@@ -45,6 +45,8 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 sub is_bareword { 0 }
+sub is_constant { 0 }
+sub is_symbol { 0 }
 sub lvalue_context { Language::P::ParseTree::CXT_SCALAR }
 
 sub _fields {
@@ -121,7 +123,7 @@ use base qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(value type);
 
-sub bare { 0 }
+sub is_constant { 1 }
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -132,7 +134,6 @@ use warnings;
 use base qw(Language::P::ParseTree::Constant);
 
 sub type { 'string' }
-sub bare { 1 }
 sub is_bareword { 1 }
 
 package Language::P::ParseTree::Number;
@@ -199,6 +200,7 @@ our @FIELDS = qw(name sigil context);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub is_symbol { 1 }
 sub lvalue_context {
     my( $self ) = @_;
 
