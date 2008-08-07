@@ -17,6 +17,7 @@ __PACKAGE__->mk_accessors( qw(_package _lexicals _pending_lexicals
 
 use constant
   { PREC_HIGHEST       => 0,
+    PREC_NAMED_UNOP    => 10,
     PREC_TERNARY       => 18,
     PREC_TERNARY_COLON => 40,
     PREC_LISTOP        => 21,
@@ -1280,6 +1281,8 @@ sub _parse_listop {
         my $cl = $self->lexer->lex( X_OPERATOR );
 
         die $cl->[0], ' ', $cl->[1] unless $cl->[0] eq 'CLPAR';
+    } elsif( $proto->[1] == 1 && $proto->[2] eq '$' ) {
+        ( $args, $fh ) = _parse_arglist( $self, PREC_NAMED_UNOP, $proto, 0 );
     } elsif( $proto->[1] != 0 ) {
         Carp::confess( "Undeclared identifier '$op->[1]'" ) unless $declared;
         ( $args, $fh ) = _parse_arglist( $self, PREC_LISTOP, $proto, 0 );
