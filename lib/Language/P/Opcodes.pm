@@ -465,4 +465,16 @@ sub o_dereference_scalar {
     return $pc + 1;
 }
 
+sub o_defined {
+    my( $op, $runtime, $pc ) = @_;
+    my $value = pop @{$runtime->{_stack}};
+    my $defined = $value->is_defined;
+
+    push @{$runtime->{_stack}}, $defined ?
+             Language::P::Value::StringNumber->new( { integer => 1 } ) :
+             Language::P::Value::StringNumber->new( { string => '' } );
+
+    return $pc + 1;
+}
+
 1;

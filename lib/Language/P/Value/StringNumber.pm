@@ -68,4 +68,12 @@ sub as_boolean_int {
     die;
 }
 
+sub is_defined {
+    my( $self ) = @_;
+
+    return    defined $self->{float}
+           || defined $self->{integer}
+           || defined $self->{string} ? 1 : 0;
+}
+
 1;

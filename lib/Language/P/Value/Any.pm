@@ -19,6 +19,7 @@ our @METHODS = qw(as_integer as_float as_string as_scalar as_boolean_int
                   );
 
 sub type { 1 }
+sub is_defined { 1 }
 
 sub unimplemented { Carp::confess( "Unimplemented!\n" ) }
 

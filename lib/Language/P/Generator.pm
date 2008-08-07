@@ -143,8 +143,8 @@ sub finished {
 
 my %dispatch =
   ( 'Language::P::ParseTree::FunctionCall'           => '_function_call',
-    'Language::P::ParseTree::Builtin'                => '_function_call',
-    'Language::P::ParseTree::Overridable'            => '_function_call',
+    'Language::P::ParseTree::Builtin'                => '_builtin',
+    'Language::P::ParseTree::Overridable'            => '_builtin',
     'Language::P::ParseTree::Print'                  => '_print',
     'Language::P::ParseTree::UnOp'                   => '_unary_op',
     'Language::P::ParseTree::BinOp'                  => '_binary_op',
@@ -239,7 +239,6 @@ my %builtins =
   ( print    => 'print',
     return   => 'return',
     unlink   => 'unlink',
-    abs      => 'abs',
     %short_circuit,
     '.'      => 'concat',
     '+'      => 'add',
@@ -253,6 +252,12 @@ my %builtins =
     'eq'     => 'compare_s_eq_scalar',
     '!='     => 'compare_i_ne_scalar',
     'ne'     => 'compare_s_ne_scalar',
+    );
+
+my %builtins_no_list =
+  ( abs      => 'abs',
+    defined  => 'defined',
+    undef    => 'undef',
     );
 
 sub _print {
@@ -277,6 +282,23 @@ sub _print {
     }
 
     push @bytecode, o( $builtins{$tree->function} );
+}
+
+sub _builtin {
+    my( $self, $tree ) = @_;
+
+    if( $tree->function eq 'undef' && !$tree->arguments ) {
+        push @bytecode, o( 'constant',
+                           value => Language::P::Value::StringNumber->new );
+    } elsif( $builtins_no_list{$tree->function} ) {
+        foreach my $arg ( @{$tree->arguments || []} ) {
+            $self->dispatch( $arg );
+        }
+
+        push @bytecode, o( $builtins_no_list{$tree->function} );
+    } else {
+        return _function_call( $self, $tree );
+    }
 }
 
 sub _function_call {

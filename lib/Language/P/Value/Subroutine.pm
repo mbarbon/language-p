@@ -36,5 +36,6 @@ use warnings;
 use base qw(Language::P::Value::Subroutine);
 
 sub call { Carp::confess( "Called subroutine stub" ) }
+sub is_defined { 0 }
 
 1;
