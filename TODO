@@ -9,6 +9,8 @@ Parsing:
   - &foo() bypasses prototype
   - foo() is plain call
   - &$foo() is plain call (just with deref)
+  - \&foo takes reference, \&foo->() calls foo, takes reference of the result
+    and calls it
 - stashes
 - global variables/symbols (STDOUT!)
 - local variables
@@ -84,3 +86,5 @@ Refactoring:
 - make regexp parser a full blown parser, not the hack it is;
   add a lexer subclass for parsing patterns
 - fold _parse_maybe_subscripts into its only caller
+- rationalize the special cases for slices, &foo function calls,
+  subscripts, dereferences

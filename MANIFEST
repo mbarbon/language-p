@@ -54,6 +54,7 @@ t/parser/terms/081_quote_like.t
 t/parser/terms/085_pattern.t
 t/parser/terms/086_substitution.t
 t/parser/terms/105_dereference.t
+t/parser/terms/106_dereference_sub.t
 t/parser/terms/110_brackets.t
 t/parser/terms/140_prototypes.t
 t/run/005_assignment.t
