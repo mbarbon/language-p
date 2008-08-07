@@ -39,7 +39,7 @@ subscript: !parsetree:List
       context: CXT_SCALAR
       function: boo
 subscripted: !parsetree:Symbol
-  context: CXT_SCALAR|CXT_LVALUE
+  context: CXT_SCALAR|CXT_VIVIFY
   name: a
   sigil: $
 type: '['

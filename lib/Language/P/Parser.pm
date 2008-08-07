@@ -530,12 +530,15 @@ sub _parse_maybe_subscripts {
         my $subscripted = $is_id ? _find_symbol( $self, $sym_sigil,
                                                  $token->[1] ) :
                                    $token;
+        # @{...}[...] if parsed as a dereference + slice; correct it
+        my $is_reference = $subscripted->isa( 'Language::P::ParseTree::Symbol' ) ? 0 : 1;
+        $subscripted = $subscripted->left if $subscripted->isa( 'Language::P::ParseTree::Dereference' ) && $subscripted->op eq '@';
 
         return Language::P::ParseTree::Slice->new
                    ( { subscripted => $subscripted,
                        subscript   => $subscript,
                        type        => $next->[1],
-                       reference   => $subscripted->isa( 'Language::P::ParseTree::Symbol' ) ? 0 : 1,
+                       reference   => $is_reference,
                        } );
     }
 
@@ -553,12 +556,15 @@ sub _parse_maybe_subscripts {
         my $subscripted = $is_id ? _find_symbol( $self, $sym_sigil,
                                                  $token->[1] ) :
                                    $token;
+        # ${...}[...] if parsed as a dereference + subscript; correct it
+        my $is_reference = $subscripted->isa( 'Language::P::ParseTree::Symbol' ) ? 0 : 1;
+        $subscripted = $subscripted->left if $subscripted->isa( 'Language::P::ParseTree::Dereference' ) && $subscripted->op eq '$';
 
         my $term = Language::P::ParseTree::Subscript->new
                        ( { subscripted => $subscripted,
                            subscript   => $subscript,
                            type        => $next->[1],
-                           reference   => $subscripted->isa( 'Language::P::ParseTree::Symbol' ) ? 0 : 1,
+                           reference   => $is_reference,
                            } );
 
         return _parse_maybe_subscript_rest( $self, $term );
@@ -602,7 +608,7 @@ sub _parse_dereference_rest {
         _lex_token( $self, 'OPPAR' );
         ( my $args, undef ) = _parse_arglist( $self, PREC_LOWEST, [-1, -1, '@'], 0 );
         _lex_token( $self, 'CLPAR' );
-        my $func = Language::P::ParseTree::UnOp->new
+        my $func = Language::P::ParseTree::Dereference->new
                        ( { left => $subscripted,
                            op   => '&',
                            } );
@@ -923,7 +929,7 @@ sub _parse_indirobj_maybe_subscripts {
     if( ref( $indir ) eq 'ARRAY' && $indir->[0] eq 'ID' ) {
         return _parse_maybe_subscripts( $self, $token->[1], 1, $indir );
     } else {
-        my $deref = Language::P::ParseTree::UnOp->new
+        my $deref = Language::P::ParseTree::Dereference->new
                         ( { left  => $indir,
                             op    => $token->[1],
                             } );
@@ -1017,9 +1023,10 @@ sub _parse_term_p {
     } elsif( $prec_assoc_un{$token->[1]} ) {
         my $rest = _parse_term_n( $self, $prec_assoc_un{$token->[1]}[0] );
 
-        return Language::P::ParseTree::UnOp->new( { op    => $token->[1],
-                                                    left  => $rest,
-                                                    } );
+        return Language::P::ParseTree::UnOp->new
+                   ( { op    => $token->[1],
+                       left  => $rest,
+                       } );
     } elsif( $token->[0] eq 'OPPAR' ) {
         my $term = _parse_expr( $self );
         my $clpar = $self->lexer->lex( X_TERM );
@@ -1146,7 +1153,7 @@ sub _parse_indirobj {
         if( ref( $indir ) eq 'ARRAY' && $indir->[0] eq 'ID' ) {
             return _find_symbol( $self, '$', $indir->[1] );
         } else {
-            return Language::P::ParseTree::UnOp->new
+            return Language::P::ParseTree::Dereference->new
                        ( { left  => $indir,
                            op    => $token->[1],
                            } );

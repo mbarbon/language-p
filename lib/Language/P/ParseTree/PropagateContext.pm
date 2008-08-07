@@ -12,6 +12,7 @@ my %dispatch =
     'Language::P::ParseTree::Builtin'                => '_function_call',
     'Language::P::ParseTree::Overridable'            => '_function_call',
     'Language::P::ParseTree::UnOp'                   => '_unary_op',
+    'Language::P::ParseTree::Dereference'            => '_dereference',
     'Language::P::ParseTree::BinOp'                  => '_binary_op',
     'Language::P::ParseTree::Symbol'                 => '_symbol',
     'Language::P::ParseTree::Constant'               => '_noop',
@@ -74,7 +75,7 @@ sub _subscript {
 
     $tree->{context} = $cxt;
 
-    $self->visit( $tree->subscripted, $tree->reference ? CXT_SCALAR|CXT_LVALUE :
+    $self->visit( $tree->subscripted, $tree->reference ? CXT_SCALAR|CXT_VIVIFY :
                                                          CXT_LIST );
     $self->visit( $tree->subscript, CXT_SCALAR );
 }
@@ -84,7 +85,7 @@ sub _slice {
 
     $tree->{context} = $cxt;
 
-    $self->visit( $tree->subscripted, $tree->reference ? CXT_SCALAR|CXT_LVALUE :
+    $self->visit( $tree->subscripted, $tree->reference ? CXT_SCALAR|CXT_VIVIFY :
                                                          CXT_LIST );
     $self->visit( $tree->subscript, CXT_LIST );
 }
@@ -139,6 +140,13 @@ sub _unary_op {
     my( $self, $tree, $cxt ) = @_;
 
     $tree->{context} = $cxt;
+    $self->visit( $tree->left, CXT_SCALAR );
+}
+
+sub _dereference {
+    my( $self, $tree, $cxt ) = @_;
+
+    $tree->{context} = $cxt | ( $cxt & CXT_LVALUE ? CXT_VIVIFY : 0 );
     $self->visit( $tree->left, CXT_SCALAR );
 }
 

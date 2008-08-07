@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 12;
+use Test::More tests => 13;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -105,7 +105,7 @@ EOP
 --- !parsetree:FunctionCall
 arguments: ~
 context: CXT_VOID
-function: !parsetree:UnOp
+function: !parsetree:Dereference
   context: CXT_SCALAR
   left: !parsetree:Symbol
     context: CXT_SCALAR
@@ -131,7 +131,7 @@ arguments:
       type: number
       value: 2
 context: CXT_VOID
-function: !parsetree:UnOp
+function: !parsetree:Dereference
   context: CXT_SCALAR
   left: !parsetree:Symbol
     context: CXT_SCALAR
@@ -207,6 +207,41 @@ type: '{'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
+@{foo() . "x"}[1, 2, 3]
+EOP
+--- !parsetree:Slice
+context: CXT_VOID
+reference: 1
+subscript: !parsetree:List
+  expressions:
+    - !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 1
+    - !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 2
+    - !parsetree:Number
+      flags: NUM_INTEGER
+      type: number
+      value: 3
+subscripted: !parsetree:Block
+  lines:
+    - !parsetree:BinOp
+      context: CXT_SCALAR|CXT_VIVIFY
+      left: !parsetree:FunctionCall
+        arguments: ~
+        context: CXT_SCALAR
+        function: foo
+      op: .
+      right: !parsetree:Constant
+        type: string
+        value: x
+type: '['
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $foo[1]{2}->()[3]{5}( 1 + 2 + 3 );
 EOP
 --- !parsetree:FunctionCall
@@ -230,7 +265,7 @@ arguments:
       type: number
       value: 3
 context: CXT_VOID
-function: !parsetree:UnOp
+function: !parsetree:Dereference
   context: CXT_SCALAR
   left: !parsetree:Subscript
     context: CXT_SCALAR
@@ -240,7 +275,7 @@ function: !parsetree:UnOp
       type: number
       value: 5
     subscripted: !parsetree:Subscript
-      context: CXT_SCALAR|CXT_LVALUE
+      context: CXT_SCALAR|CXT_VIVIFY
       reference: 1
       subscript: !parsetree:Number
         flags: NUM_INTEGER
@@ -248,8 +283,8 @@ function: !parsetree:UnOp
         value: 3
       subscripted: !parsetree:FunctionCall
         arguments: ~
-        context: CXT_SCALAR|CXT_LVALUE
-        function: !parsetree:UnOp
+        context: CXT_SCALAR|CXT_VIVIFY
+        function: !parsetree:Dereference
           context: CXT_SCALAR
           left: !parsetree:Subscript
             context: CXT_SCALAR
@@ -259,7 +294,7 @@ function: !parsetree:UnOp
               type: number
               value: 2
             subscripted: !parsetree:Subscript
-              context: CXT_SCALAR|CXT_LVALUE
+              context: CXT_SCALAR|CXT_VIVIFY
               reference: 0
               subscript: !parsetree:Number
                 flags: NUM_INTEGER
@@ -304,20 +339,17 @@ subscript: !parsetree:Number
   flags: NUM_INTEGER
   type: number
   value: 1
-subscripted: !parsetree:UnOp
-  context: CXT_SCALAR|CXT_LVALUE
-  left: !parsetree:Block
-    lines:
-      - !parsetree:BinOp
+subscripted: !parsetree:Block
+  lines:
+    - !parsetree:BinOp
+      context: CXT_SCALAR|CXT_VIVIFY
+      left: !parsetree:FunctionCall
+        arguments: ~
         context: CXT_SCALAR
-        left: !parsetree:FunctionCall
-          arguments: ~
-          context: CXT_SCALAR
-          function: foo
-        op: .
-        right: !parsetree:Constant
-          type: string
-          value: x
-  op: $
+        function: foo
+      op: .
+      right: !parsetree:Constant
+        type: string
+        value: x
 type: '['
 EOE
