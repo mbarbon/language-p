@@ -22,7 +22,7 @@ sub as_string {
 
     return $self->{string} if defined $self->{string};
     return sprintf "%d", $self->{integer} if defined $self->{integer};
-    return sprintf "%g", $self->{float} if defined $self->{float};
+    return sprintf "%.15g", $self->{float} if defined $self->{float};
     Carp::confess();
 }
 
