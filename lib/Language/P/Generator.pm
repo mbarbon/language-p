@@ -211,17 +211,17 @@ my %reverse_conditionals =
     );
 
 my %conditionals =
-  ( '<'      => 'compare_i_lt_int',
+  ( '<'      => 'compare_f_lt_int',
     'lt'     => 'compare_s_lt_int',
-    '>'      => 'compare_i_gt_int',
+    '>'      => 'compare_f_gt_int',
     'gt'     => 'compare_s_gt_int',
-    '<='     => 'compare_i_le_int',
+    '<='     => 'compare_f_le_int',
     'le'     => 'compare_s_le_int',
-    '>='     => 'compare_i_ge_int',
+    '>='     => 'compare_f_ge_int',
     'ge'     => 'compare_s_ge_int',
-    '=='     => 'compare_i_eq_int',
+    '=='     => 'compare_f_eq_int',
     'eq'     => 'compare_s_eq_int',
-    '!='     => 'compare_i_ne_int',
+    '!='     => 'compare_f_ne_int',
     'ne'     => 'compare_s_ne_int',
     );
 
@@ -251,11 +251,11 @@ my %builtins =
     '-'      => 'subtract',
     '=~'     => 'rx_match',
     '='      => 'assign',
-    '<='     => 'compare_i_le_scalar',
+    '<='     => 'compare_f_le_scalar',
     'le'     => 'compare_s_le_scalar',
-    '=='     => 'compare_i_eq_scalar',
+    '=='     => 'compare_f_eq_scalar',
     'eq'     => 'compare_s_eq_scalar',
-    '!='     => 'compare_i_ne_scalar',
+    '!='     => 'compare_f_ne_scalar',
     'ne'     => 'compare_s_ne_scalar',
     );
 
