@@ -8,6 +8,7 @@ use Language::P::Value::StringNumber;
 use Language::P::Value::Reference;
 use Language::P::Value::Array;
 use Language::P::Value::List;
+use Language::P::ParseTree qw(:all);
 
 use Language::P::Opcodes::Regex qw(:opcodes);
 
@@ -28,6 +29,14 @@ sub o {
              };
 }
 
+sub _context {
+    my( $op, $runtime ) = @_;
+    my $cxt = $op ? $op->{context} : 0;
+
+    return $cxt if $cxt && $cxt != CXT_CALLER;
+    return $runtime->{_stack}[$runtime->{_frame} - 2][2];
+}
+
 sub o_noop {
     my( $op, $runtime, $pc ) = @_;
 
@@ -39,6 +48,14 @@ sub o_dup {
     my $value = $runtime->{_stack}->[-1];
 
     push @{$runtime->{_stack}}, $value;
+
+    return $pc + 1;
+}
+
+sub o_pop {
+    my( $op, $runtime, $pc ) = @_;
+
+    pop @{$runtime->{_stack}};
 
     return $pc + 1;
 }
@@ -61,14 +78,6 @@ sub o_print {
 sub o_constant {
     my( $op, $runtime, $pc ) = @_;
     push @{$runtime->{_stack}}, $op->{value};
-
-    return $pc + 1;
-}
-
-sub o_push_scalar {
-    my( $op, $runtime, $pc ) = @_;
-    my $value = pop @{$runtime->{_stack}};
-    $runtime->{_stack}->[-1]->push( $value );
 
     return $pc + 1;
 }
@@ -135,16 +144,29 @@ _make_binary_op( $_ ) foreach
       },
     );
 
-sub o_start_call {
+sub o_start_list {
     my( $op, $runtime, $pc ) = @_;
-    push @{$runtime->{_stack}}, Language::P::Value::List->new;
+    push @{$runtime->{_stack}}, 'list_mark';
 
     return $pc + 1;
 }
 
-sub o_start_list {
+sub o_end_list {
     my( $op, $runtime, $pc ) = @_;
-    push @{$runtime->{_stack}}, Language::P::Value::List->new;
+    my $st = $runtime->{_stack};
+
+    # find the mark
+    my $i;
+    for( $i = $#$st; $i >= 0; --$i ) {
+        last if $st->[$i] eq 'list_mark';
+    }
+    # create the list
+    my $list = $st->[$i] = Language::P::Value::List->new;
+    for( my $j = $i + 1; $j <= $#$st; ++$j ) {
+        $list->push( $st->[$j] );
+    }
+    # clear the stack
+    $#$st = $i;
 
     return $pc + 1;
 }
@@ -155,24 +177,49 @@ sub o_end {
     return -1;
 }
 
+sub o_want {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = _context( undef, $runtime );
+    my $v;
+
+    if( $cxt == CXT_VOID ) {
+        $v = Language::P::Value::StringNumber->new;
+    } elsif( $cxt == CXT_SCALAR ) {
+        $v = Language::P::Value::StringNumber->new( { string => '' } );
+    } elsif( $cxt == CXT_LIST ) {
+        $v = Language::P::Value::StringNumber->new( { integer => 1 } );
+    } else {
+        die "Unknow context $cxt";
+    }
+    push @{$runtime->{_stack}}, $v;
+
+    return $pc + 1;
+}
+
 sub o_call {
     my( $op, $runtime, $pc ) = @_;
     my $sub = pop @{$runtime->{_stack}};
 
-    $sub->call( $runtime, $pc );
+    $sub->call( $runtime, $pc, _context( $op, $runtime ) );
 
     return 0;
 }
 
 sub o_return {
     my( $op, $runtime, $pc ) = @_;
+    my $cxt = _context( undef, $runtime );
     my $rv = $runtime->{_stack}->[-1];
     my $rpc = $runtime->call_return;
 
-    # FIXME context handling, assume scalar for now
-    if( 1 ) {
-        push @{$runtime->{_stack}}, $rv->get_item( $rv->get_count - 1 )
-                                      ->as_scalar;
+    if( $cxt == CXT_SCALAR ) {
+        if( $rv->get_count > 0 ) {
+            push @{$runtime->{_stack}}, $rv->get_item( $rv->get_count - 1 )
+                                           ->as_scalar;
+        } else {
+            push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new;
+        }
+    } elsif( $cxt == CXT_LIST ) {
+        push @{$runtime->{_stack}}, $rv;
     }
 
     return $rpc + 1;

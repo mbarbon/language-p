@@ -65,9 +65,11 @@ t/run/008_while.t
 t/run/010_arithmetic.t
 t/run/015_defined.t
 t/run/080_recursion.t
+t/run/081_context.t
 t/runtime/001_load.t
 t/runtime/002_base.t
 t/runtime/010_call.t
+t/runtime/011_context.t
 t/runtime/015_recursion.t
 t/runtime/regex/001_load.t
 t/runtime/regex/002_base.t

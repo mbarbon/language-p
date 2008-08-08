@@ -19,10 +19,10 @@ sub new {
 }
 
 sub call {
-    my( $self, $runtime, $pc ) = @_;
+    my( $self, $runtime, $pc, $context ) = @_;
     my $args = pop @{$runtime->{_stack}};
 
-    $self->SUPER::call( $runtime, $pc );
+    $self->SUPER::call( $runtime, $pc, $context );
 
     my( $stack, $frame ) = ( $runtime->{_stack}, $runtime->{_frame} );
 

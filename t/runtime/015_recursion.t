@@ -7,6 +7,7 @@ use Test::More tests => 2;
 use Language::P::Runtime;
 use Language::P::Opcodes qw(o);
 use Language::P::Value::Subroutine;
+use Language::P::ParseTree qw(:all);
 
 my $runtime = Language::P::Runtime->new;
 
@@ -25,50 +26,50 @@ my @fib =
        to    => 8,
        ),
     # if n < 2
-    o( 'start_call' ),
+    o( 'start_list' ),
     o( 'constant',
        value => Language::P::Value::StringNumber->new( { integer => 1 } ),
        ),
-    o( 'push_scalar' ),
+    o( 'end_list' ),
     o( 'return' ),
     # if n >= 2
-    o( 'start_call' ),
+    o( 'start_list' ),
     # fib( n - 1 )
-    o( 'start_call' ),
+    o( 'start_list' ),
     o( 'constant',
        value => Language::P::Value::StringNumber->new( { integer => 1 } ),
        ),
     o( 'parameter_index', index => 0 ),
     o( 'subtract' ),
-    o( 'push_scalar' ),
+    o( 'end_list' ),
     o( 'constant', value => $fib ),
     o( 'call' ),
     # fib( n - 2 )
-    o( 'start_call' ),
+    o( 'start_list' ),
     o( 'constant',
        value => Language::P::Value::StringNumber->new( { integer => 2 } ),
        ),
     o( 'parameter_index', index => 0 ),
     o( 'subtract' ),
-    o( 'push_scalar' ),
+    o( 'end_list' ),
     o( 'constant', value => $fib ),
     o( 'call' ),
     # sum
     o( 'add' ),
-    o( 'push_scalar' ),
+    o( 'end_list' ),
     o( 'return' ),
     );
 
 $fib->{bytecode} = \@fib;
 
 my @main =
-  ( o( 'start_call' ),
+  ( o( 'start_list' ),
     o( 'constant',
        value => Language::P::Value::StringNumber->new( { integer => 10 } ),
        ),
-    o( 'push_scalar' ),
+    o( 'end_list' ),
     o( 'constant', value => $fib ),
-    o( 'call' ),
+    o( 'call', context => CXT_SCALAR ),
     o( 'end' ),
     );
 
@@ -76,7 +77,7 @@ $runtime->reset;
 $runtime->run_bytecode( \@main );
 my @stack = $runtime->stack_copy;
 
-is( scalar @stack, 1 );
-is( $stack[0]->as_integer, 89 );
+is( scalar @stack, 3 );
+is( $stack[2]->as_integer, 89 );
 
 1;

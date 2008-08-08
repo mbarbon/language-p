@@ -259,30 +259,26 @@ my %builtins_no_list =
   ( abs      => 'abs',
     defined  => 'defined',
     undef    => 'undef',
+    wantarray=> 'want',
     );
 
 sub _print {
     my( $self, $tree ) = @_;
 
-    push @bytecode, o( 'start_call' );
+    push @bytecode, o( 'start_list' );
 
     if( $tree->filehandle ) {
         $self->dispatch( $tree->filehandle );
-        # FIXME HACK
-        push @bytecode, o( 'push_scalar' );
     } else {
         my $out = Language::P::Value::Handle->new( { handle => \*STDOUT } );
-        push @bytecode, o( 'constant', value => $out ),
-                        o( 'push_scalar' );
+        push @bytecode, o( 'constant', value => $out );
     }
 
     foreach my $arg ( @{$tree->arguments} ) {
         $self->dispatch( $arg );
-        # FIXME HACK
-        push @bytecode, o( 'push_scalar' );
     }
 
-    push @bytecode, o( $builtins{$tree->function} );
+    push @bytecode, o( 'end_list' ), o( $builtins{$tree->function} );
 }
 
 sub _builtin {
@@ -305,20 +301,20 @@ sub _builtin {
 sub _function_call {
     my( $self, $tree ) = @_;
 
-    push @bytecode, o( 'start_call' );
+    push @bytecode, o( 'start_list' );
 
     foreach my $arg ( @{$tree->arguments || []} ) {
         $self->dispatch( $arg );
-        # FIXME HACK
-        push @bytecode, o( 'push_scalar' );
     }
+
+    push @bytecode, o( 'end_list' );
 
     Carp::confess( "Unknown '" . $tree->function . "'" )
         unless ref( $tree->function ) || $builtins{$tree->function};
 
     if( ref( $tree->function ) ) {
         $self->dispatch( $tree->function );
-        push @bytecode, o( 'call' );
+        push @bytecode, o( 'call', context => $tree->context & CXT_CALL_MASK );
     } else {
         push @bytecode, o( $builtins{$tree->function} );
     }
@@ -331,9 +327,9 @@ sub _list {
 
     foreach my $arg ( @{$tree->expressions} ) {
         $self->dispatch( $arg );
-        # HACK
-        push @bytecode, o( 'push_scalar' );
     }
+
+    push @bytecode, o( 'end_list' );
 }
 
 sub _unary_op {
@@ -365,8 +361,9 @@ sub _binary_op {
         # jump to $end if evalutating right is not necessary
         push @bytecode,
              o( 'dup' ),
-             o( $short_circuit{$tree->op} );
-        _to_label( $end, $bytecode[-1] );
+             o( $short_circuit{$tree->op} ),
+             o( 'pop' );
+        _to_label( $end, $bytecode[-2] );
 
         # evalutates right only if this is the correct return value
         $self->dispatch( $tree->right );

@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use base qw(Language::P::Value::Code);
 
+use Language::P::ParseTree qw(:all);
+
 use constant
   { REGEXP_NO_MORE_MATCHES => -1,
     REGEXP_SCAN_ALL        => -2,
@@ -27,7 +29,7 @@ sub match {
         local $SIG{__WARN__} = sub { Carp::confess @_ };
         $runtime->{_stack}[-2] = $i;
         # print "Start: $i\n";
-        $self->call( $runtime, -2 ); # -2 so we can blindly add 1
+        $self->call( $runtime, -2, CXT_VOID ); # -2 so we can blindly add 1
         $runtime->run;
         $rv = pop @{$runtime->{_stack}};
 

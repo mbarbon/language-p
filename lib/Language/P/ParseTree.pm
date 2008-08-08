@@ -7,7 +7,7 @@ use Exporter 'import';
 our @EXPORT_OK = qw(NUM_INTEGER NUM_FLOAT NUM_HEXADECIMAL NUM_OCTAL NUM_BINARY
 
                     CXT_CALLER CXT_VOID CXT_SCALAR CXT_LIST CXT_LVALUE
-                    CXT_VIVIFY
+                    CXT_VIVIFY CXT_CALL_MASK
 
                     PROTO_DEFAULT
 
@@ -30,6 +30,7 @@ use constant
     CXT_LIST           => 8,
     CXT_LVALUE         => 16,
     CXT_VIVIFY         => 32,
+    CXT_CALL_MASK      => 2|4|8,
 
     PROTO_DEFAULT      => [ -1, -1, '@' ],
 
@@ -204,7 +205,7 @@ sub is_symbol { 1 }
 sub lvalue_context {
     my( $self ) = @_;
 
-    return $self->sigil eq '%' || $self->sigil eq '%' ?
+    return $self->sigil eq '%' || $self->sigil eq '@' ?
                Language::P::ParseTree::CXT_LIST :
                Language::P::ParseTree::CXT_SCALAR;
 }
@@ -443,6 +444,7 @@ my %prototype_ov =
     close       => [  0,  1, '*' ],
     binmode     => [  0,  2, '*', '$' ],
     abs         => [  0,  1, '$' ],
+    wantarray   => [  0,  0 ],
     );
 
 sub parsing_prototype { return $prototype_ov{$_[0]->function} }
