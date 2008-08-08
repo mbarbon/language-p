@@ -7,6 +7,8 @@ use base qw(Module::Build);
 sub _run_p_tests {
     my( $self, @test_dirs ) = @_;
 
+    $self->depends_on( 'code' );
+
     require TAP::Harness;
     require TAP::Formatter::Console;
     require TAP::Parser::Aggregator;
