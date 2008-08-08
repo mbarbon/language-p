@@ -163,6 +163,7 @@ my %dispatch =
     'Language::P::ParseTree::QuotedString'           => '_quoted_string',
     'Language::P::ParseTree::Subscript'              => '_subscript',
     'Language::P::ParseTree::Pattern'                => '_pattern',
+    'Language::P::ParseTree::Parentheses'            => '_parentheses',
     );
 
 my %dispatch_cond =
@@ -343,6 +344,12 @@ sub _unary_op {
     $self->dispatch( $tree->left );
 
     push @bytecode, o( $unary{$tree->op} );
+}
+
+sub _parentheses {
+    my( $self, $tree ) = @_;
+
+    $self->dispatch( $tree->left );
 }
 
 sub _binary_op {

@@ -285,6 +285,15 @@ our @FIELDS = qw(op left context);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+package Language::P::ParseTree::Parentheses;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::UnOp);
+
+sub op { '()' }
+sub lvalue_context { Language::P::ParseTree::CXT_LIST }
+
 package Language::P::ParseTree::Dereference;
 
 use strict;

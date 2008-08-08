@@ -12,6 +12,7 @@ my %dispatch =
     'Language::P::ParseTree::Builtin'                => '_function_call',
     'Language::P::ParseTree::Overridable'            => '_function_call',
     'Language::P::ParseTree::UnOp'                   => '_unary_op',
+    'Language::P::ParseTree::Parentheses'            => '_parentheses',
     'Language::P::ParseTree::Dereference'            => '_dereference',
     'Language::P::ParseTree::BinOp'                  => '_binary_op',
     'Language::P::ParseTree::Symbol'                 => '_symbol',
@@ -141,6 +142,13 @@ sub _unary_op {
 
     $tree->{context} = $cxt;
     $self->visit( $tree->left, CXT_SCALAR );
+}
+
+sub _parentheses {
+    my( $self, $tree, $cxt ) = @_;
+
+    $tree->{context} = $cxt;
+    $self->visit( $tree->left, $cxt );
 }
 
 sub _dereference {
