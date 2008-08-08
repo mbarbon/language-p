@@ -5,6 +5,7 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 use Language::P::Value::SymbolTable;
+use Language::P::ParseTree qw(:all);
 
 __PACKAGE__->mk_ro_accessors( qw(symbol_table) );
 
@@ -20,16 +21,15 @@ sub new {
 sub reset {
     my( $self ) = @_;
 
-    $self->{_stack} = [];
+    $self->{_stack} = [ [ -1, undef, CXT_VOID ], undef ];
     $self->{_frame} = @{$self->{_stack}};
 }
 
 sub run_last_file {
     my( $self, $code ) = @_;
 
-    $self->reset;
     $self->set_bytecode( $code->bytecode );
-    $self->{_stack} = [ $code->lexicals ];
+    $self->{_stack} = [ [ -1, undef, CXT_VOID ], $code->lexicals ];
     $self->{_frame} = @{$self->{_stack}};
     return $self->run;
 }

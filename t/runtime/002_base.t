@@ -21,13 +21,12 @@ my $runtime = Language::P::Runtime->new;
 my( $out1, $fh1 ) = _oth();
 
 my @program1 =
-  ( o( 'start_call' ),
+  ( o( 'start_list' ),
     o( 'constant', value => $fh1 ),
-    o( 'push_scalar' ),
     o( 'constant',
        value => Language::P::Value::StringNumber->new( { string => "Hello, world!\n" } ),
        ),
-    o( 'push_scalar' ),
+    o( 'end_list' ),
     o( 'print' ),
     o( 'end' ),
   );
@@ -40,21 +39,18 @@ is( $$out1, "Hello, world!\n" );
 my( $out2, $fh2 ) = _oth();
 
 my @program2 =
-  ( o( 'start_call' ),
+  ( o( 'start_list' ),
     o( 'constant', value => $fh2 ),
-    o( 'push_scalar' ),
     o( 'constant',
        value => Language::P::Value::StringNumber->new( { string => "Hello, " } ),
        ),
-    o( 'push_scalar' ),
     o( 'constant',
        value => Language::P::Value::StringNumber->new( { string => "world!" } ),
        ),
-    o( 'push_scalar' ),
     o( 'constant',
        value => Language::P::Value::StringNumber->new( { string => "\n" } ),
        ),
-    o( 'push_scalar' ),
+    o( 'end_list' ),
     o( 'print' ),
     o( 'end' ),
     );
@@ -83,5 +79,5 @@ $runtime->reset;
 $runtime->run_bytecode( \@program3 );
 my @stack3 = $runtime->stack_copy;
 
-is( scalar @stack3, 1 );
-is( $stack3[0]->as_integer, 28 );
+is( scalar @stack3, 3 );
+is( $stack3[2]->as_integer, 28 );

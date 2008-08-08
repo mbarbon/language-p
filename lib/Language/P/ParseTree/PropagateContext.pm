@@ -120,12 +120,13 @@ sub _function_call {
     my( $self, $tree, $cxt ) = @_;
 
     $tree->{context} = $cxt;
+    my $arg_cxt = $tree->function eq 'return' ? CXT_CALLER : CXT_LIST;
     $self->visit( $tree->function, CXT_SCALAR ) if ref $tree->function;
 
     # FIXME prototypes
     if( $tree->arguments ) {
         foreach my $arg ( @{$tree->arguments} ) {
-            $self->visit( $arg, CXT_LIST );
+            $self->visit( $arg, $arg_cxt );
         }
     }
 }
@@ -223,10 +224,10 @@ sub _cond_loop {
 sub _cond {
     my( $self, $tree, $cxt ) = @_;
 
-    $self->visit( $tree->iffalse->block, CXT_VOID ) if $tree->iffalse;
+    $self->visit( $tree->iffalse->block, $cxt ) if $tree->iffalse;
     foreach my $iftrue ( @{$tree->iftrues} ) {
         $self->visit( $iftrue->condition, CXT_SCALAR );
-        $self->visit( $iftrue->block, CXT_VOID );
+        $self->visit( $iftrue->block, $cxt );
     }
 }
 
