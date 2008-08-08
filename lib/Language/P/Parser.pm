@@ -22,6 +22,9 @@ use constant
     PREC_TERNARY_COLON => 40,
     PREC_LISTOP        => 21,
     PREC_LOWEST        => 50,
+
+    BLOCK_OPEN_SCOPE      => 1,
+    BLOCK_IMPLICIT_RETURN => 2,
     };
 
 my %prec_assoc_bin =
@@ -192,7 +195,7 @@ sub _parse_line {
     } elsif( $token->[0] eq 'OPBRK' ) {
         _lex_token( $self, 'OPBRK' );
 
-        return _parse_block_rest( $self, 1 );
+        return _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
     } elsif( $token->[1] eq 'sub' ) {
         return _parse_sub( $self, 1 | 2 );
     } elsif( $special_sub{$token->[1]} ) {
@@ -271,7 +274,7 @@ sub _parse_sub {
     $args_slot->{index} = $self->_lexicals->add_value;
 
     $self->_current_sub( $sub );
-    my $block = _parse_block_rest( $self, 0 );
+    my $block = _parse_block_rest( $self, BLOCK_IMPLICIT_RETURN );
     $sub->{lines} = $block->{lines}; # FIXME encapsulation
     $self->_leave_scope;
     $self->_current_sub( $sub->outer );
@@ -300,7 +303,7 @@ sub _parse_cond {
     _lex_token( $self, 'CLPAR' );
     _lex_token( $self, 'OPBRK' );
 
-    my $block = _parse_block_rest( $self, 1 );
+    my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
 
     my $if = Language::P::ParseTree::Conditional->new
                  ( { iftrues => [ Language::P::ParseTree::ConditionalBlock->new
@@ -324,7 +327,7 @@ sub _parse_cond {
             _lex_token( $self, 'CLPAR' );
         }
         _lex_token( $self, 'OPBRK' );
-        my $block = _parse_block_rest( $self, 1 );
+        my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
 
         if( $expr ) {
             push @{$if->iftrues}, Language::P::ParseTree::ConditionalBlock->new
@@ -374,7 +377,7 @@ sub _parse_for {
             $self->_add_pending_lexicals;
 
             _lex_token( $self, 'OPBRK' );
-            my $block = _parse_block_rest( $self, 1 );
+            my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
 
             my $for = Language::P::ParseTree::For->new
                           ( { block_type  => 'for',
@@ -411,7 +414,7 @@ sub _parse_for {
     $self->_add_pending_lexicals;
     _lex_token( $self, 'OPBRK' );
 
-    my $block = _parse_block_rest( $self, 1 );
+    my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
 
     my $for = Language::P::ParseTree::Foreach->new
                   ( { expression => $foreach_expr,
@@ -437,7 +440,7 @@ sub _parse_while {
     _lex_token( $self, 'CLPAR' );
     _lex_token( $self, 'OPBRK' );
 
-    my $block = _parse_block_rest( $self, 1 );
+    my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
 
     my $while = Language::P::ParseTree::ConditionalLoop
                     ->new( { condition  => $expr,
@@ -732,7 +735,7 @@ sub _parse_substitution {
     if( $match->flags && grep $_ eq 'e', @{$match->flags} ) {
         local $self->{lexer} = Language::P::Lexer->new
                                    ( { string => $token->[4]->[3] } );
-        $replace = _parse_block_rest( $self, 1, 'SPECIAL' );
+        $replace = _parse_block_rest( $self, BLOCK_OPEN_SCOPE, 'SPECIAL' );
     } else {
         $replace = _parse_string_rest( $self, $token->[4] );
     }
@@ -1149,17 +1152,47 @@ sub _parse_term {
     return undef;
 }
 
+sub _add_implicit_return {
+    my( $line ) = @_;
+
+    return $line unless $line->can_implicit_return;
+    if( !$line->is_compound ) {
+        return Language::P::ParseTree::Builtin->new
+                   ( { arguments => [ $line ],
+                       function  => 'return',
+                       } );
+    }
+
+    # compund and can implicitly return
+    if( $line->isa( 'Language::P::ParseTree::Block' ) && @{$line->lines} ) {
+        $line->lines->[-1] = _add_implicit_return( $line->lines->[-1] );
+    } elsif( $line->isa( 'Language::P::ParseTree::Conditional' ) ) {
+        _add_implicit_return( $_ ) foreach @{$line->iftrues};
+        _add_implicit_return( $line->iffalse ) if $line->iffalse;
+    } elsif( $line->isa( 'Language::P::ParseTree::ConditionalBlock' ) ) {
+        _add_implicit_return( $line->block )
+    } else {
+        Carp::confess( "Unhandled statement type: ", ref( $line ) );
+    }
+
+    return $line;
+}
+
 sub _parse_block_rest {
-    my( $self, $open_scope, $end_token ) = @_;
+    my( $self, $flags, $end_token ) = @_;
 
     $end_token ||= 'CLBRK';
-    $self->_enter_scope if $open_scope;
+    $self->_enter_scope if $flags & BLOCK_OPEN_SCOPE;
 
     my @lines;
     for(;;) {
         my $token = $self->lexer->lex( X_STATE );
         if( $token->[0] eq $end_token ) {
-            $self->_leave_scope if $open_scope;
+            if( $flags & BLOCK_IMPLICIT_RETURN && @lines ) {
+                $lines[-1] = _add_implicit_return( $lines[-1] );
+            }
+
+            $self->_leave_scope if $flags & BLOCK_OPEN_SCOPE;
             return Language::P::ParseTree::Block->new( { lines => \@lines } );
         } else {
             $self->lexer->unlex( $token );
@@ -1181,7 +1214,7 @@ sub _parse_indirobj {
     my $token = $self->lexer->lex( X_TERM );
 
     if( $token->[0] eq 'OPBRK' ) {
-        my $block = _parse_block_rest( $self, 1 );
+        my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
 
         return $block;
     } elsif( $token->[0] eq 'DOLLAR' ) {
