@@ -1062,12 +1062,16 @@ sub _parse_term_p {
                        } );
     } elsif( $token->[0] eq 'OPPAR' ) {
         my $term = _parse_expr( $self );
-        my $clpar = $self->lexer->lex( X_TERM );
+        _lex_token( $self, 'CLPAR' );
 
-        die $clpar->[0], ' ', $clpar->[1]
-          unless $clpar->[0] eq 'CLPAR';
-
-        return $term;
+        # record that there were prentheses, unless it is a list
+        if( !$term->isa( 'Language::P::ParseTree::List' ) ) {
+            return Language::P::ParseTree::Parentheses->new
+                       ( { left => $term,
+                           } );
+        } else {
+            return $term;
+        }
     }
 
     return undef;
