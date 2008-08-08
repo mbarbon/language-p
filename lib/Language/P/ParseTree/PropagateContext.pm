@@ -215,10 +215,10 @@ sub _cond_loop {
 sub _cond {
     my( $self, $tree, $cxt ) = @_;
 
-    $self->visit( $tree->iffalse->[2], CXT_VOID ) if $tree->iffalse;
+    $self->visit( $tree->iffalse->block, CXT_VOID ) if $tree->iffalse;
     foreach my $iftrue ( @{$tree->iftrues} ) {
-        $self->visit( $iftrue->[1], CXT_SCALAR );
-        $self->visit( $iftrue->[2], CXT_VOID );
+        $self->visit( $iftrue->condition, CXT_SCALAR );
+        $self->visit( $iftrue->block, CXT_VOID );
     }
 }
 

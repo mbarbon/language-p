@@ -302,9 +302,14 @@ sub _parse_cond {
 
     my $block = _parse_block_rest( $self, 1 );
 
-    my $if = Language::P::ParseTree::Conditional
-                 ->new( { iftrues => [ [ $cond->[1], $expr, $block ] ],
-                          } );
+    my $if = Language::P::ParseTree::Conditional->new
+                 ( { iftrues => [ Language::P::ParseTree::ConditionalBlock->new
+                                      ( { block_type => $cond->[1],
+                                          condition  => $expr,
+                                          block      => $block,
+                                          } )
+                                  ],
+                     } );
 
     for(;;) {
         my $else = $self->lexer->peek( X_STATE );
@@ -322,9 +327,17 @@ sub _parse_cond {
         my $block = _parse_block_rest( $self, 1 );
 
         if( $expr ) {
-            push @{$if->iftrues}, [ 'if', $expr, $block ];
+            push @{$if->iftrues}, Language::P::ParseTree::ConditionalBlock->new
+                                      ( { block_type => 'if',
+                                          condition  => $expr,
+                                          block      => $block,
+                                          } )
         } else {
-            $if->{iffalse} = [ 'else', undef, $block ];
+            $if->{iffalse} = Language::P::ParseTree::ConditionalBlock->new
+                                      ( { block_type => 'else',
+                                          condition  => undef,
+                                          block      => $block,
+                                          } )
         }
     }
 
@@ -448,7 +461,12 @@ sub _parse_sideff {
             my $cond = _parse_expr( $self );
 
             $expr = Language::P::ParseTree::Conditional->new
-                        ( { iftrues => [ [ $keyword->[1], $cond, $expr ] ],
+                        ( { iftrues => [ Language::P::ParseTree::ConditionalBlock->new
+                                             ( { block_type => $keyword->[1],
+                                                 condition  => $cond,
+                                                 block      => $expr,
+                                                 } )
+                                         ],
                             } );
         } elsif( $keyword->[1] eq 'while' || $keyword->[1] eq 'until' ) {
             _lex_token( $self, 'ID' );

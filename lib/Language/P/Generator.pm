@@ -494,18 +494,19 @@ sub _cond {
 
     my $end = _new_label;
     foreach my $elsif ( @{$tree->iftrues} ) {
-        my $is_unless = $elsif->[0] eq 'unless';
+        my $is_unless = $elsif->block_type eq 'unless';
         my( $true, $false ) = ( _new_label, _new_label );
-        $self->dispatch_cond( $elsif->[1], $is_unless ? ( $false, $true ) :
-                                                        ( $true, $false ) );
+        $self->dispatch_cond( $elsif->condition,
+                              $is_unless ? ( $false, $true ) :
+                                           ( $true, $false ) );
         _set_label( $true, scalar @bytecode );
-        $self->dispatch( $elsif->[2] );
+        $self->dispatch( $elsif->block );
         push @bytecode, o( 'jump' );
         _to_label( $end, $bytecode[-1] );
         _set_label( $false, scalar @bytecode );
     }
     if( $tree->iffalse ) {
-        $self->dispatch( $tree->iffalse->[2] );
+        $self->dispatch( $tree->iffalse->block );
     }
     _set_label( $end, scalar @bytecode );
 }

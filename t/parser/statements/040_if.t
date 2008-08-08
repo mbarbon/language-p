@@ -15,9 +15,15 @@ EOP
 --- !parsetree:Conditional
 iffalse: ~
 iftrues:
-  -
-    - if
-    - !parsetree:BinOp
+  - !parsetree:ConditionalBlock
+    block: !parsetree:Block
+      lines:
+        - !parsetree:Number
+          flags: NUM_INTEGER
+          type: number
+          value: 1
+    block_type: if
+    condition: !parsetree:BinOp
       context: CXT_SCALAR
       left: !parsetree:Symbol
         context: CXT_SCALAR
@@ -28,12 +34,6 @@ iftrues:
         flags: NUM_INTEGER
         type: number
         value: 2
-    - !parsetree:Block
-      lines:
-        - !parsetree:Number
-          flags: NUM_INTEGER
-          type: number
-          value: 1
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -44,9 +44,15 @@ EOP
 --- !parsetree:Conditional
 iffalse: ~
 iftrues:
-  -
-    - unless
-    - !parsetree:BinOp
+  - !parsetree:ConditionalBlock
+    block: !parsetree:Block
+      lines:
+        - !parsetree:Number
+          flags: NUM_INTEGER
+          type: number
+          value: 1
+    block_type: unless
+    condition: !parsetree:BinOp
       context: CXT_SCALAR
       left: !parsetree:Symbol
         context: CXT_SCALAR
@@ -57,12 +63,6 @@ iftrues:
         flags: NUM_INTEGER
         type: number
         value: 2
-    - !parsetree:Block
-      lines:
-        - !parsetree:Number
-          flags: NUM_INTEGER
-          type: number
-          value: 1
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -73,19 +73,25 @@ if( $a < 2 ) {
 }
 EOP
 --- !parsetree:Conditional
-iffalse:
-  - else
-  - ~
-  - !parsetree:Block
+iffalse: !parsetree:ConditionalBlock
+  block: !parsetree:Block
     lines:
       - !parsetree:Number
         flags: NUM_INTEGER
         type: number
         value: 3
+  block_type: else
+  condition: ~
 iftrues:
-  -
-    - if
-    - !parsetree:BinOp
+  - !parsetree:ConditionalBlock
+    block: !parsetree:Block
+      lines:
+        - !parsetree:Number
+          flags: NUM_INTEGER
+          type: number
+          value: 1
+    block_type: if
+    condition: !parsetree:BinOp
       context: CXT_SCALAR
       left: !parsetree:Symbol
         context: CXT_SCALAR
@@ -96,12 +102,6 @@ iftrues:
         flags: NUM_INTEGER
         type: number
         value: 2
-    - !parsetree:Block
-      lines:
-        - !parsetree:Number
-          flags: NUM_INTEGER
-          type: number
-          value: 1
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -114,19 +114,25 @@ if( $a < 2 ) {
 }
 EOP
 --- !parsetree:Conditional
-iffalse:
-  - else
-  - ~
-  - !parsetree:Block
+iffalse: !parsetree:ConditionalBlock
+  block: !parsetree:Block
     lines:
       - !parsetree:Number
         flags: NUM_INTEGER
         type: number
         value: 3
+  block_type: else
+  condition: ~
 iftrues:
-  -
-    - if
-    - !parsetree:BinOp
+  - !parsetree:ConditionalBlock
+    block: !parsetree:Block
+      lines:
+        - !parsetree:Number
+          flags: NUM_INTEGER
+          type: number
+          value: 1
+    block_type: if
+    condition: !parsetree:BinOp
       context: CXT_SCALAR
       left: !parsetree:Symbol
         context: CXT_SCALAR
@@ -137,15 +143,15 @@ iftrues:
         flags: NUM_INTEGER
         type: number
         value: 2
-    - !parsetree:Block
+  - !parsetree:ConditionalBlock
+    block: !parsetree:Block
       lines:
         - !parsetree:Number
           flags: NUM_INTEGER
           type: number
-          value: 1
-  -
-    - if
-    - !parsetree:BinOp
+          value: 2
+    block_type: if
+    condition: !parsetree:BinOp
       context: CXT_SCALAR
       left: !parsetree:Symbol
         context: CXT_SCALAR
@@ -156,10 +162,4 @@ iftrues:
         flags: NUM_INTEGER
         type: number
         value: 3
-    - !parsetree:Block
-      lines:
-        - !parsetree:Number
-          flags: NUM_INTEGER
-          type: number
-          value: 2
 EOE
