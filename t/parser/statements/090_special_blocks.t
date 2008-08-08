@@ -14,10 +14,14 @@ BEGIN {
 EOP
 --- !parsetree:Subroutine
 lines:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
-    value: 1
+  - !parsetree:Builtin
+    arguments:
+      - !parsetree:Number
+        flags: NUM_INTEGER
+        type: number
+        value: 1
+    context: CXT_CALLER
+    function: return
 name: BEGIN
 EOE
 
@@ -28,10 +32,14 @@ sub END {
 EOP
 --- !parsetree:Subroutine
 lines:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
-    value: 1
+  - !parsetree:Builtin
+    arguments:
+      - !parsetree:Number
+        flags: NUM_INTEGER
+        type: number
+        value: 1
+    context: CXT_CALLER
+    function: return
 name: END
 EOE
 
@@ -42,9 +50,13 @@ END {
 EOP
 --- !parsetree:Subroutine
 lines:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
-    value: 1
+  - !parsetree:Builtin
+    arguments:
+      - !parsetree:Number
+        flags: NUM_INTEGER
+        type: number
+        value: 1
+    context: CXT_CALLER
+    function: return
 name: END
 EOE

@@ -135,7 +135,11 @@ sub finished {
     $self->_allocate_lexicals;
 
     if( $code_stack[-1][0]->isa( 'Language::P::Value::Subroutine' ) ) {
-        push @bytecode, o( 'return' );
+        # could be avoided in most cases, but simplifies code generation
+        push @bytecode,
+            o( 'start_list' ),
+            o( 'end_list' ),
+            o( 'return' );
     } else {
         push @bytecode, o( 'end' );
     }
@@ -370,7 +374,7 @@ sub _binary_op {
 
         _set_label( $end, scalar @bytecode );
     } else {
-        $self->dispatch( $tree->right, $tree->op eq '=~' ? 1 : 0 );
+        $self->dispatch( $tree->right );
         $self->dispatch( $tree->left );
 
         push @bytecode, o( $builtins{$tree->op} );
@@ -601,9 +605,7 @@ sub _subscript {
 }
 
 sub _pattern {
-    my( $self, $tree, $explicit_bind ) = @_;
-
-    die "Pattern not bound by match operator" unless $explicit_bind;
+    my( $self, $tree ) = @_;
 
     my $re = $self->process_regex( $tree );
     push @bytecode, o( 'constant', value => $re );

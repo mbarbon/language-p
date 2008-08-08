@@ -48,6 +48,8 @@ use base qw(Class::Accessor::Fast);
 sub is_bareword { 0 }
 sub is_constant { 0 }
 sub is_symbol { 0 }
+sub is_compound { 0 }
+sub can_implicit_return { 1 }
 sub lvalue_context { Language::P::ParseTree::CXT_SCALAR }
 
 sub _fields {
@@ -246,6 +248,8 @@ our @FIELDS = qw(lines);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub is_compound { 1 }
+
 package Language::P::ParseTree::Subroutine;
 
 use strict;
@@ -345,6 +349,8 @@ our @FIELDS = qw(iftrues iffalse);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub is_compound { 1 }
+
 package Language::P::ParseTree::ConditionalBlock;
 
 use strict;
@@ -355,11 +361,16 @@ our @FIELDS = qw(condition block block_type);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub is_compound { 1 }
+
 package Language::P::ParseTree::ConditionalLoop;
 
 use strict;
 use warnings;
 use base qw(Language::P::ParseTree::ConditionalBlock);
+
+sub can_implicit_return { 0 }
+sub is_compound { 1 }
 
 package Language::P::ParseTree::For;
 
@@ -371,6 +382,8 @@ our @FIELDS = qw(initializer step);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub is_compound { 1 }
+
 package Language::P::ParseTree::Foreach;
 
 use strict;
@@ -380,6 +393,9 @@ use base qw(Language::P::ParseTree::Node);
 our @FIELDS = qw(expression block variable);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
+
+sub can_implicit_return { 0 }
+sub is_compound { 1 }
 
 package Language::P::ParseTree::Ternary;
 
@@ -415,6 +431,7 @@ my %prototype_bi =
     );
 
 sub parsing_prototype { return $prototype_bi{$_[0]->function} }
+sub can_implicit_return { return $_[0]->function eq 'return' ? 0 : 1 }
 
 package Language::P::ParseTree::Print;
 
