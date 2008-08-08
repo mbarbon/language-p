@@ -1198,7 +1198,7 @@ sub _parse_block_rest {
             $self->lexer->unlex( $token );
             my $line = _parse_line( $self );
 
-            push @lines, $line;
+            push @lines, $line if $line; # skip empty satements
         }
     }
 }
