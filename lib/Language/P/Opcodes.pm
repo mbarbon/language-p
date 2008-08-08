@@ -391,7 +391,7 @@ sub o_abs {
     my( $op, $runtime, $pc ) = @_;
     my $v = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new( { float => abs $v->get_item( 0 )->as_float } );
+    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new( { float => abs $v->as_float } );
 
     return $pc + 1;
 }
