@@ -18,6 +18,5 @@ my $build = My::Build->new
           'perl'              => '5.8.3',
           },
     recursive_test_files => 1,
-    test_files           => 't/parser t/runtime',
     );
 $build->create_build_script;
