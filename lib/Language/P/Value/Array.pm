@@ -35,9 +35,14 @@ sub clone {
 sub assign {
     my( $self, $other ) = @_;
 
-    # FIXME optimize: don't do it unless necessary
-    my $oiter = $other->clone( 1 )->iterator;
-    $self->assign_iterator( $oiter );
+    # FIXME multiple dispatch
+    if( $other->isa( 'Language::P::Value::Scalar' ) ) {
+        $self->{array} = [ $other->clone( 1 ) ];
+    } else {
+        # FIXME optimize: don't do it unless necessary
+        my $oiter = $other->clone( 1 )->iterator;
+        $self->assign_iterator( $oiter );
+    }
 }
 
 sub assign_iterator {
@@ -72,7 +77,7 @@ sub iterator_from {
 sub get_item {
     my( $self, $index ) = @_;
 
-    die "Array index out of range ($index > $#{$self->{array}})"
+    Carp::confess "Array index out of range ($index > $#{$self->{array}})"
         if $index < 0 || $index > $#{$self->{array}};
 
     return $self->{array}->[$index];
