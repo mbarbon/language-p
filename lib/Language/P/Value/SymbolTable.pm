@@ -4,18 +4,18 @@ use strict;
 use warnings;
 use base qw(Language::P::Value::Any);
 
-__PACKAGE__->mk_ro_accessors( qw(symbols is_main) );
+__PACKAGE__->mk_ro_accessors( qw(symbols) );
 
 use Language::P::Value::Typeglob;
 
 sub type { 7 }
+sub is_main { 0 }
 
 sub new {
     my( $class, $args ) = @_;
     my $self = $class->SUPER::new( $args );
 
     $self->{symbols} ||= {};
-    $self->{is_main} ||= 0;
 
     return $self;
 }
@@ -28,7 +28,7 @@ sub get_package {
     die 'Implement me';
 }
 
-my %sigils =
+our %sigils =
   ( '$'  => [ 'scalar',     'Language::P::Value::Scalar' ],
     '@'  => [ 'array',      'Language::P::Value::Array' ],
     '%'  => [ 'hash',       'Language::P::Value::Hash' ],
@@ -41,6 +41,13 @@ my %sigils =
 
 sub get_symbol {
     my( $self, $name, $sigil, $create ) = @_;
+    my( $symbol, $created ) = $self->_get_symbol( $name, $sigil, $create );
+
+    return $symbol;
+}
+
+sub _get_symbol {
+    my( $self, $name, $sigil, $create ) = @_;
     my( @packages ) = split /::/, $name;
 
     my $index = 0;
@@ -49,17 +56,19 @@ sub get_symbol {
         if( $index == $#packages ) {
             return $current if $sigil eq '::';
             my $glob = $current->{symbols}{$package};
-            return undef if !$glob && !$create;
+            my $created = 0;
+            return ( undef, $created ) if !$glob && !$create;
             if( !$glob ) {
+                $created = 1;
                 $glob = $current->{symbols}{$package} =
                     Language::P::Value::Typeglob->new;
             }
-            return $glob if $sigil eq '*';
-            return $glob->get_slot( $sigils{$sigil}[0] );
+            return ( $glob, $created ) if $sigil eq '*';
+            return ( $glob->get_slot( $sigils{$sigil}[0] ), $created );
         } else {
             my $subpackage = $package . '::';
             if( !exists $current->{symbols}{$subpackage} ) {
-                return undef unless $create;
+                return ( undef, 0 ) unless $create;
 
                 $current = $current->{symbols}{$subpackage} =
                   Language::P::Value::SymbolTable->new;
