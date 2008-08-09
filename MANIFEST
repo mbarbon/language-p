@@ -16,11 +16,13 @@ lib/Language/P/ParseTree/Visitor.pm
 lib/Language/P/Parser.pm
 lib/Language/P/Parser/Regex.pm
 lib/Language/P/Runtime.pm
+lib/Language/P/Value/ActiveScalar.pm
 lib/Language/P/Value/Any.pm
 lib/Language/P/Value/Array.pm
 lib/Language/P/Value/Code.pm
 lib/Language/P/Value/Handle.pm
 lib/Language/P/Value/List.pm
+lib/Language/P/Value/MainSymbolTable.pm
 lib/Language/P/Value/Reference.pm
 lib/Language/P/Value/Regex.pm
 lib/Language/P/Value/Scalar.pm

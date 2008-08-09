@@ -4,18 +4,25 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
-use Language::P::Value::SymbolTable;
+use Language::P::Value::MainSymbolTable;
 use Language::P::ParseTree qw(:all);
 
-__PACKAGE__->mk_ro_accessors( qw(symbol_table) );
+__PACKAGE__->mk_ro_accessors( qw(symbol_table _variables) );
+
+our $current;
 
 sub new {
     my( $class, $args ) = @_;
+
+    Carp::confess( "Only one runtime supported" ) if $current;
+
     my $self = $class->SUPER::new( $args );
 
-    $self->{symbol_table} ||= Language::P::Value::SymbolTable->new;
+    $self->{symbol_table} ||= Language::P::Value::MainSymbolTable->new;
+    $self->{_variables} = { osname      => $^O,
+                            };
 
-    return $self;
+    return $current = $self;
 }
 
 sub reset {

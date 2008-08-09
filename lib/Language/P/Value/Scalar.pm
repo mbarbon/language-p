@@ -23,7 +23,7 @@ sub assign {
 sub assign_iterator {
     my( $self, $iter ) = @_;
 
-    die unless $iter->next; # FIXME
+    die unless $iter->next; # FIXME, must assign undef
     $self->assign( $iter->item );
 }
 
