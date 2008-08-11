@@ -1,17 +1,13 @@
 Parsing:
 - scalar/array/void context
-  - some binary operators do not force scalar context (assignment)
   - prototypes
   - splice/substr/lvalue subroutines
 - stashes
 - global variables/symbols (STDOUT!)
 - local variables
 - scoping
-- lexing of quoted strings
-- conditional constructs
 - do/require/use/eval
-- undef
-- garbage collection
+- eval {block}
 - labels
 - subroutine prototypes
   - parsing
@@ -33,7 +29,9 @@ Parsing:
 - parsing of nullary/unary vs. list operators
 - => must also quote qw/qx/s/etc.
 - quoting inside ->{}, also of {s}, etc.
-- \Q\L\U\E in quoted strings/patterns
+- quoted strings
+  - \Q\L\U\E in quoted strings/patterns
+  - \xaf, \011,etc when lexing quoted strings
 - regexp
   - char classes and other metacharacters
   - backreferences, also in substitution
@@ -44,7 +42,6 @@ Parsing:
   - context-dependent bexaviour
   - always a pattern after =~/!~
 - intuit_more, esp. inside patterns
-- \xaf, \011,etc when lexing quoted strings
 
 Runtime:
 - integer -> float on overflow (also in parsing!)
@@ -63,6 +60,7 @@ Runtime:
 - array/list/hash assignment
   - optimize lists with common assignments
   - check mixed assignments
+- garbage collection
 
 Refactoring:
 - check offsets for call sequence, refactor stack handling
