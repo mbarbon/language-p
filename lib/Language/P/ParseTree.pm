@@ -428,6 +428,7 @@ my %prototype_bi =
     defined     => [  0,  1, '#' ],
     return      => [ -1, -1, '@' ],
     undef       => [  0,  1, '$' ],
+    eval        => [  0,  1, '$' ],
     );
 
 sub parsing_prototype { return $prototype_bi{$_[0]->function} }
