@@ -42,6 +42,7 @@ sub new {
     $self->{buffer} = ref $a ? $a : \$a;
     $self->{tokens} = [];
     $self->{brackets} = 0;
+    $self->{pending_brackets} = [];
 
     return $self;
 }
@@ -329,6 +330,10 @@ sub lex_identifier {
 
         if( $$_ =~ s/^}//x ) {
             $id = [ 'ID', $maybe_id ];
+        } elsif( $$_ =~ /^\[|^\{/ ) {
+            ++$self->{brackets};
+            push @{$self->{pending_brackets}}, $self->{brackets};
+            $id = [ 'ID', $maybe_id ];
         } else {
             # not a simple identifier
             $$_ = '{' . $spcbef . $maybe_id . $spcaft . $$_;
@@ -597,21 +602,28 @@ sub lex {
     $$_ =~ s/^([\*%@&])//x and do {
         return [ $ops{$1}, $1 ];
     };
-    if( $self->quote ) {
-        $$_ =~ s/^([{}\[\]])// and do {
-            if( $1 eq '[' || $1 eq '{' ) {
-                ++$self->{brackets};
-            } else {
+    $$_ =~ s/^([{}\[\]])// and do {
+        if( $1 eq '[' || $1 eq '{' ) {
+            ++$self->{brackets};
+        } else {
+            if(    $1 eq '}'
+                && @{$self->{pending_brackets}}
+                && $self->{pending_brackets}[-1] == $self->{brackets} ) {
+                pop @{$self->{pending_brackets}};
                 --$self->{brackets};
 
-                if( $self->{brackets} == 0 ) {
-                    _quoted_code_lookahead( $self );
-                }
+                return $self->lex( $expect );
             }
 
-            return [ $ops{$1}, $1 ];
-        };
-    }
+            --$self->{brackets};
+
+            if( $self->{brackets} == 0 && $self->quote ) {
+                _quoted_code_lookahead( $self );
+            }
+        }
+
+        return [ $ops{$1}, $1 ];
+    };
     $$_ =~ s/^\///x and do {
         if( $expect == X_TERM || $expect == X_STATE ) {
             return _prepare_sublex( $self, 'm', '/' );
@@ -619,7 +631,7 @@ sub lex {
             return [ 'SLASH', '/' ];
         }
     };
-    $$_ =~ s/^([:;,(){}\[\]\?<>!=\/\\\+\-\.])//x and return [ $ops{$1}, $1 ];
+    $$_ =~ s/^([:;,()\?<>!=\/\\\+\-\.])//x and return [ $ops{$1}, $1 ];
 
     die "Lexer error: '$$_'";
 }
