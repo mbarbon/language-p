@@ -541,7 +541,7 @@ sub _parse_maybe_subscript_rest {
     # array/hash element
     if( $next->[0] eq 'ARROW' ) {
         _lex_token( $self, 'ARROW' );
-        my $bracket = $self->lexer->peek;
+        my $bracket = $self->lexer->peek( X_OPERATOR );
 
         if(    $bracket->[0] eq 'OPPAR'
             || $bracket->[0] eq 'OPSQ'
@@ -885,7 +885,7 @@ sub _parse_term_terminal {
                   || $token->[1] eq 'state' ) ) {
         return _parse_lexical( $self, $token->[1] );
     } elsif( $token->[0] eq 'ID' ) {
-        my $next = $self->lexer->peek( X_OPERATOR );
+        my $next = $self->lexer->peek( X_TERM );
 
         if( $next->[0] eq 'COMMA' && $next->[1] eq '=>' ) {
             # quoted by fat arrow
@@ -1280,7 +1280,6 @@ sub _parse_listop {
     my( $self, $op ) = @_;
     my $next = $self->lexer->peek( X_TERM );
 
-    my $is_print = $op->[1] eq 'print';
     my( $call, $declared ) = _declared_id( $self, $op );
     my( $args, $fh );
 

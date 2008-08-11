@@ -498,6 +498,51 @@ sub _prepare_sublex {
     return $token;
 }
 
+sub _prepare_sublex_heredoc {
+    my( $self ) = @_;
+    my( $quote, $str, $end ) = ( '"', '' );
+
+    local $_ = $self->buffer;
+
+    if( $$_ =~ s/^[ \t]*(['"`])// ) {
+        # << "EOT", << 'EOT', << `EOT`
+        $quote = $1;
+
+        while( $$_ =~ s/^(.*?)(\\)?($quote)// ) {
+            $end .= $1;
+            if( !$2 ) {
+                last;
+            } else {
+                $end .= $quote;
+            }
+        }
+    } else {
+        # <<\EOT, <<EOT
+        if( $$_ =~ s/\\// ) {
+            $quote = "'";
+        }
+
+        $$_ =~ s/^(\w*)//;
+        warn "Deprecated" unless $1;
+        $end = $1;
+    }
+    $end .= "\n";
+
+    my $stream = $self->stream;
+    my $finished = 0;
+    while( defined( my $line = readline $stream ) ) {
+        if( $line eq $end ) {
+            $finished = 1;
+            last;
+        }
+        $str .= $line;
+    }
+
+    Carp::confess "EOF while looking for terminator" unless $finished;
+
+    return [ 'QUOTE', $quote, $quote, \$str ];
+}
+
 sub lex {
     my( $self, $expect ) = ( @_, X_NOTHING );
 
@@ -527,6 +572,8 @@ sub lex {
 
         if( $1 eq '<' ) {
             return _prepare_sublex( $self, '<', '<' );
+        } elsif( $1 eq '<<' ) {
+            return _prepare_sublex_heredoc( $self );
         }
     };
     $$_ =~ s/^(<=|>=|==|!=|=>|->
