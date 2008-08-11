@@ -55,6 +55,7 @@ t/parser/terms/006_numbers.t
 t/parser/terms/050_my.t
 t/parser/terms/080_quoted_string.t
 t/parser/terms/081_quote_like.t
+t/parser/terms/082_heredoc.t
 t/parser/terms/085_pattern.t
 t/parser/terms/086_substitution.t
 t/parser/terms/105_dereference.t
