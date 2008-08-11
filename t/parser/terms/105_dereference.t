@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 6;
+use Test::More tests => 9;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -102,4 +102,71 @@ left: !parsetree:Symbol
   name: a
   sigil: $
 op: '*'
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+${foo{2}}
+EOP
+--- !parsetree:Subscript
+context: CXT_VOID
+reference: 0
+subscript: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 2
+subscripted: !parsetree:Symbol
+  context: CXT_LIST
+  name: foo
+  sigil: '%'
+type: '{'
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+${foo{2}[1]}
+EOP
+--- !parsetree:Subscript
+context: CXT_VOID
+reference: 1
+subscript: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 1
+subscripted: !parsetree:Subscript
+  context: CXT_SCALAR|CXT_VIVIFY
+  reference: 0
+  subscript: !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 2
+  subscripted: !parsetree:Symbol
+    context: CXT_LIST
+    name: foo
+    sigil: '%'
+  type: '{'
+type: '['
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+${foo{2}}[1]
+EOP
+--- !parsetree:Subscript
+context: CXT_VOID
+reference: 1
+subscript: !parsetree:Number
+  flags: NUM_INTEGER
+  type: number
+  value: 1
+subscripted: !parsetree:Subscript
+  context: CXT_SCALAR|CXT_VIVIFY
+  reference: 0
+  subscript: !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 2
+  subscripted: !parsetree:Symbol
+    context: CXT_LIST
+    name: foo
+    sigil: '%'
+  type: '{'
+type: '['
 EOE
