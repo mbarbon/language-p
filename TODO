@@ -43,6 +43,7 @@ Parsing:
   - context-dependent bexaviour
   - always a pattern after =~/!~
 - intuit_more, esp. inside patterns
+- correct parsing of heredoc in substritutions (s//<<HEREDOC/e)
 
 Runtime:
 - integer -> float on overflow (also in parsing!)
