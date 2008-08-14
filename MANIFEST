@@ -45,6 +45,7 @@ t/parser/expressions/021_list_op.t
 t/parser/expressions/024_or_low.t
 t/parser/loops/001_block.t
 t/parser/regex/002_base.t
+t/parser/regex/010_character_classes.t
 t/parser/statements/034_return.t
 t/parser/statements/035_postfix.t
 t/parser/statements/040_if.t

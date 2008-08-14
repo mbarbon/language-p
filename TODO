@@ -37,7 +37,12 @@ Parsing:
   - \Q\L\U\E in quoted strings/patterns
   - \xaf, \011,etc when lexing quoted strings
 - regexp
-  - char classes and other metacharacters
+  - char classes
+    - [a-\w] is not a range
+    - [a-] is not a range
+    - [[] is a "["
+    - ^ negation
+  - other metacharacters
   - backreferences, also in substitution
   - magic variables
   - (?...) syntax and grouping

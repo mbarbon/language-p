@@ -24,8 +24,8 @@ right: !parsetree:Pattern
     - !parsetree:Constant
       type: string
       value: "\ntest"
-    - !parsetree:RXClass
-      elements: WORDS
+    - !parsetree:RXSpecialClass
+      type: WORDS
   flags: ~
   op: m
 EOE
