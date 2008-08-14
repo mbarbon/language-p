@@ -28,7 +28,10 @@ Parsing:
 - packages
 - package handling in our()
 - parsing of nullary/unary vs. list operators
-- => must also quote qw/qx/s/etc.
+- => auto-quoting
+  - => must also quote qw/qx/s/etc.
+  - => must only quote barwords
+  - => quoting of -foo => 1
 - quoting inside ->{}, also of {s}, etc.
 - quoted strings
   - \Q\L\U\E in quoted strings/patterns

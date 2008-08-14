@@ -878,6 +878,11 @@ sub _parse_term_terminal {
         return Language::P::ParseTree::Number->new( { value => $token->[1],
                                                       flags => $token->[2],
                                                       } );
+    } elsif( $token->[0] eq 'STRING' ) {
+        return Language::P::ParseTree::Constant->new
+                   ( { value => $token->[1],
+                       type  => 'string',
+                       } );
     } elsif( $token->[1] eq '$#' || $token->[1] =~ /[\*\$%@&]/ ) {
         return _parse_indirobj_maybe_subscripts( $self, $token );
     } elsif(    $token->[0] eq 'ID' && $token->[2] == T_KEYWORD
@@ -885,16 +890,6 @@ sub _parse_term_terminal {
                   || $token->[1] eq 'state' ) ) {
         return _parse_lexical( $self, $token->[1] );
     } elsif( $token->[0] eq 'ID' ) {
-        my $next = $self->lexer->peek( X_TERM );
-
-        if( $next->[0] eq 'COMMA' && $next->[1] eq '=>' ) {
-            # quoted by fat arrow
-            return Language::P::ParseTree::Constant->new
-                       ( { value => $token->[1],
-                           type  => 'string',
-                           } );
-        }
-
         return _parse_listop( $self, $token );
     }
 
