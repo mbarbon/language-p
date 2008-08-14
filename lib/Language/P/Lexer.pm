@@ -428,7 +428,10 @@ sub _find_end {
         if( $$_ =~ /^[\s\r\n]/ ) {
             _skip_space( $self );
         }
-        $$_ =~ s/(\S)// or die;
+        # if we find a fat comma, we got a string constant, not the
+        # start of a quoted string!
+        $$_ =~ /^=>/ and return [ 'STRING', $op ];
+        $$_ =~ s/^(\S)// or die;
         $quote_start = $1;
     }
 
@@ -483,6 +486,9 @@ sub _find_end {
 sub _prepare_sublex {
     my( $self, $op, $quote_start ) = @_;
     my $token = _find_end( $self, $op, $quote_start );
+
+    # oops, found fat comma: not a quote-like operator
+    return $token if $token->[0] eq 'STRING';
 
     # scan second part of substitution/transliteration
     if( $op eq 's' || $op eq 'tr' || $op eq 'y' ) {
@@ -563,12 +569,20 @@ sub lex {
     $$_ =~ s/^(q|qq|qx|qw|m|qr|s|tr|y)(?=\W)//x and
         return _prepare_sublex( $self, $1, undef );
     $$_ =~ s/^(\w+)//x and do {
-        if( $ops{$1} ) {
-            return [ $ops{$1}, $1 ];
+        my $id = $1;
+
+        # look ahead for fat comma
+        _skip_space( $self );
+        if( $$_ =~ /^=>/ ) {
+            return [ 'STRING', $id ];
         }
-        return [ 'ID', $1, $keywords{$1}     ? T_KEYWORD :
-                           $overridables{$1} ? T_OVERRIDABLE :
-                                               T_ID
+
+        if( $ops{$id} ) {
+            return [ $ops{$id}, $id ];
+        }
+        return [ 'ID', $id, $keywords{$id}     ? T_KEYWORD :
+                            $overridables{$id} ? T_OVERRIDABLE :
+                                                 T_ID
                  ];
     };
     $$_ =~ s/^(["'`])//x and return _prepare_sublex( $self, $1, $1 );
