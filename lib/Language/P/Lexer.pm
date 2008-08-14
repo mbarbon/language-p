@@ -175,15 +175,76 @@ sub _skip_space {
     return $retval;
 }
 
+# taken from intuit_more in toke.c
+sub _character_class_insanity {
+    my( $self ) = @_;
+    my $buffer = $self->buffer;
+
+    if( $$buffer =~ /^\]|^\^/ ) {
+        return 1;
+    }
+
+    my( $t ) = $$buffer =~ /^(.*\])/;
+    my $w = 2;
+    my( $un_char, $last_un_char, @seen ) = ( 255 );
+
+    return 1 if !defined $t;
+
+    if( $t =~ /^\$/ ) {
+        $w -= 3;
+    } elsif( $t =~ /^[0-9][0-9]\]/ ) {
+        $w -= 10
+    } elsif( $t =~ /^[0-9]\]/ ) {
+        $w -= 100;
+    } elsif( $t =~ /^\$\w+/ ) {
+        # HACK, not in original
+        $w -= 100;
+    }
+
+    for(;;) {
+        last;
+    }
+
+    return $w >= 0 ? 1 : 0;
+}
+
+# taken from intuit_more in toke.c
 sub _quoted_code_lookahead {
     my( $self ) = @_;
+    my $buffer = $self->buffer;
 
-    # FIXME intuit_more
-    # force the parser to stop parsing code
-    my $token = $self->lex_quote;
-    $self->unlex( $token );
-
-    return 0;
+    if( $$buffer =~ s/^->([{[])// ) {
+        ++$self->{brackets};
+        $self->unlex( [ $ops{$1}, $1 ] );
+        $self->unlex( [ 'ARROW', '->' ] );
+    } elsif( $$buffer =~ s/^{// ) {
+        if( !$self->quote->{interpolated_pattern} ) {
+            ++$self->{brackets};
+            $self->unlex( [ 'OPBRK', '{' ] );
+        } elsif( $$buffer =~ /^[0-9]+,[0-9]*}/ ) {
+            die 'Quantifier!';
+        } else {
+            ++$self->{brackets};
+            $self->unlex( [ 'OPBRK', '{' ] );
+        }
+    } elsif( $$buffer =~ s/^\[// ) {
+        if( !$self->quote->{interpolated_pattern} ) {
+            ++$self->{brackets};
+            $self->unlex( [ 'OPSQ', '[' ] );
+        } else {
+            if( _character_class_insanity( $self ) ) {
+                $$buffer = '[' . $$buffer;
+                my $token = $self->lex_quote;
+                $self->unlex( $token );
+            } else {
+                ++$self->{brackets};
+                $self->unlex( [ 'OPSQ', '[' ] );
+            }
+        }
+    } else {
+        my $token = $self->lex_quote;
+        $self->unlex( $token );
+    }
 }
 
 sub lex_pattern_group {
@@ -578,7 +639,7 @@ sub _prepare_sublex_heredoc {
         $str .= $line;
     }
 
-    Carp::confess "EOF while looking for terminator" unless $finished;
+    Carp::confess "EOF while looking for terminator '$end'" unless $finished;
 
     return [ 'QUOTE', $quote, $quote, \$str ];
 }
