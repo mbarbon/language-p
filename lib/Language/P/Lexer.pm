@@ -241,7 +241,8 @@ sub lex_quote {
         while( length $$buffer ) {
             my $c = substr $$buffer, 0, 1, '';
 
-            if( $self->quote->{pattern} ) {
+            if(    $self->quote->{pattern}
+                && !$self->quote->{interpolated_pattern} ) {
                 if( $c eq '\\' ) {
                     my $qc = substr $$buffer, 0, 1;
 
@@ -299,7 +300,12 @@ sub lex_quote {
                     $v .= $qc;
                 }
             } elsif( $c =~ /^[\$\@]$/ && $self->quote->{interpolate} ) {
-                if( length $v ) {
+                if(    $self->quote->{interpolated_pattern}
+                    && (    !length( $$buffer )
+                         || index( "()| \r\n\t",
+                                   substr( $$buffer, 0, 1 ) ) != -1 ) ) {
+                    $v .= $c;
+                } elsif( length $v ) {
                     $self->unlex( [ $ops{$c}, $c ] );
 
                     return [ 'STRING', $v ];

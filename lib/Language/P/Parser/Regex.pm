@@ -25,8 +25,9 @@ sub _parse {
     my( $self ) = @_;
     my( @values );
 
-    $self->lexer->quote( { interpolate => $self->interpolate,
-                           pattern     => 1,
+    $self->lexer->quote( { interpolate          => $self->interpolate,
+                           pattern              => 1,
+                           interpolated_pattern => 0,
                            } );
 
     my( $in_group, $st ) = ( 0, \@values );

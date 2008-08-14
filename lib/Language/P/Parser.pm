@@ -700,7 +700,7 @@ sub _parse_match {
     my( $self, $token ) = @_;
 
     if( $token->[6] ) {
-        my $string = _parse_string_rest( $self, $token );
+        my $string = _parse_string_rest( $self, $token, 1 );
         my $match = Language::P::ParseTree::InterpolatedPattern->new
                         ( { string     => $string,
                             op         => $token->[1],
@@ -717,11 +717,11 @@ sub _parse_match {
                             runtime     => $self->runtime,
                             interpolate => $interpolate,
                             } )->parse_string( $token->[3] );
-    my $match = Language::P::ParseTree::Pattern->new
-                    ( { components => $parts,
-                        op         => $token->[1],
-                        flags      => $token->[5],
-                        } );
+        my $match = Language::P::ParseTree::Pattern->new
+                        ( { components => $parts,
+                            op         => $token->[1],
+                            flags      => $token->[5],
+                            } );
 
         return $match;
     }
@@ -737,7 +737,7 @@ sub _parse_substitution {
                                    ( { string => $token->[4]->[3] } );
         $replace = _parse_block_rest( $self, BLOCK_OPEN_SCOPE, 'SPECIAL' );
     } else {
-        $replace = _parse_string_rest( $self, $token->[4] );
+        $replace = _parse_string_rest( $self, $token->[4], 0 );
     }
 
     my $sub = Language::P::ParseTree::Substitution->new
@@ -749,7 +749,7 @@ sub _parse_substitution {
 }
 
 sub _parse_string_rest {
-    my( $self, $token ) = @_;
+    my( $self, $token, $pattern ) = @_;
     my( $quote, $terminator ) = ( $token->[1], $token->[2] );
     my $interpolate = $quote eq 'qq'     ? 1 :
                       $quote eq 'q'      ? 0 :
@@ -759,8 +759,9 @@ sub _parse_string_rest {
     my @values;
     local $self->{lexer} = Language::P::Lexer->new( { string => $token->[3] } );
 
-    $self->lexer->quote( { interpolate => $interpolate,
-                           pattern     => 0,
+    $self->lexer->quote( { interpolate          => $interpolate,
+                           pattern              => 0,
+                           interpolated_pattern => $pattern,
                            } );
     for(;;) {
         my $value = $self->lexer->lex_quote;
@@ -818,7 +819,7 @@ sub _parse_term_terminal {
     my( $self, $token, $is_bind ) = @_;
 
     if( $token->[0] eq 'QUOTE' ) {
-        my $qstring = _parse_string_rest( $self, $token );
+        my $qstring = _parse_string_rest( $self, $token, 0 );
 
         if( $token->[1] eq '<' ) {
             # simple scalar: readline, anything else: glob
