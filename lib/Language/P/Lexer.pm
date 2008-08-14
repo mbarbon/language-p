@@ -299,19 +299,25 @@ sub lex_quote {
         }
 
         my $to_return;
+        my $pattern = $self->quote->{pattern};
+        my $interpolated_pattern = $self->quote->{interpolated_pattern};
         while( length $$buffer ) {
             my $c = substr $$buffer, 0, 1, '';
 
-            if(    $self->quote->{pattern}
-                && !$self->quote->{interpolated_pattern} ) {
+            if( $pattern || $interpolated_pattern ) {
                 if( $c eq '\\' ) {
                     my $qc = substr $$buffer, 0, 1;
 
-                    if( $quoted_pattern{$qc} ) {
+                    if( my $qp = $quoted_pattern{$qc} ) {
                         substr $$buffer, 0, 1, ''; # eat character
-                        $to_return = [ 'PATTERN', $qc, $quoted_pattern{$qc} ];
+                        if( $pattern ) {
+                            $to_return = [ 'PATTERN', $qc, $qp ];
+                        } else {
+                            $v .= $c . $qc;
+                            next;
+                        }
                     }
-                } elsif( $c eq '(' ) {
+                } elsif( $c eq '(' && !$interpolated_pattern ) {
                     my $nc = substr $$buffer, 0, 1;
 
                     if( $nc eq '?' ) {
@@ -320,9 +326,8 @@ sub lex_quote {
                     } else {
                         $to_return = [ 'PATTERN', '(' ];
                     }
-                } elsif( $pattern_special{$c} ) {
-                    my $special = $pattern_special{$c};
-
+                } elsif(     !$interpolated_pattern
+                         and my $special = $pattern_special{$c} ) {
                     # check nongreedy quantifiers
                     if( $special->[0] eq 'QUANTIFIER' ) {
                         my $qc = substr $$buffer, 0, 1;
@@ -361,7 +366,7 @@ sub lex_quote {
                     $v .= $qc;
                 }
             } elsif( $c =~ /^[\$\@]$/ && $self->quote->{interpolate} ) {
-                if(    $self->quote->{interpolated_pattern}
+                if(    $interpolated_pattern
                     && (    !length( $$buffer )
                          || index( "()| \r\n\t",
                                    substr( $$buffer, 0, 1 ) ) != -1 ) ) {

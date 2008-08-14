@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 7;
+use Test::More tests => 8;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -155,4 +155,28 @@ right: !parsetree:InterpolatedPattern
       - !parsetree:Constant
         type: string
         value: $
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+/$foo\w/
+EOP
+--- !parsetree:BinOp
+context: 2
+left: !parsetree:Symbol
+  context: 4
+  name: _
+  sigil: $
+op: =~
+right: !parsetree:InterpolatedPattern
+  flags: ~
+  op: m
+  string: !parsetree:QuotedString
+    components:
+      - !parsetree:Symbol
+        context: 4
+        name: foo
+        sigil: $
+      - !parsetree:Constant
+        type: string
+        value: \w
 EOE
