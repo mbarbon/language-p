@@ -545,6 +545,26 @@ our @FIELDS = qw(elements);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+package Language::P::ParseTree::RXSpecialClass;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(type);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
+package Language::P::ParseTree::RXRange;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(start end);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
 package Language::P::ParseTree::RXAlternation;
 
 use strict;

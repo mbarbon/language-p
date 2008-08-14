@@ -153,6 +153,8 @@ my %pattern_special =
     '??' => [ 'QUANTIFIER', 0,  1, 0 ],
     ')'  => [ 'SPECIAL' ],
     '|'  => [ 'ALTERNATE' ],
+    '['  => [ 'CLASS_START' ],
+    ']'  => [ 'CLASS_END' ],
     );
 
 sub _skip_space {
@@ -196,6 +198,28 @@ sub lex_pattern_group {
     return [ 'PATTERN', $1 ];
 }
 
+sub lex_charclass {
+    my( $self ) = @_;
+
+    my $buffer = $self->buffer;
+    my $c = substr $$buffer, 0, 1, '';
+    if( $c eq '\\' ) {
+        my $qc = substr $$buffer, 0, 1, '';
+
+        if( $quoted_pattern{$qc} ) {
+            return $quoted_pattern{$qc};
+        }
+
+        return [ 'STRING', $qc ];
+    } elsif( $c eq '-' ) {
+        return [ 'DASH', '-' ];
+    } elsif( $c eq ']' ) {
+        return [ 'CLASS_END' ];
+    } else {
+        return [ 'STRING', $c ];
+    }
+}
+
 sub lex_quote {
     my( $self ) = @_;
 
@@ -204,7 +228,6 @@ sub lex_quote {
     my $buffer = $self->buffer;
     my $v = '';
     for(;;) {
-        $self->_fill_buffer unless length $$buffer;
         unless( length $$buffer ) {
             if( length $v ) {
                 $self->unlex( [ 'SPECIAL', 'EOF' ] );

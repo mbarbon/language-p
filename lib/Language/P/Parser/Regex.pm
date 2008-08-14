@@ -101,9 +101,15 @@ sub _parse {
                                ( { type => $value->[2]->[1],
                                    } );
             } elsif( $value->[2]->[0] eq 'CLASS' ) {
-                push @$st, Language::P::ParseTree::RXClass->new
-                               ( { elements => $value->[2]->[1],
+                push @$st, Language::P::ParseTree::RXSpecialClass->new
+                               ( { type => $value->[2]->[1],
                                    } );
+            } elsif( $value->[2]->[0] eq 'CLASS_START' ) {
+                push @$st, Language::P::ParseTree::RXClass->new
+                               ( { elements => [],
+                                   } );
+
+                _parse_charclass( $self, $st->[-1] );
             } else {
                 Carp::confess $value->[0], ' ', $value->[1], ' ',
                               $value->[2]->[0];
@@ -118,6 +124,42 @@ sub _parse {
     die 'Unmatched ( in regex' if $in_group;
 
     return \@values;
+}
+
+sub _parse_charclass {
+    my( $self, $class ) = @_;
+    my $st = $class->elements;
+    my @la;
+
+    for(;;) {
+        my $value = @la ? pop @la : $self->lexer->lex_charclass;
+        last if $value->[0] eq 'CLASS_END';
+        if( $value->[0] eq 'STRING' ) {
+            my $next = $self->lexer->lex_charclass;
+
+            if( $next->[0] eq 'DASH' ) {
+                my $next_next = $self->lexer->lex_charclass;
+                if( $next_next->[0] eq 'STRING' ) {
+                    push @$st, Language::P::ParseTree::RXRange->new
+                                   ( { start => $value->[1],
+                                       end   => $next_next->[1],
+                                       } );
+                    next;
+                } else {
+                    push @la, $next_next, $next;
+                }
+            } else {
+                push @la, $next;
+            }
+        } elsif( $value->[0] eq 'CLASS' ) {
+            push @$st, Language::P::ParseTree::RXSpecialClass->new
+                           ( { type => $value->[1],
+                                } );
+            next;
+        }
+
+        push @$st, $value->[1];
+    }
 }
 
 1;
