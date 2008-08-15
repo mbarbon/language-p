@@ -17,9 +17,6 @@ use constant
     X_OPERATOR => 3,
     X_BLOCK    => 4,
 
-    LEX_NORMAL => 1,
-    LEX_QUOTED => 2,
-
     T_ID          => 1,
     T_KEYWORD     => 2,
     T_OVERRIDABLE => 3,
@@ -407,8 +404,17 @@ sub lex_identifier {
     $$_ =~ s/^\^([A-Z\[\\\]^_?])//x and do {
         $id = [ 'ID', chr( ord( $1 ) - ord( 'A' ) + 1 ) ];
     };
-    $id or $$_ =~ s/^(\w+)//x and do {
-        $id = [ 'ID', $1 ];
+    $id or $$_ =~ s/^::(?=\W)//x and do {
+        $id = [ 'ID', 'main::' ];
+    };
+    $id or $$_ =~ s/^(\'|::)?(\w+)//x and do {
+        my $ids = defined $1 ? '::' . $2 : $2;
+
+        while( $$_ =~ s/^::(\w*)|^\'(\w+)// ) {
+            $ids .= '::' . ( defined $1 ? $1 : $2 );
+        }
+
+        $id = [ 'ID', $ids ];
     };
     $id or $$_ =~ s/^{\^([A-Z\[\\\]^_?])(\w*)}//x and do {
         $id = [ 'ID', chr( ord( $1 ) - ord( 'A' ) + 1 ) . $2 ];
@@ -664,22 +670,37 @@ sub lex {
     $$_ =~ /^\d|^\.\d/ and return $self->lex_number;
     $$_ =~ s/^(q|qq|qx|qw|m|qr|s|tr|y)(?=\W)//x and
         return _prepare_sublex( $self, $1, undef );
-    $$_ =~ s/^(\w+)//x and do {
-        my $id = $1;
+    $$_ =~ s/^(::)?(\w+)//x and do {
+        my $ids = ( $1 || '' ) . $2;
+        my $no_space = $$_ !~ /^[\s\r\n]/;
 
         # look ahead for fat comma
         _skip_space( $self );
         if( $$_ =~ /^=>/ ) {
-            return [ 'STRING', $id ];
+            return [ 'STRING', $ids ];
+        }
+        my $op = $ops{$ids};
+        my $type =  $op                 ? T_KEYWORD :
+                    $keywords{$ids}     ? T_KEYWORD :
+                    $overridables{$ids} ? T_OVERRIDABLE :
+                                          T_ID;
+
+        if( $no_space && (    $$_ =~ /^::/
+                           || ( $type == T_ID && $$_ =~ /^'\w/ ) ) ) {
+            while( $$_ =~ s/^::(\w*)|^\'(\w+)// ) {
+                $ids .= '::' . ( defined $1 ? $1 : $2 );
+            }
+            if( $ids =~ s/::$// ) {
+                # warn for nonexistent package
+            }
+            $op = undef;
+            $type = T_ID;
         }
 
-        if( $ops{$id} ) {
-            return [ $ops{$id}, $id ];
+        if( $op ) {
+            return [ $op, $ids ];
         }
-        return [ 'ID', $id, $keywords{$id}     ? T_KEYWORD :
-                            $overridables{$id} ? T_OVERRIDABLE :
-                                                 T_ID
-                 ];
+        return [ 'ID', $ids, $type ];
     };
     $$_ =~ s/^(["'`])//x and return _prepare_sublex( $self, $1, $1 );
     $$_ =~ /^</ and $expect != X_OPERATOR and do {

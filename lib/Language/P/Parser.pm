@@ -513,7 +513,11 @@ sub _parse_expr {
 sub _find_symbol {
     my( $self, $sigil, $name ) = @_;
 
-    die if $name =~ /::/;
+    if( $name =~ /::/ ) {
+        return Language::P::ParseTree::Symbol->new( { name  => $name,
+                                                      sigil => $sigil,
+                                                      } );
+    }
 
     my( $crossed_sub, $slot ) = $self->_lexicals->find_name( $sigil . $name );
 
