@@ -53,6 +53,7 @@ t/parser/statements/040_if.t
 t/parser/statements/050_while.t
 t/parser/statements/055_for.t
 t/parser/statements/090_special_blocks.t
+t/parser/statements/120_package.t
 t/parser/terms/004_bareword.t
 t/parser/terms/005_variables.t
 t/parser/terms/006_numbers.t

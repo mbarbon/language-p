@@ -79,7 +79,7 @@ sub parse_and_diff_yaml {
     require Language::P::ParseTree::DumpYAML;
 
     my $parser = fresh_parser();
-    $parser->parse_string( $expr );
+    $parser->parse_string( $expr, 'main' );
 
     my $got = '';
     my $dumper = Language::P::ParseTree::DumpYAML->new;

@@ -23,9 +23,8 @@ Parsing:
 - scope handling of conditional/while/continue
 - handle errors
 - handling of parse errors with recovery
-- strictures
 - lexical pragmas/hints
-- handle :: in identifiers, "'" in identifiers
+  - strictures
 - proper lexing of ${  id # comment\n } vs. ${ id # comment \n expr }
 - more tests for ${foo[.......} crazy cases
 - proper check for overridable builtins (only if imported)
@@ -37,7 +36,13 @@ Parsing:
   - normalize package names:
     - "::foo" == "main::foo" == "::main::foo" (foo is entered in main stash)
     - "main::" == "::" == "::main::" (main:: is the real name in stash)
-- package handling in our()
+  - add subpackages to runtime
+  - subroutines
+    - declare/define subroutines in the correct package
+    - allow defining subroutines with fully-qualified name
+  - when searching prototypes/definitions/variables at parse time,
+    use the correct package name
+  - package handling in our()
 - parsing of nullary/unary vs. list operators
 - => auto-quoting
   - => must only quote barewords

@@ -114,7 +114,7 @@ my %ops =
 
 my %keywords = map { ( $_ => 1 ) }
   qw(if unless else elsif for foreach while until do last next redo
-     my our state sub eval
+     my our state sub eval package
      ),
   qw(print defined return undef);
 my %overridables = map { ( $_ => 1 ) }
