@@ -738,7 +738,13 @@ sub lex {
         if( $brack eq '{' ) {
             if( $expect == X_TERM ) {
                 return [ 'OPHASH', '{' ];
-            } elsif( $expect != X_BLOCK && $expect != X_OPERATOR ) {
+            } elsif( $expect == X_OPERATOR ) {
+                # autoquote literal strings in hash subscripts
+                if( $$_ =~ s/^\s*([[:alpha:]_]+)\s*\}// ) {
+                    $self->unlex( [ 'CLBRK', '}' ] );
+                    $self->unlex( [ 'STRING', $1 ] );
+                }
+            } elsif( $expect != X_BLOCK ) {
                 # try to guess if it is a block or anonymous hash
                 $self->_skip_space;
 
