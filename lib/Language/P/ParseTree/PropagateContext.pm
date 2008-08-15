@@ -35,6 +35,7 @@ my %dispatch =
     'Language::P::ParseTree::Substitution'           => '_substitution',
     'Language::P::ParseTree::Foreach'                => '_foreach',
     'Language::P::ParseTree::For'                    => '_for',
+    'Language::P::ParseTree::Package'                => '_noop',
     'DEFAULT'                                        => '_noisy_noop',
     );
 

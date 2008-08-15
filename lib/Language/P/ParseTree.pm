@@ -118,6 +118,16 @@ sub _pretty_print {
     return $str;
 }
 
+package Language::P::ParseTree::Package;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(name);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
 package Language::P::ParseTree::Constant;
 
 use strict;

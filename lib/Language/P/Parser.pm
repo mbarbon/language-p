@@ -13,7 +13,8 @@ use Language::P::ParseTree::PropagateContext;
 
 __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime) );
 __PACKAGE__->mk_accessors( qw(_package _lexicals _pending_lexicals
-                              _current_sub _propagate_context) );
+                              _current_sub _propagate_context
+                              _lexical_state) );
 
 use constant
   { PREC_HIGHEST       => 0,
@@ -80,10 +81,11 @@ my %prec_assoc_un =
     );
 
 sub parse_string {
-    my( $self, $string ) = @_;
+    my( $self, $string, $package ) = @_;
 
     open my $fh, '<', \$string;
 
+    $self->_package( $package );
     $self->parse_stream( $fh );
 }
 
@@ -100,6 +102,7 @@ sub parse_stream {
     my( $self, $stream ) = @_;
 
     $self->{lexer} = Language::P::Lexer->new( { stream => $stream } );
+    $self->{_lexical_state} = [];
     $self->_parse;
 }
 
@@ -131,6 +134,9 @@ sub _parse {
 sub _enter_scope {
     my( $self, $is_sub, $all_in_pad ) = @_;
 
+    push @{$self->{_lexical_state}}, { package  => $self->_package,
+                                       lexicals => $self->_lexicals,
+                                       };
     $self->_lexicals( Language::P::Value::ScratchPad->new
                           ( { outer         => $self->_lexicals,
                               is_subroutine => $is_sub || 0,
@@ -141,7 +147,9 @@ sub _enter_scope {
 sub _leave_scope {
     my( $self ) = @_;
 
-    $self->_lexicals( $self->_lexicals->outer );
+    my $state = pop @{$self->{_lexical_state}};
+    $self->_package( $state->{package} );
+    $self->_lexicals( $state->{lexicals} );
 }
 
 sub _label {
@@ -206,6 +214,16 @@ sub _parse_line {
         return _parse_while( $self );
     } elsif( $token->[1] eq 'for' || $token->[1] eq 'foreach' ) {
         return _parse_for( $self );
+    } elsif( $token->[1] eq 'package' ) {
+        _lex_token( $self, 'ID' );
+        my $id = $self->lexer->lex_identifier;
+        _lex_semicolon( $self );
+
+        $self->_package( $id->[1] );
+
+        return Language::P::ParseTree::Package->new
+                   ( { name => $id->[1],
+                       } );
     } else {
         my $sideff = _parse_sideff( $self );
         _lex_semicolon( $self );
@@ -533,7 +551,8 @@ sub _find_symbol {
                        } );
     }
 
-    return Language::P::ParseTree::Symbol->new( { name  => $name,
+    my $prefix = $self->_package eq 'main' ? '' : $self->_package . '::';
+    return Language::P::ParseTree::Symbol->new( { name  => $prefix . $name,
                                                   sigil => $sigil,
                                                   } );
 }
