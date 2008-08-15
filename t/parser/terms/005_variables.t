@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 9;
+use Test::More tests => 11;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -14,6 +14,24 @@ EOP
 context: CXT_VOID
 name: foo
 sigil: '@'
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+@'foo
+EOP
+--- !parsetree:Symbol
+context: CXT_VOID
+name: ::foo
+sigil: '@'
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+$::foo'moo::::boo::::
+EOP
+--- !parsetree:Symbol
+context: CXT_VOID
+name: '::foo::moo::::boo::::'
+sigil: $
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

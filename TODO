@@ -25,7 +25,7 @@ Parsing:
 - handling of parse errors with recovery
 - strictures
 - lexical pragmas/hints
-- handle :: in identifiers, ${^foo} special variables, "'" in identifiers
+- handle :: in identifiers, "'" in identifiers
 - proper lexing of ${  id # comment\n } vs. ${ id # comment \n expr }
 - more tests for ${foo[.......} crazy cases
 - proper check for overridable builtins (only if imported)
@@ -34,6 +34,9 @@ Parsing:
 - special treatment for glob()
 - simplify detection of <foo> vs. <foo >, avoid constructing a lexer
 - packages
+  - normalize package names:
+    - "::foo" == "main::foo" == "::main::foo" (foo is entered in main stash)
+    - "main::" == "::" == "::main::" (main:: is the real name in stash)
 - package handling in our()
 - parsing of nullary/unary vs. list operators
 - => auto-quoting
@@ -56,7 +59,6 @@ Parsing:
   - flags
   - context-dependent bexaviour
   - always a pattern after =~/!~
-- intuit_more, esp. inside patterns
 - correct parsing of heredoc in substritutions (s//<<HEREDOC/e)
 
 Runtime:

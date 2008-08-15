@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 18;
+use Test::More tests => 20;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -204,6 +204,32 @@ arguments:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: foo
+    sigil: '*'
+context: CXT_VOID
+function: readline
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+<foo::moo'boo>;
+EOP
+--- !parsetree:Overridable
+arguments:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: foo::moo::boo
+    sigil: '*'
+context: CXT_VOID
+function: readline
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+<foo'boo>;
+EOP
+--- !parsetree:Overridable
+arguments:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: foo::boo
     sigil: '*'
 context: CXT_VOID
 function: readline
