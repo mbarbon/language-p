@@ -56,6 +56,7 @@ t/parser/statements/090_special_blocks.t
 t/parser/terms/004_bareword.t
 t/parser/terms/005_variables.t
 t/parser/terms/006_numbers.t
+t/parser/terms/020_anon_array_hash.t
 t/parser/terms/050_my.t
 t/parser/terms/080_quoted_string.t
 t/parser/terms/081_quote_like.t
