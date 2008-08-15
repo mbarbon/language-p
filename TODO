@@ -8,10 +8,18 @@ Parsing:
 - scoping
 - do/require/use/eval
 - eval {block}
+- do ...
 - labels
+- formats
+- indirect method calls
+- list slices ( ... )[ ... ]
+- test all unary/binary operator
+- anonymous array/hash/sub
 - subroutine prototypes
   - parsing
-  - context propagation
+- local()
+- implicit $_ in various builtins
+- parsing of loop + continue
 - scope handling of conditional/while/continue
 - handle errors
 - handling of parse errors with recovery
