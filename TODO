@@ -39,7 +39,6 @@ Parsing:
 - => auto-quoting
   - => must only quote barewords
   - => quoting of -foo => 1
-- quoting inside ->{}, also of {s}, etc.
 - quoted strings
   - \Q\L\U\E in quoted strings/patterns
   - \xaf, \011,etc when lexing quoted strings
