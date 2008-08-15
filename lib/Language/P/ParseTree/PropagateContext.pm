@@ -29,6 +29,7 @@ my %dispatch =
     'Language::P::ParseTree::QuotedString'           => '_quoted_string',
     'Language::P::ParseTree::Subscript'              => '_subscript',
     'Language::P::ParseTree::Slice'                  => '_slice',
+    'Language::P::ParseTree::ReferenceConstructor'   => '_ref_constr',
     'Language::P::ParseTree::Pattern'                => '_noop',
     'Language::P::ParseTree::InterpolatedPattern'    => '_pattern',
     'Language::P::ParseTree::Substitution'           => '_substitution',
@@ -250,6 +251,12 @@ sub _ternary {
     $self->visit( $tree->condition, CXT_SCALAR );
     $self->visit( $tree->iftrue, $cxt );
     $self->visit( $tree->iffalse, $cxt );
+}
+
+sub _ref_constr {
+    my( $self, $tree, $cxt ) = @_;
+
+    $self->visit( $tree->expression, CXT_LIST ) if $tree->expression;
 }
 
 1;

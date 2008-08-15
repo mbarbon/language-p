@@ -14,7 +14,7 @@ Parsing:
 - indirect method calls
 - list slices ( ... )[ ... ]
 - test all unary/binary operator
-- anonymous array/hash/sub
+- anonymous sub
 - subroutine prototypes
   - parsing
 - local()
@@ -37,8 +37,7 @@ Parsing:
 - package handling in our()
 - parsing of nullary/unary vs. list operators
 - => auto-quoting
-  - => must also quote qw/qx/s/etc.
-  - => must only quote barwords
+  - => must only quote barewords
   - => quoting of -foo => 1
 - quoting inside ->{}, also of {s}, etc.
 - quoted strings

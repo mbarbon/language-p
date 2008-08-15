@@ -151,8 +151,8 @@ sub _label {
 }
 
 sub _lex_token {
-    my( $self, $type, $value ) = @_;
-    my $token = $self->lexer->lex;
+    my( $self, $type, $value, $expect ) = @_;
+    my $token = $self->lexer->lex( $expect || X_NOTHING );
 
     return if !$value && !$type;
 
@@ -236,7 +236,7 @@ sub _add_pending_lexicals {
 sub _parse_sub {
     my( $self, $flags, $no_sub_token ) = @_;
     _lex_token( $self, 'ID' ) unless $no_sub_token;
-    my $name = $self->lexer->peek( X_NOTHING );
+    my $name = $self->lexer->peek( X_BLOCK );
 
     # TODO prototypes
     if( $name->[0] eq 'ID' ) {
@@ -301,7 +301,7 @@ sub _parse_cond {
     $self->_add_pending_lexicals;
 
     _lex_token( $self, 'CLPAR' );
-    _lex_token( $self, 'OPBRK' );
+    _lex_token( $self, 'OPBRK', undef, X_BLOCK );
 
     my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
 
@@ -326,7 +326,7 @@ sub _parse_cond {
             $expr = _parse_expr( $self );
             _lex_token( $self, 'CLPAR' );
         }
-        _lex_token( $self, 'OPBRK' );
+        _lex_token( $self, 'OPBRK', undef, X_BLOCK );
         my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
 
         if( $expr ) {
@@ -376,7 +376,7 @@ sub _parse_for {
             _lex_token( $self, 'CLPAR' );
             $self->_add_pending_lexicals;
 
-            _lex_token( $self, 'OPBRK' );
+            _lex_token( $self, 'OPBRK', undef, X_BLOCK );
             my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
 
             my $for = Language::P::ParseTree::For->new
@@ -412,7 +412,7 @@ sub _parse_for {
     }
 
     $self->_add_pending_lexicals;
-    _lex_token( $self, 'OPBRK' );
+    _lex_token( $self, 'OPBRK', undef, X_BLOCK );
 
     my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
 
@@ -438,7 +438,7 @@ sub _parse_while {
     $self->_add_pending_lexicals;
 
     _lex_token( $self, 'CLPAR' );
-    _lex_token( $self, 'OPBRK' );
+    _lex_token( $self, 'OPBRK', undef, X_BLOCK );
 
     my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
 
@@ -599,7 +599,7 @@ sub _parse_dereference_rest {
     if( $bracket->[0] eq 'OPPAR' ) {
         $term = _parse_indirect_function_call( $self, $subscripted, 1, 0 );
     } else {
-        my( undef, $subscript ) = _parse_bracketed_expr( $self, $bracket->[0] );
+        my $subscript = _parse_bracketed_expr( $self, $bracket->[0], 0 );
         $term = Language::P::ParseTree::Subscript->new
                     ( { subscripted => $subscripted,
                         subscript   => $subscript,
@@ -612,23 +612,23 @@ sub _parse_dereference_rest {
 }
 
 sub _parse_bracketed_expr {
-    my( $self, $bracket ) = @_;
+    my( $self, $bracket, $allow_empty, $no_consume_opening ) = @_;
+    my $close = $bracket eq 'OPBRK' ? 'CLBRK' :
+                $bracket eq 'OPSQ'  ? 'CLSQ' :
+                                      'CLPAR';
 
-    _lex_token( $self, $bracket );
-    # allow empty () for function call
-    if( $bracket eq 'OPPAR' ) {
+    _lex_token( $self, $bracket ) unless $no_consume_opening;
+    if( $allow_empty ) {
         my $next = $self->lexer->peek( X_TERM );
-        if( $next->[0] eq 'CLPAR' ) {
-            _lex_token( $self, 'CLPAR' );
-            return ( $bracket, undef );
+        if( $next->[0] eq $close ) {
+            _lex_token( $self, $close );
+            return undef;
         }
     }
     my $subscript = _parse_expr( $self );
-    _lex_token( $self, $bracket eq 'OPBRK' ? 'CLBRK' :
-                       $bracket eq 'OPSQ'  ? 'CLSQ' :
-                                             'CLPAR' );
+    _lex_token( $self, $close );
 
-    return ( $bracket, $subscript );
+    return $subscript;
 }
 
 sub _parse_maybe_indirect_method_call {
@@ -663,7 +663,7 @@ sub _parse_maybe_direct_method_call {
         my $oppar = $self->lexer->peek( X_OPERATOR );
         my $args;
         if( $oppar->[0] eq 'OPPAR' ) {
-            ( undef, $args ) = _parse_bracketed_expr( $self, 'OPPAR' );
+            $args = _parse_bracketed_expr( $self, 'OPPAR', 1 );
         }
 
         my $term = Language::P::ParseTree::MethodCall->new
@@ -680,7 +680,7 @@ sub _parse_maybe_direct_method_call {
         my $oppar = $self->lexer->peek( X_OPERATOR );
         my $args;
         if( $oppar->[0] eq 'OPPAR' ) {
-            ( undef, $args ) = _parse_bracketed_expr( $self, 'OPPAR' );
+            $args = _parse_bracketed_expr( $self, 'OPPAR', 1 );
         }
 
         my $term = Language::P::ParseTree::MethodCall->new
@@ -892,6 +892,20 @@ sub _parse_term_terminal {
         return _parse_lexical( $self, $token->[1] );
     } elsif( $token->[0] eq 'ID' ) {
         return _parse_listop( $self, $token );
+    } elsif( $token->[0] eq 'OPHASH' ) {
+        my $expr = _parse_bracketed_expr( $self, 'OPBRK', 1, 1 );
+
+        return Language::P::ParseTree::ReferenceConstructor->new
+                   ( { expression => $expr,
+                       type       => '{'
+                       } );
+    } elsif( $token->[0] eq 'OPSQ' ) {
+        my $expr = _parse_bracketed_expr( $self, 'OPSQ', 1, 1 );
+
+        return Language::P::ParseTree::ReferenceConstructor->new
+                   ( { expression => $expr,
+                       type       => '['
+                       } );
     }
 
     return undef;
@@ -947,7 +961,7 @@ sub _parse_indirobj_maybe_subscripts {
                                  } );
     }
 
-    my( undef, $subscript ) = _parse_bracketed_expr( $self, $next->[0] );
+    my $subscript = _parse_bracketed_expr( $self, $next->[0], 0 );
     my $subscripted = $is_id ? _find_symbol( $self, $sym_sigil, $indir->[1] ) :
                                $indir;
 
@@ -1207,7 +1221,7 @@ sub _parse_indirobj {
         return $id;
     }
 
-    my $token = $self->lexer->lex( X_TERM );
+    my $token = $self->lexer->lex( X_OPERATOR );
 
     if( $token->[0] eq 'OPBRK' ) {
         my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
@@ -1284,7 +1298,7 @@ sub _parse_listop {
 
         if( $next->[0] eq 'ARROW' ) {
             _lex_token( $self, 'ARROW' );
-            my $la = $self->lexer->peek( X_TERM );
+            my $la = $self->lexer->peek( X_OPERATOR );
 
             if( $la->[0] eq 'ID' || $la->[0] eq 'DOLLAR' ) {
                 # here we are calling the method on a bareword

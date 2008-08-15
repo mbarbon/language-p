@@ -161,6 +161,16 @@ our @FIELDS = qw(components);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+package Language::P::ParseTree::ReferenceConstructor;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(expression type);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
 package Language::P::ParseTree::FunctionCall;
 
 use strict;

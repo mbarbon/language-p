@@ -15,6 +15,7 @@ use constant
     X_STATE    => 1,
     X_TERM     => 2,
     X_OPERATOR => 3,
+    X_BLOCK    => 4,
 
     LEX_NORMAL => 1,
     LEX_QUOTED => 2,
@@ -27,7 +28,7 @@ use constant
 use Exporter qw(import);
 
 our @EXPORT_OK =
-  qw(X_NOTHING X_STATE X_TERM X_OPERATOR
+  qw(X_NOTHING X_STATE X_TERM X_OPERATOR X_BLOCK
      T_ID T_SPECIAL T_NUMBER T_STRING T_KEYWORD T_OVERRIDABLE
      );
 our %EXPORT_TAGS =
@@ -712,10 +713,12 @@ sub lex {
         return [ $ops{$1}, $1 ];
     };
     $$_ =~ s/^([{}\[\]])// and do {
-        if( $1 eq '[' || $1 eq '{' ) {
+        my $brack = $1;
+
+        if( $brack eq '[' || $brack eq '{' ) {
             ++$self->{brackets};
         } else {
-            if(    $1 eq '}'
+            if(    $brack eq '}'
                 && @{$self->{pending_brackets}}
                 && $self->{pending_brackets}[-1] == $self->{brackets} ) {
                 pop @{$self->{pending_brackets}};
@@ -731,7 +734,37 @@ sub lex {
             }
         }
 
-        return [ $ops{$1}, $1 ];
+        # disambiguate start of block from anonymous hash
+        if( $brack eq '{' ) {
+            if( $expect == X_TERM ) {
+                return [ 'OPHASH', '{' ];
+            } elsif( $expect != X_BLOCK && $expect != X_OPERATOR ) {
+                # try to guess if it is a block or anonymous hash
+                $self->_skip_space;
+
+                if( $$_ =~ /^}/ ) {
+                    return [ 'OPHASH', '{' ];
+                }
+
+                # treat '<bareward> =>', '<string> ,/=>' lookahead
+                # as indicators of anonymous hash
+                if( $$_ =~ /^([\w"'`])/ ) {
+                    my $first = $1;
+
+                    # can only be a string literal, quote like operator
+                    # or identifier
+                    my $next = $self->peek( X_NOTHING );
+
+                    $self->_skip_space;
+                    if(    $$_ =~ /^=>/
+                        || ( $$_ =~ /^,/ && $next->[0] ne 'ID' ) ) {
+                        return [ 'OPHASH', '{' ];
+                    }
+                }
+            }
+        }
+
+        return [ $ops{$brack}, $brack ];
     };
     $$_ =~ s/^\///x and do {
         if( $expect == X_TERM || $expect == X_STATE ) {
