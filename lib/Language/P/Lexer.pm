@@ -10,6 +10,24 @@ __PACKAGE__->mk_accessors( qw(quote) );
 
 use Language::P::ParseTree qw(:all);
 
+our @TOKENS;
+BEGIN {
+  our @TOKENS =
+    qw(T_ID T_KEYWORD T_OVERRIDABLE T_EOF T_PATTERN T_STRING T_NUMBER T_QUOTE
+       T_SEMICOLON T_COLON T_COMMA T_OPPAR T_CLPAR T_OPSQ T_CLSQ
+       T_OPBRK T_CLBRK T_OPHASH T_OPAN T_CLPAN T_INTERR
+       T_NOT T_SLESS T_CLAN T_SGREAT T_EQUAL T_LESSEQUAL T_SLESSEQUAL
+       T_GREATEQUAL T_SGREATEQUAL T_EQUALEQUAL T_SEQUALEQUAL T_NOTEQUAL
+       T_SNOTEQUAL T_SLASH T_BACKSLASH T_DOT T_DOTDOT T_DOTDOTDOT T_PLUS
+       T_MINUS T_STAR T_DOLLAR T_PERCENT T_AT T_AMPERSAND T_PLUSPLUS
+       T_MINUSMINUS T_ANDAND T_OROR T_ARYLEN T_ARROW T_MATCH T_NOTMATCH
+       T_ANDANDLOW T_ORORLOW T_NOTLOW T_XORLOW
+
+       T_CLASS_START T_CLASS_END T_CLASS T_QUANTIFIER T_ASSERTION T_ALTERNATE
+       T_CLGROUP
+       );
+};
+
 use constant
   { X_NOTHING  => 0,
     X_STATE    => 1,
@@ -17,17 +35,14 @@ use constant
     X_OPERATOR => 3,
     X_BLOCK    => 4,
 
-    T_ID          => 1,
-    T_KEYWORD     => 2,
-    T_OVERRIDABLE => 3,
+    map { $TOKENS[$_] => $_ + 1 } 0 .. $#TOKENS,
     };
 
 use Exporter qw(import);
 
 our @EXPORT_OK =
-  qw(X_NOTHING X_STATE X_TERM X_OPERATOR X_BLOCK
-     T_ID T_SPECIAL T_NUMBER T_STRING T_KEYWORD T_OVERRIDABLE
-     );
+  ( qw(X_NOTHING X_STATE X_TERM X_OPERATOR X_BLOCK
+       ), @TOKENS );
 our %EXPORT_TAGS =
   ( all  => \@EXPORT_OK,
     );
@@ -61,55 +76,55 @@ sub unlex {
 }
 
 my %ops =
-  ( ';'   => 'SEMICOLON',
-    ':'   => 'COLON',
-    ','   => 'COMMA',
-    '=>'  => 'COMMA',
-    '('   => 'OPPAR',
-    ')'   => 'CLPAR',
-    '['   => 'OPSQ',
-    ']'   => 'CLSQ',
-    '{'   => 'OPBRK',
-    '}'   => 'CLBRK',
-    '?'   => 'INTERR',
-    '!'   => 'NOT',
-    '<'   => 'OPAN',
-    'lt'  => 'SLESS',
-    '>'   => 'CLAN',
-    'gt'  => 'SGREAT',
-    '='   => 'EQUAL',
-    '<='  => 'LESSEQUAL',
-    'le'  => 'SLESSEQUAL',
-    '>='  => 'GREATEQUAL',
-    'ge'  => 'SGREATEQUAL',
-    '=='  => 'EQUALEQUAL',
-    'eq'  => 'SEQUALEQUAL',
-    '!='  => 'NOTEQUAL',
-    'ne'  => 'SNOTEQUAL',
-    '/'   => 'SLASH',
-    '\\'  => 'BACKSLASH',
-    '.'   => 'DOT',
-    '..'  => 'DOTDOT',
-    '...' => 'DOTDOTDOT',
-    '+'   => 'PLUS',
-    '-'   => 'MINUS',
-    '*'   => 'STAR',
-    '$'   => 'DOLLAR',
-    '%'   => 'PERCENT',
-    '@'   => 'AT',
-    '&'   => 'AMPERSAND',
-    '++'  => 'PLUSPLUS',
-    '--'  => 'MINUSMINUS',
-    '&&'  => 'ANDAND',
-    '||'  => 'OROR',
-    '$#'  => 'ARYLEN',
-    '->'  => 'ARROW',
-    '=~'  => 'MATCH',
-    '!~'  => 'NOTMATCH',
-    'and' => 'ANDANDLOW',
-    'or'  => 'ORORLOW',
-    'not' => 'NOTLOW',
-    'xor' => 'XORLOW',
+  ( ';'   => T_SEMICOLON,
+    ':'   => T_COLON,
+    ','   => T_COMMA,
+    '=>'  => T_COMMA,
+    '('   => T_OPPAR,
+    ')'   => T_CLPAR,
+    '['   => T_OPSQ,
+    ']'   => T_CLSQ,
+    '{'   => T_OPBRK,
+    '}'   => T_CLBRK,
+    '?'   => T_INTERR,
+    '!'   => T_NOT,
+    '<'   => T_OPAN,
+    'lt'  => T_SLESS,
+    '>'   => T_CLAN,
+    'gt'  => T_SGREAT,
+    '='   => T_EQUAL,
+    '<='  => T_LESSEQUAL,
+    'le'  => T_SLESSEQUAL,
+    '>='  => T_GREATEQUAL,
+    'ge'  => T_SGREATEQUAL,
+    '=='  => T_EQUALEQUAL,
+    'eq'  => T_SEQUALEQUAL,
+    '!='  => T_NOTEQUAL,
+    'ne'  => T_SNOTEQUAL,
+    '/'   => T_SLASH,
+    '\\'  => T_BACKSLASH,
+    '.'   => T_DOT,
+    '..'  => T_DOTDOT,
+    '...' => T_DOTDOTDOT,
+    '+'   => T_PLUS,
+    '-'   => T_MINUS,
+    '*'   => T_STAR,
+    '$'   => T_DOLLAR,
+    '%'   => T_PERCENT,
+    '@'   => T_AT,
+    '&'   => T_AMPERSAND,
+    '++'  => T_PLUSPLUS,
+    '--'  => T_MINUSMINUS,
+    '&&'  => T_ANDAND,
+    '||'  => T_OROR,
+    '$#'  => T_ARYLEN,
+    '->'  => T_ARROW,
+    '=~'  => T_MATCH,
+    '!~'  => T_NOTMATCH,
+    'and' => T_ANDANDLOW,
+    'or'  => T_ORORLOW,
+    'not' => T_NOTLOW,
+    'xor' => T_XORLOW,
     );
 
 my %keywords = map { ( $_ => 1 ) }
@@ -126,33 +141,33 @@ my %quoted_chars =
     );
 
 my %quoted_pattern =
-  ( w  => [ 'CLASS', 'WORDS' ],
-    W  => [ 'CLASS', 'NON_WORDS' ],
-    s  => [ 'CLASS', 'SPACES' ],
-    S  => [ 'CLASS', 'NOT_SPACES' ],
-    d  => [ 'CLASS', 'DIGITS' ],
-    D  => [ 'CLASS', 'NOT_DIGITS' ],
-    b  => [ 'ASSERTION', 'WORD_BOUNDARY' ],
-    B  => [ 'ASSERTION', 'NON_WORD_BOUNDARY' ],
-    A  => [ 'ASSERTION', 'BEGINNING' ],
-    Z  => [ 'ASSERTION', 'END_OR_NEWLINE' ],
-    z  => [ 'ASSERTION', 'END' ],
-    G  => [ 'ASSERTION', 'POS' ],
+  ( w  => [ T_CLASS, 'WORDS' ],
+    W  => [ T_CLASS, 'NON_WORDS' ],
+    s  => [ T_CLASS, 'SPACES' ],
+    S  => [ T_CLASS, 'NOT_SPACES' ],
+    d  => [ T_CLASS, 'DIGITS' ],
+    D  => [ T_CLASS, 'NOT_DIGITS' ],
+    b  => [ T_ASSERTION, 'WORD_BOUNDARY' ],
+    B  => [ T_ASSERTION, 'NON_WORD_BOUNDARY' ],
+    A  => [ T_ASSERTION, 'BEGINNING' ],
+    Z  => [ T_ASSERTION, 'END_OR_NEWLINE' ],
+    z  => [ T_ASSERTION, 'END' ],
+    G  => [ T_ASSERTION, 'POS' ],
     );
 
 my %pattern_special =
-  ( '^'  => [ 'ASSERTION', 'START_SPECIAL' ],
-    '$'  => [ 'ASSERTION', 'END_SPECIAL' ],
-    '*'  => [ 'QUANTIFIER', 0, -1, 1 ],
-    '+'  => [ 'QUANTIFIER', 1, -1, 1 ],
-    '?'  => [ 'QUANTIFIER', 0,  1, 1 ],
-    '*?' => [ 'QUANTIFIER', 0, -1, 0 ],
-    '+?' => [ 'QUANTIFIER', 1, -1, 0 ],
-    '??' => [ 'QUANTIFIER', 0,  1, 0 ],
-    ')'  => [ 'SPECIAL' ],
-    '|'  => [ 'ALTERNATE' ],
-    '['  => [ 'CLASS_START' ],
-    ']'  => [ 'CLASS_END' ],
+  ( '^'  => [ T_ASSERTION, 'START_SPECIAL' ],
+    '$'  => [ T_ASSERTION, 'END_SPECIAL' ],
+    '*'  => [ T_QUANTIFIER, 0, -1, 1 ],
+    '+'  => [ T_QUANTIFIER, 1, -1, 1 ],
+    '?'  => [ T_QUANTIFIER, 0,  1, 1 ],
+    '*?' => [ T_QUANTIFIER, 0, -1, 0 ],
+    '+?' => [ T_QUANTIFIER, 1, -1, 0 ],
+    '??' => [ T_QUANTIFIER, 0,  1, 0 ],
+    ')'  => [ T_CLGROUP ],
+    '|'  => [ T_ALTERNATE ],
+    '['  => [ T_CLASS_START ],
+    ']'  => [ T_CLASS_END ],
     );
 
 sub _skip_space {
@@ -214,21 +229,21 @@ sub _quoted_code_lookahead {
     if( $$buffer =~ s/^->([{[])// ) {
         ++$self->{brackets};
         $self->unlex( [ $ops{$1}, $1 ] );
-        $self->unlex( [ 'ARROW', '->' ] );
+        $self->unlex( [ T_ARROW, '->' ] );
     } elsif( $$buffer =~ s/^{// ) {
         if( !$self->quote->{interpolated_pattern} ) {
             ++$self->{brackets};
-            $self->unlex( [ 'OPBRK', '{' ] );
+            $self->unlex( [ T_OPBRK, '{' ] );
         } elsif( $$buffer =~ /^[0-9]+,[0-9]*}/ ) {
             die 'Quantifier!';
         } else {
             ++$self->{brackets};
-            $self->unlex( [ 'OPBRK', '{' ] );
+            $self->unlex( [ T_OPBRK, '{' ] );
         }
     } elsif( $$buffer =~ s/^\[// ) {
         if( !$self->quote->{interpolated_pattern} ) {
             ++$self->{brackets};
-            $self->unlex( [ 'OPSQ', '[' ] );
+            $self->unlex( [ T_OPSQ, '[' ] );
         } else {
             if( _character_class_insanity( $self ) ) {
                 $$buffer = '[' . $$buffer;
@@ -236,7 +251,7 @@ sub _quoted_code_lookahead {
                 $self->unlex( $token );
             } else {
                 ++$self->{brackets};
-                $self->unlex( [ 'OPSQ', '[' ] );
+                $self->unlex( [ T_OPSQ, '[' ] );
             }
         }
     } else {
@@ -254,7 +269,7 @@ sub lex_pattern_group {
     $$buffer =~ s/^(\#|:|[imsx]*\-[imsx]*:?|!|=|<=|<!|{|\?{|\?>)//x
       or die "Invalid character after (?";
 
-    return [ 'PATTERN', $1 ];
+    return [ T_PATTERN, $1 ];
 }
 
 sub lex_charclass {
@@ -269,13 +284,13 @@ sub lex_charclass {
             return $quoted_pattern{$qc};
         }
 
-        return [ 'STRING', $qc ];
+        return [ T_STRING, $qc ];
     } elsif( $c eq '-' ) {
-        return [ 'DASH', '-' ];
+        return [ T_MINUS, '-' ];
     } elsif( $c eq ']' ) {
-        return [ 'CLASS_END' ];
+        return [ T_CLASS_END ];
     } else {
-        return [ 'STRING', $c ];
+        return [ T_STRING, $c ];
     }
 }
 
@@ -289,10 +304,10 @@ sub lex_quote {
     for(;;) {
         unless( length $$buffer ) {
             if( length $v ) {
-                $self->unlex( [ 'SPECIAL', 'EOF' ] );
-                return [ 'STRING', $v, 1 ];
+                $self->unlex( [ T_EOF, '' ] );
+                return [ T_STRING, $v, 1 ];
             } else {
-                return [ 'SPECIAL', 'EOF' ];
+                return [ T_EOF, '' ];
             }
         }
 
@@ -309,7 +324,7 @@ sub lex_quote {
                     if( my $qp = $quoted_pattern{$qc} ) {
                         substr $$buffer, 0, 1, ''; # eat character
                         if( $pattern ) {
-                            $to_return = [ 'PATTERN', $qc, $qp ];
+                            $to_return = [ T_PATTERN, $qc, $qp ];
                         } else {
                             $v .= $c . $qc;
                             next;
@@ -320,14 +335,14 @@ sub lex_quote {
 
                     if( $nc eq '?' ) {
                         substr $$buffer, 0, 1, ''; # eat character
-                        $to_return = [ 'PATTERN', '(?' ];
+                        $to_return = [ T_PATTERN, '(?' ];
                     } else {
-                        $to_return = [ 'PATTERN', '(' ];
+                        $to_return = [ T_PATTERN, '(' ];
                     }
                 } elsif(     !$interpolated_pattern
                          and my $special = $pattern_special{$c} ) {
                     # check nongreedy quantifiers
-                    if( $special->[0] eq 'QUANTIFIER' ) {
+                    if( $special->[0] == T_QUANTIFIER ) {
                         my $qc = substr $$buffer, 0, 1;
 
                         if( $qc eq '?' ) {
@@ -336,14 +351,14 @@ sub lex_quote {
                         }
                     }
 
-                    $to_return = [ 'PATTERN', $c, $special ];
+                    $to_return = [ T_PATTERN, $c, $special ];
                 }
             }
 
             if( $to_return ) {
                 if( length $v ) {
                     $self->unlex( $to_return );
-                    return [ 'STRING', $v, 1 ];
+                    return [ T_STRING, $v, 1 ];
                 } else {
                     return $to_return;
                 }
@@ -372,7 +387,7 @@ sub lex_quote {
                 } elsif( length $v ) {
                     $self->unlex( [ $ops{$c}, $c ] );
 
-                    return [ 'STRING', $v ];
+                    return [ T_STRING, $v ];
                 } else {
                     return [ $ops{$c}, $c ];
                 }
@@ -389,7 +404,7 @@ sub lex_identifier {
     my( $self ) = @_;
 
     if( @{$self->tokens} ) {
-        return undef if $self->tokens->[-1]->[0] ne 'ID';
+        return undef if $self->tokens->[-1]->[0] != T_ID;
         return pop @{$self->tokens};
     }
 
@@ -398,14 +413,14 @@ sub lex_identifier {
     _skip_space( $self )
       if defined( $$_ ) && $$_ =~ /^[\s\r\n]/;
 
-    return [ 'SPECIAL', 'EOF' ] unless length $$_;
+    return [ T_EOF, '' ] unless length $$_;
 
     my $id;
     $$_ =~ s/^\^([A-Z\[\\\]^_?])//x and do {
-        $id = [ 'ID', chr( ord( $1 ) - ord( 'A' ) + 1 ) ];
+        $id = [ T_ID, chr( ord( $1 ) - ord( 'A' ) + 1 ) ];
     };
     $id or $$_ =~ s/^::(?=\W)//x and do {
-        $id = [ 'ID', 'main::' ];
+        $id = [ T_ID, 'main::' ];
     };
     $id or $$_ =~ s/^(\'|::)?(\w+)//x and do {
         my $ids = defined $1 ? '::' . $2 : $2;
@@ -414,10 +429,10 @@ sub lex_identifier {
             $ids .= '::' . ( defined $1 ? $1 : $2 );
         }
 
-        $id = [ 'ID', $ids ];
+        $id = [ T_ID, $ids ];
     };
     $id or $$_ =~ s/^{\^([A-Z\[\\\]^_?])(\w*)}//x and do {
-        $id = [ 'ID', chr( ord( $1 ) - ord( 'A' ) + 1 ) . $2 ];
+        $id = [ T_ID, chr( ord( $1 ) - ord( 'A' ) + 1 ) . $2 ];
     };
     $id or $$_ =~ s/^{//x and do {
         my $spcbef = _skip_space( $self );
@@ -431,11 +446,11 @@ sub lex_identifier {
         my $spcaft = _skip_space( $self );
 
         if( $$_ =~ s/^}//x ) {
-            $id = [ 'ID', $maybe_id ];
+            $id = [ T_ID, $maybe_id ];
         } elsif( $$_ =~ /^\[|^\{/ ) {
             ++$self->{brackets};
             push @{$self->{pending_brackets}}, $self->{brackets};
-            $id = [ 'ID', $maybe_id ];
+            $id = [ T_ID, $maybe_id ];
         } else {
             # not a simple identifier
             $$_ = '{' . $spcbef . $maybe_id . $spcaft . $$_;
@@ -443,7 +458,7 @@ sub lex_identifier {
         }
     };
     $id or $$_ =~ s/^(\W)(?=\W)// and do {
-        $id = [ 'ID', $1 ];
+        $id = [ T_ID, $1 ];
     };
 
     if( $id && $self->quote && $self->{brackets} == 0 ) {
@@ -465,7 +480,7 @@ sub lex_number {
                 $flags = NUM_BINARY | NUM_INTEGER;
                 $num .= $1;
 
-                return [ 'NUMBER', $num, $flags ];
+                return [ T_NUMBER, $num, $flags ];
             } else {
                 die "Invalid binary digit";
             }
@@ -475,7 +490,7 @@ sub lex_number {
                 $flags = NUM_HEXADECIMAL | NUM_INTEGER;
                 $num .= $1;
 
-                return [ 'NUMBER', $num, $flags ];
+                return [ T_NUMBER, $num, $flags ];
             } else {
                 die "Invalid hexadecimal digit";
             }
@@ -486,7 +501,7 @@ sub lex_number {
                 $num .= $1;
                 $$_ =~ /^[89]/ and die "Invalid octal digit";
 
-                return [ 'NUMBER', $num, $flags ];
+                return [ T_NUMBER, $num, $flags ];
             } else {
                 $flags = NUM_INTEGER;
                 $num = '0'
@@ -498,7 +513,7 @@ sub lex_number {
         $num .= $1;
     };
     # '..' operator (es. 12..15)
-    $$_ =~ /^\.\./ and return [ 'NUMBER', $num, $flags ];
+    $$_ =~ /^\.\./ and return [ T_NUMBER, $num, $flags ];
     $$_ =~ s/^\.(\d*)//x and do {
         $flags = NUM_FLOAT;
         $num = '0' unless length $num;
@@ -509,7 +524,7 @@ sub lex_number {
         $num .= "e$1";
     };
 
-    return [ 'NUMBER', $num, $flags ];
+    return [ T_NUMBER, $num, $flags ];
 }
 
 my %quote_end = qw!( ) { } [ ] < >!;
@@ -532,7 +547,7 @@ sub _find_end {
         }
         # if we find a fat comma, we got a string constant, not the
         # start of a quoted string!
-        $$_ =~ /^=>/ and return [ 'STRING', $op ];
+        $$_ =~ /^=>/ and return [ T_STRING, $op ];
         $$_ =~ s/^(\S)// or die;
         $quote_start = $1;
     }
@@ -581,7 +596,7 @@ sub _find_end {
         }
     }
 
-    return [ $is_regex ? 'PATTERN' : 'QUOTE',
+    return [ $is_regex ? T_PATTERN : T_QUOTE,
              $op, $quote_start, \$str, undef, undef, $interpolated ];
 }
 
@@ -590,7 +605,7 @@ sub _prepare_sublex {
     my $token = _find_end( $self, $op, $quote_start );
 
     # oops, found fat comma: not a quote-like operator
-    return $token if $token->[0] eq 'STRING';
+    return $token if $token->[0] == T_STRING;
 
     # scan second part of substitution/transliteration
     if( $op eq 's' || $op eq 'tr' || $op eq 'y' ) {
@@ -653,7 +668,7 @@ sub _prepare_sublex_heredoc {
 
     Carp::confess "EOF while looking for terminator '$end'" unless $finished;
 
-    return [ 'QUOTE', $quote, $quote, \$str ];
+    return [ T_QUOTE, $quote, $quote, \$str ];
 }
 
 sub lex {
@@ -665,7 +680,7 @@ sub lex {
     _skip_space( $self );
 
     local $_ = $self->buffer;
-    return [ 'SPECIAL', 'EOF' ] unless length $$_;
+    return [ T_EOF, '' ] unless length $$_;
 
     $$_ =~ /^\d|^\.\d/ and return $self->lex_number;
     $$_ =~ s/^(q|qq|qx|qw|m|qr|s|tr|y)(?=\W)//x and
@@ -677,7 +692,7 @@ sub lex {
         # look ahead for fat comma
         _skip_space( $self );
         if( $$_ =~ /^=>/ ) {
-            return [ 'STRING', $ids ];
+            return [ T_STRING, $ids ];
         }
         my $op = $ops{$ids};
         my $type =  $op                 ? T_KEYWORD :
@@ -700,7 +715,7 @@ sub lex {
         if( $op ) {
             return [ $op, $ids ];
         }
-        return [ 'ID', $ids, $type ];
+        return [ T_ID, $ids, $type ];
     };
     $$_ =~ s/^(["'`])//x and return _prepare_sublex( $self, $1, $1 );
     $$_ =~ /^</ and $expect != X_OPERATOR and do {
@@ -758,19 +773,19 @@ sub lex {
         # disambiguate start of block from anonymous hash
         if( $brack eq '{' ) {
             if( $expect == X_TERM ) {
-                return [ 'OPHASH', '{' ];
+                return [ T_OPHASH, '{' ];
             } elsif( $expect == X_OPERATOR ) {
                 # autoquote literal strings in hash subscripts
                 if( $$_ =~ s/^\s*([[:alpha:]_]+)\s*\}// ) {
-                    $self->unlex( [ 'CLBRK', '}' ] );
-                    $self->unlex( [ 'STRING', $1 ] );
+                    $self->unlex( [ T_CLBRK, '}' ] );
+                    $self->unlex( [ T_STRING, $1 ] );
                 }
             } elsif( $expect != X_BLOCK ) {
                 # try to guess if it is a block or anonymous hash
                 $self->_skip_space;
 
                 if( $$_ =~ /^}/ ) {
-                    return [ 'OPHASH', '{' ];
+                    return [ T_OPHASH, '{' ];
                 }
 
                 # treat '<bareward> =>', '<string> ,/=>' lookahead
@@ -784,8 +799,8 @@ sub lex {
 
                     $self->_skip_space;
                     if(    $$_ =~ /^=>/
-                        || ( $$_ =~ /^,/ && $next->[0] ne 'ID' ) ) {
-                        return [ 'OPHASH', '{' ];
+                        || ( $$_ =~ /^,/ && $next->[0] != T_ID ) ) {
+                        return [ T_OPHASH, '{' ];
                     }
                 }
             }
@@ -797,7 +812,7 @@ sub lex {
         if( $expect == X_TERM || $expect == X_STATE ) {
             return _prepare_sublex( $self, 'm', '/' );
         } else {
-            return [ 'SLASH', '/' ];
+            return [ T_SLASH, '/' ];
         }
     };
     $$_ =~ s/^([:;,()\?<>!=\/\\\+\-\.])//x and return [ $ops{$1}, $1 ];
