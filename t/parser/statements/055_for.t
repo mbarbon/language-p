@@ -15,9 +15,8 @@ EOP
 --- !parsetree:For
 block: !parsetree:Block
   lines:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 block_type: for
 condition: !parsetree:BinOp
@@ -27,9 +26,8 @@ condition: !parsetree:BinOp
     name: i
     sigil: $
   op: <
-  right: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  right: !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 10
 initializer: !parsetree:BinOp
   context: CXT_VOID
@@ -39,9 +37,8 @@ initializer: !parsetree:BinOp
     name: i
     sigil: $
   op: =
-  right: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  right: !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 0
 step: !parsetree:BinOp
   context: CXT_VOID
@@ -57,9 +54,8 @@ step: !parsetree:BinOp
       name: i
       sigil: $
     op: +
-    right: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    right: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 EOE
 
@@ -71,9 +67,8 @@ EOP
 --- !parsetree:Foreach
 block: !parsetree:Block
   lines:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 expression: !parsetree:Symbol
   context: CXT_LIST
@@ -93,9 +88,8 @@ EOP
 --- !parsetree:Foreach
 block: !parsetree:Block
   lines:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 expression: !parsetree:Symbol
   context: CXT_LIST
@@ -115,9 +109,8 @@ EOP
 --- !parsetree:Foreach
 block: !parsetree:Block
   lines:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 expression: !parsetree:Symbol
   context: CXT_LIST

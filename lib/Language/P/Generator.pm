@@ -153,7 +153,6 @@ my %dispatch =
     'Language::P::ParseTree::UnOp'                   => '_unary_op',
     'Language::P::ParseTree::BinOp'                  => '_binary_op',
     'Language::P::ParseTree::Constant'               => '_constant',
-    'Language::P::ParseTree::Number'                 => '_constant',
     'Language::P::ParseTree::Symbol'                 => '_symbol',
     'Language::P::ParseTree::LexicalDeclaration'     => '_lexical_declaration',
     'Language::P::ParseTree::LexicalSymbol'          => '_lexical_declaration',
@@ -411,14 +410,13 @@ sub _anything_cond {
 
 sub _constant {
     my( $self, $tree ) = @_;
-    my $type = $tree->type;
     my $v;
 
-    if( $type eq 'number' ) {
-        if( $tree->flags == NUM_INTEGER ) {
+    if( $tree->is_number ) {
+        if( $tree->flags & NUM_INTEGER ) {
             $v = Language::P::Value::StringNumber
                      ->new( { integer => $tree->value } );
-        } elsif( $tree->flags == NUM_FLOAT ) {
+        } elsif( $tree->flags & NUM_FLOAT ) {
             $v = Language::P::Value::StringNumber
                      ->new( { float => $tree->value } );
         } elsif( $tree->flags & NUM_OCTAL ) {
@@ -430,11 +428,13 @@ sub _constant {
         } elsif( $tree->flags & NUM_BINARY ) {
             $v = Language::P::Value::StringNumber
                      ->new( { integer => oct '0b' . $tree->value } );
+        } else {
+            die "Unhandled flags value";
         }
-    } elsif( $type eq 'string' ) {
+    } elsif( $tree->is_string ) {
         $v = Language::P::Value::StringNumber->new( { string => $tree->value } );
     } else {
-        die $type;
+        die "Neither number nor string";
     }
 
     push @bytecode, o( 'constant', value => $v );

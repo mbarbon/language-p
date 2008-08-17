@@ -14,15 +14,13 @@ EOP
 arguments:
   - !parsetree:Builtin
     arguments:
-      - !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      - !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 1
     context: CXT_LIST
     function: defined
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID
 filehandle: ~
@@ -36,13 +34,11 @@ EOP
 arguments:
   - !parsetree:Overridable
     arguments:
-      - !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      - !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 1
-      - !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      - !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 2
     context: CXT_LIST
     function: unlink
@@ -63,7 +59,7 @@ left: !parsetree:Overridable
       name: FILE
       sigil: '*'
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: '>foo'
   context: CXT_SCALAR
   function: open
@@ -71,7 +67,7 @@ op: or
 right: !parsetree:Overridable
   arguments:
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: error
   context: CXT_VOID
   function: die

@@ -27,14 +27,12 @@ expression: !parsetree:List
       sigil: $
     - !parsetree:BinOp
       context: CXT_LIST
-      left: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      left: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 1
       op: +
-      right: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      right: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 2
 type: '['
 EOE
@@ -54,11 +52,10 @@ EOP
 expression: !parsetree:List
   expressions:
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: q
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 type: '{'
 EOE
@@ -68,8 +65,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:Block
 lines:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 EOE

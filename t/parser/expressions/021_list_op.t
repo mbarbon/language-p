@@ -12,13 +12,11 @@ x( 1, 2 );
 EOP
 --- !parsetree:FunctionCall
 arguments:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID
 function: !parsetree:Symbol
@@ -36,13 +34,11 @@ EOP
 name: x
 --- !parsetree:FunctionCall
 arguments:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID
 function: !parsetree:Symbol
@@ -61,13 +57,11 @@ lines: []
 name: x
 --- !parsetree:FunctionCall
 arguments:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID
 function: !parsetree:Symbol
@@ -87,18 +81,16 @@ expressions:
     context: CXT_VOID
     filehandle: ~
     function: print
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   - !parsetree:Print
     arguments: ~
     context: CXT_VOID
     filehandle: ~
     function: print
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 EOE
 
@@ -113,15 +105,13 @@ expressions:
     context: CXT_VOID
     filehandle: ~
     function: print
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: print
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 EOE

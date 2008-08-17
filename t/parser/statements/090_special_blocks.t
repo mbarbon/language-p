@@ -16,9 +16,8 @@ EOP
 lines:
   - !parsetree:Builtin
     arguments:
-      - !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      - !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 1
     context: CXT_CALLER
     function: return
@@ -34,9 +33,8 @@ EOP
 lines:
   - !parsetree:Builtin
     arguments:
-      - !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      - !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 1
     context: CXT_CALLER
     function: return
@@ -52,9 +50,8 @@ EOP
 lines:
   - !parsetree:Builtin
     arguments:
-      - !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      - !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 1
     context: CXT_CALLER
     function: return

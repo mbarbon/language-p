@@ -11,18 +11,15 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1 ? 2 : 3
 EOP
 --- !parsetree:Ternary
-condition: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+condition: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 context: CXT_VOID
-iffalse: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+iffalse: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 3
-iftrue: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+iftrue: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 2
 EOE
 
@@ -37,18 +34,15 @@ left: !parsetree:Symbol
   sigil: $
 op: =
 right: !parsetree:Ternary
-  condition: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  condition: !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   context: CXT_SCALAR
-  iffalse: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  iffalse: !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 3
-  iftrue: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  iftrue: !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 EOE
 
@@ -65,37 +59,31 @@ op: =
 right: !parsetree:Ternary
   condition: !parsetree:BinOp
     context: CXT_SCALAR
-    left: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    left: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
     op: <
-    right: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    right: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 2
   context: CXT_SCALAR
   iffalse: !parsetree:BinOp
     context: CXT_SCALAR
-    left: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    left: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 3
     op: +
-    right: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    right: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 4
   iftrue: !parsetree:BinOp
     context: CXT_SCALAR
-    left: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    left: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 2
     op: +
-    right: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    right: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 3
 EOE
 
@@ -121,13 +109,11 @@ left: !parsetree:Ternary
       name: a
       sigil: $
     op: =
-    right: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    right: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 op: =
-right: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+right: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 2
 EOE

@@ -11,7 +11,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 "";
 EOP
 --- !parsetree:Constant
-type: string
+flags: CONST_STRING
 value: ''
 EOE
 
@@ -19,7 +19,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 "\"";
 EOP
 --- !parsetree:Constant
-type: string
+flags: CONST_STRING
 value: '"'
 EOE
 
@@ -27,7 +27,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 '\'';
 EOP
 --- !parsetree:Constant
-type: string
+flags: CONST_STRING
 value: "'"
 EOE
 
@@ -35,7 +35,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 '\n';
 EOP
 --- !parsetree:Constant
-type: string
+flags: CONST_STRING
 value: \n
 EOE
 
@@ -43,7 +43,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 "abcdefg";
 EOP
 --- !parsetree:Constant
-type: string
+flags: CONST_STRING
 value: abcdefg
 EOE
 
@@ -51,7 +51,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 "x\n";
 EOP
 --- !parsetree:Constant
-type: string
+flags: CONST_STRING
 value: "x\n"
 EOE
 
@@ -61,14 +61,14 @@ EOP
 --- !parsetree:QuotedString
 components:
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: ab
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: a
     sigil: $
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: ' '
   - !parsetree:Symbol
     context: CXT_SCALAR
@@ -82,14 +82,14 @@ EOP
 --- !parsetree:QuotedString
 components:
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: ab
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: a
     sigil: $
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: cd
 EOE
 
@@ -99,14 +99,14 @@ EOP
 --- !parsetree:QuotedString
 components:
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: a
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: "\x05"
     sigil: $
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: ' b'
 EOE
 
@@ -116,14 +116,14 @@ EOP
 --- !parsetree:QuotedString
 components:
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: a
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: "\x06oo"
     sigil: $
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: ' b'
 EOE
 
@@ -139,7 +139,7 @@ left: !parsetree:Symbol
   sigil: $
 op: =
 right: !parsetree:Constant
-  type: string
+  flags: CONST_STRING
   value: 1
 --- !parsetree:BinOp
 context: CXT_VOID
@@ -148,9 +148,8 @@ left: !parsetree:Symbol
   name: x
   sigil: $
 op: =
-right: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+right: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 EOE
 
@@ -162,14 +161,14 @@ context: CXT_VOID
 left: !parsetree:QuotedString
   components:
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: ab
     - !parsetree:Symbol
       context: CXT_SCALAR
       name: a
       sigil: $
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: cd
 op: backtick
 EOE
@@ -186,7 +185,7 @@ arguments:
         name: x
         sigil: $
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: ' '
       - !parsetree:Symbol
         context: CXT_SCALAR
@@ -241,7 +240,7 @@ EOP
 --- !parsetree:Glob
 arguments:
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: 'foo '
 context: CXT_VOID
 function: glob
@@ -281,21 +280,21 @@ arguments:
   - !parsetree:QuotedString
     components:
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: "'"
       - !parsetree:Symbol
         context: CXT_SCALAR
         name: x
         sigil: $
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: ' '
       - !parsetree:Symbol
         context: CXT_SCALAR
         name: y
         sigil: $
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: "'"
 context: CXT_VOID
 function: glob

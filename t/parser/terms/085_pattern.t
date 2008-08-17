@@ -22,7 +22,7 @@ right: !parsetree:Pattern
     - !parsetree:RXAssertion
       type: START_SPECIAL
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: test
     - !parsetree:RXAssertion
       type: END_SPECIAL
@@ -45,7 +45,7 @@ right: !parsetree:Pattern
     - !parsetree:RXAssertion
       type: START_SPECIAL
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: test
   flags: ~
   op: m
@@ -77,7 +77,7 @@ components:
   - !parsetree:RXAssertion
     type: START_SPECIAL
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: test
 flags: ~
 op: qr
@@ -99,14 +99,14 @@ right: !parsetree:InterpolatedPattern
   string: !parsetree:QuotedString
     components:
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: '^'
       - !parsetree:Symbol
         context: CXT_SCALAR
         name: foo
         sigil: $
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: aaa
 EOE
 
@@ -127,7 +127,7 @@ right: !parsetree:Pattern
     - !parsetree:RXAssertion
       type: END_SPECIAL
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: '{foo}aaa'
   flags: ~
   op: m
@@ -153,7 +153,7 @@ right: !parsetree:InterpolatedPattern
         name: foo
         sigil: $
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: $
 EOE
 
@@ -177,6 +177,6 @@ right: !parsetree:InterpolatedPattern
         name: foo
         sigil: $
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: \w
 EOE

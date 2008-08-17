@@ -13,9 +13,8 @@ EOP
 --- !parsetree:Subscript
 context: CXT_VOID
 reference: 0
-subscript: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+subscript: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 subscripted: !parsetree:Symbol
   context: CXT_LIST
@@ -30,9 +29,8 @@ EOP
 --- !parsetree:Subscript
 context: CXT_VOID
 reference: 0
-subscript: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+subscript: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 subscripted: !parsetree:Symbol
   context: CXT_LIST
@@ -47,9 +45,8 @@ EOP
 --- !parsetree:Subscript
 context: CXT_VOID
 reference: 0
-subscript: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+subscript: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 subscripted: !parsetree:Symbol
   context: CXT_LIST
@@ -64,9 +61,8 @@ EOP
 --- !parsetree:Subscript
 context: CXT_VOID
 reference: 0
-subscript: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+subscript: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 2
 subscripted: !parsetree:Symbol
   context: CXT_LIST
@@ -82,7 +78,7 @@ EOP
 context: CXT_VOID
 reference: 0
 subscript: !parsetree:Constant
-  type: string
+  flags: CONST_STRING
   value: qq
 subscripted: !parsetree:Symbol
   context: CXT_LIST
@@ -98,7 +94,7 @@ EOP
 context: CXT_VOID
 reference: 0
 subscript: !parsetree:Constant
-  type: string
+  flags: CONST_STRING
   value: HASH
 subscripted: !parsetree:Symbol
   context: CXT_SCALAR
@@ -115,14 +111,12 @@ context: CXT_VOID
 reference: 0
 subscript: !parsetree:BinOp
   context: CXT_SCALAR
-  left: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  left: !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 2
   op: +
-  right: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  right: !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 3
 subscripted: !parsetree:Symbol
   context: CXT_LIST
@@ -153,14 +147,12 @@ EOP
 arguments:
   - !parsetree:BinOp
     context: CXT_LIST
-    left: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    left: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
     op: +
-    right: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    right: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 2
 context: CXT_VOID
 function: !parsetree:Dereference
@@ -180,23 +172,20 @@ context: CXT_VOID
 reference: 0
 subscript: !parsetree:List
   expressions:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: xx
     - !parsetree:BinOp
       context: CXT_LIST
-      left: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      left: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 3
       op: +
-      right: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      right: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 4
 subscripted: !parsetree:Symbol
   context: CXT_LIST
@@ -213,23 +202,20 @@ context: CXT_VOID
 reference: 0
 subscript: !parsetree:List
   expressions:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: xx
     - !parsetree:BinOp
       context: CXT_LIST
-      left: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      left: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 3
       op: +
-      right: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      right: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 4
 subscripted: !parsetree:Symbol
   context: CXT_LIST
@@ -246,17 +232,14 @@ context: CXT_VOID
 reference: 1
 subscript: !parsetree:List
   expressions:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 2
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 3
 subscripted: !parsetree:Block
   lines:
@@ -271,7 +254,7 @@ subscripted: !parsetree:Block
           sigil: '&'
       op: .
       right: !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: x
 type: '['
 EOE
@@ -285,19 +268,16 @@ arguments:
     context: CXT_LIST
     left: !parsetree:BinOp
       context: CXT_SCALAR
-      left: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      left: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 1
       op: +
-      right: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      right: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 2
     op: +
-    right: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    right: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 3
 context: CXT_VOID
 function: !parsetree:Dereference
@@ -305,16 +285,14 @@ function: !parsetree:Dereference
   left: !parsetree:Subscript
     context: CXT_SCALAR
     reference: 1
-    subscript: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    subscript: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 5
     subscripted: !parsetree:Subscript
       context: CXT_SCALAR|CXT_VIVIFY
       reference: 1
-      subscript: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      subscript: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 3
       subscripted: !parsetree:FunctionCall
         arguments: ~
@@ -324,16 +302,14 @@ function: !parsetree:Dereference
           left: !parsetree:Subscript
             context: CXT_SCALAR
             reference: 1
-            subscript: !parsetree:Number
-              flags: NUM_INTEGER
-              type: number
+            subscript: !parsetree:Constant
+              flags: CONST_NUMBER|NUM_INTEGER
               value: 2
             subscripted: !parsetree:Subscript
               context: CXT_SCALAR|CXT_VIVIFY
               reference: 0
-              subscript: !parsetree:Number
-                flags: NUM_INTEGER
-                type: number
+              subscript: !parsetree:Constant
+                flags: CONST_NUMBER|NUM_INTEGER
                 value: 1
               subscripted: !parsetree:Symbol
                 context: CXT_LIST
@@ -353,9 +329,8 @@ EOP
 --- !parsetree:Subscript
 context: CXT_VOID
 reference: 0
-subscript: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+subscript: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 subscripted: !parsetree:Symbol
   context: CXT_LIST
@@ -370,9 +345,8 @@ EOP
 --- !parsetree:Subscript
 context: CXT_VOID
 reference: 1
-subscript: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+subscript: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 subscripted: !parsetree:Block
   lines:
@@ -387,7 +361,7 @@ subscripted: !parsetree:Block
           sigil: '&'
       op: .
       right: !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: x
 type: '['
 EOE

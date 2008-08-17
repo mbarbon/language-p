@@ -12,14 +12,12 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
-left: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+left: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 op: <
-right: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+right: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 2
 EOE
 
@@ -28,14 +26,12 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
-left: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+left: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 op: '>'
-right: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+right: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 2
 EOE
 
@@ -44,14 +40,12 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
-left: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+left: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 op: '>='
-right: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+right: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 2
 EOE
 
@@ -60,13 +54,11 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
-left: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+left: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 op: <=
-right: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+right: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 2
 EOE

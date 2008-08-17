@@ -33,55 +33,55 @@ use constant
     };
 
 my %prec_assoc_bin =
-  ( '->'  => [ 2,  ASSOC_LEFT ],
-    '**'  => [ 4,  ASSOC_RIGHT ],
-    '=~'  => [ 6,  ASSOC_LEFT ],
-    '!~'  => [ 6,  ASSOC_LEFT ],
-    '*'   => [ 7,  ASSOC_LEFT ],
-    '/'   => [ 7,  ASSOC_LEFT ],
-    '%'   => [ 7,  ASSOC_LEFT ],
-    'x'   => [ 7,  ASSOC_LEFT ],
-    '+'   => [ 8,  ASSOC_LEFT ],
-    '-'   => [ 8,  ASSOC_LEFT ],
-    '.'   => [ 8,  ASSOC_LEFT ],
-    '<'   => [ 11, ASSOC_NON ],
-    '>'   => [ 11, ASSOC_NON ],
-    '<='  => [ 11, ASSOC_NON ],
-    '>='  => [ 11, ASSOC_NON ],
-    'lt'  => [ 11, ASSOC_NON ],
-    'gt'  => [ 11, ASSOC_NON ],
-    'le'  => [ 11, ASSOC_NON ],
-    'ge'  => [ 11, ASSOC_NON ],
-    '=='  => [ 12, ASSOC_NON ],
-    '!='  => [ 12, ASSOC_NON ],
-    '<=>' => [ 12, ASSOC_NON ],
-    'eq'  => [ 12, ASSOC_NON ],
-    'ne'  => [ 12, ASSOC_NON ],
-    'cmp' => [ 12, ASSOC_NON ],
-    '&&'  => [ 15, ASSOC_LEFT ],
-    '||'  => [ 16, ASSOC_LEFT ],
-    '..'  => [ 17, ASSOC_NON ],
-    '...' => [ 17, ASSOC_NON ],
-    '?'   => [ 18, ASSOC_RIGHT ], # ternary
-    '='   => [ 19, ASSOC_RIGHT ],
-    '+='  => [ 19, ASSOC_RIGHT ],
-    '-='  => [ 19, ASSOC_RIGHT ],
-    '*='  => [ 19, ASSOC_RIGHT ],
-    '/='  => [ 19, ASSOC_RIGHT ],
+  ( T_ARROW()       => [ 2,  ASSOC_LEFT ],
+    T_POWER()       => [ 4,  ASSOC_RIGHT ],
+    T_MATCH()       => [ 6,  ASSOC_LEFT ],
+    T_NOTMATCH()    => [ 6,  ASSOC_LEFT ],
+    T_STAR()        => [ 7,  ASSOC_LEFT ],
+    T_SLASH()       => [ 7,  ASSOC_LEFT ],
+    T_PERCENT()     => [ 7,  ASSOC_LEFT ],
+    T_SSTAR()       => [ 7,  ASSOC_LEFT ],
+    T_PLUS()        => [ 8,  ASSOC_LEFT ],
+    T_MINUS()       => [ 8,  ASSOC_LEFT ],
+    T_DOT()         => [ 8,  ASSOC_LEFT ],
+    T_OPAN()        => [ 11, ASSOC_NON ],
+    T_CLAN()        => [ 11, ASSOC_NON ],
+    T_LESSEQUAL()   => [ 11, ASSOC_NON ],
+    T_GREATEQUAL()  => [ 11, ASSOC_NON ],
+    T_SLESS()       => [ 11, ASSOC_NON ],
+    T_SGREAT()      => [ 11, ASSOC_NON ],
+    T_SLESSEQUAL()  => [ 11, ASSOC_NON ],
+    T_SGREATEQUAL() => [ 11, ASSOC_NON ],
+    T_EQUALEQUAL()  => [ 12, ASSOC_NON ],
+    T_NOTEQUAL()    => [ 12, ASSOC_NON ],
+    T_CMP()         => [ 12, ASSOC_NON ],
+    T_SEQUALEQUAL() => [ 12, ASSOC_NON ],
+    T_SNOTEQUAL()   => [ 12, ASSOC_NON ],
+    T_SCMP()        => [ 12, ASSOC_NON ],
+    T_ANDAND()      => [ 15, ASSOC_LEFT ],
+    T_OROR()        => [ 16, ASSOC_LEFT ],
+    T_DOTDOT()      => [ 17, ASSOC_NON ],
+    T_DOTDOTDOT()   => [ 17, ASSOC_NON ],
+    T_INTERR()      => [ 18, ASSOC_RIGHT ], # ternary
+    T_EQUAL()       => [ 19, ASSOC_RIGHT ],
+    T_PLUSEQUAL()   => [ 19, ASSOC_RIGHT ],
+    T_MINUSEQUAL()  => [ 19, ASSOC_RIGHT ],
+    T_STAREQUAL()   => [ 19, ASSOC_RIGHT ],
+    T_SLASHEQUAL()  => [ 19, ASSOC_RIGHT ],
     # 20, comma
     # 21, list ops
-    'not' => [ 22, ASSOC_RIGHT ],
-    'and' => [ 23, ASSOC_LEFT ],
-    'or'  => [ 24, ASSOC_LEFT ],
-    'xor' => [ 24, ASSOC_LEFT ],
-    ':'   => [ 40, ASSOC_RIGHT ], # ternary, must be lowest,
+    T_NOTLOW()      => [ 22, ASSOC_RIGHT ],
+    T_ANDANDLOW()   => [ 23, ASSOC_LEFT ],
+    T_ORORLOW()     => [ 24, ASSOC_LEFT ],
+    T_XORLOW()      => [ 24, ASSOC_LEFT ],
+    T_COLON()       => [ 40, ASSOC_RIGHT ], # ternary, must be lowest,
     );
 
 my %prec_assoc_un =
-  ( '+'   => [ 5,  ASSOC_RIGHT ],
-    '-'   => [ 5,  ASSOC_RIGHT ],
-    '!'   => [ 5,  ASSOC_RIGHT ],
-    '\\'  => [ 5,  ASSOC_RIGHT ],
+  ( T_PLUS()        => [ 5,  ASSOC_RIGHT ],
+    T_MINUS()       => [ 5,  ASSOC_RIGHT ],
+    T_NOT()         => [ 5,  ASSOC_RIGHT ],
+    T_BACKSLASH()   => [ 5,  ASSOC_RIGHT ],
     );
 
 sub parse_string {
@@ -676,8 +676,9 @@ sub _parse_maybe_indirect_method_call {
         Carp::confess Dumper( $indir ) . ' ';
     }
 
-    return Language::P::ParseTree::Bareword->new
+    return Language::P::ParseTree::Constant->new
                ( { value => $op->[1],
+                   flags => CONST_STRING|STRING_BARE
                    } );
 }
 
@@ -793,10 +794,10 @@ sub _parse_string_rest {
         my $value = $self->lexer->lex_quote;
 
         if( $value->[0] == T_STRING ) {
-            push @values,
-                Language::P::ParseTree::Constant->new( { type  => 'string',
-                                                         value => $value->[1],
-                                                         } );
+            push @values, Language::P::ParseTree::Constant->new
+                              ( { flags => CONST_STRING,
+                                  value => $value->[1],
+                                  } );
         } elsif( $value->[0] == T_EOF ) {
             last;
         } elsif( $value->[0] == T_DOLLAR || $value->[0] == T_AT ) {
@@ -812,9 +813,10 @@ sub _parse_string_rest {
     if( @values == 1 && $values[0]->is_constant ) {
         $string = $values[0];
     } elsif( @values == 0 ) {
-        $string = Language::P::ParseTree::Constant->new( { value => "",
-                                                           type  => 'string',
-                                                           } );
+        $string = Language::P::ParseTree::Constant->new
+                      ( { value => "",
+                          flags => CONST_STRING,
+                          } );
     } else {
         $string = Language::P::ParseTree::QuotedString->new
                       ( { components => \@values,
@@ -829,7 +831,7 @@ sub _parse_string_rest {
     } elsif( $quote eq 'qw' ) {
         my @words = map Language::P::ParseTree::Constant->new
                             ( { value => $_,
-                                type  => 'string',
+                                flags => CONST_STRING,
                                 } ),
                         split /[\s\r\n]+/, $string->value;
 
@@ -902,13 +904,14 @@ sub _parse_term_terminal {
 
         return $pattern;
     } elsif( $token->[0] == T_NUMBER ) {
-        return Language::P::ParseTree::Number->new( { value => $token->[1],
-                                                      flags => $token->[2],
-                                                      } );
+        return Language::P::ParseTree::Constant->new
+                   ( { value => $token->[1],
+                       flags => $token->[2]|CONST_NUMBER,
+                       } );
     } elsif( $token->[0] == T_STRING ) {
         return Language::P::ParseTree::Constant->new
                    ( { value => $token->[1],
-                       type  => 'string',
+                       flags => CONST_STRING,
                        } );
     } elsif( $token->[1] eq '$#' || $token->[1] =~ /[\*\$%@&]/ ) {
         return _parse_indirobj_maybe_subscripts( $self, $token );
@@ -1080,20 +1083,19 @@ sub _parse_term_p {
     if( $terminal ) {
         my $la = $self->lexer->peek( X_OPERATOR );
 
-        if( !$prec_assoc_bin{$la->[1]} || $prec_assoc_bin{$la->[1]}[0] > $prec ) {
+        if( !$prec_assoc_bin{$la->[0]} || $prec_assoc_bin{$la->[0]}[0] > $prec ) {
             return $terminal;
         } elsif( $la->[0] == T_INTERR ) {
             _lex_token( $self, T_INTERR );
-            return _parse_ternary( $self, $prec_assoc_bin{$la->[1]}[0],
-                                   $terminal );
-        } elsif( $prec_assoc_bin{$la->[1]} ) {
-            return _parse_term_n( $self, $prec_assoc_bin{$la->[1]}[0],
+            return _parse_ternary( $self, PREC_TERNARY, $terminal );
+        } elsif( $prec_assoc_bin{$la->[0]} ) {
+            return _parse_term_n( $self, $prec_assoc_bin{$la->[0]}[0],
                                   $terminal );
         } else {
             Carp::confess $la->[0], ' ', $la->[1];
         }
-    } elsif( $prec_assoc_un{$token->[1]} ) {
-        my $rest = _parse_term_n( $self, $prec_assoc_un{$token->[1]}[0] );
+    } elsif( $prec_assoc_un{$token->[0]} ) {
+        my $rest = _parse_term_n( $self, $prec_assoc_un{$token->[0]}[0] );
 
         return Language::P::ParseTree::UnOp->new
                    ( { op    => $token->[1],
@@ -1145,12 +1147,12 @@ sub _parse_term_n {
 
     for(;;) {
         my $token = $self->lexer->lex( X_OPERATOR );
-        my $bin = $prec_assoc_bin{$token->[1]};
+        my $bin = $prec_assoc_bin{$token->[0]};
         if( !$bin || $bin->[0] > $prec ) {
             $self->lexer->unlex( $token );
             last;
         } elsif( $token->[0] == T_INTERR ) {
-            $terminal = _parse_ternary( $self, $bin->[0], $terminal );
+            $terminal = _parse_ternary( $self, PREC_TERNARY, $terminal );
         } else {
             # do not try to use colon as binary
             Carp::confess $token->[0], ' ', $token->[1]
@@ -1330,7 +1332,7 @@ sub _parse_listop {
                 # here we are calling the method on a bareword
                 my $invocant = Language::P::ParseTree::Constant->new
                                    ( { value => $op->[1],
-                                       type  => 'string',
+                                       flags => CONST_STRING,
                                        } );
 
                 return _parse_maybe_direct_method_call( $self, $invocant );
@@ -1338,8 +1340,9 @@ sub _parse_listop {
                 # looks like a bareword, report as such
                 $self->lexer->unlex( $next );
 
-                return Language::P::ParseTree::Bareword->new
+                return Language::P::ParseTree::Constant->new
                            ( { value => $op->[1],
+                               flags => CONST_STRING|STRING_BARE
                                } );
             }
         } elsif( !$declared && $next->[0] != T_OPPAR ) {
