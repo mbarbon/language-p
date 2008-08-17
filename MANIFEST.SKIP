@@ -33,6 +33,9 @@
 \.#
 \.rej$
 
+# Emacs tags
+^TAGS$
+
 # Avoid OS-specific files/dirs
 #   Mac OSX metadata
 \B\.DS_Store
