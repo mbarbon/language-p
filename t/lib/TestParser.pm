@@ -7,7 +7,7 @@ use Exporter 'import';
 
 use Language::P::Parser;
 use Language::P::ParseTree qw(:all);
-use Language::P::Value::SymbolTable;
+use Language::P::Value::MainSymbolTable;
 
 our @EXPORT_OK = qw(fresh_parser parsed_program parse_and_diff
                     parse_and_diff_yaml);
@@ -47,7 +47,7 @@ my @lines;
     package TestParserRuntime;
 
     sub new {
-        my $st = Language::P::Value::SymbolTable->new;
+        my $st = Language::P::Value::MainSymbolTable->new;
 
         return bless { symbol_table => $st }, __PACKAGE__;
     }

@@ -49,6 +49,9 @@ sub get_symbol {
 sub _get_symbol {
     my( $self, $name, $sigil, $create ) = @_;
     my( @packages ) = split /::/, $name;
+    if( $self->is_main && ( $packages[0] eq '' || $packages[0] eq 'main' ) ) {
+        shift @packages;
+    }
 
     my $index = 0;
     my $current = $self;

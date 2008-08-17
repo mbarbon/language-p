@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 3;
+use Test::More tests => 5;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -15,6 +15,41 @@ expressions:
   - !parsetree:Constant
     type: string
     value: foo
+  - !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 1
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+foo::x => 1
+EOP
+--- !parsetree:List
+expressions:
+  - !parsetree:Constant
+    type: string
+    value: foo::x
+  - !parsetree:Number
+    flags: NUM_INTEGER
+    type: number
+    value: 1
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+sub foo::q;
+foo::q => 1
+EOP
+--- !parsetree:SubroutineDeclaration
+name: foo::q
+--- !parsetree:List
+expressions:
+  - !parsetree:FunctionCall
+    arguments: ~
+    context: CXT_VOID
+    function: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: foo::q
+      sigil: '&'
   - !parsetree:Number
     flags: NUM_INTEGER
     type: number

@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
-__PACKAGE__->mk_ro_accessors( qw(stream buffer tokens
+__PACKAGE__->mk_ro_accessors( qw(stream buffer tokens symbol_table
                                  ) );
 __PACKAGE__->mk_accessors( qw(quote) );
 
@@ -20,13 +20,14 @@ use constant
     T_ID          => 1,
     T_KEYWORD     => 2,
     T_OVERRIDABLE => 3,
+    T_FQ_ID       => 4,
     };
 
 use Exporter qw(import);
 
 our @EXPORT_OK =
   qw(X_NOTHING X_STATE X_TERM X_OPERATOR X_BLOCK
-     T_ID T_SPECIAL T_NUMBER T_STRING T_KEYWORD T_OVERRIDABLE
+     T_ID T_FQ_ID T_NUMBER T_STRING T_KEYWORD T_OVERRIDABLE
      );
 our %EXPORT_TAGS =
   ( all  => \@EXPORT_OK,
@@ -402,22 +403,24 @@ sub lex_identifier {
 
     my $id;
     $$_ =~ s/^\^([A-Z\[\\\]^_?])//x and do {
-        $id = [ 'ID', chr( ord( $1 ) - ord( 'A' ) + 1 ) ];
+        $id = [ 'ID', chr( ord( $1 ) - ord( 'A' ) + 1 ), T_FQ_ID ];
     };
     $id or $$_ =~ s/^::(?=\W)//x and do {
-        $id = [ 'ID', 'main::' ];
+        $id = [ 'ID', 'main::', T_FQ_ID ];
     };
     $id or $$_ =~ s/^(\'|::)?(\w+)//x and do {
         my $ids = defined $1 ? '::' . $2 : $2;
+        my $idt = defined $1 ? T_FQ_ID : T_ID;
 
         while( $$_ =~ s/^::(\w*)|^\'(\w+)// ) {
             $ids .= '::' . ( defined $1 ? $1 : $2 );
+            $idt = T_FQ_ID;
         }
 
-        $id = [ 'ID', $ids ];
+        $id = [ 'ID', $ids, $idt ];
     };
     $id or $$_ =~ s/^{\^([A-Z\[\\\]^_?])(\w*)}//x and do {
-        $id = [ 'ID', chr( ord( $1 ) - ord( 'A' ) + 1 ) . $2 ];
+        $id = [ 'ID', chr( ord( $1 ) - ord( 'A' ) + 1 ) . $2, T_FQ_ID ];
     };
     $id or $$_ =~ s/^{//x and do {
         my $spcbef = _skip_space( $self );
@@ -431,11 +434,11 @@ sub lex_identifier {
         my $spcaft = _skip_space( $self );
 
         if( $$_ =~ s/^}//x ) {
-            $id = [ 'ID', $maybe_id ];
+            $id = [ 'ID', $maybe_id, T_ID ];
         } elsif( $$_ =~ /^\[|^\{/ ) {
             ++$self->{brackets};
             push @{$self->{pending_brackets}}, $self->{brackets};
-            $id = [ 'ID', $maybe_id ];
+            $id = [ 'ID', $maybe_id, T_ID ];
         } else {
             # not a simple identifier
             $$_ = '{' . $spcbef . $maybe_id . $spcaft . $$_;
@@ -443,7 +446,7 @@ sub lex_identifier {
         }
     };
     $id or $$_ =~ s/^(\W)(?=\W)// and do {
-        $id = [ 'ID', $1 ];
+        $id = [ 'ID', $1, T_FQ_ID ];
     };
 
     if( $id && $self->quote && $self->{brackets} == 0 ) {
@@ -672,21 +675,19 @@ sub lex {
         return _prepare_sublex( $self, $1, undef );
     $$_ =~ s/^(::)?(\w+)//x and do {
         my $ids = ( $1 || '' ) . $2;
+        my $fqual = $1 ? 1 : 0;
         my $no_space = $$_ !~ /^[\s\r\n]/;
 
-        # look ahead for fat comma
-        _skip_space( $self );
-        if( $$_ =~ /^=>/ ) {
-            return [ 'STRING', $ids ];
-        }
         my $op = $ops{$ids};
-        my $type =  $op                 ? T_KEYWORD :
+        my $type =  $fqual              ? T_FQ_ID :
+                    $op                 ? T_KEYWORD :
                     $keywords{$ids}     ? T_KEYWORD :
                     $overridables{$ids} ? T_OVERRIDABLE :
                                           T_ID;
 
         if( $no_space && (    $$_ =~ /^::/
-                           || ( $type == T_ID && $$_ =~ /^'\w/ ) ) ) {
+                           || (    ( $type == T_ID || $type == T_FQ_ID )
+                                && $$_ =~ /^'\w/ ) ) ) {
             while( $$_ =~ s/^::(\w*)|^\'(\w+)// ) {
                 $ids .= '::' . ( defined $1 ? $1 : $2 );
             }
@@ -694,7 +695,19 @@ sub lex {
                 # warn for nonexistent package
             }
             $op = undef;
-            $type = T_ID;
+            $type = T_FQ_ID;
+        }
+
+        # look ahead for fat comma
+        _skip_space( $self );
+        if( $$_ =~ /^=>/ ) {
+            # fully qualified name (foo::moo) is quoted only if not declared
+            if(    $type == T_FQ_ID
+                && $self->symbol_table->get_symbol( $ids, '*' ) ) {
+                return [ 'ID', $ids, $type ];
+            } else {
+                return [ 'STRING', $ids ];
+            }
         }
 
         if( $op ) {

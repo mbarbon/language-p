@@ -101,9 +101,22 @@ sub parse_file {
 sub parse_stream {
     my( $self, $stream ) = @_;
 
-    $self->{lexer} = Language::P::Lexer->new( { stream => $stream } );
+    $self->{lexer} = Language::P::Lexer->new
+                         ( { stream       => $stream,
+                             symbol_table => $self->runtime->symbol_table,
+                             } );
     $self->{_lexical_state} = [];
     $self->_parse;
+}
+
+sub _qualify {
+    my( $self, $name, $type ) = @_;
+    if( $type == T_FQ_ID ) {
+        ( my $normalized = $name ) =~ s/^(?:::)?(?:main::)?//;
+        return $normalized;
+    }
+    my $prefix = $self->_package eq 'main' ? '' : $self->_package . '::';
+    return $prefix . $name;
 }
 
 sub _parse {
@@ -254,37 +267,33 @@ sub _add_pending_lexicals {
 sub _parse_sub {
     my( $self, $flags, $no_sub_token ) = @_;
     _lex_token( $self, 'ID' ) unless $no_sub_token;
-    my $name = $self->lexer->peek( X_BLOCK );
+    my $name = $self->lexer->lex_identifier;
+    my $fqname = $name ? _qualify( $self, $name->[1], $name->[2] ) : undef;
 
     # TODO prototypes
-    if( $name->[0] eq 'ID' ) {
+    if( $fqname ) {
         die 'Syntax error: named sub' unless $flags & 1;
-        _lex_token( $self, 'ID' );
 
         my $next = $self->lexer->lex( X_OPERATOR );
 
         if( $next->[0] eq 'SEMICOLON' ) {
-            $self->generator->add_declaration( $name->[1] );
+            $self->generator->add_declaration( $fqname );
 
             return Language::P::ParseTree::SubroutineDeclaration->new
-                       ( { name => $name->[1],
+                       ( { name => $fqname,
                            } );
         } elsif( $next->[0] ne 'OPBRK' ) {
             Carp::confess( $next->[0], ' ', $next->[1] );
         }
-    } elsif( $name->[0] eq 'OPBRK' ) {
-        die 'Syntax error: anonymous sub' unless $flags & 2;
-        undef $name;
-        _lex_token( $self, 'OPBRK' );
     } else {
-        die $name->[0], ' ', $name->[1];
+        die 'Syntax error: anonymous sub' unless $flags & 2;
     }
 
     $self->_enter_scope( 1 );
     my $sub = Language::P::ParseTree::Subroutine->new
                   ( { lexicals => $self->_lexicals,
                       outer    => $self->_current_sub,
-                      name     => $name ? $name->[1] : undef,
+                      name     => $fqname,
                       } );
 
     # FIXME incestuos with runtime
@@ -301,8 +310,8 @@ sub _parse_sub {
 
     # add a subroutine declaration, the generator might
     # not create it until later
-    if( $name ) {
-        $self->generator->add_declaration( $name->[1] );
+    if( $fqname ) {
+        $self->generator->add_declaration( $fqname );
     }
 
     return $sub;
@@ -380,7 +389,7 @@ sub _parse_for {
         my $sep = $self->lexer->lex( X_OPERATOR );
 
         if( $sep->[0] eq 'CLPAR' ) {
-            $foreach_var = _find_symbol( $self, '$', '_' );
+            $foreach_var = _find_symbol( $self, '$', '_', T_FQ_ID );
             $foreach_expr = $expr;
         } elsif( $sep->[0] eq 'SEMICOLON' ) {
             # C-style for
@@ -417,7 +426,7 @@ sub _parse_for {
         $foreach_var = _parse_lexical_variable( $self, $token->[1] )
     } elsif( $token->[0] eq 'DOLLAR' ) {
         my $id = $self->lexer->lex_identifier;
-        $foreach_var = _find_symbol( $self, '$', $id->[1] );
+        $foreach_var = _find_symbol( $self, '$', $id->[1], $id->[2] );
     } else {
         Carp::confess $token->[0], ' ', $token->[1];
     }
@@ -505,7 +514,7 @@ sub _parse_sideff {
             $expr = Language::P::ParseTree::Foreach->new
                         ( { expression => $cond,
                             block      => $expr,
-                            variable   => _find_symbol( $self, '$', '_' ),
+                            variable   => _find_symbol( $self, '$', '_', T_FQ_ID ),
                             } );
         }
     }
@@ -529,12 +538,13 @@ sub _parse_expr {
 }
 
 sub _find_symbol {
-    my( $self, $sigil, $name ) = @_;
+    my( $self, $sigil, $name, $type ) = @_;
 
-    if( $name =~ /::/ ) {
-        return Language::P::ParseTree::Symbol->new( { name  => $name,
-                                                      sigil => $sigil,
-                                                      } );
+    if( $type == T_FQ_ID ) {
+        return Language::P::ParseTree::Symbol->new
+                   ( { name  => _qualify( $self, $name, $type ),
+                       sigil => $sigil,
+                       } );
     }
 
     my( $crossed_sub, $slot ) = $self->_lexicals->find_name( $sigil . $name );
@@ -551,10 +561,10 @@ sub _find_symbol {
                        } );
     }
 
-    my $prefix = $self->_package eq 'main' ? '' : $self->_package . '::';
-    return Language::P::ParseTree::Symbol->new( { name  => $prefix . $name,
-                                                  sigil => $sigil,
-                                                  } );
+    return Language::P::ParseTree::Symbol->new
+               ( { name  => _qualify( $self, $name, $type ),
+                   sigil => $sigil,
+                   } );
 }
 
 sub _parse_maybe_subscript_rest {
@@ -699,7 +709,7 @@ sub _parse_maybe_direct_method_call {
         return _parse_maybe_subscript_rest( $self, $term );
     } elsif( $token->[0] eq 'DOLLAR' ) {
         my $id = _lex_token( $self, 'ID' );
-        my $meth = _find_symbol( $self, '$', $id->[1] );
+        my $meth = _find_symbol( $self, '$', $id->[1], $id->[2] );
         my $oppar = $self->lexer->peek( X_OPERATOR );
         my $args;
         if( $oppar->[0] eq 'OPPAR' ) {
@@ -757,7 +767,9 @@ sub _parse_substitution {
     my $replace;
     if( $match->flags && grep $_ eq 'e', @{$match->flags} ) {
         local $self->{lexer} = Language::P::Lexer->new
-                                   ( { string => $token->[4]->[3] } );
+                                   ( { string       => $token->[4]->[3],
+                                       symbol_table => $self->runtime->symbol_table,
+                                       } );
         $replace = _parse_block_rest( $self, BLOCK_OPEN_SCOPE, 'SPECIAL' );
     } else {
         $replace = _parse_string_rest( $self, $token->[4], 0 );
@@ -780,7 +792,10 @@ sub _parse_string_rest {
                       $terminator eq "'" ? 0 :
                                            1;
     my @values;
-    local $self->{lexer} = Language::P::Lexer->new( { string => $token->[3] } );
+    local $self->{lexer} = Language::P::Lexer->new
+                               ( { string       => $token->[3],
+                                   symbol_table => $self->runtime->symbol_table,
+                                   } );
 
     $self->lexer->quote( { interpolate          => $interpolate,
                            pattern              => 0,
@@ -861,7 +876,7 @@ sub _parse_term_terminal {
 
                     if( $id && !length( ${$lexer->buffer} ) ) {
                         my $glob = Language::P::ParseTree::Symbol->new
-                                       ( { name  => $id->[1],
+                                       ( { name  => _qualify( $self, $id->[1], $id->[2] ),
                                            sigil => '*',
                                            } );
                         return Language::P::ParseTree::Overridable
@@ -892,7 +907,7 @@ sub _parse_term_terminal {
         if( !$is_bind && $token->[1] ne 'qr' ) {
             $pattern = Language::P::ParseTree::BinOp->new
                            ( { op    => '=~',
-                               left  => _find_symbol( $self, '$', '_' ),
+                               left  => _find_symbol( $self, '$', '_', T_FQ_ID ),
                                right => $pattern,
                                } );
         }
@@ -942,7 +957,7 @@ sub _parse_indirobj_maybe_subscripts {
 
     # no subscripting/slicing possible for '%'
     if( $sigil eq '%' ) {
-        return $is_id ? _find_symbol( $self, $sigil, $indir->[1] ) :
+        return $is_id ? _find_symbol( $self, $sigil, $indir->[1], $indir->[2] ) :
                          Language::P::ParseTree::Dereference->new
                              ( { left  => $indir,
                                  op    => $sigil,
@@ -952,7 +967,7 @@ sub _parse_indirobj_maybe_subscripts {
     my $next = $self->lexer->peek( X_OPERATOR );
 
     if( $sigil eq '&' ) {
-        my $deref = $is_id ? _find_symbol( $self, $sigil, $indir->[1] ) :
+        my $deref = $is_id ? _find_symbol( $self, $sigil, $indir->[1], $indir->[2] ) :
                              $indir;
 
         return _parse_indirect_function_call( $self, $deref,
@@ -960,7 +975,7 @@ sub _parse_indirobj_maybe_subscripts {
     }
 
     if( $next->[0] eq 'ARROW' ) {
-        my $deref = $is_id ? _find_symbol( $self, $sigil, $indir->[1] ) :
+        my $deref = $is_id ? _find_symbol( $self, $sigil, $indir->[1], $indir->[2] ) :
                              Language::P::ParseTree::Dereference->new
                                  ( { left  => $indir,
                                      op    => $sigil,
@@ -977,7 +992,7 @@ sub _parse_indirobj_maybe_subscripts {
     } elsif( $sigil eq '*' && $next->[0] eq 'OPBRK' ) {
         $sym_sigil = '*';
     } else {
-        return $is_id ? _find_symbol( $self, $sigil, $indir->[1] ) :
+        return $is_id ? _find_symbol( $self, $sigil, $indir->[1], $indir->[2] ) :
                          Language::P::ParseTree::Dereference->new
                              ( { left  => $indir,
                                  op    => $sigil,
@@ -985,7 +1000,7 @@ sub _parse_indirobj_maybe_subscripts {
     }
 
     my $subscript = _parse_bracketed_expr( $self, $next->[0], 0 );
-    my $subscripted = $is_id ? _find_symbol( $self, $sym_sigil, $indir->[1] ) :
+    my $subscripted = $is_id ? _find_symbol( $self, $sym_sigil, $indir->[1], $indir->[2] ) :
                                $indir;
 
     if( $is_slice ) {
@@ -1254,7 +1269,7 @@ sub _parse_indirobj {
         my $indir = _parse_indirobj( $self, 0 );
 
         if( ref( $indir ) eq 'ARRAY' && $indir->[0] eq 'ID' ) {
-            return _find_symbol( $self, '$', $indir->[1] );
+            return _find_symbol( $self, '$', $indir->[1], $indir->[2] );
         } else {
             return Language::P::ParseTree::Dereference->new
                        ( { left  => $indir,
@@ -1278,7 +1293,7 @@ sub _declared_id {
     if( $op->[2] == T_OVERRIDABLE ) {
         my $st = $self->runtime->symbol_table;
 
-        if( $st->get_symbol( $op->[1], '&' ) ) {
+        if( $st->get_symbol( _qualify( $self, $op->[1], $op->[2] ), '&' ) ) {
             die "Overriding '$op->[1]' not implemented";
         }
         $call = Language::P::ParseTree::Overridable->new
@@ -1301,7 +1316,7 @@ sub _declared_id {
     } else {
         my $st = $self->runtime->symbol_table;
 
-        if( $st->get_symbol( $op->[1], '&' ) ) {
+        if( $st->get_symbol( _qualify( $self, $op->[1], $op->[2] ), '&' ) ) {
             return ( undef, 1 );
         }
     }
@@ -1352,7 +1367,7 @@ sub _parse_listop {
         }
 
         my $symbol = Language::P::ParseTree::Symbol->new
-                         ( { name   => $op->[1],
+                         ( { name   => _qualify( $self, $op->[1], $op->[2] ),
                              sigil => '&',
                              } );
         $call = Language::P::ParseTree::FunctionCall->new
