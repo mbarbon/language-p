@@ -866,13 +866,7 @@ sub lex {
 
         return [ 'FILETEST', $op ];
     };
-    $$_ =~ s/^&//x and do {
-        if( $expect == X_OPERATOR ) {
-        }
-
-        return [ 'AMPERSAND', '&' ];
-    };
-    $$_ =~ s/^([:;,()\?<>!=\/\\\+\-\.\|^\*%@])//x and return [ $ops{$1}, $1 ];
+    $$_ =~ s/^([:;,()\?<>!=\/\\\+\-\.\|^\*%@&])//x and return [ $ops{$1}, $1 ];
 
     die "Lexer error: '$$_'";
 }
