@@ -6,7 +6,7 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 use Language::P::Lexer qw(:all);
-use Language::P::ParseTree;
+use Language::P::ParseTree qw(:all);
 
 __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime
                                  interpolate) );
@@ -36,7 +36,7 @@ sub _parse {
 
         if( $value->[0] == T_STRING ) {
             push @$st,
-                Language::P::ParseTree::Constant->new( { type  => 'string',
+                Language::P::ParseTree::Constant->new( { flags => CONST_STRING,
                                                          value => $value->[1],
                                                          } );
         } elsif( $value->[0] == T_PATTERN ) {
@@ -86,7 +86,7 @@ sub _parse {
                     my $last = chop $st->[-1]->{value}; # XXX
 
                     push @$st, Language::P::ParseTree::Constant->new
-                                   ( { type  => 'string',
+                                   ( { flags => CONST_STRING,
                                        value => $last,
                                        } );
                 }

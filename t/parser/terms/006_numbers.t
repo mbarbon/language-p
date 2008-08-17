@@ -10,99 +10,88 @@ use TestParser qw(:all);
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1725272
 EOP
---- !parsetree:Number
-flags: NUM_INTEGER
-type: number
+--- !parsetree:Constant
+flags: CONST_NUMBER|NUM_INTEGER
 value: 1725272
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 0b101010
 EOP
---- !parsetree:Number
-flags: NUM_INTEGER|NUM_BINARY
-type: number
+--- !parsetree:Constant
+flags: CONST_NUMBER|NUM_BINARY
 value: 101010
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 0xffa1345
 EOP
---- !parsetree:Number
-flags: NUM_INTEGER|NUM_HEXADECIMAL
-type: number
+--- !parsetree:Constant
+flags: CONST_NUMBER|NUM_HEXADECIMAL
 value: ffa1345
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 0
 EOP
---- !parsetree:Number
-flags: NUM_INTEGER
-type: number
+--- !parsetree:Constant
+flags: CONST_NUMBER|NUM_INTEGER
 value: 0
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 0755
 EOP
---- !parsetree:Number
-flags: NUM_INTEGER|NUM_OCTAL
-type: number
+--- !parsetree:Constant
+flags: CONST_NUMBER|NUM_OCTAL
 value: 755
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1.2
 EOP
---- !parsetree:Number
-flags: NUM_FLOAT
-type: number
+--- !parsetree:Constant
+flags: CONST_NUMBER|NUM_FLOAT
 value: 1.2
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 173.
 EOP
---- !parsetree:Number
-flags: NUM_FLOAT
-type: number
+--- !parsetree:Constant
+flags: CONST_NUMBER|NUM_FLOAT
 value: 173
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 .0123
 EOP
---- !parsetree:Number
-flags: NUM_FLOAT
-type: number
+--- !parsetree:Constant
+flags: CONST_NUMBER|NUM_FLOAT
 value: 0.0123
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1E7
 EOP
---- !parsetree:Number
-flags: NUM_FLOAT
-type: number
+--- !parsetree:Constant
+flags: CONST_NUMBER|NUM_FLOAT
 value: 1e7
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1e+07
 EOP
---- !parsetree:Number
-flags: NUM_FLOAT
-type: number
+--- !parsetree:Constant
+flags: CONST_NUMBER|NUM_FLOAT
 value: 1e+07
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 12.7e-3
 EOP
---- !parsetree:Number
-flags: NUM_FLOAT
-type: number
+--- !parsetree:Constant
+flags: CONST_NUMBER|NUM_FLOAT
 value: 12.7e-3
 EOE
 
@@ -111,13 +100,11 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
-left: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+left: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 12
 op: ..
-right: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+right: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 15
 EOE

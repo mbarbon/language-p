@@ -18,9 +18,8 @@ iftrues:
   - !parsetree:ConditionalBlock
     block: !parsetree:Block
       lines:
-        - !parsetree:Number
-          flags: NUM_INTEGER
-          type: number
+        - !parsetree:Constant
+          flags: CONST_NUMBER|NUM_INTEGER
           value: 1
     block_type: if
     condition: !parsetree:BinOp
@@ -30,9 +29,8 @@ iftrues:
         name: a
         sigil: $
       op: '>'
-      right: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      right: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 2
 EOE
 
@@ -47,9 +45,8 @@ iftrues:
   - !parsetree:ConditionalBlock
     block: !parsetree:Block
       lines:
-        - !parsetree:Number
-          flags: NUM_INTEGER
-          type: number
+        - !parsetree:Constant
+          flags: CONST_NUMBER|NUM_INTEGER
           value: 1
     block_type: unless
     condition: !parsetree:BinOp
@@ -59,9 +56,8 @@ iftrues:
         name: a
         sigil: $
       op: '>'
-      right: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      right: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 2
 EOE
 
@@ -76,9 +72,8 @@ EOP
 iffalse: !parsetree:ConditionalBlock
   block: !parsetree:Block
     lines:
-      - !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      - !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 3
   block_type: else
   condition: ~
@@ -86,9 +81,8 @@ iftrues:
   - !parsetree:ConditionalBlock
     block: !parsetree:Block
       lines:
-        - !parsetree:Number
-          flags: NUM_INTEGER
-          type: number
+        - !parsetree:Constant
+          flags: CONST_NUMBER|NUM_INTEGER
           value: 1
     block_type: if
     condition: !parsetree:BinOp
@@ -98,9 +92,8 @@ iftrues:
         name: a
         sigil: $
       op: <
-      right: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      right: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 2
 EOE
 
@@ -117,9 +110,8 @@ EOP
 iffalse: !parsetree:ConditionalBlock
   block: !parsetree:Block
     lines:
-      - !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      - !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 3
   block_type: else
   condition: ~
@@ -127,9 +119,8 @@ iftrues:
   - !parsetree:ConditionalBlock
     block: !parsetree:Block
       lines:
-        - !parsetree:Number
-          flags: NUM_INTEGER
-          type: number
+        - !parsetree:Constant
+          flags: CONST_NUMBER|NUM_INTEGER
           value: 1
     block_type: if
     condition: !parsetree:BinOp
@@ -139,16 +130,14 @@ iftrues:
         name: a
         sigil: $
       op: <
-      right: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      right: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 2
   - !parsetree:ConditionalBlock
     block: !parsetree:Block
       lines:
-        - !parsetree:Number
-          flags: NUM_INTEGER
-          type: number
+        - !parsetree:Constant
+          flags: CONST_NUMBER|NUM_INTEGER
           value: 2
     block_type: if
     condition: !parsetree:BinOp
@@ -158,8 +147,7 @@ iftrues:
         name: a
         sigil: $
       op: <
-      right: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      right: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 3
 EOE

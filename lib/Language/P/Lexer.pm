@@ -21,7 +21,8 @@ BEGIN {
        T_SNOTEQUAL T_SLASH T_BACKSLASH T_DOT T_DOTDOT T_DOTDOTDOT T_PLUS
        T_MINUS T_STAR T_DOLLAR T_PERCENT T_AT T_AMPERSAND T_PLUSPLUS
        T_MINUSMINUS T_ANDAND T_OROR T_ARYLEN T_ARROW T_MATCH T_NOTMATCH
-       T_ANDANDLOW T_ORORLOW T_NOTLOW T_XORLOW
+       T_ANDANDLOW T_ORORLOW T_NOTLOW T_XORLOW T_CMP T_SCMP T_SSTAR T_POWER
+       T_PLUSEQUAL T_MINUSEQUAL T_STAREQUAL T_SLASHEQUAL
 
        T_CLASS_START T_CLASS_END T_CLASS T_QUANTIFIER T_ASSERTION T_ALTERNATE
        T_CLGROUP
@@ -101,6 +102,8 @@ my %ops =
     'eq'  => T_SEQUALEQUAL,
     '!='  => T_NOTEQUAL,
     'ne'  => T_SNOTEQUAL,
+    '<=>' => T_CMP,
+    'cmp' => T_SCMP,
     '/'   => T_SLASH,
     '\\'  => T_BACKSLASH,
     '.'   => T_DOT,
@@ -111,6 +114,7 @@ my %ops =
     '*'   => T_STAR,
     '$'   => T_DOLLAR,
     '%'   => T_PERCENT,
+    '**'  => T_POWER,
     '@'   => T_AT,
     '&'   => T_AMPERSAND,
     '++'  => T_PLUSPLUS,
@@ -477,7 +481,7 @@ sub lex_number {
         if( $1 eq 'b' ) {
             # binary number
             if( $$_ =~ s/^([01]+)// ) {
-                $flags = NUM_BINARY | NUM_INTEGER;
+                $flags = NUM_BINARY;
                 $num .= $1;
 
                 return [ T_NUMBER, $num, $flags ];
@@ -487,7 +491,7 @@ sub lex_number {
         } elsif( $1 eq 'x' ) {
             # hexadecimal number
             if( $$_ =~ s/^([0-9a-fA-F]+)// ) {
-                $flags = NUM_HEXADECIMAL | NUM_INTEGER;
+                $flags = NUM_HEXADECIMAL;
                 $num .= $1;
 
                 return [ T_NUMBER, $num, $flags ];
@@ -497,7 +501,7 @@ sub lex_number {
         } else {
             # maybe octal number
             if( $$_ =~ s/^([0-7]+)// ) {
-                $flags = NUM_OCTAL | NUM_INTEGER;
+                $flags = NUM_OCTAL;
                 $num .= $1;
                 $$_ =~ /^[89]/ and die "Invalid octal digit";
 
@@ -731,6 +735,7 @@ sub lex {
                 |=~|!~
                 |\.\.|\.\.\.
                 |\+\+|\-\-
+                |\+=|\-=|\*=|\/=
                 |\&\&|\|\|)//x and return [ $ops{$1}, $1 ];
     $$_ =~ s/^\$//x and do {
         if( $$_ =~ /^\#/ ) {

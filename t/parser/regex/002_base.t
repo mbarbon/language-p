@@ -22,7 +22,7 @@ right: !parsetree:Pattern
     - !parsetree:RXAssertion
       type: START_SPECIAL
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: "\ntest"
     - !parsetree:RXSpecialClass
       type: WORDS
@@ -47,42 +47,42 @@ right: !parsetree:Pattern
       max: -1
       min: 0
       node: !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: a
     - !parsetree:RXQuantifier
       greedy: 1
       max: -1
       min: 1
       node: !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: b
     - !parsetree:RXQuantifier
       greedy: 1
       max: 1
       min: 0
       node: !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: c
     - !parsetree:RXQuantifier
       greedy: 0
       max: -1
       min: 0
       node: !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: d
     - !parsetree:RXQuantifier
       greedy: 0
       max: -1
       min: 1
       node: !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: b
     - !parsetree:RXQuantifier
       greedy: 0
       max: 1
       min: 0
       node: !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: c
   flags: ~
   op: m
@@ -108,7 +108,7 @@ right: !parsetree:Pattern
         capture: 1
         components:
           - !parsetree:Constant
-            type: string
+            flags: CONST_STRING
             value: a
           - !parsetree:RXQuantifier
             greedy: 0
@@ -118,10 +118,10 @@ right: !parsetree:Pattern
               capture: 1
               components:
                 - !parsetree:Constant
-                  type: string
+                  flags: CONST_STRING
                   value: cbc
           - !parsetree:Constant
-            type: string
+            flags: CONST_STRING
             value: w
   flags: ~
   op: m
@@ -144,17 +144,17 @@ right: !parsetree:Pattern
         - !parsetree:RXAssertion
           type: START_SPECIAL
         - !parsetree:Constant
-          type: string
+          flags: CONST_STRING
           value: t
       right:
         - !parsetree:RXAlternation
           left:
             - !parsetree:Constant
-              type: string
+              flags: CONST_STRING
               value: es
           right:
             - !parsetree:Constant
-              type: string
+              flags: CONST_STRING
               value: t
             - !parsetree:RXAssertion
               type: END_SPECIAL
@@ -179,7 +179,7 @@ right: !parsetree:Pattern
       max: -1
       min: 1
       node: !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: a
     - !parsetree:RXGroup
       capture: 1
@@ -187,17 +187,17 @@ right: !parsetree:Pattern
         - !parsetree:RXAlternation
           left:
             - !parsetree:Constant
-              type: string
+              flags: CONST_STRING
               value: a
           right:
             - !parsetree:RXAlternation
               left:
                 - !parsetree:Constant
-                  type: string
+                  flags: CONST_STRING
                   value: b
               right:
                 - !parsetree:Constant
-                  type: string
+                  flags: CONST_STRING
                   value: c
   flags: ~
   op: m
@@ -216,19 +216,19 @@ op: =~
 right: !parsetree:Pattern
   components:
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: a
     - !parsetree:RXGroup
       capture: 0
       components:
         - !parsetree:Constant
-          type: string
+          flags: CONST_STRING
           value: a
     - !parsetree:RXGroup
       capture: 1
       components:
         - !parsetree:Constant
-          type: string
+          flags: CONST_STRING
           value: a
   flags: ~
   op: m

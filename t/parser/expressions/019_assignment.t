@@ -17,9 +17,8 @@ left: !parsetree:Symbol
   name: x
   sigil: $
 op: =
-right: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+right: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 EOE
 
@@ -34,7 +33,7 @@ left: !parsetree:Symbol
   sigil: $
 op: =
 right: !parsetree:Constant
-  type: string
+  flags: CONST_STRING
   value: test
 EOE
 

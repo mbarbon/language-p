@@ -28,9 +28,8 @@ left: !parsetree:LexicalDeclaration
   name: foo
   sigil: $
 op: =
-right: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+right: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 EOE
 
@@ -54,17 +53,14 @@ left: !parsetree:List
 op: =
 right: !parsetree:List
   expressions:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 2
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 3
 EOE
 

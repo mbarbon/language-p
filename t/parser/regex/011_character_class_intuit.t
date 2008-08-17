@@ -25,9 +25,8 @@ right: !parsetree:InterpolatedPattern
       - !parsetree:Subscript
         context: CXT_SCALAR
         reference: 0
-        subscript: !parsetree:Number
-          flags: NUM_INTEGER
-          type: number
+        subscript: !parsetree:Constant
+          flags: CONST_NUMBER|NUM_INTEGER
           value: 1
         subscripted: !parsetree:Symbol
           context: CXT_LIST
@@ -54,8 +53,8 @@ right: !parsetree:InterpolatedPattern
       - !parsetree:Subscript
         context: CXT_SCALAR
         reference: 0
-        subscript: !parsetree:Bareword
-          type: string
+        subscript: !parsetree:Constant
+          flags: CONST_STRING|STRING_BARE
           value: a
         subscripted: !parsetree:Symbol
           context: CXT_LIST
@@ -84,6 +83,6 @@ right: !parsetree:InterpolatedPattern
         name: x
         sigil: $
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: '[a]'
 EOE

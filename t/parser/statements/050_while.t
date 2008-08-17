@@ -15,9 +15,8 @@ EOP
 --- !parsetree:ConditionalLoop
 block: !parsetree:Block
   lines:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 block_type: while
 condition: !parsetree:BinOp
@@ -27,9 +26,8 @@ condition: !parsetree:BinOp
     name: a
     sigil: $
   op: '>'
-  right: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  right: !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 EOE
 
@@ -41,9 +39,8 @@ EOP
 --- !parsetree:ConditionalLoop
 block: !parsetree:Block
   lines:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 block_type: until
 condition: !parsetree:BinOp
@@ -53,8 +50,7 @@ condition: !parsetree:BinOp
     name: a
     sigil: $
   op: <
-  right: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  right: !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 EOE

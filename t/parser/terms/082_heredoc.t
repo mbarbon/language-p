@@ -15,7 +15,7 @@ EOP
 --- !parsetree:Print
 arguments:
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: "test\n"
 context: CXT_VOID
 filehandle: ~
@@ -36,7 +36,7 @@ arguments:
         name: a
         sigil: $
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: "\n"
 context: CXT_VOID
 filehandle: ~
@@ -57,7 +57,7 @@ arguments:
         name: a
         sigil: $
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: "\n"
 context: CXT_VOID
 filehandle: ~
@@ -72,7 +72,7 @@ EOP
 --- !parsetree:Print
 arguments:
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: "$a\n"
 context: CXT_VOID
 filehandle: ~
@@ -89,7 +89,7 @@ arguments:
   - !parsetree:UnOp
     context: CXT_LIST
     left: !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: "ls\n"
     op: backtick
 context: CXT_VOID

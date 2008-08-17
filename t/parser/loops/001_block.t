@@ -22,9 +22,8 @@ lines:
       name: x
       sigil: $
     op: =
-    right: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    right: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
   - !parsetree:BinOp
     context: CXT_VOID
@@ -33,8 +32,7 @@ lines:
       name: y
       sigil: $
     op: =
-    right: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    right: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 2
 EOE

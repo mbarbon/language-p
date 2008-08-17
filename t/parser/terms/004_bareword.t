@@ -12,12 +12,12 @@ moo.boo
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
-left: !parsetree:Bareword
-  type: string
+left: !parsetree:Constant
+  flags: CONST_STRING|STRING_BARE
   value: moo
 op: .
-right: !parsetree:Bareword
-  type: string
+right: !parsetree:Constant
+  flags: CONST_STRING|STRING_BARE
   value: boo
 EOE
 
@@ -26,12 +26,12 @@ moo'moo.boo::boo::::
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
-left: !parsetree:Bareword
-  type: string
+left: !parsetree:Constant
+  flags: CONST_STRING|STRING_BARE
   value: moo::moo
 op: .
-right: !parsetree:Bareword
-  type: string
+right: !parsetree:Constant
+  flags: CONST_STRING|STRING_BARE
   value: 'boo::boo::'
 EOE
 
@@ -40,11 +40,11 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
-left: !parsetree:Bareword
-  type: string
+left: !parsetree:Constant
+  flags: CONST_STRING|STRING_BARE
   value: ::moo
 op: .
-right: !parsetree:Bareword
-  type: string
+right: !parsetree:Constant
+  flags: CONST_STRING|STRING_BARE
   value: ::boo
 EOE

@@ -21,13 +21,13 @@ right: !parsetree:Substitution
   pattern: !parsetree:Pattern
     components:
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: foo
     flags:
       - g
     op: s
   replacement: !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: bar
 EOE
 
@@ -45,7 +45,7 @@ right: !parsetree:Substitution
   pattern: !parsetree:Pattern
     components:
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: foo
     flags: ~
     op: s
@@ -71,12 +71,12 @@ right: !parsetree:Substitution
   pattern: !parsetree:Pattern
     components:
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: foo
     flags: ~
     op: s
   replacement: !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: $1
 EOE
 
@@ -94,7 +94,7 @@ right: !parsetree:Substitution
   pattern: !parsetree:Pattern
     components:
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: foo
     flags:
       - g
@@ -110,9 +110,8 @@ right: !parsetree:Substitution
           name: x
           sigil: $
         op: =
-        right: !parsetree:Number
-          flags: NUM_INTEGER
-          type: number
+        right: !parsetree:Constant
+          flags: CONST_NUMBER|NUM_INTEGER
           value: 1
       - !parsetree:LexicalSymbol
         context: CXT_SCALAR
@@ -142,7 +141,7 @@ right: !parsetree:Substitution
           name: foo
           sigil: $
   replacement: !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: bar
 EOE
 
@@ -162,12 +161,12 @@ right: !parsetree:Substitution
       - !parsetree:RXAssertion
         type: END_SPECIAL
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: foo
     flags:
       - g
     op: s
   replacement: !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: bar
 EOE

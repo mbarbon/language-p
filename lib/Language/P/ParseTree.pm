@@ -5,6 +5,7 @@ use warnings;
 use Exporter 'import';
 
 our @EXPORT_OK = qw(NUM_INTEGER NUM_FLOAT NUM_HEXADECIMAL NUM_OCTAL NUM_BINARY
+                    STRING_BARE CONST_STRING CONST_NUMBER
 
                     CXT_CALLER CXT_VOID CXT_SCALAR CXT_LIST CXT_LVALUE
                     CXT_VIVIFY CXT_CALL_MASK
@@ -18,11 +19,16 @@ our %EXPORT_TAGS =
     );
 
 use constant
-  { NUM_INTEGER        => 1,
-    NUM_FLOAT          => 2,
-    NUM_HEXADECIMAL    => 4,
-    NUM_OCTAL          => 8,
-    NUM_BINARY         => 16,
+  { CONST_STRING       => 1,
+    CONST_NUMBER       => 2,
+
+    STRING_BARE        => 4,
+
+    NUM_INTEGER        => 8,
+    NUM_FLOAT          => 16,
+    NUM_HEXADECIMAL    => 32,
+    NUM_OCTAL          => 64,
+    NUM_BINARY         => 128,
 
     CXT_CALLER         => 1,
     CXT_VOID           => 2,
@@ -134,30 +140,12 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(value type);
+our @FIELDS = qw(value flags);
 
 sub is_constant { 1 }
-
-__PACKAGE__->mk_ro_accessors( @FIELDS );
-
-package Language::P::ParseTree::Bareword;
-
-use strict;
-use warnings;
-use base qw(Language::P::ParseTree::Constant);
-
-sub type { 'string' }
-sub is_bareword { 1 }
-
-package Language::P::ParseTree::Number;
-
-use strict;
-use warnings;
-use base qw(Language::P::ParseTree::Constant);
-
-our @FIELDS = qw(flags);
-
-sub type { 'number' }
+sub is_bareword { $_[0]->{flags} & Language::P::ParseTree::STRING_BARE }
+sub is_string   { $_[0]->{flags} & Language::P::ParseTree::CONST_STRING }
+sub is_number   { $_[0]->{flags} & Language::P::ParseTree::CONST_NUMBER }
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
