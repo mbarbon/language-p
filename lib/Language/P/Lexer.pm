@@ -101,6 +101,7 @@ my %ops =
     '$'   => 'DOLLAR',
     '%'   => 'PERCENT',
     '@'   => 'AT',
+    '|'   => 'OR',
     '&'   => 'AMPERSAND',
     '++'  => 'PLUSPLUS',
     '--'  => 'MINUSMINUS',
@@ -773,9 +774,6 @@ sub lex {
         }
         return [ $ops{'$'}, '$' ];
     };
-    $$_ =~ s/^([\*%@&])//x and do {
-        return [ $ops{$1}, $1 ];
-    };
     $$_ =~ s/^([{}\[\]])// and do {
         my $brack = $1;
 
@@ -852,7 +850,13 @@ sub lex {
 
         return [ 'FILETEST', $op ];
     };
-    $$_ =~ s/^([:;,()\?<>!=\/\\\+\-\.])//x and return [ $ops{$1}, $1 ];
+    $$_ =~ s/^&//x and do {
+        if( $expect == X_OPERATOR ) {
+        }
+
+        return [ 'AMPERSAND', '&' ];
+    };
+    $$_ =~ s/^([:;,()\?<>!=\/\\\+\-\.\|^\*%@])//x and return [ $ops{$1}, $1 ];
 
     die "Lexer error: '$$_'";
 }
