@@ -1109,6 +1109,13 @@ sub _parse_term_p {
         } else {
             Carp::confess $la->[0], ' ', $la->[1];
         }
+    } elsif( $token->[0] eq 'FILETEST' ) {
+        my $rest = _parse_term_n( $self, PREC_NAMED_UNOP );
+
+        return Language::P::ParseTree::Filetest->new
+                   ( { op    => $token->[1],
+                       left  => $rest,
+                       } );
     } elsif( $prec_assoc_un{$token->[1]} ) {
         my $rest = _parse_term_n( $self, $prec_assoc_un{$token->[1]}[0] );
 

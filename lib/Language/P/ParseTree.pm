@@ -319,6 +319,12 @@ use base qw(Language::P::ParseTree::UnOp);
 sub op { '()' }
 sub lvalue_context { Language::P::ParseTree::CXT_LIST }
 
+package Language::P::ParseTree::Filetest;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::UnOp);
+
 package Language::P::ParseTree::Dereference;
 
 use strict;

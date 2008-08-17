@@ -843,6 +843,15 @@ sub lex {
             return [ 'SLASH', '/' ];
         }
     };
+    $$_ =~ s/^-([rwxoRWXOezsfdlpSugkbctTBMMAC])(?=\W)// and do {
+        my $op = $1;
+        if( $$_ =~ /^[ \t]*=>/ ) {
+            $self->unlex( [ 'STRING', $1 ] );
+            return [ 'MINUS', '-' ];
+        }
+
+        return [ 'FILETEST', $op ];
+    };
     $$_ =~ s/^([:;,()\?<>!=\/\\\+\-\.])//x and return [ $ops{$1}, $1 ];
 
     die "Lexer error: '$$_'";

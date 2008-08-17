@@ -3,6 +3,9 @@ Parsing:
   - prototypes
   - splice/substr/lvalue subroutines
 - filetest
+  - after filetest, foo and _ are not barewords
+  - parse using normal parsing for named unary operators,
+    and add parsing prototype
 - stashes
 - global variables/symbols (STDOUT!)
 - local variables
