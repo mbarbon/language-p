@@ -2,6 +2,7 @@ Parsing:
 - scalar/array/void context
   - prototypes
   - splice/substr/lvalue subroutines
+- filetest
 - stashes
 - global variables/symbols (STDOUT!)
 - local variables

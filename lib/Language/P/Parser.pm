@@ -922,6 +922,11 @@ sub _parse_term_terminal {
                    ( { value => $token->[1],
                        type  => 'string',
                        } );
+    } elsif( $token->[0] eq 'PACKAGE' ) {
+        return Language::P::ParseTree::Constant->new
+                   ( { value => $self->_package,
+                       type  => 'string',
+                       } );
     } elsif( $token->[1] eq '$#' || $token->[1] =~ /[\*\$%@&]/ ) {
         return _parse_indirobj_maybe_subscripts( $self, $token );
     } elsif(    $token->[0] eq 'ID' && $token->[2] == T_KEYWORD

@@ -5,6 +5,7 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_ro_accessors( qw(stream buffer tokens symbol_table
+                                 file line _start_of_line
                                  ) );
 __PACKAGE__->mk_accessors( qw(quote) );
 
@@ -42,6 +43,8 @@ sub new {
     $self->{tokens} = [];
     $self->{brackets} = 0;
     $self->{pending_brackets} = [];
+    $self->{line} = 1;
+    $self->{_start_of_line} = 1;
 
     return $self;
 }
@@ -165,8 +168,24 @@ sub _skip_space {
         $self->_fill_buffer unless length $$buffer;
         return unless length $$buffer;
 
-        $$buffer =~ s/^([\s\r\n]+)// && defined wantarray and $retval .= $1;
-        $$buffer =~ s/^(#.*\n)// && defined wantarray and $retval .= $1;
+        if(    $self->{_start_of_line}
+            && $$buffer =~ s/^#[ \t]*line[ \t]+([0-9]+)(?:[ \t]+"([^"]+)")?[ \t]*[\r\n]// ) {
+            $self->{line} = $1;
+            $self->{file} = $2 if $2;
+            next;
+        }
+
+        $$buffer =~ s/^([ \t]+)// && defined wantarray and $retval .= $1;
+        if( $$buffer =~ s/^[\r\n]// ) {
+            $retval .= $1 if defined wantarray;
+            $self->{_start_of_line} = 1;
+            ++$self->{line};
+        }
+        if( $$buffer =~ s/^(#.*\n)// ) {
+            $retval .= $1 if defined wantarray;
+            $self->{_start_of_line} = 1;
+            ++$self->{line};
+        }
 
         last if length $$buffer;
     }
@@ -397,7 +416,7 @@ sub lex_identifier {
     local $_ = $self->buffer;
 
     _skip_space( $self )
-      if defined( $$_ ) && $$_ =~ /^[\s\r\n]/;
+      if defined( $$_ ) && $$_ =~ /^[ \t\r\n]/;
 
     return [ 'SPECIAL', 'EOF' ] unless length $$_;
 
@@ -530,13 +549,13 @@ sub _find_end {
     local $_ = $self->buffer;
 
     if( $op && !$quote_start ) {
-        if( $$_ =~ /^[\s\r\n]/ ) {
+        if( $$_ =~ /^[ \t\r\n]/ ) {
             _skip_space( $self );
         }
         # if we find a fat comma, we got a string constant, not the
         # start of a quoted string!
         $$_ =~ /^=>/ and return [ 'STRING', $op ];
-        $$_ =~ s/^(\S)// or die;
+        $$_ =~ s/^([^ \t\r\n])// or die;
         $quote_start = $1;
     }
 
@@ -676,7 +695,7 @@ sub lex {
     $$_ =~ s/^(::)?(\w+)//x and do {
         my $ids = ( $1 || '' ) . $2;
         my $fqual = $1 ? 1 : 0;
-        my $no_space = $$_ !~ /^[\s\r\n]/;
+        my $no_space = $$_ !~ /^[ \t\r\n]/;
 
         my $op = $ops{$ids};
         my $type =  $fqual              ? T_FQ_ID :
@@ -698,7 +717,8 @@ sub lex {
             $type = T_FQ_ID;
         }
 
-        # look ahead for fat comma
+        # look ahead for fat comma, save the original value for __LINE__
+        my $line = $self->line;
         _skip_space( $self );
         if( $$_ =~ /^=>/ ) {
             # fully qualified name (foo::moo) is quoted only if not declared
@@ -707,6 +727,16 @@ sub lex {
                 return [ 'ID', $ids, $type ];
             } else {
                 return [ 'STRING', $ids ];
+            }
+        }
+
+        if( $type == T_ID && $ids =~ /^__/ ) {
+            if( $ids eq '__FILE__' ) {
+                return [ 'STRING', $self->file ];
+            } elsif( $ids eq '__LINE__' ) {
+                return [ 'NUMBER', $line, NUM_INTEGER ];
+            } elsif( $ids eq '__PACKAGE__' ) {
+                return [ 'PACKAGE', '' ];
             }
         }
 
@@ -774,7 +804,7 @@ sub lex {
                 return [ 'OPHASH', '{' ];
             } elsif( $expect == X_OPERATOR ) {
                 # autoquote literal strings in hash subscripts
-                if( $$_ =~ s/^\s*([[:alpha:]_]+)\s*\}// ) {
+                if( $$_ =~ s/^[ \t]*([[:alpha:]_]+)[ \t]*\}// ) {
                     $self->unlex( [ 'CLBRK', '}' ] );
                     $self->unlex( [ 'STRING', $1 ] );
                 }
