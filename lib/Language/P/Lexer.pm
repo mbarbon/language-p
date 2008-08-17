@@ -98,6 +98,7 @@ my %ops =
     '+'   => 'PLUS',
     '-'   => 'MINUS',
     '*'   => 'STAR',
+    'x'   => 'SSTAR',
     '$'   => 'DOLLAR',
     '%'   => 'PERCENT',
     '@'   => 'AT',
@@ -699,6 +700,10 @@ sub lex {
     $$_ =~ /^\d|^\.\d/ and return $self->lex_number;
     $$_ =~ s/^(q|qq|qx|qw|m|qr|s|tr|y)(?=\W)//x and
         return _prepare_sublex( $self, $1, undef );
+    $$_ =~ /^x[0-9]/ && $expect == X_OPERATOR and do {
+        $$_ =~ s/^.//;
+        return [ 'SSTAR', 'x' ];
+    };
     $$_ =~ s/^(::)?(\w+)//x and do {
         my $ids = ( $1 || '' ) . $2;
         my $fqual = $1 ? 1 : 0;
@@ -748,6 +753,11 @@ sub lex {
         }
 
         if( $op ) {
+            # 'x' is an operator only when we expect it
+            if( $op eq 'SSTAR' && $expect != X_OPERATOR ) {
+                return [ 'ID', $ids, T_ID ];
+            }
+
             return [ $op, $ids ];
         }
         return [ 'ID', $ids, $type ];
