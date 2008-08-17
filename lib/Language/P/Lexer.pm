@@ -128,6 +128,12 @@ my %overridables = map { ( $_ => 1 ) }
 
 my %quoted_chars =
   ( 'n' => "\n",
+    't' => "\t",
+    'r' => "\r",
+    'f' => "\f",
+    'b' => "\b",
+    'a' => "\a",
+    'e' => "\e",
     );
 
 my %quoted_pattern =
