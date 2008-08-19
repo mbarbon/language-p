@@ -4,22 +4,45 @@ use strict;
 use warnings;
 use Exporter 'import';
 
-our @EXPORT_OK = qw(NUM_INTEGER NUM_FLOAT NUM_HEXADECIMAL NUM_OCTAL NUM_BINARY
-                    STRING_BARE CONST_STRING CONST_NUMBER
+our @OPERATIONS;
+BEGIN {
+    @OPERATIONS =
+      ( qw(OP_POWER OP_MATCH OP_NOT_MATCH OP_MULTIPLY OP_DIVIDE OP_MODULUS
+           OP_REPEAT OP_ADD OP_SUBTRACT OP_CONCATENATE OP_NUM_LT OP_NUM_GT
+           OP_NUM_LE OP_NUM_GE OP_STR_LT OP_STR_GT OP_STR_LE OP_STR_GE
+           OP_NUM_EQ OP_NUM_NE OP_NUM_CMP OP_STR_EQ OP_STR_NE OP_STR_CMP
+           OP_LOG_AND OP_LOG_OR OP_DOT_DOT OP_DOT_DOT_DOT OP_ASSIGN
+           OP_ADD_ASSIGN OP_SUBTRACT_ASSIGN OP_MULTIPLY_ASSIGN
+           OP_DIVIDE_ASSIGN OP_LOG_AND OP_LOG_OR OP_LOG_XOR OP_PLUS
+           OP_MINUS OP_LOG_NOT OP_REFERENCE OP_LOG_NOT OP_PARENTHESES
+           OP_QL_S OP_QL_M OP_QL_TR OP_QL_QR OP_QL_QX
+           ) );
+}
 
-                    CXT_CALLER CXT_VOID CXT_SCALAR CXT_LIST CXT_LVALUE
-                    CXT_VIVIFY CXT_CALL_MASK
+our @EXPORT_OK =
+  ( qw(NUM_INTEGER NUM_FLOAT NUM_HEXADECIMAL NUM_OCTAL NUM_BINARY
+       STRING_BARE CONST_STRING CONST_NUMBER
 
-                    PROTO_DEFAULT
+       CXT_CALLER CXT_VOID CXT_SCALAR CXT_LIST CXT_LVALUE
+       CXT_VIVIFY CXT_CALL_MASK
 
-                    FLAG_IMPLICITARGUMENTS FLAG_ERASEFRAME
-                    );
+       PROTO_DEFAULT
+
+       FLAG_IMPLICITARGUMENTS FLAG_ERASEFRAME
+       FLAG_RX_MULTI_LINE FLAG_RX_SINGLE_LINE FLAG_RX_CASE_INSENSITIVE
+       FLAG_RX_FREE_FORMAT FLAG_RX_ONCE FLAG_RX_GLOBAL FLAG_RX_KEEP
+       FLAG_RX_EVAL FLAG_RX_COMPLEMENT FLAG_RX_DELETE FLAG_RX_SQUEEZE
+
+       VALUE_SCALAR VALUE_ARRAY VALUE_HASH VALUE_SUB VALUE_GLOB
+       VALUE_ARRAY_LENGTH
+       ), @OPERATIONS );
 our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,
     );
 
 use constant
-  { CONST_STRING       => 1,
+  { # numeric/string constants
+    CONST_STRING       => 1,
     CONST_NUMBER       => 2,
 
     STRING_BARE        => 4,
@@ -30,6 +53,7 @@ use constant
     NUM_OCTAL          => 64,
     NUM_BINARY         => 128,
 
+    # context
     CXT_CALLER         => 1,
     CXT_VOID           => 2,
     CXT_SCALAR         => 4,
@@ -40,9 +64,32 @@ use constant
 
     PROTO_DEFAULT      => [ -1, -1, '@' ],
 
+    # sigils, anonymous array/hash constructors, dereferences
+    VALUE_SCALAR       => 1,
+    VALUE_ARRAY        => 2,
+    VALUE_HASH         => 3,
+    VALUE_SUB          => 4,
+    VALUE_GLOB         => 5,
+    VALUE_ARRAY_LENGTH => 6,
+
     # function calls
     FLAG_IMPLICITARGUMENTS => 1,
     FLAG_ERASEFRAME        => 2,
+
+    # regular expressions
+    FLAG_RX_MULTI_LINE       => 1,
+    FLAG_RX_SINGLE_LINE      => 2,
+    FLAG_RX_CASE_INSENSITIVE => 4,
+    FLAG_RX_FREE_FORMAT      => 8,
+    FLAG_RX_ONCE             => 16,
+    FLAG_RX_GLOBAL           => 32,
+    FLAG_RX_KEEP             => 64,
+    FLAG_RX_EVAL             => 128,
+    FLAG_RX_COMPLEMENT       => 1,
+    FLAG_RX_DELETE           => 2,
+    FLAG_RX_SQUEEZE          => 4,
+
+    map { $OPERATIONS[$_] => $_ + 1 } 0 .. $#OPERATIONS,
     };
 
 package Language::P::ParseTree::Node;
@@ -215,9 +262,10 @@ sub is_symbol { 1 }
 sub lvalue_context {
     my( $self ) = @_;
 
-    return $self->sigil eq '%' || $self->sigil eq '@' ?
-               Language::P::ParseTree::CXT_LIST :
-               Language::P::ParseTree::CXT_SCALAR;
+    return    $self->sigil == Language::P::ParseTree::VALUE_HASH
+           || $self->sigil == Language::P::ParseTree::VALUE_ARRAY ?
+                 Language::P::ParseTree::CXT_LIST :
+                 Language::P::ParseTree::CXT_SCALAR;
 }
 
 package Language::P::ParseTree::Symbol;
@@ -304,7 +352,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::UnOp);
 
-sub op { '()' }
+sub op { Language::P::ParseTree::OP_PARENTHESES }
 sub lvalue_context { Language::P::ParseTree::CXT_LIST }
 
 package Language::P::ParseTree::Dereference;

@@ -58,7 +58,7 @@ sub _noisy_noop {
 sub _symbol {
     my( $self, $tree, $cxt ) = @_;
 
-    if( $tree->sigil eq '@' || $tree->sigil eq '%' ) {
+    if( $tree->sigil == VALUE_ARRAY || $tree->sigil == VALUE_HASH ) {
         $tree->{context} = $cxt;
     } else {
         $tree->{context} = $cxt & CXT_LIST ? _lv( CXT_SCALAR, $cxt ) : $cxt;
@@ -168,14 +168,13 @@ sub _binary_op {
 
     # FIXME some binary operators do not force scalar context
 
-    if(    $tree->op eq '||' || $tree->op eq '&&' || $tree->op eq 'and'
-        || $tree->op eq 'or' ) {
+    if( $tree->op == OP_LOG_OR || $tree->op == OP_LOG_AND ) {
         $self->visit( $tree->left, CXT_SCALAR );
         $self->visit( $tree->right, _lv( $cxt & CXT_VOID ? CXT_VOID :
                                          $cxt & CXT_CALLER ? CXT_CALLER :
                                                              CXT_SCALAR,
                                          $cxt ) );
-    } elsif( $tree->op eq '=' ) {
+    } elsif( $tree->op == OP_ASSIGN ) {
         my $left_cxt = $tree->left->lvalue_context;
 
         $self->visit( $tree->left, $left_cxt|CXT_LVALUE );

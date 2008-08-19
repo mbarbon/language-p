@@ -532,12 +532,17 @@ sub lex_number {
 }
 
 my %quote_end = qw!( ) { } [ ] < >!;
+my @rx_flags =
+  ( FLAG_RX_MULTI_LINE, FLAG_RX_SINGLE_LINE, FLAG_RX_CASE_INSENSITIVE,
+    FLAG_RX_FREE_FORMAT, FLAG_RX_ONCE, FLAG_RX_GLOBAL, FLAG_RX_KEEP,
+    FLAG_RX_EVAL );
+my @tr_flags = ( FLAG_RX_COMPLEMENT, FLAG_RX_DELETE, FLAG_RX_SQUEEZE );
 my %regex_flags =
-  ( m  => 'msixopgc',
-    qr => 'msixop',
-    s  => 'msixopgce',
-    tr => 'cds',
-    y  => 'cds',
+  ( m  => [ OP_QL_M,  'msixogc', @rx_flags ],
+    qr => [ OP_QL_QR, 'msixo', @rx_flags ],
+    s  => [ OP_QL_S,  'msixogce', @rx_flags ],
+    tr => [ OP_QL_TR, 'cds', @tr_flags ],
+    y  => [ OP_QL_TR, 'cds', @tr_flags ],
     );
 
 sub _find_end {
@@ -617,14 +622,18 @@ sub _prepare_sublex {
         my $rest = _find_end( $self, $op, $quote_char );
         $token->[4] = $rest;
     }
-    if( my $flags = $regex_flags{$op} ) {
+    if( my $op_descr = $regex_flags{$op} ) {
+        $token->[1] = $op_descr->[0];
+        my $fl_str = $op_descr->[1];
         local $_ = $self->buffer;
 
-        my @flags;
-        while( length( $$_ ) && index( $flags, substr( $$_, 0, 1 ) ) >= 0 ) {
-            push @flags, substr $$_, 0, 1, '';
+        my $flags = 0;
+        while(     length( $$_ )
+               and ( my $idx = index( $fl_str, substr( $$_, 0, 1 ) ) ) >= 0 ) {
+            substr $$_, 0, 1, '';
+            $flags |= $op_descr->[$idx + 2];
         }
-        $token->[5] = \@flags if @flags;
+        $token->[5] = $flags;
     }
 
     return $token;
