@@ -24,8 +24,8 @@ condition: !parsetree:BinOp
   left: !parsetree:LexicalSymbol
     context: CXT_SCALAR
     name: i
-    sigil: $
-  op: <
+    sigil: VALUE_SCALAR
+  op: OP_NUM_LT
   right: !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
     value: 10
@@ -35,8 +35,8 @@ initializer: !parsetree:BinOp
     context: CXT_SCALAR|CXT_LVALUE
     declaration_type: my
     name: i
-    sigil: $
-  op: =
+    sigil: VALUE_SCALAR
+  op: OP_ASSIGN
   right: !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
     value: 0
@@ -45,15 +45,15 @@ step: !parsetree:BinOp
   left: !parsetree:LexicalSymbol
     context: CXT_SCALAR|CXT_LVALUE
     name: i
-    sigil: $
-  op: =
+    sigil: VALUE_SCALAR
+  op: OP_ASSIGN
   right: !parsetree:BinOp
     context: CXT_SCALAR
     left: !parsetree:LexicalSymbol
       context: CXT_SCALAR
       name: i
-      sigil: $
-    op: +
+      sigil: VALUE_SCALAR
+    op: OP_ADD
     right: !parsetree:Constant
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
@@ -73,11 +73,11 @@ block: !parsetree:Block
 expression: !parsetree:Symbol
   context: CXT_LIST
   name: a
-  sigil: '@'
+  sigil: VALUE_ARRAY
 variable: !parsetree:Symbol
   context: CXT_SCALAR
   name: _
-  sigil: $
+  sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -94,11 +94,11 @@ block: !parsetree:Block
 expression: !parsetree:Symbol
   context: CXT_LIST
   name: a
-  sigil: '@'
+  sigil: VALUE_ARRAY
 variable: !parsetree:Symbol
   context: CXT_SCALAR
   name: x
-  sigil: $
+  sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -115,10 +115,10 @@ block: !parsetree:Block
 expression: !parsetree:Symbol
   context: CXT_LIST
   name: a
-  sigil: '@'
+  sigil: VALUE_ARRAY
 variable: !parsetree:LexicalDeclaration
   context: CXT_SCALAR
   declaration_type: my
   name: x
-  sigil: $
+  sigil: VALUE_SCALAR
 EOE

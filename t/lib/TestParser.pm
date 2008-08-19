@@ -74,7 +74,7 @@ sub parsed_program {
 sub parse_and_diff_yaml {
     my( $expr, $expected ) = @_;
 
-    $expected =~ s{ ((?:NUM|CXT|FLAG|CONST|STRING)_[A-Z_ \|]+)}
+    $expected =~ s{ ((?:NUM|CXT|FLAG|CONST|STRING|VALUE|OP)_[A-Z_ \|]+)}
                   {" " . eval $1 or die $@}eg;
 
     require Language::P::ParseTree::DumpYAML;

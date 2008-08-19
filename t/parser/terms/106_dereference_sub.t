@@ -17,7 +17,7 @@ flags: FLAG_IMPLICITARGUMENTS
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: print
-  sigil: '&'
+  sigil: VALUE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -29,7 +29,7 @@ context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: print
-  sigil: '&'
+  sigil: VALUE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -40,16 +40,16 @@ arguments:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: a
-    sigil: $
+    sigil: VALUE_SCALAR
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: b
-    sigil: $
+    sigil: VALUE_SCALAR
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: print
-  sigil: '&'
+  sigil: VALUE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -64,8 +64,8 @@ function: !parsetree:Dereference
   left: !parsetree:Symbol
     context: CXT_SCALAR
     name: print
-    sigil: $
-  op: '&'
+    sigil: VALUE_SCALAR
+  op: VALUE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -76,15 +76,15 @@ arguments:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: a
-    sigil: $
+    sigil: VALUE_SCALAR
 context: CXT_VOID
 function: !parsetree:Dereference
   context: CXT_SCALAR
   left: !parsetree:Symbol
     context: CXT_SCALAR
     name: print
-    sigil: $
-  op: '&'
+    sigil: VALUE_SCALAR
+  op: VALUE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -95,7 +95,7 @@ arguments:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: a
-    sigil: $
+    sigil: VALUE_SCALAR
 context: CXT_VOID
 function: !parsetree:Dereference
   context: CXT_SCALAR
@@ -108,6 +108,6 @@ function: !parsetree:Dereference
         function: !parsetree:Symbol
           context: CXT_SCALAR
           name: print
-          sigil: '&'
-  op: '&'
+          sigil: VALUE_SUB
+  op: VALUE_SUB
 EOE

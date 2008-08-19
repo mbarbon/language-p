@@ -20,7 +20,7 @@ condition: !parsetree:BinOp
   left: !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
-  op: <
+  op: OP_NUM_LT
   right: !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
@@ -35,7 +35,7 @@ block: !parsetree:BinOp
   left: !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
-  op: +
+  op: OP_ADD
   right: !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
@@ -57,7 +57,7 @@ iftrues:
       left: !parsetree:Constant
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
-      op: +
+      op: OP_ADD
       right: !parsetree:Constant
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
@@ -79,7 +79,7 @@ iftrues:
       left: !parsetree:Constant
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
-      op: +
+      op: OP_ADD
       right: !parsetree:Constant
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
@@ -107,5 +107,5 @@ expression: !parsetree:List
 variable: !parsetree:Symbol
   context: CXT_SCALAR
   name: _
-  sigil: $
+  sigil: VALUE_SCALAR
 EOE

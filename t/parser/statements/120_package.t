@@ -28,7 +28,7 @@ EOP
 --- !parsetree:Symbol
 context: CXT_VOID
 name: x
-sigil: $
+sigil: VALUE_SCALAR
 --- !parsetree:Block
 lines:
   - !parsetree:Package
@@ -36,17 +36,17 @@ lines:
   - !parsetree:Symbol
     context: CXT_VOID
     name: x::x
-    sigil: $
+    sigil: VALUE_SCALAR
   - !parsetree:Package
     name: z
 --- !parsetree:Symbol
 context: CXT_VOID
 name: x
-sigil: $
+sigil: VALUE_SCALAR
 --- !parsetree:Package
 name: y
 --- !parsetree:Symbol
 context: CXT_VOID
 name: y::x
-sigil: $
+sigil: VALUE_SCALAR
 EOE

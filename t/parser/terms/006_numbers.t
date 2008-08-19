@@ -103,7 +103,7 @@ context: CXT_VOID
 left: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 12
-op: ..
+op: OP_DOT_DOT
 right: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 15

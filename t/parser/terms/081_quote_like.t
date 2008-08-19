@@ -42,7 +42,7 @@ components:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: e
-    sigil: $
+    sigil: VALUE_SCALAR
   - !parsetree:Constant
     flags: CONST_STRING
     value: cdefg
@@ -59,7 +59,7 @@ components:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: e
-    sigil: $
+    sigil: VALUE_SCALAR
   - !parsetree:Constant
     flags: CONST_STRING
     value: (d)e)f)g
@@ -73,7 +73,7 @@ components:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: e
-    sigil: $
+    sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -86,7 +86,7 @@ left: !parsetree:QuotedString
     - !parsetree:Symbol
       context: CXT_SCALAR
       name: e
-      sigil: $
+      sigil: VALUE_SCALAR
 op: backtick
 EOE
 
@@ -112,7 +112,7 @@ left: !parsetree:QuotedString
     - !parsetree:Symbol
       context: CXT_SCALAR
       name: e
-      sigil: $
+      sigil: VALUE_SCALAR
 op: backtick
 EOE
 

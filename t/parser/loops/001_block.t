@@ -20,8 +20,8 @@ lines:
     left: !parsetree:Symbol
       context: CXT_SCALAR|CXT_LVALUE
       name: x
-      sigil: $
-    op: =
+      sigil: VALUE_SCALAR
+    op: OP_ASSIGN
     right: !parsetree:Constant
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
@@ -30,8 +30,8 @@ lines:
     left: !parsetree:Symbol
       context: CXT_SCALAR|CXT_LVALUE
       name: y
-      sigil: $
-    op: =
+      sigil: VALUE_SCALAR
+    op: OP_ASSIGN
     right: !parsetree:Constant
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2

@@ -15,7 +15,7 @@ context: CXT_VOID
 left: !parsetree:Constant
   flags: CONST_STRING|STRING_BARE
   value: moo
-op: .
+op: OP_CONCATENATE
 right: !parsetree:Constant
   flags: CONST_STRING|STRING_BARE
   value: boo
@@ -29,7 +29,7 @@ context: CXT_VOID
 left: !parsetree:Constant
   flags: CONST_STRING|STRING_BARE
   value: moo::moo
-op: .
+op: OP_CONCATENATE
 right: !parsetree:Constant
   flags: CONST_STRING|STRING_BARE
   value: 'boo::boo::'
@@ -43,7 +43,7 @@ context: CXT_VOID
 left: !parsetree:Constant
   flags: CONST_STRING|STRING_BARE
   value: ::moo
-op: .
+op: OP_CONCATENATE
 right: !parsetree:Constant
   flags: CONST_STRING|STRING_BARE
   value: ::boo

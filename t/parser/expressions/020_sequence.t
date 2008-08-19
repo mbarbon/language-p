@@ -18,14 +18,14 @@ expressions:
     function: !parsetree:Symbol
       context: CXT_SCALAR
       name: foo
-      sigil: '&'
+      sigil: VALUE_SUB
   - !parsetree:FunctionCall
     arguments: ~
     context: CXT_VOID
     function: !parsetree:Symbol
       context: CXT_SCALAR
       name: boo
-      sigil: '&'
+      sigil: VALUE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -42,19 +42,19 @@ subscript: !parsetree:List
       function: !parsetree:Symbol
         context: CXT_SCALAR
         name: foo
-        sigil: '&'
+        sigil: VALUE_SUB
     - !parsetree:FunctionCall
       arguments: ~
       context: CXT_SCALAR
       function: !parsetree:Symbol
         context: CXT_SCALAR
         name: boo
-        sigil: '&'
+        sigil: VALUE_SUB
 subscripted: !parsetree:Symbol
   context: CXT_SCALAR|CXT_VIVIFY
   name: a
-  sigil: $
-type: '['
+  sigil: VALUE_SCALAR
+type: VALUE_ARRAY
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -68,17 +68,17 @@ arguments:
     function: !parsetree:Symbol
       context: CXT_SCALAR
       name: foo
-      sigil: '&'
+      sigil: VALUE_SUB
   - !parsetree:FunctionCall
     arguments: ~
     context: CXT_LIST
     function: !parsetree:Symbol
       context: CXT_SCALAR
       name: boo
-      sigil: '&'
+      sigil: VALUE_SUB
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: foo
-  sigil: '&'
+  sigil: VALUE_SUB
 EOE

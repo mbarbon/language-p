@@ -14,7 +14,7 @@ EOP
 context: CXT_VOID
 declaration_type: my
 name: foo
-sigil: $
+sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -26,8 +26,8 @@ left: !parsetree:LexicalDeclaration
   context: CXT_SCALAR|CXT_LVALUE
   declaration_type: my
   name: foo
-  sigil: $
-op: =
+  sigil: VALUE_SCALAR
+op: OP_ASSIGN
 right: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
@@ -44,13 +44,13 @@ left: !parsetree:List
       context: CXT_SCALAR|CXT_LVALUE
       declaration_type: my
       name: foo
-      sigil: $
+      sigil: VALUE_SCALAR
     - !parsetree:LexicalDeclaration
       context: CXT_LIST|CXT_LVALUE
       declaration_type: my
       name: bar
-      sigil: '@'
-op: =
+      sigil: VALUE_ARRAY
+op: OP_ASSIGN
 right: !parsetree:List
   expressions:
     - !parsetree:Constant
@@ -73,15 +73,15 @@ expressions:
     context: CXT_VOID
     declaration_type: my
     name: foo
-    sigil: $
+    sigil: VALUE_SCALAR
   - !parsetree:LexicalDeclaration
     context: CXT_VOID
     declaration_type: my
     name: b
-    sigil: '@'
+    sigil: VALUE_ARRAY
   - !parsetree:LexicalDeclaration
     context: CXT_VOID
     declaration_type: my
     name: x
-    sigil: $
+    sigil: VALUE_SCALAR
 EOE

@@ -24,8 +24,8 @@ condition: !parsetree:BinOp
   left: !parsetree:Symbol
     context: CXT_SCALAR
     name: a
-    sigil: $
-  op: '>'
+    sigil: VALUE_SCALAR
+  op: OP_NUM_GT
   right: !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
@@ -48,8 +48,8 @@ condition: !parsetree:BinOp
   left: !parsetree:Symbol
     context: CXT_SCALAR
     name: a
-    sigil: $
-  op: <
+    sigil: VALUE_SCALAR
+  op: OP_NUM_LT
   right: !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2

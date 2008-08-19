@@ -15,8 +15,8 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
   name: a
-  sigil: $
-op: $
+  sigil: VALUE_SCALAR
+op: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -31,13 +31,13 @@ left: !parsetree:Block
       left: !parsetree:Symbol
         context: CXT_SCALAR
         name: a
-        sigil: $
-      op: .
+        sigil: VALUE_SCALAR
+      op: OP_CONCATENATE
       right: !parsetree:Symbol
         context: CXT_SCALAR
         name: b
-        sigil: $
-op: $
+        sigil: VALUE_SCALAR
+op: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -50,9 +50,9 @@ left: !parsetree:Dereference
   left: !parsetree:Symbol
     context: CXT_SCALAR
     name: a
-    sigil: $
-  op: $
-op: =
+    sigil: VALUE_SCALAR
+  op: VALUE_SCALAR
+op: OP_ASSIGN
 right: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
@@ -70,9 +70,9 @@ left: !parsetree:Dereference
       - !parsetree:Symbol
         context: CXT_SCALAR
         name: a
-        sigil: $
-  op: $
-op: =
+        sigil: VALUE_SCALAR
+  op: VALUE_SCALAR
+op: OP_ASSIGN
 right: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
@@ -86,8 +86,8 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
   name: a
-  sigil: $
-op: '%'
+  sigil: VALUE_SCALAR
+op: VALUE_HASH
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -98,8 +98,8 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
   name: a
-  sigil: $
-op: '*'
+  sigil: VALUE_SCALAR
+op: VALUE_GLOB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -114,8 +114,8 @@ subscript: !parsetree:Constant
 subscripted: !parsetree:Symbol
   context: CXT_LIST
   name: foo
-  sigil: '%'
-type: '{'
+  sigil: VALUE_HASH
+type: VALUE_HASH
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -136,9 +136,9 @@ subscripted: !parsetree:Subscript
   subscripted: !parsetree:Symbol
     context: CXT_LIST
     name: foo
-    sigil: '%'
-  type: '{'
-type: '['
+    sigil: VALUE_HASH
+  type: VALUE_HASH
+type: VALUE_ARRAY
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -159,9 +159,9 @@ subscripted: !parsetree:Subscript
   subscripted: !parsetree:Symbol
     context: CXT_LIST
     name: foo
-    sigil: '%'
-  type: '{'
-type: '['
+    sigil: VALUE_HASH
+  type: VALUE_HASH
+type: VALUE_ARRAY
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -175,10 +175,10 @@ components:
     subscript: !parsetree:Symbol
       context: CXT_SCALAR
       name: BAR
-      sigil: $
+      sigil: VALUE_SCALAR
     subscripted: !parsetree:Symbol
       context: CXT_LIST
       name: foo
-      sigil: '%'
-    type: '{'
+      sigil: VALUE_HASH
+    type: VALUE_HASH
 EOE

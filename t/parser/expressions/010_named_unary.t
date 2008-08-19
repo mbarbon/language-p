@@ -15,7 +15,7 @@ arguments:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: a
-    sigil: $
+    sigil: VALUE_SCALAR
 context: CXT_VOID
 function: defined
 EOE
@@ -28,7 +28,7 @@ arguments:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: foo
-    sigil: '&'
+    sigil: VALUE_SUB
 context: CXT_VOID
 function: defined
 EOE
@@ -45,8 +45,8 @@ arguments:
         - !parsetree:Symbol
           context: CXT_SCALAR
           name: foo
-          sigil: $
-    op: '&'
+          sigil: VALUE_SCALAR
+    op: VALUE_SUB
 context: CXT_VOID
 function: defined
 EOE
@@ -60,16 +60,16 @@ condition: !parsetree:Builtin
     - !parsetree:Symbol
       context: CXT_SCALAR
       name: a
-      sigil: $
+      sigil: VALUE_SCALAR
   context: CXT_SCALAR
   function: defined
 context: CXT_VOID
 iffalse: !parsetree:Symbol
   context: CXT_VOID
   name: c
-  sigil: $
+  sigil: VALUE_SCALAR
 iftrue: !parsetree:Symbol
   context: CXT_VOID
   name: b
-  sigil: $
+  sigil: VALUE_SCALAR
 EOE

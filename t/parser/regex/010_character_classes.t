@@ -15,8 +15,8 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
   name: _
-  sigil: $
-op: =~
+  sigil: VALUE_SCALAR
+op: OP_MATCH
 right: !parsetree:Pattern
   components:
     - !parsetree:RXClass
@@ -24,8 +24,8 @@ right: !parsetree:Pattern
         - a
         - b
         - c
-  flags: ~
-  op: m
+  flags: 0
+  op: OP_QL_M
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -36,8 +36,8 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
   name: _
-  sigil: $
-op: =~
+  sigil: VALUE_SCALAR
+op: OP_MATCH
 right: !parsetree:Pattern
   components:
     - !parsetree:RXClass
@@ -45,8 +45,8 @@ right: !parsetree:Pattern
         - !parsetree:RXRange
           end: q
           start: a
-  flags: ~
-  op: m
+  flags: 0
+  op: OP_QL_M
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -57,16 +57,16 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
   name: _
-  sigil: $
-op: =~
+  sigil: VALUE_SCALAR
+op: OP_MATCH
 right: !parsetree:Pattern
   components:
     - !parsetree:RXClass
       elements:
         - a
         - -
-  flags: ~
-  op: m
+  flags: 0
+  op: OP_QL_M
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -77,8 +77,8 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
   name: _
-  sigil: $
-op: =~
+  sigil: VALUE_SCALAR
+op: OP_MATCH
 right: !parsetree:Pattern
   components:
     - !parsetree:RXClass
@@ -87,8 +87,8 @@ right: !parsetree:Pattern
         - -
         - !parsetree:RXSpecialClass
           type: WORDS
-  flags: ~
-  op: m
+  flags: 0
+  op: OP_QL_M
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -99,14 +99,14 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
   name: _
-  sigil: $
-op: =~
+  sigil: VALUE_SCALAR
+op: OP_MATCH
 right: !parsetree:Pattern
   components:
     - !parsetree:RXClass
       elements:
         - '['
         - ']'
-  flags: ~
-  op: m
+  flags: 0
+  op: OP_QL_M
 EOE

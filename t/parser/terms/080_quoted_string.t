@@ -66,14 +66,14 @@ components:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: a
-    sigil: $
+    sigil: VALUE_SCALAR
   - !parsetree:Constant
     flags: CONST_STRING
     value: ' '
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: b
-    sigil: $
+    sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -87,7 +87,7 @@ components:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: a
-    sigil: $
+    sigil: VALUE_SCALAR
   - !parsetree:Constant
     flags: CONST_STRING
     value: cd
@@ -104,7 +104,7 @@ components:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: "\x05"
-    sigil: $
+    sigil: VALUE_SCALAR
   - !parsetree:Constant
     flags: CONST_STRING
     value: ' b'
@@ -121,7 +121,7 @@ components:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: "\x06oo"
-    sigil: $
+    sigil: VALUE_SCALAR
   - !parsetree:Constant
     flags: CONST_STRING
     value: ' b'
@@ -136,8 +136,8 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR|CXT_LVALUE
   name: x
-  sigil: $
-op: =
+  sigil: VALUE_SCALAR
+op: OP_ASSIGN
 right: !parsetree:Constant
   flags: CONST_STRING
   value: 1
@@ -146,8 +146,8 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR|CXT_LVALUE
   name: x
-  sigil: $
-op: =
+  sigil: VALUE_SCALAR
+op: OP_ASSIGN
 right: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
@@ -166,7 +166,7 @@ left: !parsetree:QuotedString
     - !parsetree:Symbol
       context: CXT_SCALAR
       name: a
-      sigil: $
+      sigil: VALUE_SCALAR
     - !parsetree:Constant
       flags: CONST_STRING
       value: cd
@@ -183,14 +183,14 @@ arguments:
       - !parsetree:Symbol
         context: CXT_SCALAR
         name: x
-        sigil: $
+        sigil: VALUE_SCALAR
       - !parsetree:Constant
         flags: CONST_STRING
         value: ' '
       - !parsetree:Symbol
         context: CXT_SCALAR
         name: y
-        sigil: $
+        sigil: VALUE_SCALAR
 context: CXT_VOID
 function: glob
 EOE
@@ -203,7 +203,7 @@ arguments:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: foo
-    sigil: '*'
+    sigil: VALUE_GLOB
 context: CXT_VOID
 function: readline
 EOE
@@ -216,7 +216,7 @@ arguments:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: foo::moo::boo
-    sigil: '*'
+    sigil: VALUE_GLOB
 context: CXT_VOID
 function: readline
 EOE
@@ -229,7 +229,7 @@ arguments:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: foo::boo
-    sigil: '*'
+    sigil: VALUE_GLOB
 context: CXT_VOID
 function: readline
 EOE
@@ -254,7 +254,7 @@ arguments:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: x
-    sigil: $
+    sigil: VALUE_SCALAR
 context: CXT_VOID
 function: readline
 EOE
@@ -267,7 +267,7 @@ arguments:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: x
-    sigil: $
+    sigil: VALUE_SCALAR
 context: CXT_VOID
 function: readline
 EOE
@@ -285,14 +285,14 @@ arguments:
       - !parsetree:Symbol
         context: CXT_SCALAR
         name: x
-        sigil: $
+        sigil: VALUE_SCALAR
       - !parsetree:Constant
         flags: CONST_STRING
         value: ' '
       - !parsetree:Symbol
         context: CXT_SCALAR
         name: y
-        sigil: $
+        sigil: VALUE_SCALAR
       - !parsetree:Constant
         flags: CONST_STRING
         value: "'"

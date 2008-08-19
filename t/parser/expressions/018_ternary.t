@@ -31,8 +31,8 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR|CXT_LVALUE
   name: a
-  sigil: $
-op: =
+  sigil: VALUE_SCALAR
+op: OP_ASSIGN
 right: !parsetree:Ternary
   condition: !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
@@ -54,15 +54,15 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR|CXT_LVALUE
   name: a
-  sigil: $
-op: =
+  sigil: VALUE_SCALAR
+op: OP_ASSIGN
 right: !parsetree:Ternary
   condition: !parsetree:BinOp
     context: CXT_SCALAR
     left: !parsetree:Constant
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
-    op: <
+    op: OP_NUM_LT
     right: !parsetree:Constant
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
@@ -72,7 +72,7 @@ right: !parsetree:Ternary
     left: !parsetree:Constant
       flags: CONST_NUMBER|NUM_INTEGER
       value: 3
-    op: +
+    op: OP_ADD
     right: !parsetree:Constant
       flags: CONST_NUMBER|NUM_INTEGER
       value: 4
@@ -81,7 +81,7 @@ right: !parsetree:Ternary
     left: !parsetree:Constant
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
-    op: +
+    op: OP_ADD
     right: !parsetree:Constant
       flags: CONST_NUMBER|NUM_INTEGER
       value: 3
@@ -96,23 +96,23 @@ left: !parsetree:Ternary
   condition: !parsetree:Symbol
     context: CXT_SCALAR
     name: x
-    sigil: $
+    sigil: VALUE_SCALAR
   context: CXT_SCALAR|CXT_LVALUE
   iffalse: !parsetree:Symbol
     context: CXT_SCALAR|CXT_LVALUE
     name: b
-    sigil: $
+    sigil: VALUE_SCALAR
   iftrue: !parsetree:BinOp
     context: CXT_SCALAR|CXT_LVALUE
     left: !parsetree:Symbol
       context: CXT_SCALAR|CXT_LVALUE
       name: a
-      sigil: $
-    op: =
+      sigil: VALUE_SCALAR
+    op: OP_ASSIGN
     right: !parsetree:Constant
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
-op: =
+op: OP_ASSIGN
 right: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 2

@@ -15,7 +15,7 @@ context: CXT_VOID
 left: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
-op: <
+op: OP_NUM_LT
 right: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 2
@@ -29,7 +29,7 @@ context: CXT_VOID
 left: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
-op: '>'
+op: OP_NUM_GT
 right: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 2
@@ -43,7 +43,7 @@ context: CXT_VOID
 left: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
-op: '>='
+op: OP_NUM_GE
 right: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 2
@@ -57,7 +57,7 @@ context: CXT_VOID
 left: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
-op: <=
+op: OP_NUM_LE
 right: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 2

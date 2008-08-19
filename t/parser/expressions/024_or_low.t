@@ -23,7 +23,7 @@ left: !parsetree:Print
   context: CXT_SCALAR
   filehandle: ~
   function: print
-op: or
+op: OP_LOG_OR
 right: !parsetree:Overridable
   arguments: ~
   context: CXT_VOID

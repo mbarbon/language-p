@@ -34,7 +34,7 @@ arguments:
       - !parsetree:Symbol
         context: CXT_SCALAR
         name: a
-        sigil: $
+        sigil: VALUE_SCALAR
       - !parsetree:Constant
         flags: CONST_STRING
         value: "\n"
@@ -55,7 +55,7 @@ arguments:
       - !parsetree:Symbol
         context: CXT_SCALAR
         name: a
-        sigil: $
+        sigil: VALUE_SCALAR
       - !parsetree:Constant
         flags: CONST_STRING
         value: "\n"

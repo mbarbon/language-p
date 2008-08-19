@@ -32,56 +32,65 @@ use constant
     ASSOC_NON          => 3,
     };
 
+my %token_to_sigil =
+  ( T_DOLLAR()    => VALUE_SCALAR,
+    T_AT()        => VALUE_ARRAY,
+    T_PERCENT()   => VALUE_HASH,
+    T_STAR()      => VALUE_GLOB,
+    T_AMPERSAND() => VALUE_SUB,
+    T_ARYLEN()    => VALUE_ARRAY_LENGTH,
+    );
+
 my %prec_assoc_bin =
   ( T_ARROW()       => [ 2,  ASSOC_LEFT ],
-    T_POWER()       => [ 4,  ASSOC_RIGHT ],
-    T_MATCH()       => [ 6,  ASSOC_LEFT ],
-    T_NOTMATCH()    => [ 6,  ASSOC_LEFT ],
-    T_STAR()        => [ 7,  ASSOC_LEFT ],
-    T_SLASH()       => [ 7,  ASSOC_LEFT ],
-    T_PERCENT()     => [ 7,  ASSOC_LEFT ],
-    T_SSTAR()       => [ 7,  ASSOC_LEFT ],
-    T_PLUS()        => [ 8,  ASSOC_LEFT ],
-    T_MINUS()       => [ 8,  ASSOC_LEFT ],
-    T_DOT()         => [ 8,  ASSOC_LEFT ],
-    T_OPAN()        => [ 11, ASSOC_NON ],
-    T_CLAN()        => [ 11, ASSOC_NON ],
-    T_LESSEQUAL()   => [ 11, ASSOC_NON ],
-    T_GREATEQUAL()  => [ 11, ASSOC_NON ],
-    T_SLESS()       => [ 11, ASSOC_NON ],
-    T_SGREAT()      => [ 11, ASSOC_NON ],
-    T_SLESSEQUAL()  => [ 11, ASSOC_NON ],
-    T_SGREATEQUAL() => [ 11, ASSOC_NON ],
-    T_EQUALEQUAL()  => [ 12, ASSOC_NON ],
-    T_NOTEQUAL()    => [ 12, ASSOC_NON ],
-    T_CMP()         => [ 12, ASSOC_NON ],
-    T_SEQUALEQUAL() => [ 12, ASSOC_NON ],
-    T_SNOTEQUAL()   => [ 12, ASSOC_NON ],
-    T_SCMP()        => [ 12, ASSOC_NON ],
-    T_ANDAND()      => [ 15, ASSOC_LEFT ],
-    T_OROR()        => [ 16, ASSOC_LEFT ],
-    T_DOTDOT()      => [ 17, ASSOC_NON ],
-    T_DOTDOTDOT()   => [ 17, ASSOC_NON ],
+    T_POWER()       => [ 4,  ASSOC_RIGHT, OP_POWER ],
+    T_MATCH()       => [ 6,  ASSOC_LEFT,  OP_MATCH ],
+    T_NOTMATCH()    => [ 6,  ASSOC_LEFT,  OP_NOT_MATCH ],
+    T_STAR()        => [ 7,  ASSOC_LEFT,  OP_MULTIPLY ],
+    T_SLASH()       => [ 7,  ASSOC_LEFT,  OP_DIVIDE ],
+    T_PERCENT()     => [ 7,  ASSOC_LEFT,  OP_MODULUS ],
+    T_SSTAR()       => [ 7,  ASSOC_LEFT,  OP_REPEAT ],
+    T_PLUS()        => [ 8,  ASSOC_LEFT,  OP_ADD ],
+    T_MINUS()       => [ 8,  ASSOC_LEFT,  OP_SUBTRACT ],
+    T_DOT()         => [ 8,  ASSOC_LEFT,  OP_CONCATENATE ],
+    T_OPAN()        => [ 11, ASSOC_NON,   OP_NUM_LT ],
+    T_CLAN()        => [ 11, ASSOC_NON,   OP_NUM_GT ],
+    T_LESSEQUAL()   => [ 11, ASSOC_NON,   OP_NUM_LE ],
+    T_GREATEQUAL()  => [ 11, ASSOC_NON,   OP_NUM_GE ],
+    T_SLESS()       => [ 11, ASSOC_NON,   OP_STR_LT ],
+    T_SGREAT()      => [ 11, ASSOC_NON,   OP_STR_GT ],
+    T_SLESSEQUAL()  => [ 11, ASSOC_NON,   OP_STR_LE ],
+    T_SGREATEQUAL() => [ 11, ASSOC_NON,   OP_STR_GE ],
+    T_EQUALEQUAL()  => [ 12, ASSOC_NON,   OP_NUM_EQ ],
+    T_NOTEQUAL()    => [ 12, ASSOC_NON,   OP_NUM_NE ],
+    T_CMP()         => [ 12, ASSOC_NON,   OP_NUM_CMP ],
+    T_SEQUALEQUAL() => [ 12, ASSOC_NON,   OP_STR_EQ ],
+    T_SNOTEQUAL()   => [ 12, ASSOC_NON,   OP_STR_NE ],
+    T_SCMP()        => [ 12, ASSOC_NON,   OP_STR_CMP ],
+    T_ANDAND()      => [ 15, ASSOC_LEFT,  OP_LOG_AND ],
+    T_OROR()        => [ 16, ASSOC_LEFT,  OP_LOG_OR ],
+    T_DOTDOT()      => [ 17, ASSOC_NON,   OP_DOT_DOT ],
+    T_DOTDOTDOT()   => [ 17, ASSOC_NON,   OP_DOT_DOT_DOT ],
     T_INTERR()      => [ 18, ASSOC_RIGHT ], # ternary
-    T_EQUAL()       => [ 19, ASSOC_RIGHT ],
-    T_PLUSEQUAL()   => [ 19, ASSOC_RIGHT ],
-    T_MINUSEQUAL()  => [ 19, ASSOC_RIGHT ],
-    T_STAREQUAL()   => [ 19, ASSOC_RIGHT ],
-    T_SLASHEQUAL()  => [ 19, ASSOC_RIGHT ],
+    T_EQUAL()       => [ 19, ASSOC_RIGHT, OP_ASSIGN ],
+    T_PLUSEQUAL()   => [ 19, ASSOC_RIGHT, OP_ADD_ASSIGN ],
+    T_MINUSEQUAL()  => [ 19, ASSOC_RIGHT, OP_SUBTRACT_ASSIGN ],
+    T_STAREQUAL()   => [ 19, ASSOC_RIGHT, OP_MULTIPLY_ASSIGN ],
+    T_SLASHEQUAL()  => [ 19, ASSOC_RIGHT, OP_DIVIDE_ASSIGN ],
     # 20, comma
     # 21, list ops
-    T_NOTLOW()      => [ 22, ASSOC_RIGHT ],
-    T_ANDANDLOW()   => [ 23, ASSOC_LEFT ],
-    T_ORORLOW()     => [ 24, ASSOC_LEFT ],
-    T_XORLOW()      => [ 24, ASSOC_LEFT ],
+    T_ANDANDLOW()   => [ 23, ASSOC_LEFT,  OP_LOG_AND ],
+    T_ORORLOW()     => [ 24, ASSOC_LEFT,  OP_LOG_OR ],
+    T_XORLOW()      => [ 24, ASSOC_LEFT,  OP_LOG_XOR ],
     T_COLON()       => [ 40, ASSOC_RIGHT ], # ternary, must be lowest,
     );
 
 my %prec_assoc_un =
-  ( T_PLUS()        => [ 5,  ASSOC_RIGHT ],
-    T_MINUS()       => [ 5,  ASSOC_RIGHT ],
-    T_NOT()         => [ 5,  ASSOC_RIGHT ],
-    T_BACKSLASH()   => [ 5,  ASSOC_RIGHT ],
+  ( T_PLUS()        => [ 5,  ASSOC_RIGHT, OP_PLUS ],
+    T_MINUS()       => [ 5,  ASSOC_RIGHT, OP_MINUS ],
+    T_NOT()         => [ 5,  ASSOC_RIGHT, OP_LOG_NOT ],
+    T_BACKSLASH()   => [ 5,  ASSOC_RIGHT, OP_REFERENCE ],
+    T_NOTLOW()      => [ 22, ASSOC_RIGHT, OP_LOG_NOT ],
     );
 
 sub parse_string {
@@ -291,7 +300,7 @@ sub _parse_sub {
                       } );
 
     # FIXME incestuos with runtime
-    my $args_slot = $self->_lexicals->add_name( '@', '_' );
+    my $args_slot = $self->_lexicals->add_name( VALUE_ARRAY, '_' );
     $args_slot->{index} = $self->_lexicals->add_value;
 
     $self->_current_sub( $sub );
@@ -383,7 +392,7 @@ sub _parse_for {
         my $sep = $self->lexer->lex( X_OPERATOR );
 
         if( $sep->[0] == T_CLPAR ) {
-            $foreach_var = _find_symbol( $self, '$', '_' );
+            $foreach_var = _find_symbol( $self, VALUE_SCALAR, '_' );
             $foreach_expr = $expr;
         } elsif( $sep->[0] == T_SEMICOLON ) {
             # C-style for
@@ -420,7 +429,7 @@ sub _parse_for {
         $foreach_var = _parse_lexical_variable( $self, $token->[1] )
     } elsif( $token->[0] == T_DOLLAR ) {
         my $id = $self->lexer->lex_identifier;
-        $foreach_var = _find_symbol( $self, '$', $id->[1] );
+        $foreach_var = _find_symbol( $self, VALUE_SCALAR, $id->[1] );
     } else {
         Carp::confess $token->[0], ' ', $token->[1];
     }
@@ -508,7 +517,7 @@ sub _parse_sideff {
             $expr = Language::P::ParseTree::Foreach->new
                         ( { expression => $cond,
                             block      => $expr,
-                            variable   => _find_symbol( $self, '$', '_' ),
+                            variable   => _find_symbol( $self, VALUE_SCALAR, '_' ),
                             } );
         }
     }
@@ -597,10 +606,10 @@ sub _parse_indirect_function_call {
 
     # $foo->() requires an additional dereference, while
     # &{...}(...) does not construct a reference but might need it
-    if( !$subscripted->is_symbol || $subscripted->sigil ne '&' ) {
+    if( !$subscripted->is_symbol || $subscripted->sigil != VALUE_SUB ) {
         $subscripted = Language::P::ParseTree::Dereference->new
                            ( { left => $subscripted,
-                               op   => '&',
+                               op   => VALUE_SUB,
                                } );
     }
 
@@ -629,7 +638,8 @@ sub _parse_dereference_rest {
         $term = Language::P::ParseTree::Subscript->new
                     ( { subscripted => $subscripted,
                         subscript   => $subscript,
-                        type        => $bracket->[1],
+                        type        => $bracket->[0] == T_OPBRK ? VALUE_HASH :
+                                                                  VALUE_ARRAY,
                         reference   => 1,
                         } );
     }
@@ -703,7 +713,7 @@ sub _parse_maybe_direct_method_call {
         return _parse_maybe_subscript_rest( $self, $term );
     } elsif( $token->[0] == T_DOLLAR ) {
         my $id = _lex_token( $self, T_ID );
-        my $meth = _find_symbol( $self, '$', $id->[1] );
+        my $meth = _find_symbol( $self, VALUE_SCALAR, $id->[1] );
         my $oppar = $self->lexer->peek( X_OPERATOR );
         my $args;
         if( $oppar->[0] == T_OPPAR ) {
@@ -759,7 +769,7 @@ sub _parse_substitution {
     my $match = _parse_match( $self, $token );
 
     my $replace;
-    if( $match->flags && grep $_ eq 'e', @{$match->flags} ) {
+    if( $match->flags & FLAG_RX_EVAL ) {
         local $self->{lexer} = Language::P::Lexer->new
                                    ( { string => $token->[4]->[3] } );
         $replace = _parse_block_rest( $self, BLOCK_OPEN_SCOPE, T_EOF );
@@ -867,7 +877,7 @@ sub _parse_term_terminal {
                     if( $id && !length( ${$lexer->buffer} ) ) {
                         my $glob = Language::P::ParseTree::Symbol->new
                                        ( { name  => $id->[1],
-                                           sigil => '*',
+                                           sigil => VALUE_GLOB,
                                            } );
                         return Language::P::ParseTree::Overridable
                                    ->new( { function  => 'readline',
@@ -886,18 +896,18 @@ sub _parse_term_terminal {
         return $qstring;
     } elsif( $token->[0] == T_PATTERN ) {
         my $pattern;
-        if( $token->[1] eq 'm' || $token->[1] eq 'qr' ) {
+        if( $token->[1] == OP_QL_M || $token->[1] == OP_QL_QR ) {
             $pattern = _parse_match( $self, $token );
-        } elsif( $token->[1] eq 's' ) {
+        } elsif( $token->[1] == OP_QL_S ) {
             $pattern = _parse_substitution( $self, $token );
         } else {
             die;
         }
 
-        if( !$is_bind && $token->[1] ne 'qr' ) {
+        if( !$is_bind && $token->[1] != OP_QL_QR ) {
             $pattern = Language::P::ParseTree::BinOp->new
-                           ( { op    => '=~',
-                               left  => _find_symbol( $self, '$', '_' ),
+                           ( { op    => OP_MATCH,
+                               left  => _find_symbol( $self, VALUE_SCALAR, '_' ),
                                right => $pattern,
                                } );
         }
@@ -913,7 +923,12 @@ sub _parse_term_terminal {
                    ( { value => $token->[1],
                        flags => CONST_STRING,
                        } );
-    } elsif( $token->[1] eq '$#' || $token->[1] =~ /[\*\$%@&]/ ) {
+    } elsif(    $token->[0] == T_DOLLAR
+             || $token->[0] == T_AT
+             || $token->[0] == T_PERCENT
+             || $token->[0] == T_STAR
+             || $token->[0] == T_AMPERSAND
+             || $token->[0] == T_ARYLEN ) {
         return _parse_indirobj_maybe_subscripts( $self, $token );
     } elsif(    $token->[0] == T_ID && $token->[2] == T_KEYWORD
              && (    $token->[1] eq 'my' || $token->[1] eq 'our'
@@ -926,14 +941,14 @@ sub _parse_term_terminal {
 
         return Language::P::ParseTree::ReferenceConstructor->new
                    ( { expression => $expr,
-                       type       => '{'
+                       type       => VALUE_HASH,
                        } );
     } elsif( $token->[0] == T_OPSQ ) {
         my $expr = _parse_bracketed_expr( $self, T_OPSQ, 1, 1 );
 
         return Language::P::ParseTree::ReferenceConstructor->new
                    ( { expression => $expr,
-                       type       => '['
+                       type       => VALUE_ARRAY,
                        } );
     }
 
@@ -943,11 +958,11 @@ sub _parse_term_terminal {
 sub _parse_indirobj_maybe_subscripts {
     my( $self, $token ) = @_;
     my $indir = _parse_indirobj( $self, 0 );
-    my $sigil = $token->[1];
+    my $sigil = $token_to_sigil{$token->[0]};
     my $is_id = ref( $indir ) eq 'ARRAY' && $indir->[0] == T_ID;
 
     # no subscripting/slicing possible for '%'
-    if( $sigil eq '%' ) {
+    if( $sigil == VALUE_HASH ) {
         return $is_id ? _find_symbol( $self, $sigil, $indir->[1] ) :
                          Language::P::ParseTree::Dereference->new
                              ( { left  => $indir,
@@ -957,12 +972,20 @@ sub _parse_indirobj_maybe_subscripts {
 
     my $next = $self->lexer->peek( X_OPERATOR );
 
-    if( $sigil eq '&' ) {
+    if( $sigil == VALUE_SUB ) {
         my $deref = $is_id ? _find_symbol( $self, $sigil, $indir->[1] ) :
                              $indir;
 
         return _parse_indirect_function_call( $self, $deref,
                                               $next->[0] == T_OPPAR, 1 );
+    }
+
+    # simplify the code below by resolving the symbol here, so a
+    # dereference will be constructed below (probably an unary
+    # operator would be more consistent)
+    if( $sigil == VALUE_ARRAY_LENGTH && $is_id ) {
+        $indir = _find_symbol( $self, VALUE_ARRAY, $indir->[1] );
+        $is_id = 0;
     }
 
     if( $next->[0] == T_ARROW ) {
@@ -976,12 +999,12 @@ sub _parse_indirobj_maybe_subscripts {
     }
 
     my( $is_slice, $sym_sigil );
-    if(    ( $sigil eq '@' || $sigil eq '$' )
+    if(    ( $sigil == VALUE_ARRAY || $sigil == VALUE_SCALAR )
         && ( $next->[0] == T_OPSQ || $next->[0] == T_OPBRK ) ) {
-        $sym_sigil = $next->[0] == T_OPBRK ? '%' : '@';
-        $is_slice = $sigil eq '@';
-    } elsif( $sigil eq '*' && $next->[0] == T_OPBRK ) {
-        $sym_sigil = '*';
+        $sym_sigil = $next->[0] == T_OPBRK ? VALUE_HASH : VALUE_ARRAY;
+        $is_slice = $sigil == VALUE_ARRAY;
+    } elsif( $sigil == VALUE_GLOB && $next->[0] == T_OPBRK ) {
+        $sym_sigil = VALUE_GLOB;
     } else {
         return $is_id ? _find_symbol( $self, $sigil, $indir->[1] ) :
                          Language::P::ParseTree::Dereference->new
@@ -993,19 +1016,20 @@ sub _parse_indirobj_maybe_subscripts {
     my $subscript = _parse_bracketed_expr( $self, $next->[0], 0 );
     my $subscripted = $is_id ? _find_symbol( $self, $sym_sigil, $indir->[1] ) :
                                $indir;
+    my $subscript_type = $next->[0] == T_OPBRK ? VALUE_HASH : VALUE_ARRAY;
 
     if( $is_slice ) {
         return Language::P::ParseTree::Slice->new
                    ( { subscripted => $subscripted,
                        subscript   => $subscript,
-                       type        => $next->[1],
+                       type        => $subscript_type,
                        reference   => $is_id ? 0 : 1,
                        } );
     } else {
         my $term = Language::P::ParseTree::Subscript->new
                        ( { subscripted => $subscripted,
                            subscript   => $subscript,
-                           type        => $next->[1],
+                           type        => $subscript_type,
                            reference   => $is_id ? 0 : 1,
                            } );
 
@@ -1069,7 +1093,7 @@ sub _parse_lexical_variable {
     # FIXME our() variable refers to package it was declared in
     return Language::P::ParseTree::LexicalDeclaration->new
                ( { name             => $name->[1],
-                   sigil            => $sigil->[1],
+                   sigil            => $token_to_sigil{$sigil->[0]},
                    declaration_type => $keyword,
                    } );
 }
@@ -1082,23 +1106,24 @@ sub _parse_term_p {
 
     if( $terminal ) {
         my $la = $self->lexer->peek( X_OPERATOR );
+        my $binprec = $prec_assoc_bin{$la->[0]};
 
-        if( !$prec_assoc_bin{$la->[0]} || $prec_assoc_bin{$la->[0]}[0] > $prec ) {
+        if( !$binprec || $binprec->[0] > $prec ) {
             return $terminal;
         } elsif( $la->[0] == T_INTERR ) {
             _lex_token( $self, T_INTERR );
             return _parse_ternary( $self, PREC_TERNARY, $terminal );
-        } elsif( $prec_assoc_bin{$la->[0]} ) {
-            return _parse_term_n( $self, $prec_assoc_bin{$la->[0]}[0],
+        } elsif( $binprec ) {
+            return _parse_term_n( $self, $binprec->[0],
                                   $terminal );
         } else {
             Carp::confess $la->[0], ' ', $la->[1];
         }
-    } elsif( $prec_assoc_un{$token->[0]} ) {
-        my $rest = _parse_term_n( $self, $prec_assoc_un{$token->[0]}[0] );
+    } elsif( my $p = $prec_assoc_un{$token->[0]} ) {
+        my $rest = _parse_term_n( $self, $p->[0] );
 
         return Language::P::ParseTree::UnOp->new
-                   ( { op    => $token->[1],
+                   ( { op    => $p->[2],
                        left  => $rest,
                        } );
     } elsif( $token->[0] == T_OPPAR ) {
@@ -1164,7 +1189,7 @@ sub _parse_term_n {
                                          || $token->[0] == T_NOTMATCH ) );
 
             $terminal = Language::P::ParseTree::BinOp->new
-                            ( { op    => $token->[1],
+                            ( { op    => $bin->[2],
                                 left  => $terminal,
                                 right => $rterm,
                                 } );
@@ -1259,11 +1284,11 @@ sub _parse_indirobj {
         my $indir = _parse_indirobj( $self, 0 );
 
         if( ref( $indir ) eq 'ARRAY' && $indir->[0] == T_ID ) {
-            return _find_symbol( $self, '$', $indir->[1] );
+            return _find_symbol( $self, VALUE_SCALAR, $indir->[1] );
         } else {
             return Language::P::ParseTree::Dereference->new
                        ( { left  => $indir,
-                           op    => $token->[1],
+                           op    => VALUE_SCALAR,
                            } );
         }
     } elsif( $allow_fail ) {
@@ -1359,7 +1384,7 @@ sub _parse_listop {
 
         my $symbol = Language::P::ParseTree::Symbol->new
                          ( { name   => $op->[1],
-                             sigil => '&',
+                             sigil => VALUE_SUB,
                              } );
         $call = Language::P::ParseTree::FunctionCall->new
                     ( { function  => $symbol,
@@ -1403,7 +1428,7 @@ sub _parse_arglist {
             _lex_token( $self, T_ID );
             $term = Language::P::ParseTree::Symbol->new
                         ( { name  => $la->[1],
-                            sigil => '*',
+                            sigil => VALUE_GLOB,
                             } );
         } else {
             $indirect_filehandle = 0;
@@ -1469,7 +1494,7 @@ sub _maybe_handle {
 
     return Language::P::ParseTree::Symbol->new
                ( { name  => $term->value,
-                   sigil => '*',
+                   sigil => VALUE_GLOB,
                    } );
 }
 

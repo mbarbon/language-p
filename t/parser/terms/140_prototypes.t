@@ -57,13 +57,13 @@ left: !parsetree:Overridable
     - !parsetree:Symbol
       context: CXT_SCALAR
       name: FILE
-      sigil: '*'
+      sigil: VALUE_GLOB
     - !parsetree:Constant
       flags: CONST_STRING
       value: '>foo'
   context: CXT_SCALAR
   function: open
-op: or
+op: OP_LOG_OR
 right: !parsetree:Overridable
   arguments:
     - !parsetree:Constant
@@ -81,12 +81,12 @@ arguments:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: stuff
-    sigil: $
+    sigil: VALUE_SCALAR
 context: CXT_VOID
 filehandle: !parsetree:Symbol
   context: CXT_SCALAR
   name: FILE
-  sigil: '*'
+  sigil: VALUE_GLOB
 function: print
 EOE
 
@@ -98,11 +98,11 @@ arguments:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: foo
-    sigil: $
+    sigil: VALUE_SCALAR
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: FILE
-    sigil: '*'
+    sigil: VALUE_GLOB
 context: CXT_VOID
 function: pipe
 EOE
