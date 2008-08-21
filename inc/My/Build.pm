@@ -4,6 +4,19 @@ use strict;
 use warnings;
 use base qw(Module::Build);
 
+sub ACTION_code {
+    my( $self ) = @_;
+
+    if( !$self->up_to_date( [ 'inc/Keywords.pm' ],
+                            [ 'lib/Language/P/Keywords.pm' ] ) ) {
+        $self->do_system( $^X, '-Iinc', '-MKeywords', '-e', 'write_keywords',
+                          '--', 'lib/Language/P/Keywords.pm' );
+        $self->add_to_cleanup( 'lib/Language/P/Keywords.pm' );
+    }
+
+    $self->SUPER::ACTION_code;
+}
+
 sub _run_p_tests {
     my( $self, @test_dirs ) = @_;
 

@@ -1,3 +1,6 @@
+# Avoid build files
+^lib/Language/P/Keywords.pm$
+
 # Avoid version control files.
 \bRCS\b
 \bCVS\b
@@ -20,7 +23,7 @@
 \bBuild.bat$
 \b_build
 
-# Avoid Devel::Cover generated files
+# Avoid Devel::Cover/NYTProf generated files
 \bcover_db
 \bnytprof
 

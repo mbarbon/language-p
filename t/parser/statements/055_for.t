@@ -33,7 +33,7 @@ initializer: !parsetree:BinOp
   context: CXT_VOID
   left: !parsetree:LexicalDeclaration
     context: CXT_SCALAR|CXT_LVALUE
-    declaration_type: my
+    declaration_type: OP_MY
     name: i
     sigil: VALUE_SCALAR
   op: OP_ASSIGN
@@ -118,7 +118,7 @@ expression: !parsetree:Symbol
   sigil: VALUE_ARRAY
 variable: !parsetree:LexicalDeclaration
   context: CXT_SCALAR
-  declaration_type: my
+  declaration_type: OP_MY
   name: x
   sigil: VALUE_SCALAR
 EOE

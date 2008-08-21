@@ -9,11 +9,13 @@ __PACKAGE__->mk_ro_accessors( qw(stream buffer tokens
 __PACKAGE__->mk_accessors( qw(quote) );
 
 use Language::P::ParseTree qw(:all);
+use Language::P::Keywords;
 
 our @TOKENS;
 BEGIN {
   our @TOKENS =
-    qw(T_ID T_KEYWORD T_OVERRIDABLE T_EOF T_PATTERN T_STRING T_NUMBER T_QUOTE
+    qw(T_ID T_KEYWORD T_OVERRIDABLE T_BUILTIN T_EOF
+       T_PATTERN T_STRING T_NUMBER T_QUOTE
        T_SEMICOLON T_COLON T_COMMA T_OPPAR T_CLPAR T_OPSQ T_CLSQ
        T_OPBRK T_CLBRK T_OPHASH T_OPAN T_CLPAN T_INTERR
        T_NOT T_SLESS T_CLAN T_SGREAT T_EQUAL T_LESSEQUAL T_SLESSEQUAL
@@ -130,15 +132,6 @@ my %ops =
     'not' => T_NOTLOW,
     'xor' => T_XORLOW,
     );
-
-my %keywords = map { ( $_ => 1 ) }
-  qw(if unless else elsif for foreach while until do last next redo
-     my our state sub eval package
-     ),
-  qw(print defined return undef);
-my %overridables = map { ( $_ => 1 ) }
-  qw(unlink glob readline die open pipe chdir rmdir glob readline
-     close binmode abs wantarray);
 
 my %quoted_chars =
   ( 'n' => "\n",
@@ -556,7 +549,7 @@ sub _find_end {
         }
         # if we find a fat comma, we got a string constant, not the
         # start of a quoted string!
-        $$_ =~ /^=>/ and return [ T_STRING, $op ];
+        $$_ =~ /^=>/ and return ( undef, [ T_STRING, $op ] );
         $$_ =~ s/^(\S)// or die;
         $quote_start = $1;
     }
@@ -605,24 +598,32 @@ sub _find_end {
         }
     }
 
-    return [ $is_regex ? T_PATTERN : T_QUOTE,
-             $op, $quote_start, \$str, undef, undef, $interpolated ];
+    my $interpolate = $op eq 'qq'         ? 1 :
+                      $op eq 'q'          ? 0 :
+                      $op eq 'qw'         ? 0 :
+                      $quote_start eq "'" ? 0 :
+                                            1;
+    return ( $quote_start,
+             [ $is_regex ? T_PATTERN : T_QUOTE,
+               0, $interpolate, \$str, undef, undef, $interpolated ] );
 }
 
 sub _prepare_sublex {
     my( $self, $op, $quote_start ) = @_;
-    my $token = _find_end( $self, $op, $quote_start );
+    my( $quote, $token ) = _find_end( $self, $op, $quote_start );
 
     # oops, found fat comma: not a quote-like operator
     return $token if $token->[0] == T_STRING;
 
-    # scan second part of substitution/transliteration
-    if( $op eq 's' || $op eq 'tr' || $op eq 'y' ) {
-        my $quote_char = $quote_end{$token->[2]} ? undef : $token->[2];
-        my $rest = _find_end( $self, $op, $quote_char );
-        $token->[4] = $rest;
-    }
     if( my $op_descr = $regex_flags{$op} ) {
+        # scan second part of substitution/transliteration
+        if( $op eq 's' || $op eq 'tr' || $op eq 'y' ) {
+            my $quote_char = $quote_end{$quote} ? undef : $quote;
+            my( undef, $rest ) = _find_end( $self, $op, $quote_char );
+            $token->[4] = $rest;
+        }
+
+        # scan regexp flags
         $token->[1] = $op_descr->[0];
         my $fl_str = $op_descr->[1];
         local $_ = $self->buffer;
@@ -634,6 +635,12 @@ sub _prepare_sublex {
             $flags |= $op_descr->[$idx + 2];
         }
         $token->[5] = $flags;
+    } elsif( $op eq 'qx' || $op eq "`" ) {
+        $token->[1] = OP_QL_QX;
+    } elsif( $op eq 'qw' ) {
+        $token->[1] = OP_QL_QW;
+    } elsif( $op eq '<' ) {
+        $token->[1] = OP_QL_LT;
     }
 
     return $token;
@@ -681,7 +688,7 @@ sub _prepare_sublex_heredoc {
 
     Carp::confess "EOF while looking for terminator '$end'" unless $finished;
 
-    return [ T_QUOTE, $quote, $quote, \$str ];
+    return [ T_QUOTE, $quote eq "`" ? OP_QL_QX : 0, $quote ne "'", \$str ];
 }
 
 sub lex {
@@ -708,10 +715,10 @@ sub lex {
             return [ T_STRING, $ids ];
         }
         my $op = $ops{$ids};
-        my $type =  $op                 ? T_KEYWORD :
-                    $keywords{$ids}     ? T_KEYWORD :
-                    $overridables{$ids} ? T_OVERRIDABLE :
-                                          T_ID;
+        my $kw = $op ? undef : $Language::P::Keywords::KEYWORDS{$ids};
+        my $type =  $op ? -1 :
+                    $kw ? $kw :
+                          T_ID;
 
         if( $no_space && (    $$_ =~ /^::/
                            || ( $type == T_ID && $$_ =~ /^'\w/ ) ) ) {
