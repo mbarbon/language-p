@@ -6,6 +6,7 @@ use warnings;
 use Exporter 'import';
 
 use Language::P::Parser;
+use Language::P::Keywords;
 use Language::P::ParseTree qw(:all);
 use Language::P::Value::SymbolTable;
 

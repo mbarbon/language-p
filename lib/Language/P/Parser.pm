@@ -10,6 +10,7 @@ use Language::P::Parser::Regex;
 use Language::P::Value::ScratchPad;
 use Language::P::Value::Code;
 use Language::P::ParseTree::PropagateContext;
+use Language::P::Keywords;
 
 __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime) );
 __PACKAGE__->mk_accessors( qw(_package _lexicals _pending_lexicals
@@ -177,7 +178,7 @@ sub _lex_token {
 
     return if !$value && !$type;
 
-    if(    ( $type && $type ne $token->[0] )
+    if(    ( $type && $type != $token->[0] )
         || ( $value && $value eq $token->[1] ) ) {
         Carp::confess( $token->[0], ' ', $token->[1] );
     }
@@ -216,33 +217,34 @@ sub _parse_line {
         _lex_token( $self, T_OPBRK );
 
         return _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
-    } elsif( $token->[1] eq 'sub' ) {
-        return _parse_sub( $self, 1 | 2 );
+    } elsif( $token->[0] == T_ID && is_keyword( $token->[2] ) ) {
+        if( $token->[2] == KEY_SUB ) {
+            return _parse_sub( $self, 1 | 2 );
+        } elsif( $token->[2] == KEY_IF || $token->[2] == KEY_UNLESS ) {
+            return _parse_cond( $self );
+        } elsif( $token->[2] == KEY_WHILE || $token->[2] == KEY_UNTIL ) {
+            return _parse_while( $self );
+        } elsif( $token->[2] == KEY_FOR || $token->[2] == KEY_FOREACH ) {
+            return _parse_for( $self );
+        } elsif( $token->[2] == KEY_PACKAGE ) {
+            _lex_token( $self, T_ID );
+            my $id = $self->lexer->lex_identifier;
+            _lex_semicolon( $self );
+
+            $self->_package( $id->[1] );
+
+            return Language::P::ParseTree::Package->new
+                       ( { name => $id->[1],
+                           } );
+        } elsif(    $token->[2] == OP_MY
+                 || $token->[2] == OP_OUR
+                 || $token->[2] == OP_STATE ) {
+            return _parse_sideff( $self );
+        }
     } elsif( $special_sub{$token->[1]} ) {
         return _parse_sub( $self, 1, 1 );
-    } elsif( $token->[1] eq 'if' || $token->[1] eq 'unless' ) {
-        return _parse_cond( $self );
-    } elsif( $token->[1] eq 'while' || $token->[1] eq 'until' ) {
-        return _parse_while( $self );
-    } elsif( $token->[1] eq 'for' || $token->[1] eq 'foreach' ) {
-        return _parse_for( $self );
-    } elsif( $token->[1] eq 'package' ) {
-        _lex_token( $self, T_ID );
-        my $id = $self->lexer->lex_identifier;
-        _lex_semicolon( $self );
-
-        $self->_package( $id->[1] );
-
-        return Language::P::ParseTree::Package->new
-                   ( { name => $id->[1],
-                       } );
     } else {
-        my $sideff = _parse_sideff( $self );
-        _lex_semicolon( $self );
-
-        $self->_add_pending_lexicals;
-
-        return $sideff;
+        return _parse_sideff( $self );
     }
 
     Carp::confess $token->[0], ' ', $token->[1];
@@ -346,12 +348,12 @@ sub _parse_cond {
 
     for(;;) {
         my $else = $self->lexer->peek( X_STATE );
-        last if    $else->[0] != T_ID || $else->[2] != T_KEYWORD
-                || ( $else->[1] ne 'else' && $else->[1] ne 'elsif' );
+        last if    $else->[0] != T_ID
+                || ( $else->[2] != KEY_ELSE && $else->[2] != KEY_ELSIF );
         _lex_token( $self );
 
         my $expr;
-        if( $else->[1] eq 'elsif' ) {
+        if( $else->[2] == KEY_ELSIF ) {
             _lex_token( $self, T_OPPAR );
             $expr = _parse_expr( $self );
             _lex_token( $self, T_CLPAR );
@@ -423,10 +425,10 @@ sub _parse_for {
         } else {
             Carp::confess $sep->[0], ' ', $sep->[1];
         }
-    } elsif( $token->[0] == T_ID && (    $token->[1] eq 'my'
-                                      || $token->[1] eq 'our'
-                                      || $token->[1] eq 'state' ) ) {
-        $foreach_var = _parse_lexical_variable( $self, $token->[1] )
+    } elsif( $token->[0] == T_ID && (    $token->[2] == OP_MY
+                                      || $token->[2] == OP_OUR
+                                      || $token->[2] == OP_STATE ) ) {
+        $foreach_var = _parse_lexical_variable( $self, $token->[2] )
     } elsif( $token->[0] == T_DOLLAR ) {
         my $id = $self->lexer->lex_identifier;
         $foreach_var = _find_symbol( $self, VALUE_SCALAR, $id->[1] );
@@ -488,8 +490,8 @@ sub _parse_sideff {
     my $expr = _parse_expr( $self );
     my $keyword = $self->lexer->peek( X_TERM );
 
-    if( $keyword->[0] == T_ID && $keyword->[2] == T_KEYWORD ) {
-        if( $keyword->[1] eq 'if' || $keyword->[1] eq 'unless' ) {
+    if( $keyword->[0] == T_ID && is_keyword( $keyword->[2] ) ) {
+        if( $keyword->[2] == KEY_IF || $keyword->[2] == KEY_UNLESS ) {
             _lex_token( $self, T_ID );
             my $cond = _parse_expr( $self );
 
@@ -501,7 +503,7 @@ sub _parse_sideff {
                                                  } )
                                          ],
                             } );
-        } elsif( $keyword->[1] eq 'while' || $keyword->[1] eq 'until' ) {
+        } elsif( $keyword->[2] == KEY_WHILE || $keyword->[2] == KEY_UNTIL ) {
             _lex_token( $self, T_ID );
             my $cond = _parse_expr( $self );
 
@@ -510,7 +512,7 @@ sub _parse_sideff {
                             block      => $expr,
                             block_type => $keyword->[1],
                             } );
-        } elsif( $keyword->[1] eq 'for' || $keyword->[1] eq 'foreach' ) {
+        } elsif( $keyword->[2] == KEY_FOR || $keyword->[2] == KEY_FOREACH ) {
             _lex_token( $self, T_ID );
             my $cond = _parse_expr( $self );
 
@@ -521,6 +523,9 @@ sub _parse_sideff {
                             } );
         }
     }
+
+    _lex_semicolon( $self );
+    $self->_add_pending_lexicals;
 
     return $expr;
 }
@@ -656,7 +661,7 @@ sub _parse_bracketed_expr {
     _lex_token( $self, $bracket ) unless $no_consume_opening;
     if( $allow_empty ) {
         my $next = $self->lexer->peek( X_TERM );
-        if( $next->[0] eq $close ) {
+        if( $next->[0] == $close ) {
             _lex_token( $self, $close );
             return undef;
         }
@@ -677,7 +682,7 @@ sub _parse_maybe_indirect_method_call {
         # Foo $bar (?) -> no method
         # foo $bar -> method
         # print xxx .... -> no method
-        if( $op->[1] eq 'print' ) {
+        if( $op->[2] == OP_PRINT ) {
             my $la = 1;
         }
         # foo pack:: -> method
@@ -746,13 +751,10 @@ sub _parse_match {
 
         return $match;
     } else {
-        my $terminator = $token->[2];
-        my $interpolate = $terminator eq "'" ? 0 : 1;
-
         my $parts = Language::P::Parser::Regex->new
                         ( { generator   => $self->generator,
                             runtime     => $self->runtime,
-                            interpolate => $interpolate,
+                            interpolate => $token->[2],
                             } )->parse_string( $token->[3] );
         my $match = Language::P::ParseTree::Pattern->new
                         ( { components => $parts,
@@ -787,16 +789,10 @@ sub _parse_substitution {
 
 sub _parse_string_rest {
     my( $self, $token, $pattern ) = @_;
-    my( $quote, $terminator ) = ( $token->[1], $token->[2] );
-    my $interpolate = $quote eq 'qq'     ? 1 :
-                      $quote eq 'q'      ? 0 :
-                      $quote eq 'qw'     ? 0 :
-                      $terminator eq "'" ? 0 :
-                                           1;
     my @values;
     local $self->{lexer} = Language::P::Lexer->new( { string => $token->[3] } );
 
-    $self->lexer->quote( { interpolate          => $interpolate,
+    $self->lexer->quote( { interpolate          => $token->[2],
                            pattern              => 0,
                            interpolated_pattern => $pattern,
                            } );
@@ -833,12 +829,13 @@ sub _parse_string_rest {
                            } );
     }
 
-    if( $quote eq '`' || $quote eq 'qx' ) {
+    my $quote = $token->[1];
+    if( $quote == OP_QL_QX ) {
         $string = Language::P::ParseTree::UnOp->new
                       ( { op   => 'backtick',
                           left => $string,
                           } );
-    } elsif( $quote eq 'qw' ) {
+    } elsif( $quote == OP_QL_QW ) {
         my @words = map Language::P::ParseTree::Constant->new
                             ( { value => $_,
                                 flags => CONST_STRING,
@@ -859,7 +856,7 @@ sub _parse_term_terminal {
     if( $token->[0] == T_QUOTE ) {
         my $qstring = _parse_string_rest( $self, $token, 0 );
 
-        if( $token->[1] eq '<' ) {
+        if( $token->[1] == OP_QL_LT ) {
             # simple scalar: readline, anything else: glob
             if(    $qstring->isa( 'Language::P::ParseTree::QuotedString' )
                 && $#{$qstring->components} == 0
@@ -930,11 +927,12 @@ sub _parse_term_terminal {
              || $token->[0] == T_AMPERSAND
              || $token->[0] == T_ARYLEN ) {
         return _parse_indirobj_maybe_subscripts( $self, $token );
-    } elsif(    $token->[0] == T_ID && $token->[2] == T_KEYWORD
-             && (    $token->[1] eq 'my' || $token->[1] eq 'our'
-                  || $token->[1] eq 'state' ) ) {
-        return _parse_lexical( $self, $token->[1] );
-    } elsif( $token->[0] == T_ID ) {
+    } elsif(    $token->[0] == T_ID
+             && (    $token->[2] == OP_MY || $token->[2] == OP_OUR
+                  || $token->[2] == OP_STATE ) ) {
+        return _parse_lexical( $self, $token->[2] );
+    } elsif(    $token->[0] == T_ID
+             && !is_keyword( $token->[2] ) ) {
         return _parse_listop( $self, $token );
     } elsif( $token->[0] == T_OPHASH ) {
         my $expr = _parse_bracketed_expr( $self, T_OPBRK, 1, 1 );
@@ -1040,7 +1038,7 @@ sub _parse_indirobj_maybe_subscripts {
 sub _parse_lexical {
     my( $self, $keyword ) = @_;
 
-    die $keyword unless $keyword eq 'my' || $keyword eq 'our';
+    die $keyword unless $keyword == OP_MY || $keyword == OP_OUR;
 
     my $list = _parse_lexical_rest( $self, $keyword );
 
@@ -1250,7 +1248,7 @@ sub _parse_block_rest {
     my @lines;
     for(;;) {
         my $token = $self->lexer->lex( X_STATE );
-        if( $token->[0] eq $end_token ) {
+        if( $token->[0] == $end_token ) {
             if( $flags & BLOCK_IMPLICIT_RETURN && @lines ) {
                 $lines[-1] = _add_implicit_return( $lines[-1] );
             }
@@ -1304,8 +1302,7 @@ sub _declared_id {
     my( $self, $op ) = @_;
     my $call;
 
-    my $is_print = $op->[1] eq 'print';
-    if( $op->[2] == T_OVERRIDABLE ) {
+    if( is_overridable( $op->[2] ) ) {
         my $st = $self->runtime->symbol_table;
 
         if( $st->get_symbol( $op->[1], '&' ) ) {
@@ -1316,13 +1313,13 @@ sub _declared_id {
                         } );
 
         return ( $call, 1 );
-    } elsif( $is_print ) {
+    } elsif( $op->[2] == OP_PRINT ) {
         $call = Language::P::ParseTree::Print->new
                     ( { function  => $op->[1],
                         } );
 
         return ( $call, 1 );
-    } elsif( $op->[2] == T_KEYWORD ) {
+    } elsif( is_builtin( $op->[2] ) ) {
         $call = Language::P::ParseTree::Builtin->new
                     ( { function  => $op->[1],
                         } );
