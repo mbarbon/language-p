@@ -15,6 +15,6 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
   name: foo
-  sigil: $
+  sigil: VALUE_SCALAR
 op: f
 EOE

@@ -149,11 +149,10 @@ my %dispatch =
   ( 'Language::P::ParseTree::FunctionCall'           => '_function_call',
     'Language::P::ParseTree::Builtin'                => '_builtin',
     'Language::P::ParseTree::Overridable'            => '_builtin',
-    'Language::P::ParseTree::Print'                  => '_print',
+    'Language::P::ParseTree::BuiltinIndirect'        => '_indirect',
     'Language::P::ParseTree::UnOp'                   => '_unary_op',
     'Language::P::ParseTree::BinOp'                  => '_binary_op',
     'Language::P::ParseTree::Constant'               => '_constant',
-    'Language::P::ParseTree::Number'                 => '_constant',
     'Language::P::ParseTree::Symbol'                 => '_symbol',
     'Language::P::ParseTree::LexicalDeclaration'     => '_lexical_declaration',
     'Language::P::ParseTree::LexicalSymbol'          => '_lexical_declaration',
@@ -201,43 +200,33 @@ sub dispatch_regex {
     return $self->visit_map( \%dispatch_regex, $tree, $true, $false );
 }
 
-my %reverse_conditionals =
-  ( '<'      => '>=',
-    '>'      => '<=',
-    '<='     => '>',
-    '>='     => '<',
-    '=='     => '!=',
-    '!='     => '==',
-    );
-
 my %conditionals =
-  ( '<'      => 'compare_f_lt_int',
-    'lt'     => 'compare_s_lt_int',
-    '>'      => 'compare_f_gt_int',
-    'gt'     => 'compare_s_gt_int',
-    '<='     => 'compare_f_le_int',
-    'le'     => 'compare_s_le_int',
-    '>='     => 'compare_f_ge_int',
-    'ge'     => 'compare_s_ge_int',
-    '=='     => 'compare_f_eq_int',
-    'eq'     => 'compare_s_eq_int',
-    '!='     => 'compare_f_ne_int',
-    'ne'     => 'compare_s_ne_int',
+  ( OP_NUM_LT() => 'compare_f_lt_int',
+    OP_STR_LT() => 'compare_s_lt_int',
+    OP_NUM_GT() => 'compare_f_gt_int',
+    OP_STR_GT() => 'compare_s_gt_int',
+    OP_NUM_LE() => 'compare_f_le_int',
+    OP_STR_LE() => 'compare_s_le_int',
+    OP_NUM_GE() => 'compare_f_ge_int',
+    OP_STR_GE() => 'compare_s_ge_int',
+    OP_NUM_EQ() => 'compare_f_eq_int',
+    OP_STR_EQ() => 'compare_s_eq_int',
+    OP_NUM_NE() => 'compare_f_ne_int',
+    OP_STR_NE() => 'compare_s_ne_int',
     );
 
 my %short_circuit =
-  ( '&&'     => 'jump_if_false',
-    '||'     => 'jump_if_true',
-    'and'    => 'jump_if_false',
-    'or'     => 'jump_if_true',
+  ( OP_LOG_AND() => 'jump_if_false',
+    OP_LOG_OR()  => 'jump_if_true',
     );
 
 my %unary =
-  ( '-'      => 'negate',
-    '!'      => 'not',
-    '\\'     => 'reference',
-    '$'      => 'dereference_scalar',
-    backtick => 'backtick',
+  ( OP_MINUS()           => 'negate',
+    OP_LOG_NOT()         => 'not',
+    OP_REFERENCE()       => 'reference',
+    VALUE_SCALAR()       => 'dereference_scalar',
+    VALUE_ARRAY_LENGTH() => 'array_size',
+    backtick             => 'backtick',
     );
 
 my %builtins =
@@ -245,18 +234,18 @@ my %builtins =
     return   => 'return',
     unlink   => 'unlink',
     %short_circuit,
-    '.'      => 'concat',
-    '+'      => 'add',
-    '*'      => 'multiply',
-    '-'      => 'subtract',
-    '=~'     => 'rx_match',
-    '='      => 'assign',
-    '<='     => 'compare_f_le_scalar',
-    'le'     => 'compare_s_le_scalar',
-    '=='     => 'compare_f_eq_scalar',
-    'eq'     => 'compare_s_eq_scalar',
-    '!='     => 'compare_f_ne_scalar',
-    'ne'     => 'compare_s_ne_scalar',
+    OP_CONCATENATE()            => 'concat',
+    OP_ADD()                    => 'add',
+    OP_MULTIPLY()               => 'multiply',
+    OP_SUBTRACT()               => 'subtract',
+    OP_MATCH()                  => 'rx_match',
+    OP_ASSIGN()                 => 'assign',
+    OP_NUM_LE()                 => 'compare_f_le_scalar',
+    OP_STR_LE()                 => 'compare_s_le_scalar',
+    OP_NUM_EQ()                 => 'compare_f_eq_scalar',
+    OP_STR_EQ()                 => 'compare_s_eq_scalar',
+    OP_NUM_NE()                 => 'compare_f_ne_scalar',
+    OP_STR_NE()                 => 'compare_s_ne_scalar',
     );
 
 my %builtins_no_list =
@@ -266,13 +255,13 @@ my %builtins_no_list =
     wantarray=> 'want',
     );
 
-sub _print {
+sub _indirect {
     my( $self, $tree ) = @_;
 
     push @bytecode, o( 'start_list' );
 
-    if( $tree->filehandle ) {
-        $self->dispatch( $tree->filehandle );
+    if( $tree->indirect ) {
+        $self->dispatch( $tree->indirect );
     } else {
         my $out = Language::P::Value::Handle->new( { handle => \*STDOUT } );
         push @bytecode, o( 'constant', value => $out );
@@ -411,14 +400,13 @@ sub _anything_cond {
 
 sub _constant {
     my( $self, $tree ) = @_;
-    my $type = $tree->type;
     my $v;
 
-    if( $type eq 'number' ) {
-        if( $tree->flags == NUM_INTEGER ) {
+    if( $tree->is_number ) {
+        if( $tree->flags & NUM_INTEGER ) {
             $v = Language::P::Value::StringNumber
                      ->new( { integer => $tree->value } );
-        } elsif( $tree->flags == NUM_FLOAT ) {
+        } elsif( $tree->flags & NUM_FLOAT ) {
             $v = Language::P::Value::StringNumber
                      ->new( { float => $tree->value } );
         } elsif( $tree->flags & NUM_OCTAL ) {
@@ -430,27 +418,28 @@ sub _constant {
         } elsif( $tree->flags & NUM_BINARY ) {
             $v = Language::P::Value::StringNumber
                      ->new( { integer => oct '0b' . $tree->value } );
+        } else {
+            die "Unhandled flags value";
         }
-    } elsif( $type eq 'string' ) {
+    } elsif( $tree->is_string ) {
         $v = Language::P::Value::StringNumber->new( { string => $tree->value } );
     } else {
-        die $type;
+        die "Neither number nor string";
     }
 
     push @bytecode, o( 'constant', value => $v );
 }
 
 my %sigils =
-  ( '$'  => 'scalar',
-    '&'  => 'subroutine',
-    '@'  => 'array',
-    '$#' => 'array',
+  ( VALUE_SCALAR() => 'scalar',
+    VALUE_SUB()    => 'subroutine',
+    VALUE_ARRAY()  => 'array',
     );
 
 sub _symbol {
     my( $self, $tree ) = @_;
 
-    if( $tree->sigil eq '*' ) {
+    if( $tree->sigil == VALUE_GLOB ) {
         push @bytecode, o( 'glob', name => $tree->name, create => 1 );
         return;
     }
@@ -461,10 +450,6 @@ sub _symbol {
     push @bytecode,
          o( 'glob',             name => $tree->name, create => 1 ),
          o( 'glob_slot_create', slot => $slot );
-
-    if( $tree->sigil eq '$#' ) {
-        push @bytecode, o( 'array_size' );
-    }
 }
 
 sub _lexical_declaration {
@@ -595,9 +580,9 @@ sub _subscript {
     $self->dispatch( $tree->subscript );
     $self->dispatch( $tree->subscripted );
 
-    if( $tree->type eq '[' ) {
+    if( $tree->type == VALUE_ARRAY ) {
         push @bytecode, o( 'array_element' );
-    } elsif( $tree->type eq '{' ) {
+    } elsif( $tree->type == VALUE_HASH ) {
         push @bytecode, o( 'hash_element' );
     } else {
         die $tree->type;

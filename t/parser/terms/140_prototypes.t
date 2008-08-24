@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 5;
+use Test::More tests => 10;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -10,45 +10,41 @@ use TestParser qw(:all);
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 print defined 1, 2
 EOP
---- !parsetree:Print
+--- !parsetree:BuiltinIndirect
 arguments:
   - !parsetree:Builtin
     arguments:
-      - !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      - !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 1
     context: CXT_LIST
     function: defined
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID
-filehandle: ~
 function: print
+indirect: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 print unlink 1, 2
 EOP
---- !parsetree:Print
+--- !parsetree:BuiltinIndirect
 arguments:
   - !parsetree:Overridable
     arguments:
-      - !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      - !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 1
-      - !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      - !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 2
     context: CXT_LIST
     function: unlink
 context: CXT_VOID
-filehandle: ~
 function: print
+indirect: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -61,17 +57,17 @@ left: !parsetree:Overridable
     - !parsetree:Symbol
       context: CXT_SCALAR
       name: FILE
-      sigil: '*'
+      sigil: VALUE_GLOB
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: '>foo'
   context: CXT_SCALAR
   function: open
-op: or
+op: OP_LOG_OR
 right: !parsetree:Overridable
   arguments:
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: error
   context: CXT_VOID
   function: die
@@ -80,18 +76,101 @@ EOE
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 print FILE $stuff;
 EOP
---- !parsetree:Print
+--- !parsetree:BuiltinIndirect
 arguments:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: stuff
-    sigil: $
+    sigil: VALUE_SCALAR
 context: CXT_VOID
-filehandle: !parsetree:Symbol
+function: print
+indirect: !parsetree:Symbol
   context: CXT_SCALAR
   name: FILE
-  sigil: '*'
+  sigil: VALUE_GLOB
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print FILE;
+EOP
+--- !parsetree:BuiltinIndirect
+arguments: ~
+context: CXT_VOID
 function: print
+indirect: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: FILE
+  sigil: VALUE_GLOB
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print $stuff + $b;
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:BinOp
+    context: CXT_LIST
+    left: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: stuff
+      sigil: VALUE_SCALAR
+    op: OP_ADD
+    right: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: b
+      sigil: VALUE_SCALAR
+context: CXT_VOID
+function: print
+indirect: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print $stuff;
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: stuff
+    sigil: VALUE_SCALAR
+context: CXT_VOID
+function: print
+indirect: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print FILE();
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:FunctionCall
+    arguments: ~
+    context: CXT_LIST
+    function: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: FILE
+      sigil: VALUE_SUB
+context: CXT_VOID
+function: print
+indirect: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print FILE (), 1;
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:List
+    expressions: []
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
+    value: 1
+context: CXT_VOID
+function: print
+indirect: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: FILE
+  sigil: VALUE_GLOB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -102,11 +181,11 @@ arguments:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: foo
-    sigil: $
+    sigil: VALUE_SCALAR
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: FILE
-    sigil: '*'
+    sigil: VALUE_GLOB
 context: CXT_VOID
 function: pipe
 EOE

@@ -13,7 +13,7 @@ EOP
 --- !parsetree:Symbol
 context: CXT_VOID
 name: foo
-sigil: '@'
+sigil: VALUE_ARRAY
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -22,7 +22,7 @@ EOP
 --- !parsetree:Symbol
 context: CXT_VOID
 name: foo
-sigil: '@'
+sigil: VALUE_ARRAY
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -34,7 +34,7 @@ name: x
 --- !parsetree:Symbol
 context: CXT_VOID
 name: foo
-sigil: '@'
+sigil: VALUE_ARRAY
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -43,16 +43,19 @@ EOP
 --- !parsetree:Symbol
 context: CXT_VOID
 name: 'foo::moo::::boo::::'
-sigil: $
+sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $#foo
 EOP
---- !parsetree:Symbol
+--- !parsetree:Dereference
 context: CXT_VOID
-name: foo
-sigil: $#
+left: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: foo
+  sigil: VALUE_ARRAY
+op: VALUE_ARRAY_LENGTH
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -61,7 +64,7 @@ EOP
 --- !parsetree:Symbol
 context: CXT_VOID
 name: foo
-sigil: '%'
+sigil: VALUE_HASH
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -70,7 +73,7 @@ EOP
 --- !parsetree:Symbol
 context: CXT_VOID
 name: foo
-sigil: '*'
+sigil: VALUE_GLOB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -79,7 +82,7 @@ EOP
 --- !parsetree:Symbol
 context: CXT_VOID
 name: _
-sigil: $
+sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -88,7 +91,7 @@ EOP
 --- !parsetree:Symbol
 context: CXT_VOID
 name: '#'
-sigil: $
+sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -97,7 +100,7 @@ EOP
 --- !parsetree:Symbol
 context: CXT_VOID
 name: "\x05"
-sigil: $
+sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -106,7 +109,7 @@ EOP
 --- !parsetree:Symbol
 context: CXT_VOID
 name: "\x06"
-sigil: $
+sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -115,5 +118,5 @@ EOP
 --- !parsetree:Symbol
 context: CXT_VOID
 name: "\x06oo"
-sigil: $
+sigil: VALUE_SCALAR
 EOE

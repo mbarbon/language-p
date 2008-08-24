@@ -15,19 +15,19 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
   name: _
-  sigil: $
-op: =~
+  sigil: VALUE_SCALAR
+op: OP_MATCH
 right: !parsetree:Pattern
   components:
     - !parsetree:RXAssertion
       type: START_SPECIAL
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: test
     - !parsetree:RXAssertion
       type: END_SPECIAL
-  flags: ~
-  op: m
+  flags: 0
+  op: OP_QL_M
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -38,17 +38,17 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
   name: a
-  sigil: $
-op: =~
+  sigil: VALUE_SCALAR
+op: OP_MATCH
 right: !parsetree:Pattern
   components:
     - !parsetree:RXAssertion
       type: START_SPECIAL
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: test
-  flags: ~
-  op: m
+  flags: 0
+  op: OP_QL_M
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -59,14 +59,12 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
   name: _
-  sigil: $
-op: =~
+  sigil: VALUE_SCALAR
+op: OP_MATCH
 right: !parsetree:Pattern
   components: []
-  flags:
-    - m
-    - s
-  op: m
+  flags: FLAG_RX_SINGLE_LINE|FLAG_RX_MULTI_LINE
+  op: OP_QL_M
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -77,10 +75,10 @@ components:
   - !parsetree:RXAssertion
     type: START_SPECIAL
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: test
-flags: ~
-op: qr
+flags: 0
+op: OP_QL_QR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -91,22 +89,22 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
   name: _
-  sigil: $
-op: =~
+  sigil: VALUE_SCALAR
+op: OP_MATCH
 right: !parsetree:InterpolatedPattern
-  flags: ~
-  op: m
+  flags: 0
+  op: OP_QL_M
   string: !parsetree:QuotedString
     components:
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: '^'
       - !parsetree:Symbol
         context: CXT_SCALAR
         name: foo
-        sigil: $
+        sigil: VALUE_SCALAR
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: aaa
 EOE
 
@@ -118,8 +116,8 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
   name: _
-  sigil: $
-op: =~
+  sigil: VALUE_SCALAR
+op: OP_MATCH
 right: !parsetree:Pattern
   components:
     - !parsetree:RXAssertion
@@ -127,10 +125,10 @@ right: !parsetree:Pattern
     - !parsetree:RXAssertion
       type: END_SPECIAL
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: '{foo}aaa'
-  flags: ~
-  op: m
+  flags: 0
+  op: OP_QL_M
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -141,19 +139,19 @@ context: 2
 left: !parsetree:Symbol
   context: 4
   name: _
-  sigil: $
-op: =~
+  sigil: VALUE_SCALAR
+op: OP_MATCH
 right: !parsetree:InterpolatedPattern
-  flags: ~
-  op: m
+  flags: 0
+  op: OP_QL_M
   string: !parsetree:QuotedString
     components:
       - !parsetree:Symbol
         context: 4
         name: foo
-        sigil: $
+        sigil: VALUE_SCALAR
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: $
 EOE
 
@@ -165,18 +163,18 @@ context: 2
 left: !parsetree:Symbol
   context: 4
   name: _
-  sigil: $
-op: =~
+  sigil: VALUE_SCALAR
+op: OP_MATCH
 right: !parsetree:InterpolatedPattern
-  flags: ~
-  op: m
+  flags: 0
+  op: OP_QL_M
   string: !parsetree:QuotedString
     components:
       - !parsetree:Symbol
         context: 4
         name: foo
-        sigil: $
+        sigil: VALUE_SCALAR
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: \w
 EOE

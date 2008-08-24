@@ -4,26 +4,59 @@ use strict;
 use warnings;
 use Exporter 'import';
 
-our @EXPORT_OK = qw(NUM_INTEGER NUM_FLOAT NUM_HEXADECIMAL NUM_OCTAL NUM_BINARY
+our @OPERATIONS;
+BEGIN {
+    @OPERATIONS =
+      ( qw(OP_POWER OP_MATCH OP_NOT_MATCH OP_MULTIPLY OP_DIVIDE OP_MODULUS
+           OP_REPEAT OP_ADD OP_SUBTRACT OP_CONCATENATE OP_NUM_LT OP_NUM_GT
+           OP_NUM_LE OP_NUM_GE OP_STR_LT OP_STR_GT OP_STR_LE OP_STR_GE
+           OP_NUM_EQ OP_NUM_NE OP_NUM_CMP OP_STR_EQ OP_STR_NE OP_STR_CMP
+           OP_LOG_AND OP_LOG_OR OP_DOT_DOT OP_DOT_DOT_DOT OP_ASSIGN
+           OP_ADD_ASSIGN OP_SUBTRACT_ASSIGN OP_MULTIPLY_ASSIGN
+           OP_DIVIDE_ASSIGN OP_LOG_AND OP_LOG_OR OP_LOG_XOR OP_PLUS
+           OP_MINUS OP_LOG_NOT OP_REFERENCE OP_LOG_NOT OP_PARENTHESES
+           OP_BIT_AND OP_BIT_OR OP_BIT_XOR
+           OP_QL_S OP_QL_M OP_QL_TR OP_QL_QR OP_QL_QX OP_QL_LT OP_QL_QW
+           ) );
+}
 
-                    CXT_CALLER CXT_VOID CXT_SCALAR CXT_LIST CXT_LVALUE
-                    CXT_VIVIFY CXT_CALL_MASK
+our @EXPORT_OK =
+  ( qw(NUM_INTEGER NUM_FLOAT NUM_HEXADECIMAL NUM_OCTAL NUM_BINARY
+       STRING_BARE CONST_STRING CONST_NUMBER
 
-                    PROTO_DEFAULT
+       CXT_CALLER CXT_VOID CXT_SCALAR CXT_LIST CXT_LVALUE
+       CXT_VIVIFY CXT_CALL_MASK
 
-                    FLAG_IMPLICITARGUMENTS FLAG_ERASEFRAME
-                    );
+       PROTO_DEFAULT PROTO_SCALAR PROTO_ARRAY PROTO_HASH PROTO_SUB
+       PROTO_GLOB PROTO_BACKSLASH PROTO_BLOCK PROTO_AMPER PROTO_ANY
+       PROTO_INDIROBJ PROTO_FILEHANDLE
+
+       FLAG_IMPLICITARGUMENTS FLAG_ERASEFRAME
+       FLAG_RX_MULTI_LINE FLAG_RX_SINGLE_LINE FLAG_RX_CASE_INSENSITIVE
+       FLAG_RX_FREE_FORMAT FLAG_RX_ONCE FLAG_RX_GLOBAL FLAG_RX_KEEP
+       FLAG_RX_EVAL FLAG_RX_COMPLEMENT FLAG_RX_DELETE FLAG_RX_SQUEEZE
+
+       VALUE_SCALAR VALUE_ARRAY VALUE_HASH VALUE_SUB VALUE_GLOB
+       VALUE_ARRAY_LENGTH
+       ), @OPERATIONS );
 our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,
     );
 
 use constant
-  { NUM_INTEGER        => 1,
-    NUM_FLOAT          => 2,
-    NUM_HEXADECIMAL    => 4,
-    NUM_OCTAL          => 8,
-    NUM_BINARY         => 16,
+  { # numeric/string constants
+    CONST_STRING       => 1,
+    CONST_NUMBER       => 2,
 
+    STRING_BARE        => 4,
+
+    NUM_INTEGER        => 8,
+    NUM_FLOAT          => 16,
+    NUM_HEXADECIMAL    => 32,
+    NUM_OCTAL          => 64,
+    NUM_BINARY         => 128,
+
+    # context
     CXT_CALLER         => 1,
     CXT_VOID           => 2,
     CXT_SCALAR         => 4,
@@ -32,11 +65,45 @@ use constant
     CXT_VIVIFY         => 32,
     CXT_CALL_MASK      => 2|4|8,
 
-    PROTO_DEFAULT      => [ -1, -1, '@' ],
+    PROTO_SCALAR       => 1,
+    PROTO_ARRAY        => 2,
+    PROTO_HASH         => 4,
+    PROTO_SUB          => 8,
+    PROTO_GLOB         => 16,
+    PROTO_ANY          => 1|2|4|8|16,
+    PROTO_BACKSLASH    => 32,
+    PROTO_BLOCK        => 64,
+    PROTO_AMPER        => 128,
+    PROTO_INDIROBJ     => 256,
+    PROTO_FILEHANDLE   => 512,
+    PROTO_DEFAULT      => [ -1, -1, 2 ],
+
+    # sigils, anonymous array/hash constructors, dereferences
+    VALUE_SCALAR       => 1,
+    VALUE_ARRAY        => 2,
+    VALUE_HASH         => 3,
+    VALUE_SUB          => 4,
+    VALUE_GLOB         => 5,
+    VALUE_ARRAY_LENGTH => 6,
 
     # function calls
     FLAG_IMPLICITARGUMENTS => 1,
     FLAG_ERASEFRAME        => 2,
+
+    # regular expressions
+    FLAG_RX_MULTI_LINE       => 1,
+    FLAG_RX_SINGLE_LINE      => 2,
+    FLAG_RX_CASE_INSENSITIVE => 4,
+    FLAG_RX_FREE_FORMAT      => 8,
+    FLAG_RX_ONCE             => 16,
+    FLAG_RX_GLOBAL           => 32,
+    FLAG_RX_KEEP             => 64,
+    FLAG_RX_EVAL             => 128,
+    FLAG_RX_COMPLEMENT       => 1,
+    FLAG_RX_DELETE           => 2,
+    FLAG_RX_SQUEEZE          => 4,
+
+    map { $OPERATIONS[$_] => $_ + 1 } 0 .. $#OPERATIONS,
     };
 
 package Language::P::ParseTree::Node;
@@ -134,30 +201,12 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(value type);
+our @FIELDS = qw(value flags);
 
 sub is_constant { 1 }
-
-__PACKAGE__->mk_ro_accessors( @FIELDS );
-
-package Language::P::ParseTree::Bareword;
-
-use strict;
-use warnings;
-use base qw(Language::P::ParseTree::Constant);
-
-sub type { 'string' }
-sub is_bareword { 1 }
-
-package Language::P::ParseTree::Number;
-
-use strict;
-use warnings;
-use base qw(Language::P::ParseTree::Constant);
-
-our @FIELDS = qw(flags);
-
-sub type { 'number' }
+sub is_bareword { $_[0]->{flags} & Language::P::ParseTree::STRING_BARE }
+sub is_string   { $_[0]->{flags} & Language::P::ParseTree::CONST_STRING }
+sub is_number   { $_[0]->{flags} & Language::P::ParseTree::CONST_NUMBER }
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -227,9 +276,10 @@ sub is_symbol { 1 }
 sub lvalue_context {
     my( $self ) = @_;
 
-    return $self->sigil eq '%' || $self->sigil eq '@' ?
-               Language::P::ParseTree::CXT_LIST :
-               Language::P::ParseTree::CXT_SCALAR;
+    return    $self->sigil == Language::P::ParseTree::VALUE_HASH
+           || $self->sigil == Language::P::ParseTree::VALUE_ARRAY ?
+                 Language::P::ParseTree::CXT_LIST :
+                 Language::P::ParseTree::CXT_SCALAR;
 }
 
 package Language::P::ParseTree::Symbol;
@@ -316,7 +366,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::UnOp);
 
-sub op { '()' }
+sub op { Language::P::ParseTree::OP_PARENTHESES }
 sub lvalue_context { Language::P::ParseTree::CXT_LIST }
 
 package Language::P::ParseTree::Filetest;
@@ -450,23 +500,24 @@ use warnings;
 use base qw(Language::P::ParseTree::FunctionCall);
 
 my %prototype_bi =
-  ( print       => [ -1, -1, '!', '@' ],
-    defined     => [  0,  1, '#' ],
-    return      => [ -1, -1, '@' ],
-    undef       => [  0,  1, '$' ],
-    eval        => [  0,  1, '$' ],
+  ( print       => [ -1, -1, Language::P::ParseTree::PROTO_FILEHANDLE, Language::P::ParseTree::PROTO_ARRAY ],
+    defined     => [  0,  1, Language::P::ParseTree::PROTO_AMPER|Language::P::ParseTree::PROTO_ANY ],
+    return      => [ -1, -1, Language::P::ParseTree::PROTO_ARRAY ],
+    undef       => [  0,  1, Language::P::ParseTree::PROTO_ANY ],
+    eval        => [  0,  1, Language::P::ParseTree::PROTO_ANY|Language::P::ParseTree::PROTO_BLOCK ],
+    map         => [  2, -1, Language::P::ParseTree::PROTO_INDIROBJ, Language::P::ParseTree::PROTO_ARRAY ],
     );
 
 sub parsing_prototype { return $prototype_bi{$_[0]->function} }
 sub can_implicit_return { return $_[0]->function eq 'return' ? 0 : 1 }
 
-package Language::P::ParseTree::Print;
+package Language::P::ParseTree::BuiltinIndirect;
 
 use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Builtin);
 
-our @FIELDS = qw(filehandle);
+our @FIELDS = qw(indirect);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -477,18 +528,18 @@ use warnings;
 use base qw(Language::P::ParseTree::FunctionCall);
 
 my %prototype_ov =
-  ( unlink      => [ -1, -1, '@' ],
-    die         => [ -1, -1, '@' ],
-    open        => [  1, -1, '*', '$', '@' ],
-    pipe        => [  2,  2, '*', '*' ],
-    chdir       => [  0,  1, '$' ],
-    rmdir       => [  0,  1, '$' ],
-    readline    => [  0,  1, '$' ],
-    glob        => [ -1, -1, '@' ],
-    close       => [  0,  1, '*' ],
-    binmode     => [  0,  2, '*', '$' ],
-    abs         => [  0,  1, '$' ],
-    wantarray   => [  0,  0 ],
+  ( unlink      => [ -1, -1, Language::P::ParseTree::PROTO_ARRAY ],
+    die         => [ -1, -1, Language::P::ParseTree::PROTO_ARRAY ],
+    open        => [  1, -1, Language::P::ParseTree::PROTO_GLOB, Language::P::ParseTree::PROTO_SCALAR, Language::P::ParseTree::PROTO_ARRAY ],
+    pipe        => [  2,  2, Language::P::ParseTree::PROTO_GLOB, Language::P::ParseTree::PROTO_GLOB ],
+    chdir       => [  0,  1, Language::P::ParseTree::PROTO_SCALAR ],
+    rmdir       => [  0,  1, Language::P::ParseTree::PROTO_SCALAR ],
+    readline    => [  0,  1, Language::P::ParseTree::PROTO_SCALAR ],
+    glob        => [ -1, -1, Language::P::ParseTree::PROTO_ARRAY ],
+    close       => [  0,  1, Language::P::ParseTree::PROTO_GLOB ],
+    binmode     => [  0,  2, Language::P::ParseTree::PROTO_GLOB, Language::P::ParseTree::PROTO_SCALAR ],
+    abs         => [  0,  1, Language::P::ParseTree::PROTO_SCALAR ],
+    wantarray   => [  0,  0, 0 ],
     );
 
 sub parsing_prototype { return $prototype_ov{$_[0]->function} }

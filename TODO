@@ -10,22 +10,31 @@ Parsing:
 - global variables/symbols (STDOUT!)
 - local variables
 - scoping
-- do/require/use/eval
-- eval {block}
 - do ...
 - labels
 - formats
 - indirect method calls
+  - print boo foo == print( foo->boo )
+  - print boo $foo == print *boo $foo
+  - print map $foo, @foo == print( map( $foo, @foo ) )
+  - print foo + boo == print *foo ( +boo )
+  - print foo . boo == print( foo . boo )
+  - print foo && moo == print moo $_
+  - print moo() == print( moo() )
+  - print moo () == print *moo ()
+  - moo boo->foo == boo->moo->foo
+  - moo boo foo == boo->moo(foo)
+  - sub foo;print foo + boo == print( foo( +boo ) )
 - list slices ( ... )[ ... ]
 - test all unary/binary operator
 - anonymous sub
 - subroutine prototypes
+  - declaration
   - parsing
 - local()
 - implicit $_ in various builtins
 - parsing of loop + continue
 - scope handling of conditional/while/continue
-- handle errors
 - handling of parse errors with recovery
 - lexical pragmas/hints
   - strictures
@@ -68,7 +77,8 @@ Parsing:
   - flags
   - context-dependent bexaviour
   - always a pattern after =~/!~
-- correct parsing of heredoc in substritutions (s//<<HEREDOC/e)
+  - tr/// lexing/parsing
+- correct parsing of heredoc in substitutions (s//<<HEREDOC/e)
 
 Runtime:
 - integer -> float on overflow (also in parsing!)
@@ -88,6 +98,7 @@ Runtime:
   - optimize lists with common assignments
   - check mixed assignments
 - garbage collection
+- do file/require/use/eval string
 
 Refactoring:
 - check offsets for call sequence, refactor stack handling
@@ -102,3 +113,5 @@ Refactoring:
 - separate compile-time lexicals from run-time scratchpads
 - make regexp parser a full blown parser, not the hack it is;
   add a lexer subclass for parsing patterns
+- detect builtins that could have an indirect object as first argument
+  earlier in the parsing

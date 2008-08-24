@@ -23,7 +23,7 @@ name: x
 --- !parsetree:Symbol
 context: CXT_VOID
 name: '!'
-sigil: $
+sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -41,7 +41,7 @@ EOP
 --- !parsetree:Symbol
 context: CXT_VOID
 name: x
-sigil: $
+sigil: VALUE_SCALAR
 --- !parsetree:Block
 lines:
   - !parsetree:Package
@@ -49,23 +49,23 @@ lines:
   - !parsetree:Symbol
     context: CXT_VOID
     name: x::x
-    sigil: $
+    sigil: VALUE_SCALAR
   - !parsetree:Symbol
     context: CXT_VOID
     name: w
-    sigil: $
+    sigil: VALUE_SCALAR
   - !parsetree:Package
     name: z
 --- !parsetree:Symbol
 context: CXT_VOID
 name: x
-sigil: $
+sigil: VALUE_SCALAR
 --- !parsetree:Package
 name: y
 --- !parsetree:Symbol
 context: CXT_VOID
 name: y::x
-sigil: $
+sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -93,26 +93,24 @@ name: x
 name: y
 --- !parsetree:FunctionCall
 arguments:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: x
-  sigil: '&'
+  sigil: VALUE_SUB
 --- !parsetree:FunctionCall
 arguments:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: x
-  sigil: '&'
+  sigil: VALUE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -144,94 +142,86 @@ name: w
 name: w::xw
 --- !parsetree:FunctionCall
 arguments:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: xm
-  sigil: '&'
+  sigil: VALUE_SUB
 --- !parsetree:FunctionCall
 arguments:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: xm
-  sigil: '&'
+  sigil: VALUE_SUB
 --- !parsetree:FunctionCall
 arguments:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: w::xw
-  sigil: '&'
+  sigil: VALUE_SUB
 --- !parsetree:FunctionCall
 arguments:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: w::xw
-  sigil: '&'
+  sigil: VALUE_SUB
 --- !parsetree:Package
 name: main
 --- !parsetree:FunctionCall
 arguments:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: xm
-  sigil: '&'
+  sigil: VALUE_SUB
 --- !parsetree:FunctionCall
 arguments:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: xm
-  sigil: '&'
+  sigil: VALUE_SUB
 --- !parsetree:FunctionCall
 arguments:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: xm
-  sigil: '&'
+  sigil: VALUE_SUB
 --- !parsetree:FunctionCall
 arguments:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: w::xw
-  sigil: '&'
+  sigil: VALUE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -248,28 +238,26 @@ name: y::x
 name: y
 --- !parsetree:FunctionCall
 arguments:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: y::x
-  sigil: '&'
+  sigil: VALUE_SUB
 --- !parsetree:SubroutineDeclaration
 name: w
 --- !parsetree:Package
 name: main
 --- !parsetree:FunctionCall
 arguments:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: w
-  sigil: '&'
+  sigil: VALUE_SUB
 EOE

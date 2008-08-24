@@ -12,20 +12,18 @@ print 1, 2 or die;
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
-left: !parsetree:Print
+left: !parsetree:BuiltinIndirect
   arguments:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 2
   context: CXT_SCALAR
-  filehandle: ~
   function: print
-op: or
+  indirect: ~
+op: OP_LOG_OR
 right: !parsetree:Overridable
   arguments: ~
   context: CXT_VOID

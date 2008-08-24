@@ -19,7 +19,7 @@ lines:
       - !parsetree:Symbol
         context: CXT_CALLER
         name: y
-        sigil: '@'
+        sigil: VALUE_ARRAY
     context: CXT_CALLER
     function: return
 name: x
@@ -36,13 +36,13 @@ lines:
   - !parsetree:Symbol
     context: CXT_VOID
     name: x
-    sigil: '@'
+    sigil: VALUE_ARRAY
   - !parsetree:Builtin
     arguments:
       - !parsetree:Symbol
         context: CXT_CALLER
         name: y
-        sigil: '@'
+        sigil: VALUE_ARRAY
     context: CXT_CALLER
     function: return
 name: x
@@ -68,13 +68,13 @@ lines:
                 - !parsetree:Symbol
                   context: CXT_CALLER
                   name: y
-                  sigil: '@'
+                  sigil: VALUE_ARRAY
               context: CXT_CALLER
               function: return
         block_type: if
         condition: !parsetree:Symbol
           context: CXT_SCALAR
           name: a
-          sigil: $
+          sigil: VALUE_SCALAR
 name: x
 EOE

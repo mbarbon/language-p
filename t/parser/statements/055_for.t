@@ -15,9 +15,8 @@ EOP
 --- !parsetree:For
 block: !parsetree:Block
   lines:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 block_type: for
 condition: !parsetree:BinOp
@@ -25,41 +24,38 @@ condition: !parsetree:BinOp
   left: !parsetree:LexicalSymbol
     context: CXT_SCALAR
     name: i
-    sigil: $
-  op: <
-  right: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+    sigil: VALUE_SCALAR
+  op: OP_NUM_LT
+  right: !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 10
 initializer: !parsetree:BinOp
   context: CXT_VOID
   left: !parsetree:LexicalDeclaration
     context: CXT_SCALAR|CXT_LVALUE
-    declaration_type: my
+    declaration_type: OP_MY
     name: i
-    sigil: $
-  op: =
-  right: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+    sigil: VALUE_SCALAR
+  op: OP_ASSIGN
+  right: !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 0
 step: !parsetree:BinOp
   context: CXT_VOID
   left: !parsetree:LexicalSymbol
     context: CXT_SCALAR|CXT_LVALUE
     name: i
-    sigil: $
-  op: =
+    sigil: VALUE_SCALAR
+  op: OP_ASSIGN
   right: !parsetree:BinOp
     context: CXT_SCALAR
     left: !parsetree:LexicalSymbol
       context: CXT_SCALAR
       name: i
-      sigil: $
-    op: +
-    right: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+      sigil: VALUE_SCALAR
+    op: OP_ADD
+    right: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 EOE
 
@@ -71,18 +67,17 @@ EOP
 --- !parsetree:Foreach
 block: !parsetree:Block
   lines:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 expression: !parsetree:Symbol
   context: CXT_LIST
   name: a
-  sigil: '@'
+  sigil: VALUE_ARRAY
 variable: !parsetree:Symbol
   context: CXT_SCALAR
   name: _
-  sigil: $
+  sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -93,18 +88,17 @@ EOP
 --- !parsetree:Foreach
 block: !parsetree:Block
   lines:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 expression: !parsetree:Symbol
   context: CXT_LIST
   name: a
-  sigil: '@'
+  sigil: VALUE_ARRAY
 variable: !parsetree:Symbol
   context: CXT_SCALAR
   name: x
-  sigil: $
+  sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -115,17 +109,16 @@ EOP
 --- !parsetree:Foreach
 block: !parsetree:Block
   lines:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 expression: !parsetree:Symbol
   context: CXT_LIST
   name: a
-  sigil: '@'
+  sigil: VALUE_ARRAY
 variable: !parsetree:LexicalDeclaration
   context: CXT_SCALAR
-  declaration_type: my
+  declaration_type: OP_MY
   name: x
-  sigil: $
+  sigil: VALUE_SCALAR
 EOE

@@ -15,25 +15,24 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
   name: _
-  sigil: $
-op: =~
+  sigil: VALUE_SCALAR
+op: OP_MATCH
 right: !parsetree:InterpolatedPattern
-  flags: ~
-  op: m
+  flags: 0
+  op: OP_QL_M
   string: !parsetree:QuotedString
     components:
       - !parsetree:Subscript
         context: CXT_SCALAR
         reference: 0
-        subscript: !parsetree:Number
-          flags: NUM_INTEGER
-          type: number
+        subscript: !parsetree:Constant
+          flags: CONST_NUMBER|NUM_INTEGER
           value: 1
         subscripted: !parsetree:Symbol
           context: CXT_LIST
           name: x
-          sigil: '@'
-        type: '['
+          sigil: VALUE_ARRAY
+        type: VALUE_ARRAY
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -44,24 +43,24 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
   name: _
-  sigil: $
-op: =~
+  sigil: VALUE_SCALAR
+op: OP_MATCH
 right: !parsetree:InterpolatedPattern
-  flags: ~
-  op: m
+  flags: 0
+  op: OP_QL_M
   string: !parsetree:QuotedString
     components:
       - !parsetree:Subscript
         context: CXT_SCALAR
         reference: 0
-        subscript: !parsetree:Bareword
-          type: string
+        subscript: !parsetree:Constant
+          flags: CONST_STRING|STRING_BARE
           value: a
         subscripted: !parsetree:Symbol
           context: CXT_LIST
           name: x
-          sigil: '@'
-        type: '['
+          sigil: VALUE_ARRAY
+        type: VALUE_ARRAY
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -72,18 +71,18 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
   name: _
-  sigil: $
-op: =~
+  sigil: VALUE_SCALAR
+op: OP_MATCH
 right: !parsetree:InterpolatedPattern
-  flags: ~
-  op: m
+  flags: 0
+  op: OP_QL_M
   string: !parsetree:QuotedString
     components:
       - !parsetree:Symbol
         context: CXT_SCALAR
         name: x
-        sigil: $
+        sigil: VALUE_SCALAR
       - !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: '[a]'
 EOE

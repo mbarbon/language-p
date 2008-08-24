@@ -12,19 +12,17 @@ x( 1, 2 );
 EOP
 --- !parsetree:FunctionCall
 arguments:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: x
-  sigil: '&'
+  sigil: VALUE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -36,19 +34,17 @@ EOP
 name: x
 --- !parsetree:FunctionCall
 arguments:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: x
-  sigil: '&'
+  sigil: VALUE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -61,19 +57,17 @@ lines: []
 name: x
 --- !parsetree:FunctionCall
 arguments:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: x
-  sigil: '&'
+  sigil: VALUE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -82,23 +76,21 @@ print, 1;
 EOP
 --- !parsetree:List
 expressions:
-  - !parsetree:Print
+  - !parsetree:BuiltinIndirect
     arguments: ~
     context: CXT_VOID
-    filehandle: ~
     function: print
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+    indirect: ~
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
-  - !parsetree:Print
+  - !parsetree:BuiltinIndirect
     arguments: ~
     context: CXT_VOID
-    filehandle: ~
     function: print
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+    indirect: ~
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 EOE
 
@@ -108,20 +100,18 @@ print => 1;
 EOP
 --- !parsetree:List
 expressions:
-  - !parsetree:Print
+  - !parsetree:BuiltinIndirect
     arguments: ~
     context: CXT_VOID
-    filehandle: ~
     function: print
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+    indirect: ~
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: print
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 EOE

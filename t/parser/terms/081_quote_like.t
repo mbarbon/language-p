@@ -11,7 +11,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 q<$e>;
 EOP
 --- !parsetree:Constant
-type: string
+flags: CONST_STRING
 value: $e
 EOE
 
@@ -19,7 +19,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 q "$e";
 EOP
 --- !parsetree:Constant
-type: string
+flags: CONST_STRING
 value: $e
 EOE
 
@@ -27,7 +27,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 qq();
 EOP
 --- !parsetree:Constant
-type: string
+flags: CONST_STRING
 value: ''
 EOE
 
@@ -37,14 +37,14 @@ EOP
 --- !parsetree:QuotedString
 components:
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: ab
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: e
-    sigil: $
+    sigil: VALUE_SCALAR
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: cdefg
 EOE
 
@@ -54,14 +54,14 @@ EOP
 --- !parsetree:QuotedString
 components:
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: a(
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: e
-    sigil: $
+    sigil: VALUE_SCALAR
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: (d)e)f)g
 EOE
 
@@ -73,7 +73,7 @@ components:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: e
-    sigil: $
+    sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -86,7 +86,7 @@ left: !parsetree:QuotedString
     - !parsetree:Symbol
       context: CXT_SCALAR
       name: e
-      sigil: $
+      sigil: VALUE_SCALAR
 op: backtick
 EOE
 
@@ -97,7 +97,7 @@ EOP
 --- !parsetree:UnOp
 context: CXT_VOID
 left: !parsetree:Constant
-  type: string
+  flags: CONST_STRING
   value: $e
 op: backtick
 EOE
@@ -112,7 +112,7 @@ left: !parsetree:QuotedString
     - !parsetree:Symbol
       context: CXT_SCALAR
       name: e
-      sigil: $
+      sigil: VALUE_SCALAR
 op: backtick
 EOE
 
@@ -130,15 +130,15 @@ EOP
 --- !parsetree:List
 expressions:
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: aaa
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: bbb
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: eee
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: f
 EOE

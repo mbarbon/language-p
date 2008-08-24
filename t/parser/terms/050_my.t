@@ -12,9 +12,9 @@ my $foo;
 EOP
 --- !parsetree:LexicalDeclaration
 context: CXT_VOID
-declaration_type: my
+declaration_type: OP_MY
 name: foo
-sigil: $
+sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -24,13 +24,12 @@ EOP
 context: CXT_VOID
 left: !parsetree:LexicalDeclaration
   context: CXT_SCALAR|CXT_LVALUE
-  declaration_type: my
+  declaration_type: OP_MY
   name: foo
-  sigil: $
-op: =
-right: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+  sigil: VALUE_SCALAR
+op: OP_ASSIGN
+right: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 EOE
 
@@ -43,28 +42,25 @@ left: !parsetree:List
   expressions:
     - !parsetree:LexicalDeclaration
       context: CXT_SCALAR|CXT_LVALUE
-      declaration_type: my
+      declaration_type: OP_MY
       name: foo
-      sigil: $
+      sigil: VALUE_SCALAR
     - !parsetree:LexicalDeclaration
       context: CXT_LIST|CXT_LVALUE
-      declaration_type: my
+      declaration_type: OP_MY
       name: bar
-      sigil: '@'
-op: =
+      sigil: VALUE_ARRAY
+op: OP_ASSIGN
 right: !parsetree:List
   expressions:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 2
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 3
 EOE
 
@@ -75,17 +71,17 @@ EOP
 expressions:
   - !parsetree:LexicalDeclaration
     context: CXT_VOID
-    declaration_type: my
+    declaration_type: OP_MY
     name: foo
-    sigil: $
+    sigil: VALUE_SCALAR
   - !parsetree:LexicalDeclaration
     context: CXT_VOID
-    declaration_type: my
+    declaration_type: OP_MY
     name: b
-    sigil: '@'
+    sigil: VALUE_ARRAY
   - !parsetree:LexicalDeclaration
     context: CXT_VOID
-    declaration_type: my
+    declaration_type: OP_MY
     name: x
-    sigil: $
+    sigil: VALUE_SCALAR
 EOE

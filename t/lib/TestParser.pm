@@ -6,6 +6,7 @@ use warnings;
 use Exporter 'import';
 
 use Language::P::Parser;
+use Language::P::Keywords;
 use Language::P::ParseTree qw(:all);
 use Language::P::Value::MainSymbolTable;
 
@@ -74,7 +75,8 @@ sub parsed_program {
 sub parse_and_diff_yaml {
     my( $expr, $expected ) = @_;
 
-    $expected =~ s/ ((?:NUM|CXT|FLAG)_[A-Z_ \|]+)/" " . eval $1 or die $@/eg;
+    $expected =~ s{ ((?:NUM|CXT|FLAG|CONST|STRING|VALUE|OP)_[A-Z_ \|]+)}
+                  {" " . eval $1 or die $@}eg;
 
     require Language::P::ParseTree::DumpYAML;
 

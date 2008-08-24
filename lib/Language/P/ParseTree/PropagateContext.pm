@@ -8,7 +8,7 @@ use Language::P::ParseTree qw(:all);
 
 my %dispatch =
   ( 'Language::P::ParseTree::FunctionCall'           => '_function_call',
-    'Language::P::ParseTree::Print'                  => '_print',
+    'Language::P::ParseTree::BuiltinIndirect'        => '_builtin_indirect',
     'Language::P::ParseTree::Builtin'                => '_function_call',
     'Language::P::ParseTree::Overridable'            => '_function_call',
     'Language::P::ParseTree::UnOp'                   => '_unary_op',
@@ -58,7 +58,7 @@ sub _noisy_noop {
 sub _symbol {
     my( $self, $tree, $cxt ) = @_;
 
-    if( $tree->sigil eq '@' || $tree->sigil eq '%' ) {
+    if( $tree->sigil == VALUE_ARRAY || $tree->sigil == VALUE_HASH ) {
         $tree->{context} = $cxt;
     } else {
         $tree->{context} = $cxt & CXT_LIST ? _lv( CXT_SCALAR, $cxt ) : $cxt;
@@ -133,11 +133,15 @@ sub _function_call {
     }
 }
 
-sub _print {
+sub _builtin_indirect {
     my( $self, $tree, $cxt ) = @_;
 
     $self->_function_call( $tree, $cxt );
-    $self->visit( $tree->filehandle, CXT_SCALAR ) if $tree->filehandle;
+    if( $tree->indirect ) {
+        my $arg_cxt = $tree->function eq 'map' || $tree->function eq 'grep' ?
+                          CXT_LIST : CXT_SCALAR;
+        $self->visit( $tree->indirect, $arg_cxt );
+    }
 }
 
 sub _unary_op {
@@ -168,14 +172,13 @@ sub _binary_op {
 
     # FIXME some binary operators do not force scalar context
 
-    if(    $tree->op eq '||' || $tree->op eq '&&' || $tree->op eq 'and'
-        || $tree->op eq 'or' ) {
+    if( $tree->op == OP_LOG_OR || $tree->op == OP_LOG_AND ) {
         $self->visit( $tree->left, CXT_SCALAR );
         $self->visit( $tree->right, _lv( $cxt & CXT_VOID ? CXT_VOID :
                                          $cxt & CXT_CALLER ? CXT_CALLER :
                                                              CXT_SCALAR,
                                          $cxt ) );
-    } elsif( $tree->op eq '=' ) {
+    } elsif( $tree->op == OP_ASSIGN ) {
         my $left_cxt = $tree->left->lvalue_context;
 
         $self->visit( $tree->left, $left_cxt|CXT_LVALUE );

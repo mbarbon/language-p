@@ -3,6 +3,7 @@ MANIFEST
 MANIFEST.SKIP
 TODO
 bin/p
+inc/Keywords.pm
 inc/My/Build.pm
 lib/Language/P.pm
 lib/Language/P/Generator.pm
@@ -36,6 +37,7 @@ t/lib/TestRegex.pm
 t/parser/001_load.t
 t/parser/expressions/005_unary.t
 t/parser/expressions/007_repeat.t
+t/parser/expressions/010_eval.t
 t/parser/expressions/010_filtetest.t
 t/parser/expressions/010_named_unary.t
 t/parser/expressions/011_relational.t
@@ -45,6 +47,7 @@ t/parser/expressions/019_assignment.t
 t/parser/expressions/020_fat_arrow.t
 t/parser/expressions/020_sequence.t
 t/parser/expressions/021_list_op.t
+t/parser/expressions/021_map.t
 t/parser/expressions/024_or_low.t
 t/parser/loops/001_block.t
 t/parser/regex/002_base.t

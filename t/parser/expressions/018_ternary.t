@@ -11,18 +11,15 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1 ? 2 : 3
 EOP
 --- !parsetree:Ternary
-condition: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+condition: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 context: CXT_VOID
-iffalse: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+iffalse: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 3
-iftrue: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+iftrue: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 2
 EOE
 
@@ -34,21 +31,18 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR|CXT_LVALUE
   name: a
-  sigil: $
-op: =
+  sigil: VALUE_SCALAR
+op: OP_ASSIGN
 right: !parsetree:Ternary
-  condition: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  condition: !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   context: CXT_SCALAR
-  iffalse: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  iffalse: !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 3
-  iftrue: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  iftrue: !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 EOE
 
@@ -60,42 +54,36 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR|CXT_LVALUE
   name: a
-  sigil: $
-op: =
+  sigil: VALUE_SCALAR
+op: OP_ASSIGN
 right: !parsetree:Ternary
   condition: !parsetree:BinOp
     context: CXT_SCALAR
-    left: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    left: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
-    op: <
-    right: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    op: OP_NUM_LT
+    right: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 2
   context: CXT_SCALAR
   iffalse: !parsetree:BinOp
     context: CXT_SCALAR
-    left: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    left: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 3
-    op: +
-    right: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    op: OP_ADD
+    right: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 4
   iftrue: !parsetree:BinOp
     context: CXT_SCALAR
-    left: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    left: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 2
-    op: +
-    right: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    op: OP_ADD
+    right: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 3
 EOE
 
@@ -108,26 +96,24 @@ left: !parsetree:Ternary
   condition: !parsetree:Symbol
     context: CXT_SCALAR
     name: x
-    sigil: $
+    sigil: VALUE_SCALAR
   context: CXT_SCALAR|CXT_LVALUE
   iffalse: !parsetree:Symbol
     context: CXT_SCALAR|CXT_LVALUE
     name: b
-    sigil: $
+    sigil: VALUE_SCALAR
   iftrue: !parsetree:BinOp
     context: CXT_SCALAR|CXT_LVALUE
     left: !parsetree:Symbol
       context: CXT_SCALAR|CXT_LVALUE
       name: a
-      sigil: $
-    op: =
-    right: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+      sigil: VALUE_SCALAR
+    op: OP_ASSIGN
+    right: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
-op: =
-right: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+op: OP_ASSIGN
+right: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 2
 EOE

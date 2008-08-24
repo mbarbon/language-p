@@ -13,11 +13,10 @@ EOP
 --- !parsetree:List
 expressions:
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: foo
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 EOE
 
@@ -27,11 +26,10 @@ EOP
 --- !parsetree:List
 expressions:
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: foo::x
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 EOE
 
@@ -49,10 +47,9 @@ expressions:
     function: !parsetree:Symbol
       context: CXT_SCALAR
       name: foo::q
-      sigil: '&'
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+      sigil: VALUE_SUB
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 EOE
 
@@ -62,11 +59,10 @@ EOP
 --- !parsetree:List
 expressions:
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: s
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 EOE
 
@@ -80,22 +76,19 @@ iftrues:
   - !parsetree:ConditionalBlock
     block: !parsetree:Block
       lines:
-        - !parsetree:Number
-          flags: NUM_INTEGER
-          type: number
+        - !parsetree:Constant
+          flags: CONST_NUMBER|NUM_INTEGER
           value: 2
     block_type: if
-    condition: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    condition: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 --- !parsetree:List
 expressions:
   - !parsetree:Constant
-    type: string
+    flags: CONST_STRING
     value: elsif
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 EOE

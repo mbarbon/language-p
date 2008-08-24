@@ -13,15 +13,14 @@ EOP
 --- !parsetree:Subscript
 context: CXT_VOID
 reference: 0
-subscript: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+subscript: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 subscripted: !parsetree:Symbol
   context: CXT_LIST
   name: '#'
-  sigil: '@'
-type: '['
+  sigil: VALUE_ARRAY
+type: VALUE_ARRAY
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -30,15 +29,14 @@ EOP
 --- !parsetree:Subscript
 context: CXT_VOID
 reference: 0
-subscript: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+subscript: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 subscripted: !parsetree:Symbol
   context: CXT_LIST
   name: _
-  sigil: '@'
-type: '['
+  sigil: VALUE_ARRAY
+type: VALUE_ARRAY
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -47,15 +45,14 @@ EOP
 --- !parsetree:Subscript
 context: CXT_VOID
 reference: 0
-subscript: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+subscript: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 subscripted: !parsetree:Symbol
   context: CXT_LIST
   name: foo
-  sigil: '@'
-type: '['
+  sigil: VALUE_ARRAY
+type: VALUE_ARRAY
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -64,15 +61,14 @@ EOP
 --- !parsetree:Subscript
 context: CXT_VOID
 reference: 0
-subscript: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+subscript: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 2
 subscripted: !parsetree:Symbol
   context: CXT_LIST
   name: foo
-  sigil: '%'
-type: '{'
+  sigil: VALUE_HASH
+type: VALUE_HASH
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -82,13 +78,13 @@ EOP
 context: CXT_VOID
 reference: 0
 subscript: !parsetree:Constant
-  type: string
+  flags: CONST_STRING
   value: qq
 subscripted: !parsetree:Symbol
   context: CXT_LIST
   name: foo
-  sigil: '%'
-type: '{'
+  sigil: VALUE_HASH
+type: VALUE_HASH
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -98,13 +94,13 @@ EOP
 context: CXT_VOID
 reference: 0
 subscript: !parsetree:Constant
-  type: string
+  flags: CONST_STRING
   value: HASH
 subscripted: !parsetree:Symbol
   context: CXT_SCALAR
   name: foo
-  sigil: '*'
-type: '{'
+  sigil: VALUE_GLOB
+type: VALUE_HASH
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -115,20 +111,18 @@ context: CXT_VOID
 reference: 0
 subscript: !parsetree:BinOp
   context: CXT_SCALAR
-  left: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  left: !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 2
-  op: +
-  right: !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  op: OP_ADD
+  right: !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 3
 subscripted: !parsetree:Symbol
   context: CXT_LIST
   name: foo
-  sigil: '%'
-type: '{'
+  sigil: VALUE_HASH
+type: VALUE_HASH
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -142,8 +136,8 @@ function: !parsetree:Dereference
   left: !parsetree:Symbol
     context: CXT_SCALAR
     name: foo
-    sigil: $
-  op: '&'
+    sigil: VALUE_SCALAR
+  op: VALUE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -153,14 +147,12 @@ EOP
 arguments:
   - !parsetree:BinOp
     context: CXT_LIST
-    left: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    left: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
-    op: +
-    right: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    op: OP_ADD
+    right: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 2
 context: CXT_VOID
 function: !parsetree:Dereference
@@ -168,8 +160,8 @@ function: !parsetree:Dereference
   left: !parsetree:Symbol
     context: CXT_SCALAR
     name: foo
-    sigil: $
-  op: '&'
+    sigil: VALUE_SCALAR
+  op: VALUE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -180,29 +172,26 @@ context: CXT_VOID
 reference: 0
 subscript: !parsetree:List
   expressions:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: xx
     - !parsetree:BinOp
       context: CXT_LIST
-      left: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      left: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 3
-      op: +
-      right: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      op: OP_ADD
+      right: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 4
 subscripted: !parsetree:Symbol
   context: CXT_LIST
   name: foo
-  sigil: '@'
-type: '['
+  sigil: VALUE_ARRAY
+type: VALUE_ARRAY
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -213,29 +202,26 @@ context: CXT_VOID
 reference: 0
 subscript: !parsetree:List
   expressions:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: xx
     - !parsetree:BinOp
       context: CXT_LIST
-      left: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      left: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 3
-      op: +
-      right: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      op: OP_ADD
+      right: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 4
 subscripted: !parsetree:Symbol
   context: CXT_LIST
   name: foo
-  sigil: '%'
-type: '{'
+  sigil: VALUE_HASH
+type: VALUE_HASH
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -246,17 +232,14 @@ context: CXT_VOID
 reference: 1
 subscript: !parsetree:List
   expressions:
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 2
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 3
 subscripted: !parsetree:Block
   lines:
@@ -268,12 +251,12 @@ subscripted: !parsetree:Block
         function: !parsetree:Symbol
           context: CXT_SCALAR
           name: foo
-          sigil: '&'
-      op: .
+          sigil: VALUE_SUB
+      op: OP_CONCATENATE
       right: !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: x
-type: '['
+type: VALUE_ARRAY
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -285,19 +268,16 @@ arguments:
     context: CXT_LIST
     left: !parsetree:BinOp
       context: CXT_SCALAR
-      left: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      left: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 1
-      op: +
-      right: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      op: OP_ADD
+      right: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 2
-    op: +
-    right: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    op: OP_ADD
+    right: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 3
 context: CXT_VOID
 function: !parsetree:Dereference
@@ -305,16 +285,14 @@ function: !parsetree:Dereference
   left: !parsetree:Subscript
     context: CXT_SCALAR
     reference: 1
-    subscript: !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    subscript: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 5
     subscripted: !parsetree:Subscript
       context: CXT_SCALAR|CXT_VIVIFY
       reference: 1
-      subscript: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      subscript: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 3
       subscripted: !parsetree:FunctionCall
         arguments: ~
@@ -324,27 +302,25 @@ function: !parsetree:Dereference
           left: !parsetree:Subscript
             context: CXT_SCALAR
             reference: 1
-            subscript: !parsetree:Number
-              flags: NUM_INTEGER
-              type: number
+            subscript: !parsetree:Constant
+              flags: CONST_NUMBER|NUM_INTEGER
               value: 2
             subscripted: !parsetree:Subscript
               context: CXT_SCALAR|CXT_VIVIFY
               reference: 0
-              subscript: !parsetree:Number
-                flags: NUM_INTEGER
-                type: number
+              subscript: !parsetree:Constant
+                flags: CONST_NUMBER|NUM_INTEGER
                 value: 1
               subscripted: !parsetree:Symbol
                 context: CXT_LIST
                 name: foo
-                sigil: '@'
-              type: '['
-            type: '{'
-          op: '&'
-      type: '['
-    type: '{'
-  op: '&'
+                sigil: VALUE_ARRAY
+              type: VALUE_ARRAY
+            type: VALUE_HASH
+          op: VALUE_SUB
+      type: VALUE_ARRAY
+    type: VALUE_HASH
+  op: VALUE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -353,15 +329,14 @@ EOP
 --- !parsetree:Subscript
 context: CXT_VOID
 reference: 0
-subscript: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+subscript: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 subscripted: !parsetree:Symbol
   context: CXT_LIST
   name: foo
-  sigil: '@'
-type: '['
+  sigil: VALUE_ARRAY
+type: VALUE_ARRAY
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -370,9 +345,8 @@ EOP
 --- !parsetree:Subscript
 context: CXT_VOID
 reference: 1
-subscript: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+subscript: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 subscripted: !parsetree:Block
   lines:
@@ -384,10 +358,10 @@ subscripted: !parsetree:Block
         function: !parsetree:Symbol
           context: CXT_SCALAR
           name: foo
-          sigil: '&'
-      op: .
+          sigil: VALUE_SUB
+      op: OP_CONCATENATE
       right: !parsetree:Constant
-        type: string
+        flags: CONST_STRING
         value: x
-type: '['
+type: VALUE_ARRAY
 EOE

@@ -12,18 +12,17 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
-left: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+left: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
-op: '&'
+op: OP_BIT_AND
 right: !parsetree:FunctionCall
   arguments: ~
   context: CXT_SCALAR
   function: !parsetree:Symbol
     context: CXT_SCALAR
     name: foo
-    sigil: '&'
+    sigil: VALUE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -31,12 +30,12 @@ x &foo
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
-left: !parsetree:Bareword
-  type: string
+left: !parsetree:Constant
+  flags: CONST_STRING|STRING_BARE
   value: x
-op: '&'
-right: !parsetree:Bareword
-  type: string
+op: OP_BIT_AND
+right: !parsetree:Constant
+  flags: CONST_STRING|STRING_BARE
   value: foo
 EOE
 
@@ -55,10 +54,10 @@ arguments:
     function: !parsetree:Symbol
       context: CXT_SCALAR
       name: foo
-      sigil: '&'
+      sigil: VALUE_SUB
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
   name: x
-  sigil: '&'
+  sigil: VALUE_SUB
 EOE

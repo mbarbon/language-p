@@ -12,7 +12,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:ReferenceConstructor
 expression: ~
-type: '['
+type: VALUE_ARRAY
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -24,19 +24,17 @@ expression: !parsetree:List
     - !parsetree:Symbol
       context: CXT_SCALAR
       name: a
-      sigil: $
+      sigil: VALUE_SCALAR
     - !parsetree:BinOp
       context: CXT_LIST
-      left: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      left: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 1
-      op: +
-      right: !parsetree:Number
-        flags: NUM_INTEGER
-        type: number
+      op: OP_ADD
+      right: !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
         value: 2
-type: '['
+type: VALUE_ARRAY
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -44,7 +42,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:ReferenceConstructor
 expression: ~
-type: '{'
+type: VALUE_HASH
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -54,13 +52,12 @@ EOP
 expression: !parsetree:List
   expressions:
     - !parsetree:Constant
-      type: string
+      flags: CONST_STRING
       value: q
-    - !parsetree:Number
-      flags: NUM_INTEGER
-      type: number
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
       value: 1
-type: '{'
+type: VALUE_HASH
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -68,8 +65,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:Block
 lines:
-  - !parsetree:Number
-    flags: NUM_INTEGER
-    type: number
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 EOE

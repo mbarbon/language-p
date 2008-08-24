@@ -14,18 +14,15 @@ __LINE__;
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
-left: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+left: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 1
-op: .
-right: !parsetree:Number
-  flags: NUM_INTEGER
-  type: number
+op: OP_CONCATENATE
+right: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
   value: 2
---- !parsetree:Number
-flags: NUM_INTEGER
-type: number
+--- !parsetree:Constant
+flags: CONST_NUMBER|NUM_INTEGER
 value: 3
 EOE
 
@@ -36,14 +33,13 @@ __LINE__;
 __PACKAGE__;
 EOP
 --- !parsetree:Constant
-type: string
+flags: CONST_STRING
 value: moo.pm
---- !parsetree:Number
-flags: NUM_INTEGER
-type: number
+--- !parsetree:Constant
+flags: CONST_NUMBER|NUM_INTEGER
 value: 13
 --- !parsetree:Constant
-type: string
+flags: CONST_STRING
 value: main
 EOE
 
@@ -56,12 +52,12 @@ EOP
 --- !parsetree:Package
 name: foo::moo::boo
 --- !parsetree:Constant
-type: string
+flags: CONST_STRING
 value: foo::moo::boo
 --- !parsetree:Package
 name: main
 --- !parsetree:Constant
-type: string
+flags: CONST_STRING
 value: main
 EOE
 
@@ -71,9 +67,8 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 
 __LINE__
 EOP
---- !parsetree:Number
-flags: NUM_INTEGER
-type: number
+--- !parsetree:Constant
+flags: CONST_NUMBER|NUM_INTEGER
 value: 5
 EOE
 
@@ -82,8 +77,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 
 __LINE__
 EOP
---- !parsetree:Number
-flags: NUM_INTEGER
-type: number
+--- !parsetree:Constant
+flags: CONST_NUMBER|NUM_INTEGER
 value: 3
 EOE
