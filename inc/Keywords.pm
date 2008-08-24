@@ -47,25 +47,26 @@ BEGIN {
 };
 
 our @EXPORT = ( @KEYWORDS, @BUILTINS, @OVERRIDABLES,
-                qw(is_keyword is_builtin is_overridable)
+                qw(is_keyword is_builtin is_overridable is_id)
                 );
 
 use constant +
-  { ID_MASK          => 0x0003, # 1
-    KEYWORD_MASK     => 0x003e, # 5
-    BUILTIN_MASK     => 0x07c0, # 5
-    OVERRIDABLE_MASK => 0xf800, # 5
+  { ID_MASK          => 0x00003, # 2
+    KEYWORD_MASK     => 0x0007c, # 5
+    BUILTIN_MASK     => 0x00f80, # 5
+    OVERRIDABLE_MASK => 0x1f000, # 5
     };
 
 use constant +
-  { ( map { $KEYWORDS[$_] => ( $_ + 1 ) << 1 } 0 .. $#KEYWORDS ),
-    ( map { $BUILTINS[$_] => ( $_ + 1 ) << 6 } 0 .. $#BUILTINS ),
-    ( map { $OVERRIDABLES[$_] => ( $_ + 1 ) << 11 } 0 .. $#OVERRIDABLES ),
+  { ( map { $KEYWORDS[$_] => ( $_ + 1 ) << 2 } 0 .. $#KEYWORDS ),
+    ( map { $BUILTINS[$_] => ( $_ + 1 ) << 7 } 0 .. $#BUILTINS ),
+    ( map { $OVERRIDABLES[$_] => ( $_ + 1 ) << 12 } 0 .. $#OVERRIDABLES ),
     };
 
 sub is_keyword($)     { $_[0] & KEYWORD_MASK }
 sub is_builtin($)     { $_[0] & BUILTIN_MASK }
 sub is_overridable($) { $_[0] & OVERRIDABLE_MASK }
+sub is_id($)          { $_[0] & ID_MASK }
 
 our %%KEYWORDS =
   (
@@ -103,12 +104,13 @@ my                  k       OP_MY
 our                 k       OP_OUR
 state               k       OP_STATE
 sub                 k       
-eval                k       
+eval                b       
 package             k       
 print               b       OP_PRINT
 defined             b       
 return              b       
 undef               b       
+map                 b       
 unlink              o       
 glob                o       
 readline            o       

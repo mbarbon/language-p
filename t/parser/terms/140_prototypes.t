@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 5;
+use Test::More tests => 10;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -10,7 +10,7 @@ use TestParser qw(:all);
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 print defined 1, 2
 EOP
---- !parsetree:Print
+--- !parsetree:BuiltinIndirect
 arguments:
   - !parsetree:Builtin
     arguments:
@@ -23,14 +23,14 @@ arguments:
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID
-filehandle: ~
 function: print
+indirect: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 print unlink 1, 2
 EOP
---- !parsetree:Print
+--- !parsetree:BuiltinIndirect
 arguments:
   - !parsetree:Overridable
     arguments:
@@ -43,8 +43,8 @@ arguments:
     context: CXT_LIST
     function: unlink
 context: CXT_VOID
-filehandle: ~
 function: print
+indirect: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -76,18 +76,101 @@ EOE
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 print FILE $stuff;
 EOP
---- !parsetree:Print
+--- !parsetree:BuiltinIndirect
 arguments:
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: stuff
     sigil: VALUE_SCALAR
 context: CXT_VOID
-filehandle: !parsetree:Symbol
+function: print
+indirect: !parsetree:Symbol
   context: CXT_SCALAR
   name: FILE
   sigil: VALUE_GLOB
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print FILE;
+EOP
+--- !parsetree:BuiltinIndirect
+arguments: ~
+context: CXT_VOID
 function: print
+indirect: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: FILE
+  sigil: VALUE_GLOB
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print $stuff + $b;
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:BinOp
+    context: CXT_LIST
+    left: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: stuff
+      sigil: VALUE_SCALAR
+    op: OP_ADD
+    right: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: b
+      sigil: VALUE_SCALAR
+context: CXT_VOID
+function: print
+indirect: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print $stuff;
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: stuff
+    sigil: VALUE_SCALAR
+context: CXT_VOID
+function: print
+indirect: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print FILE();
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:FunctionCall
+    arguments: ~
+    context: CXT_LIST
+    function: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: FILE
+      sigil: VALUE_SUB
+context: CXT_VOID
+function: print
+indirect: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print FILE (), 1;
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:List
+    expressions: []
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
+    value: 1
+context: CXT_VOID
+function: print
+indirect: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: FILE
+  sigil: VALUE_GLOB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
