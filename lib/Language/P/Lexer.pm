@@ -14,7 +14,7 @@ use Language::P::Keywords;
 our @TOKENS;
 BEGIN {
   our @TOKENS =
-    qw(T_ID T_KEYWORD T_OVERRIDABLE T_BUILTIN T_EOF
+    qw(T_ID T_SUB_ID T_EOF
        T_PATTERN T_STRING T_NUMBER T_QUOTE
        T_SEMICOLON T_COLON T_COMMA T_OPPAR T_CLPAR T_OPSQ T_CLSQ
        T_OPBRK T_CLBRK T_OPHASH T_OPAN T_CLPAN T_INTERR
@@ -37,6 +37,7 @@ use constant
     X_TERM     => 2,
     X_OPERATOR => 3,
     X_BLOCK    => 4,
+    X_REF      => 5,
 
     map { $TOKENS[$_] => $_ + 1 } 0 .. $#TOKENS,
     };
@@ -44,7 +45,7 @@ use constant
 use Exporter qw(import);
 
 our @EXPORT_OK =
-  ( qw(X_NOTHING X_STATE X_TERM X_OPERATOR X_BLOCK
+  ( qw(X_NOTHING X_STATE X_TERM X_OPERATOR X_BLOCK X_REF
        ), @TOKENS );
 our %EXPORT_TAGS =
   ( all  => \@EXPORT_OK,
@@ -730,6 +731,10 @@ sub lex {
             }
             $op = undef;
             $type = T_ID;
+        }
+        # force subroutine call
+        if( $no_space && $type == T_ID && $$_ =~ /^\(/ ) {
+            $type = T_SUB_ID;
         }
 
         if( $op ) {

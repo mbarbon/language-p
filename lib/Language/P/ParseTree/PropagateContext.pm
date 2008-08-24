@@ -8,7 +8,7 @@ use Language::P::ParseTree qw(:all);
 
 my %dispatch =
   ( 'Language::P::ParseTree::FunctionCall'           => '_function_call',
-    'Language::P::ParseTree::Print'                  => '_print',
+    'Language::P::ParseTree::BuiltinIndirect'        => '_builtin_indirect',
     'Language::P::ParseTree::Builtin'                => '_function_call',
     'Language::P::ParseTree::Overridable'            => '_function_call',
     'Language::P::ParseTree::UnOp'                   => '_unary_op',
@@ -133,11 +133,15 @@ sub _function_call {
     }
 }
 
-sub _print {
+sub _builtin_indirect {
     my( $self, $tree, $cxt ) = @_;
 
     $self->_function_call( $tree, $cxt );
-    $self->visit( $tree->filehandle, CXT_SCALAR ) if $tree->filehandle;
+    if( $tree->indirect ) {
+        my $arg_cxt = $tree->function eq 'map' || $tree->function eq 'grep' ?
+                          CXT_LIST : CXT_SCALAR;
+        $self->visit( $tree->indirect, $arg_cxt );
+    }
 }
 
 sub _unary_op {

@@ -76,19 +76,19 @@ print, 1;
 EOP
 --- !parsetree:List
 expressions:
-  - !parsetree:Print
+  - !parsetree:BuiltinIndirect
     arguments: ~
     context: CXT_VOID
-    filehandle: ~
     function: print
+    indirect: ~
   - !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
-  - !parsetree:Print
+  - !parsetree:BuiltinIndirect
     arguments: ~
     context: CXT_VOID
-    filehandle: ~
     function: print
+    indirect: ~
   - !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
@@ -100,11 +100,11 @@ print => 1;
 EOP
 --- !parsetree:List
 expressions:
-  - !parsetree:Print
+  - !parsetree:BuiltinIndirect
     arguments: ~
     context: CXT_VOID
-    filehandle: ~
     function: print
+    indirect: ~
   - !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1

@@ -149,7 +149,7 @@ my %dispatch =
   ( 'Language::P::ParseTree::FunctionCall'           => '_function_call',
     'Language::P::ParseTree::Builtin'                => '_builtin',
     'Language::P::ParseTree::Overridable'            => '_builtin',
-    'Language::P::ParseTree::Print'                  => '_print',
+    'Language::P::ParseTree::BuiltinIndirect'        => '_indirect',
     'Language::P::ParseTree::UnOp'                   => '_unary_op',
     'Language::P::ParseTree::BinOp'                  => '_binary_op',
     'Language::P::ParseTree::Constant'               => '_constant',
@@ -255,13 +255,13 @@ my %builtins_no_list =
     wantarray=> 'want',
     );
 
-sub _print {
+sub _indirect {
     my( $self, $tree ) = @_;
 
     push @bytecode, o( 'start_list' );
 
-    if( $tree->filehandle ) {
-        $self->dispatch( $tree->filehandle );
+    if( $tree->indirect ) {
+        $self->dispatch( $tree->indirect );
     } else {
         my $out = Language::P::Value::Handle->new( { handle => \*STDOUT } );
         push @bytecode, o( 'constant', value => $out );
