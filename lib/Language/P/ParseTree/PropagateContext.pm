@@ -11,6 +11,7 @@ my %dispatch =
     'Language::P::ParseTree::BuiltinIndirect'        => '_builtin_indirect',
     'Language::P::ParseTree::Builtin'                => '_function_call',
     'Language::P::ParseTree::Overridable'            => '_function_call',
+    'Language::P::ParseTree::MethodCall'             => '_method_call',
     'Language::P::ParseTree::UnOp'                   => '_unary_op',
     'Language::P::ParseTree::Parentheses'            => '_parentheses',
     'Language::P::ParseTree::Dereference'            => '_dereference',
@@ -129,6 +130,20 @@ sub _function_call {
     if( $tree->arguments ) {
         foreach my $arg ( @{$tree->arguments} ) {
             $self->visit( $arg, $arg_cxt );
+        }
+    }
+}
+
+sub _method_call {
+    my( $self, $tree, $cxt ) = @_;
+
+    $tree->{context} = $cxt;
+    $self->visit( $tree->invocant, CXT_SCALAR );
+    $self->visit( $tree->method, CXT_SCALAR ) if ref $tree->method;
+
+    if( $tree->arguments ) {
+        foreach my $arg ( @{$tree->arguments} ) {
+            $self->visit( $arg, CXT_LIST );
         }
     }
 }

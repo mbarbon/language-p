@@ -713,42 +713,34 @@ sub _parse_maybe_indirect_method_call {
 sub _parse_maybe_direct_method_call {
     my( $self, $invocant ) = @_;
     my $token = $self->lexer->lex( X_TERM );
+    my( $method, $indirect );
 
     if( $token->[0] == T_ID ) {
-        my $oppar = $self->lexer->peek( X_OPERATOR );
-        my $args;
-        if( $oppar->[0] == T_OPPAR ) {
-            $args = _parse_bracketed_expr( $self, T_OPPAR, 1 );
-        }
-
-        my $term = Language::P::ParseTree::MethodCall->new
-                       ( { invocant  => $invocant,
-                           method    => $token->[1],
-                           arguments => $args,
-                           indirect  => 0,
-                           } );
-
-        return _parse_maybe_subscript_rest( $self, $term );
+        ( $method, $indirect ) = ( $token->[1], 0 );
     } elsif( $token->[0] == T_DOLLAR ) {
-        my $id = _lex_token( $self, T_ID );
-        my $meth = _find_symbol( $self, VALUE_SCALAR, $id->[1], $id->[2] );
-        my $oppar = $self->lexer->peek( X_OPERATOR );
-        my $args;
-        if( $oppar->[0] == T_OPPAR ) {
-            $args = _parse_bracketed_expr( $self, T_OPPAR, 1 );
-        }
-
-        my $term = Language::P::ParseTree::MethodCall->new
-                       ( { invocant  => $invocant,
-                           method    => $meth,
-                           arguments => $args,
-                           indirect  => 1,
-                           } );
-
-        return _parse_maybe_subscript_rest( $self, $term );
+        my $id = $self->lexer->lex_identifier;
+        $method = _find_symbol( $self, VALUE_SCALAR, $id->[1], $id->[2] );
+        $indirect = 1;
     } else {
         die $token->[0], ' ', $token->[1];
     }
+
+    my $oppar = $self->lexer->peek( X_OPERATOR );
+    my $args;
+    if( $oppar->[0] == T_OPPAR ) {
+        _lex_token( $self, T_OPPAR );
+        ( $args ) = _parse_arglist( $self, PREC_LOWEST, PROTO_DEFAULT, 0 );
+        _lex_token( $self, T_CLPAR );
+    }
+
+    my $term = Language::P::ParseTree::MethodCall->new
+                   ( { invocant  => $invocant,
+                       method    => $method,
+                       arguments => $args,
+                       indirect  => $indirect,
+                       } );
+
+    return _parse_maybe_subscript_rest( $self, $term );
 }
 
 sub _parse_match {
