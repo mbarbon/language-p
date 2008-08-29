@@ -22,6 +22,8 @@ use constant
     PREC_NAMED_UNOP    => 10,
     PREC_TERNARY       => 18,
     PREC_TERNARY_COLON => 40,
+    PREC_LISTEXPR      => 19,
+    PREC_COMMA         => 20,
     PREC_LISTOP        => 21,
     PREC_LOWEST        => 50,
 
@@ -81,7 +83,7 @@ my %prec_assoc_bin =
     T_MINUSEQUAL()  => [ 19, ASSOC_RIGHT, OP_SUBTRACT_ASSIGN ],
     T_STAREQUAL()   => [ 19, ASSOC_RIGHT, OP_MULTIPLY_ASSIGN ],
     T_SLASHEQUAL()  => [ 19, ASSOC_RIGHT, OP_DIVIDE_ASSIGN ],
-    # 20, comma
+    T_COMMA()       => [ 20, ASSOC_LEFT ],
     # 21, list ops
     T_ANDANDLOW()   => [ 23, ASSOC_LEFT,  OP_LOG_AND ],
     T_ORORLOW()     => [ 24, ASSOC_LEFT,  OP_LOG_OR ],
@@ -544,17 +546,8 @@ sub _parse_sideff {
 
 sub _parse_expr {
     my( $self ) = @_;
-    my $expr = _parse_term( $self, PREC_LOWEST );
-    my $la = $self->lexer->peek( X_TERM );
 
-    if( $la->[0] == T_COMMA ) {
-        my $terms = _parse_cslist_rest( $self, PREC_LOWEST,
-                                        PROTO_DEFAULT, 0, $expr );
-
-        return Language::P::ParseTree::List->new( { expressions => $terms } );
-    }
-
-    return $expr;
+    return _parse_term( $self, PREC_LOWEST );
 }
 
 sub _find_symbol {
@@ -618,7 +611,7 @@ sub _parse_indirect_function_call {
     my $args;
     if( $with_arguments ) {
         _lex_token( $self, T_OPPAR );
-        ( $args, undef ) = _parse_arglist( $self, PREC_LOWEST, PROTO_DEFAULT, 0 );
+        ( $args, undef ) = _parse_arglist( $self, PREC_LOWEST, 0, 0 );
         _lex_token( $self, T_CLPAR );
     }
 
@@ -694,14 +687,32 @@ sub _parse_maybe_indirect_method_call {
         # proto FH -> no method
         # Foo $bar (?) -> no method
         # foo $bar -> method
-        # print xxx  -> no method
-        if( $op->[2] == OP_PRINT ) {
-            my $la = 1;
-        }
+
+        # print xxx -> no method, but print is handled before getting
+        # there, since it is a non-overridable builtin
+
         # foo pack:: -> method
 
-        use Data::Dumper;
-        Carp::confess Dumper( $indir ) . ' ';
+#         use Data::Dumper;
+#         Carp::confess Dumper( $indir ) . ' ';
+
+        my $args = _parse_term( $self, PREC_COMMA );
+        if( $args->isa( 'Language::P::ParseTree::List' ) ) {
+            $args = @{$args->expressions} ? $args->expressions : undef;
+        }
+        $indir = Language::P::ParseTree::Constant->new
+                     ( { flags => CONST_STRING,
+                         value => $indir->[1],
+                         } )
+            if ref( $indir ) eq 'ARRAY';
+        my $term = Language::P::ParseTree::MethodCall->new
+                       ( { invocant  => $indir,
+                           method    => $op->[1],
+                           arguments => $args,
+                           indirect  => 0,
+                           } );
+
+        return _parse_maybe_subscript_rest( $self, $term );
     }
 
     return Language::P::ParseTree::Constant->new
@@ -729,7 +740,7 @@ sub _parse_maybe_direct_method_call {
     my $args;
     if( $oppar->[0] == T_OPPAR ) {
         _lex_token( $self, T_OPPAR );
-        ( $args ) = _parse_arglist( $self, PREC_LOWEST, PROTO_DEFAULT, 0 );
+        ( $args ) = _parse_arglist( $self, PREC_LOWEST, 0, 0 );
         _lex_token( $self, T_CLPAR );
     }
 
@@ -1213,11 +1224,21 @@ sub _parse_term_n {
                                        (    $token->[0] == T_MATCH
                                          || $token->[0] == T_NOTMATCH ) );
 
-            $terminal = Language::P::ParseTree::BinOp->new
-                            ( { op    => $bin->[2],
-                                left  => $terminal,
-                                right => $rterm,
-                                } );
+            if( $token->[0] == T_COMMA ) {
+                if( $terminal->isa( 'Language::P::ParseTree::List' ) ) {
+                    push @{$terminal->expressions}, $rterm if $rterm;
+                } else {
+                    $terminal = Language::P::ParseTree::List->new
+                        ( { expressions => [ $terminal, $rterm ? $rterm : () ],
+                            } );
+                }
+            } else {
+                $terminal = Language::P::ParseTree::BinOp->new
+                                ( { op    => $bin->[2],
+                                    left  => $terminal,
+                                    right => $rterm,
+                                    } );
+            }
         }
     }
 
@@ -1383,14 +1404,11 @@ sub _parse_listop {
                                        } );
 
                 return _parse_maybe_direct_method_call( $self, $invocant );
+            } elsif( $la->[0] == T_OPPAR ) {
+                # parsed as a normal sub call; go figure
+                $next = $la;
             } else {
-                # looks like a bareword, report as such
-                $self->lexer->unlex( $next );
-
-                return Language::P::ParseTree::Constant->new
-                           ( { value => $op->[1],
-                               flags => CONST_STRING|STRING_BARE
-                               } );
+                Carp::confess( $la->[0], ' ', $la->[1] );
             }
         } elsif( !$declared && $next->[0] != T_OPPAR ) {
             # not a declared subroutine, nor followed by parenthesis
@@ -1405,7 +1423,7 @@ sub _parse_listop {
         }
 
         my $symbol = Language::P::ParseTree::Symbol->new
-                         ( { name   => _qualify( $self, $op->[1], $op->[2] ),
+                         ( { name  => _qualify( $self, $op->[1], $op->[2] ),
                              sigil => VALUE_SUB,
                              } );
         $call = Language::P::ParseTree::FunctionCall->new
@@ -1416,17 +1434,17 @@ sub _parse_listop {
     }
 
     if( $next->[0] == T_OPPAR ) {
-        $self->lexer->lex; # comsume token
-        ( $args, $fh ) = _parse_arglist( $self, PREC_LOWEST, $proto, 0 );
+        _lex_token( $self, T_OPPAR );
+        ( $args, $fh ) = _parse_arglist( $self, PREC_LOWEST, 0, $proto->[2] );
         _lex_token( $self, T_CLPAR );
     } elsif( $proto->[1] == 1 ) {
-        ( $args, $fh ) = _parse_arglist( $self, PREC_NAMED_UNOP, $proto, 0 );
+        ( $args, undef ) = _parse_arglist( $self, PREC_NAMED_UNOP, 1, $proto->[2] );
     } elsif( $proto->[1] != 0 ) {
         Carp::confess( "Undeclared identifier '$op->[1]'" ) unless $declared;
-        ( $args, $fh ) = _parse_arglist( $self, PREC_LISTOP, $proto, 0 );
+        ( $args, $fh ) = _parse_arglist( $self, PREC_COMMA, 0, $proto->[2] );
     }
 
-    # FIXME
+    # FIXME avoid reconstructing the call?
     if( $proto->[2] & (PROTO_INDIROBJ|PROTO_FILEHANDLE) ) {
         $call = Language::P::ParseTree::BuiltinIndirect->new
                     ( { function  => $call->function,
@@ -1437,26 +1455,55 @@ sub _parse_listop {
         $call->{arguments} = $args;
     }
 
+    _apply_prototype( $self, $call );
+
     return $call;
 }
 
-sub _parse_arglist {
-    my( $self, $prec, $proto, $index ) = @_;
-    my $proto_char = $proto->[2 + $index];
-    my $indirect_term = $proto_char & (PROTO_INDIROBJ|PROTO_FILEHANDLE);
-    my $indirect_filehandle = $proto_char & PROTO_FILEHANDLE;
-    my $la = $self->lexer->peek( $indirect_term ? X_REF : X_TERM );
+sub _apply_prototype {
+    my( $self, $call ) = @_;
+    my $proto = $call->parsing_prototype;
+    my $args = $call->arguments || [];
 
-    my $term;
-    if( $proto_char & PROTO_FILEHANDLE ) {
-        ++$index;
-        $proto_char = $proto->[2 + $index];
+    if( @$args < $proto->[0] ) {
+        die "Too few arguments for call";
+    }
+    if( $proto->[1] != -1 && @$args > $proto->[1] ) {
+        die "Too many arguments for call";
     }
 
+    foreach my $i ( 3 .. $#$proto ) {
+        last if $i - 3 > $#$args;
+        my $proto_char = $proto->[$i];
+        my $term = $args->[$i - 3];
+
+        # defined/exists &foo
+        if( $proto_char & PROTO_AMPER ) {
+            if(    $term->isa( 'Language::P::ParseTree::SpecialFunctionCall' )
+                && $term->flags & FLAG_IMPLICITARGUMENTS ) {
+                $args->[$i - 3] = $term->function;
+            }
+        }
+        if( $proto_char & PROTO_MAKE_GLOB && $term->is_bareword ) {
+            $args->[$i - 3] = Language::P::ParseTree::Symbol->new
+                                  ( { name  => $term->value,
+                                      sigil => VALUE_GLOB,
+                                      } );
+        }
+    }
+}
+
+sub _parse_arglist {
+    my( $self, $prec, $is_unary, $proto_char ) = @_;
+    my $indirect_term = $proto_char & (PROTO_INDIROBJ|PROTO_FILEHANDLE);
+    my $la = $self->lexer->peek( $indirect_term ? X_REF : X_TERM );
+    my $term_prec = $prec > PREC_LISTEXPR ? PREC_LISTEXPR : $prec;
+
+    my $term;
     if( $indirect_term ) {
         if( $la->[0] == T_OPBRK ) {
             $term = _parse_indirobj( $self, 0 );
-        } elsif(    $indirect_filehandle
+        } elsif(    $proto_char & PROTO_FILEHANDLE
                  && $la->[0] == T_ID
                  && $la->[2] == T_ID ) {
             # look ahead one more token
@@ -1481,7 +1528,7 @@ sub _parse_arglist {
                                 } );
             }
         } else {
-            $term = _parse_term( $self, PREC_LOWEST );
+            $term = _parse_term( $self, $term_prec );
 
             if( !$term ) {
                 $indirect_term = 0;
@@ -1496,30 +1543,16 @@ sub _parse_arglist {
         $term = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
     }
 
-    if( !$term ) {
-        $term = _maybe_handle( _parse_term( $self, $prec ),
-                               $proto, $index );
-        ++$index;
-    }
+    $term ||= _parse_term( $self, $term_prec );
 
     return unless $term;
-
-    # special case for defined/exists &foo
-    if( $proto_char & PROTO_AMPER ) {
-        if(    $term->isa( 'Language::P::ParseTree::SpecialFunctionCall' )
-            && $term->flags & FLAG_IMPLICITARGUMENTS ) {
-            $term = $term->function;
-        }
-    }
-    return [ $term ] if $proto->[1] == $index;
+    return [ $term ] if $is_unary;
 
     if( $indirect_term ) {
         my $la = $self->lexer->peek( X_TERM );
 
-        if( $la->[0] == T_COMMA ) {
-            return _parse_cslist_rest( $self, $prec, $proto, $index, $term );
-        } else {
-            my $args = _parse_arglist( $self, $prec, $proto, $index );
+        if( $la->[0] != T_COMMA ) {
+            my $args = _parse_arglist( $self, $prec, 0, 0 );
 
             if( !$args && $term->is_symbol && $term->sigil == VALUE_SCALAR ) {
                 return ( [ $term ] );
@@ -1529,39 +1562,10 @@ sub _parse_arglist {
         }
     }
 
-    return _parse_cslist_rest( $self, $prec, $proto, $index, $term );
-}
+    $term = _parse_term_n( $self, $prec, $term, 0 );
 
-sub _parse_cslist_rest {
-    my( $self, $prec, $proto, $index, @terms ) = @_;
-
-    for(; $proto->[1] != $index;) {
-        my $comma = $self->lexer->lex( X_TERM );
-        if( $comma->[0] == T_COMMA ) {
-            my $term = _maybe_handle( _parse_term( $self, $prec ),
-                                      $proto, $index );
-            push @terms, $term;
-            ++$index;
-        } else {
-            $self->lexer->unlex( $comma );
-            last;
-        }
-    }
-
-    return \@terms;
-}
-
-sub _maybe_handle {
-    my( $term, $proto, $index ) = @_;
-
-    return $term if !$term || !$term->is_bareword;
-    return $term if    $index + 2 > $#$proto
-                    || !( $proto->[$index + 2] & PROTO_GLOB );
-
-    return Language::P::ParseTree::Symbol->new
-               ( { name  => $term->value,
-                   sigil => VALUE_GLOB,
-                   } );
+    return $term && $term->isa( 'Language::P::ParseTree::List' ) ?
+               $term->expressions : [ $term ];
 }
 
 1;

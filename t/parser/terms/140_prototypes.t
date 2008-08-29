@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 10;
+use Test::More tests => 13;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -104,6 +104,65 @@ indirect: !parsetree:Symbol
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print FILE +FOO;
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:UnOp
+    context: CXT_LIST
+    left: !parsetree:Constant
+      flags: CONST_STRING|STRING_BARE
+      value: FOO
+    op: OP_PLUS
+context: CXT_VOID
+function: print
+indirect: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: FILE
+  sigil: VALUE_GLOB
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print FILE &FOO;
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:SpecialFunctionCall
+    arguments: ~
+    context: CXT_LIST
+    flags: FLAG_IMPLICITARGUMENTS
+    function: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: FOO
+      sigil: VALUE_SUB
+context: CXT_VOID
+function: print
+indirect: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: FILE
+  sigil: VALUE_GLOB
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print FILE .FOO;
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:BinOp
+    context: CXT_LIST
+    left: !parsetree:Constant
+      flags: CONST_STRING|STRING_BARE
+      value: FILE
+    op: OP_CONCATENATE
+    right: !parsetree:Constant
+      flags: CONST_STRING|STRING_BARE
+      value: FOO
+context: CXT_VOID
+function: print
+indirect: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 print $stuff + $b;
 EOP
 --- !parsetree:BuiltinIndirect
@@ -160,8 +219,6 @@ print FILE (), 1;
 EOP
 --- !parsetree:BuiltinIndirect
 arguments:
-  - !parsetree:List
-    expressions: []
   - !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1

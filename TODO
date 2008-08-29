@@ -13,6 +13,10 @@ Parsing:
 - do ...
 - labels
 - formats
+- add operator descriptor and do parse tree modifications
+  - pipe FOO, BAR -> pipe *FOO, *BAR
+  - defined/exists &foo
+  - other similar cases
 - indirect method calls
   - print boo foo == print( foo->boo )
   - print boo $foo == print *boo $foo
@@ -31,6 +35,10 @@ Parsing:
 - subroutine prototypes
   - declaration
   - parsing
+    - & as first parameter permits either:
+      mymap { ... } 1, 2, 3
+      mymap sub { ... }, 1, 2, 3
+      myeval { ... }, 1 == myeval( sub { ... } ), 1
 - local()
 - implicit $_ in various builtins
 - parsing of loop + continue

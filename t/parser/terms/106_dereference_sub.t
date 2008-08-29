@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 6;
+use Test::More tests => 7;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -110,4 +110,16 @@ function: !parsetree:Dereference
           name: print
           sigil: VALUE_SUB
   op: VALUE_SUB
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+foo->();
+EOP
+--- !parsetree:FunctionCall
+arguments: ~
+context: CXT_VOID
+function: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: foo
+  sigil: VALUE_SUB
 EOE

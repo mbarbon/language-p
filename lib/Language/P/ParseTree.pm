@@ -29,7 +29,7 @@ our @EXPORT_OK =
 
        PROTO_DEFAULT PROTO_SCALAR PROTO_ARRAY PROTO_HASH PROTO_SUB
        PROTO_GLOB PROTO_BACKSLASH PROTO_BLOCK PROTO_AMPER PROTO_ANY
-       PROTO_INDIROBJ PROTO_FILEHANDLE
+       PROTO_INDIROBJ PROTO_FILEHANDLE PROTO_MAKE_GLOB
 
        FLAG_IMPLICITARGUMENTS FLAG_ERASEFRAME
        FLAG_RX_MULTI_LINE FLAG_RX_SINGLE_LINE FLAG_RX_CASE_INSENSITIVE
@@ -76,7 +76,8 @@ use constant
     PROTO_AMPER        => 128,
     PROTO_INDIROBJ     => 256,
     PROTO_FILEHANDLE   => 512,
-    PROTO_DEFAULT      => [ -1, -1, 2 ],
+    PROTO_MAKE_GLOB    => 1024|16,
+    PROTO_DEFAULT      => [ -1, -1, 0, 2 ],
 
     # sigils, anonymous array/hash constructors, dereferences
     VALUE_SCALAR       => 1,
@@ -501,10 +502,10 @@ use base qw(Language::P::ParseTree::FunctionCall);
 
 my %prototype_bi =
   ( print       => [ -1, -1, Language::P::ParseTree::PROTO_FILEHANDLE, Language::P::ParseTree::PROTO_ARRAY ],
-    defined     => [  0,  1, Language::P::ParseTree::PROTO_AMPER|Language::P::ParseTree::PROTO_ANY ],
-    return      => [ -1, -1, Language::P::ParseTree::PROTO_ARRAY ],
-    undef       => [  0,  1, Language::P::ParseTree::PROTO_ANY ],
-    eval        => [  0,  1, Language::P::ParseTree::PROTO_ANY|Language::P::ParseTree::PROTO_BLOCK ],
+    defined     => [  0,  1, Language::P::ParseTree::PROTO_AMPER, Language::P::ParseTree::PROTO_AMPER|Language::P::ParseTree::PROTO_ANY ],
+    return      => [ -1, -1, 0, Language::P::ParseTree::PROTO_ARRAY ],
+    undef       => [  0,  1, 0, Language::P::ParseTree::PROTO_ANY ],
+    eval        => [  0,  1, Language::P::ParseTree::PROTO_BLOCK, Language::P::ParseTree::PROTO_ANY ],
     map         => [  2, -1, Language::P::ParseTree::PROTO_INDIROBJ, Language::P::ParseTree::PROTO_ARRAY ],
     );
 
@@ -528,17 +529,17 @@ use warnings;
 use base qw(Language::P::ParseTree::FunctionCall);
 
 my %prototype_ov =
-  ( unlink      => [ -1, -1, Language::P::ParseTree::PROTO_ARRAY ],
-    die         => [ -1, -1, Language::P::ParseTree::PROTO_ARRAY ],
-    open        => [  1, -1, Language::P::ParseTree::PROTO_GLOB, Language::P::ParseTree::PROTO_SCALAR, Language::P::ParseTree::PROTO_ARRAY ],
-    pipe        => [  2,  2, Language::P::ParseTree::PROTO_GLOB, Language::P::ParseTree::PROTO_GLOB ],
-    chdir       => [  0,  1, Language::P::ParseTree::PROTO_SCALAR ],
-    rmdir       => [  0,  1, Language::P::ParseTree::PROTO_SCALAR ],
-    readline    => [  0,  1, Language::P::ParseTree::PROTO_SCALAR ],
-    glob        => [ -1, -1, Language::P::ParseTree::PROTO_ARRAY ],
-    close       => [  0,  1, Language::P::ParseTree::PROTO_GLOB ],
-    binmode     => [  0,  2, Language::P::ParseTree::PROTO_GLOB, Language::P::ParseTree::PROTO_SCALAR ],
-    abs         => [  0,  1, Language::P::ParseTree::PROTO_SCALAR ],
+  ( unlink      => [ -1, -1, 0, Language::P::ParseTree::PROTO_ARRAY ],
+    die         => [ -1, -1, 0, Language::P::ParseTree::PROTO_ARRAY ],
+    open        => [  1, -1, 0, Language::P::ParseTree::PROTO_MAKE_GLOB, Language::P::ParseTree::PROTO_SCALAR, Language::P::ParseTree::PROTO_ARRAY ],
+    pipe        => [  2,  2, 0, Language::P::ParseTree::PROTO_MAKE_GLOB, Language::P::ParseTree::PROTO_MAKE_GLOB ],
+    chdir       => [  0,  1, 0, Language::P::ParseTree::PROTO_SCALAR ],
+    rmdir       => [  0,  1, 0, Language::P::ParseTree::PROTO_SCALAR ],
+    readline    => [  0,  1, 0, Language::P::ParseTree::PROTO_SCALAR ],
+    glob        => [ -1, -1, 0, Language::P::ParseTree::PROTO_ARRAY ],
+    close       => [  0,  1, 0, Language::P::ParseTree::PROTO_MAKE_GLOB ],
+    binmode     => [  0,  2, 0, Language::P::ParseTree::PROTO_MAKE_GLOB, Language::P::ParseTree::PROTO_SCALAR ],
+    abs         => [  0,  1, 0, Language::P::ParseTree::PROTO_SCALAR ],
     wantarray   => [  0,  0, 0 ],
     );
 
