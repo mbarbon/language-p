@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 10;
+use Test::More tests => 13;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -16,6 +16,54 @@ left: !parsetree:Symbol
   context: CXT_SCALAR
   name: a
   sigil: VALUE_SCALAR
+op: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+$$$$a
+EOP
+--- !parsetree:Dereference
+context: CXT_VOID
+left: !parsetree:Dereference
+  context: CXT_SCALAR
+  left: !parsetree:Dereference
+    context: CXT_SCALAR
+    left: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: a
+      sigil: VALUE_SCALAR
+    op: VALUE_SCALAR
+  op: VALUE_SCALAR
+op: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+$$${a}
+EOP
+--- !parsetree:Dereference
+context: CXT_VOID
+left: !parsetree:Dereference
+  context: CXT_SCALAR
+  left: !parsetree:Symbol
+    context: CXT_SCALAR
+    name: a
+    sigil: VALUE_SCALAR
+  op: VALUE_SCALAR
+op: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+$$$::a
+EOP
+--- !parsetree:Dereference
+context: CXT_VOID
+left: !parsetree:Dereference
+  context: CXT_SCALAR
+  left: !parsetree:Symbol
+    context: CXT_SCALAR
+    name: a
+    sigil: VALUE_SCALAR
+  op: VALUE_SCALAR
 op: VALUE_SCALAR
 EOE
 

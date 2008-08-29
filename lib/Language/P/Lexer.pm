@@ -485,6 +485,9 @@ sub lex_identifier {
             return undef;
         }
     };
+    $id or $$_ =~ /^\$[\${:]/ and do {
+        return;
+    };
     $id or $$_ =~ s/^(\W)(?=\W)// and do {
         $id = [ T_ID, $1, T_FQ_ID ];
     };
