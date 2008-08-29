@@ -46,7 +46,8 @@ sub _run_p_tests {
         }
         my @tests = $self->expand_test_dir( @directories );
 
-        local $ENV{PERL5OPT} = $ENV{HARNESS_PERL_SWITCHES};
+        local $ENV{PERL5OPT} = $ENV{HARNESS_PERL_SWITCHES}
+          if $ENV{HARNESS_PERL_SWITCHES};
         $harness->aggregate_tests( $aggregator, @tests );
     }
     $aggregator->stop();
