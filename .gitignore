@@ -3,5 +3,6 @@ Build
 _build
 blib
 t/perl5/[a-z]*
+cover_db
 TAGS
 lib/Language/P/Keywords.pm
