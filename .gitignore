@@ -4,3 +4,4 @@ _build
 blib
 t/perl5/[a-z]*
 TAGS
+lib/Language/P/Keywords.pm
