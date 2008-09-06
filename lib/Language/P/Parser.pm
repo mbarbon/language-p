@@ -1144,12 +1144,10 @@ sub _parse_term_p {
             Carp::confess $la->[0], ' ', $la->[1];
         }
     } elsif( $token->[0] == T_FILETEST ) {
-        my $rest = _parse_term_n( $self, PREC_NAMED_UNOP );
-
-        return Language::P::ParseTree::Filetest->new
-                   ( { op    => $token->[1],
-                       left  => $rest,
-                       } );
+        return _parse_listop_like( $self, undef, 1,
+                                   Language::P::ParseTree::Builtin->new
+                                       ( { function => $token->[2],
+                                           } ) );
     } elsif( my $p = $prec_assoc_un{$token->[0]} ) {
         my $rest = _parse_term_n( $self, $p->[0] );
 
@@ -1381,6 +1379,12 @@ sub _declared_id {
 sub _parse_listop {
     my( $self, $op ) = @_;
     my( $call, $declared ) = _declared_id( $self, $op );
+
+    return _parse_listop_like( $self, $op, $declared, $call );
+}
+
+sub _parse_listop_like {
+    my( $self, $op, $declared, $call ) = @_;
     my $proto = $call ? $call->parsing_prototype : undef;
     my $expect = !$proto                                         ? X_TERM :
                  $proto->[2] & (PROTO_FILEHANDLE|PROTO_INDIROBJ) ? X_REF :

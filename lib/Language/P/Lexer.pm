@@ -140,6 +140,36 @@ my %ops =
     'xor' => T_XORLOW,
     );
 
+my %filetest =
+  ( r => OP_FT_EREADABLE,
+    w => OP_FT_EWRITABLE,
+    x => OP_FT_EEXECUTABLE,
+    o => OP_FT_EOWNED,
+    R => OP_FT_RREADABLE,
+    W => OP_FT_RWRITABLE,
+    X => OP_FT_REXECUTABLE,
+    O => OP_FT_ROWNED,
+    e => OP_FT_EXISTS,
+    z => OP_FT_EMPTY,
+    s => OP_FT_NONEMPTY,
+    f => OP_FT_ISFILE,
+    d => OP_FT_ISDIR,
+    l => OP_FT_ISSYMLINK,
+    p => OP_FT_ISPIPE,
+    S => OP_FT_ISSOCKET,
+    b => OP_FT_ISBLOCKSPECIAL,
+    c => OP_FT_ISCHARSPECIAL,
+    t => OP_FT_ISTTY,
+    u => OP_FT_SETUID,
+    g => OP_FT_SETGID,
+    k => OP_FT_STICKY,
+    T => OP_FT_ISASCII,
+    B => OP_FT_ISBINARY,
+    M => OP_FT_MTIME,
+    A => OP_FT_ATIME,
+    C => OP_FT_CTIME,
+    );
+
 my %quoted_chars =
   ( 'n' => "\n",
     't' => "\t",
@@ -908,7 +938,7 @@ sub lex {
             return [ T_MINUS, '-' ];
         }
 
-        return [ T_FILETEST, $op ];
+        return [ T_FILETEST, $op, $filetest{$op} ];
     };
     $$_ =~ s/^([:;,()\?<>!=\/\\\+\-\.\|^\*%@&])//x and return [ $ops{$1}, $1 ];
 

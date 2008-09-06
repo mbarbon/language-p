@@ -18,6 +18,14 @@ BEGIN {
            OP_BIT_AND OP_BIT_OR OP_BIT_XOR
            OP_QL_S OP_QL_M OP_QL_TR OP_QL_QR OP_QL_QX OP_QL_LT OP_QL_QW
            OP_BACKTICK
+
+           OP_FT_EREADABLE OP_FT_EWRITABLE OP_FT_EEXECUTABLE OP_FT_EOWNED
+           OP_FT_RREADABLE OP_FT_RWRITABLE OP_FT_REXECUTABLE OP_FT_ROWNED
+           OP_FT_EXISTS OP_FT_EMPTY OP_FT_NONEMPTY OP_FT_ISFILE
+           OP_FT_ISDIR OP_FT_ISSYMLINK OP_FT_ISPIPE OP_FT_ISSOCKET
+           OP_FT_ISBLOCKSPECIAL OP_FT_ISCHARSPECIAL OP_FT_ISTTY
+           OP_FT_SETUID OP_FT_SETGID OP_FT_STICKY OP_FT_ISASCII
+           OP_FT_ISBINARY OP_FT_MTIME OP_FT_ATIME OP_FT_CTIME
            ) );
 }
 
@@ -371,12 +379,6 @@ use base qw(Language::P::ParseTree::UnOp);
 sub op { Language::P::ParseTree::OP_PARENTHESES }
 sub lvalue_context { Language::P::ParseTree::CXT_LIST }
 
-package Language::P::ParseTree::Filetest;
-
-use strict;
-use warnings;
-use base qw(Language::P::ParseTree::UnOp);
-
 package Language::P::ParseTree::Dereference;
 
 use strict;
@@ -508,6 +510,35 @@ my %prototype_bi =
     undef       => [  0,  1, 0, Language::P::ParseTree::PROTO_ANY ],
     eval        => [  0,  1, Language::P::ParseTree::PROTO_BLOCK, Language::P::ParseTree::PROTO_ANY ],
     map         => [  2, -1, Language::P::ParseTree::PROTO_INDIROBJ, Language::P::ParseTree::PROTO_ARRAY ],
+    map { $_ => [ 0, 1, 0, Language::P::ParseTree::PROTO_MAKE_GLOB ] }
+        ( Language::P::ParseTree::OP_FT_EREADABLE,
+          Language::P::ParseTree::OP_FT_EWRITABLE,
+          Language::P::ParseTree::OP_FT_EEXECUTABLE,
+          Language::P::ParseTree::OP_FT_EOWNED,
+          Language::P::ParseTree::OP_FT_RREADABLE,
+          Language::P::ParseTree::OP_FT_RWRITABLE,
+          Language::P::ParseTree::OP_FT_REXECUTABLE,
+          Language::P::ParseTree::OP_FT_ROWNED,
+          Language::P::ParseTree::OP_FT_EXISTS,
+          Language::P::ParseTree::OP_FT_EMPTY,
+          Language::P::ParseTree::OP_FT_NONEMPTY,
+          Language::P::ParseTree::OP_FT_ISFILE,
+          Language::P::ParseTree::OP_FT_ISDIR,
+          Language::P::ParseTree::OP_FT_ISSYMLINK,
+          Language::P::ParseTree::OP_FT_ISPIPE,
+          Language::P::ParseTree::OP_FT_ISSOCKET,
+          Language::P::ParseTree::OP_FT_ISBLOCKSPECIAL,
+          Language::P::ParseTree::OP_FT_ISCHARSPECIAL,
+          Language::P::ParseTree::OP_FT_ISTTY,
+          Language::P::ParseTree::OP_FT_SETUID,
+          Language::P::ParseTree::OP_FT_SETGID,
+          Language::P::ParseTree::OP_FT_STICKY,
+          Language::P::ParseTree::OP_FT_ISASCII,
+          Language::P::ParseTree::OP_FT_ISBINARY,
+          Language::P::ParseTree::OP_FT_MTIME,
+          Language::P::ParseTree::OP_FT_ATIME,
+          Language::P::ParseTree::OP_FT_CTIME,
+          )
     );
 
 sub parsing_prototype { return $prototype_bi{$_[0]->function} }
