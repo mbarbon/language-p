@@ -91,7 +91,7 @@ arguments:
     left: !parsetree:Constant
       flags: CONST_STRING
       value: "ls\n"
-    op: backtick
+    op: OP_BACKTICK
 context: CXT_VOID
 function: print
 indirect: ~

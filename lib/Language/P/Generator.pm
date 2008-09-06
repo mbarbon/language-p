@@ -226,7 +226,7 @@ my %unary =
     OP_REFERENCE()       => 'reference',
     VALUE_SCALAR()       => 'dereference_scalar',
     VALUE_ARRAY_LENGTH() => 'array_size',
-    backtick             => 'backtick',
+    OP_BACKTICK()        => 'backtick',
     );
 
 my %builtins =

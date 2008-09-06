@@ -170,7 +170,7 @@ left: !parsetree:QuotedString
     - !parsetree:Constant
       flags: CONST_STRING
       value: cd
-op: backtick
+op: OP_BACKTICK
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

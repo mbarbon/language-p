@@ -87,7 +87,7 @@ left: !parsetree:QuotedString
       context: CXT_SCALAR
       name: e
       sigil: VALUE_SCALAR
-op: backtick
+op: OP_BACKTICK
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -99,7 +99,7 @@ context: CXT_VOID
 left: !parsetree:Constant
   flags: CONST_STRING
   value: $e
-op: backtick
+op: OP_BACKTICK
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -113,7 +113,7 @@ left: !parsetree:QuotedString
       context: CXT_SCALAR
       name: e
       sigil: VALUE_SCALAR
-op: backtick
+op: OP_BACKTICK
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

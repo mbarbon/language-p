@@ -853,7 +853,7 @@ sub _parse_string_rest {
     my $quote = $token->[1];
     if( $quote == OP_QL_QX ) {
         $string = Language::P::ParseTree::UnOp->new
-                      ( { op   => 'backtick',
+                      ( { op   => OP_BACKTICK,
                           left => $string,
                           } );
     } elsif( $quote == OP_QL_QW ) {
