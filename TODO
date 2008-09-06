@@ -14,21 +14,9 @@ Parsing:
 - labels
 - formats
 - add operator descriptor and do parse tree modifications
-  - pipe FOO, BAR -> pipe *FOO, *BAR
-  - defined/exists &foo
-  - other similar cases
+  - like: defined &foo; pipe X, Y; etc.
 - indirect method calls
-  - print boo foo == print( foo->boo )
-  - print boo $foo == print *boo $foo
-  - print map $foo, @foo == print( map( $foo, @foo ) )
-  - print foo + boo == print *foo ( +boo )
-  - print foo . boo == print( foo . boo )
-  - print foo && moo == print moo $_
-  - print moo() == print( moo() )
-  - print moo () == print *moo ()
-  - moo boo->foo == boo->moo->foo
-  - moo boo foo == boo->moo(foo)
-  - sub foo;print foo + boo == print( foo( +boo ) )
+  - find more corner cases
 - list slices ( ... )[ ... ]
 - test all unary/binary operator
 - anonymous sub
@@ -54,19 +42,12 @@ Parsing:
 - special treatment for glob()
 - simplify detection of <foo> vs. <foo >, avoid constructing a lexer
 - packages
-  - normalize package names:
-    - "::foo" == "main::foo" == "::main::foo" (foo is entered in main stash)
-    - "main::" == "::" == "::main::" (main:: is the real name in stash)
   - add subpackages to runtime
-  - subroutines
-    - declare/define subroutines in the correct package
-    - allow defining subroutines with fully-qualified name
   - when searching prototypes/definitions/variables at parse time,
     use the correct package name
   - package handling in our()
 - parsing of nullary/unary vs. list operators
 - => auto-quoting
-  - => must only quote barewords
   - => quoting of -foo => 1
 - quoted strings
   - \Q\L\U\E in quoted strings/patterns

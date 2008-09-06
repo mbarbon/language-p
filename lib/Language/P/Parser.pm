@@ -693,12 +693,16 @@ sub _parse_maybe_indirect_method_call {
 
         # foo pack:: -> method
 
-#         use Data::Dumper;
-#         Carp::confess Dumper( $indir ) . ' ';
+        # use Data::Dumper;
+        # print Dumper( $indir ) . ' ' . Dumper( $next );
 
         my $args = _parse_term( $self, PREC_COMMA );
-        if( $args->isa( 'Language::P::ParseTree::List' ) ) {
-            $args = @{$args->expressions} ? $args->expressions : undef;
+        if( $args ) {
+            if( $args->isa( 'Language::P::ParseTree::List' ) ) {
+	        $args = @{$args->expressions} ? $args->expressions : undef;
+            } else {
+                $args = [ $args ];
+            }
         }
         $indir = Language::P::ParseTree::Constant->new
                      ( { flags => CONST_STRING,
@@ -1510,19 +1514,28 @@ sub _parse_arglist {
         } elsif(    $proto_char & PROTO_FILEHANDLE
                  && $la->[0] == T_ID
                  && $la->[2] == T_ID ) {
+            # check if it is a declared id
+            my $declared = $self->runtime->symbol_table
+                ->get_symbol( _qualify( $self, $la->[1], $la->[2] ), '&' );
             # look ahead one more token
             _lex_token( $self );
             my $la2 = $self->lexer->peek( X_TERM );
 
             # approximate what would happen in Perl LALR parser
             my $tt = $la2->[0];
-            if(    $prec_assoc_bin{$tt}
-                && !$prec_assoc_un{$tt}
-                && $tt != T_STAR
-                && $tt != T_PERCENT
-                && $tt != T_DOLLAR
-                && $tt != T_AMPERSAND
-                ) {
+            if( $declared ) {
+                $self->lexer->unlex( $la );
+                $indirect_term = 0;
+            } elsif(    $prec_assoc_bin{$tt}
+                     && !$prec_assoc_un{$tt}
+                     && $tt != T_STAR
+                     && $tt != T_PERCENT
+                     && $tt != T_DOLLAR
+                     && $tt != T_AMPERSAND
+                     ) {
+                $self->lexer->unlex( $la );
+                $indirect_term = 0;
+            } elsif( $tt == T_ID && is_id( $la2->[2] ) ) {
                 $self->lexer->unlex( $la );
                 $indirect_term = 0;
             } else {
