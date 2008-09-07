@@ -1,4 +1,4 @@
-package Language::P::Opcodes::Regex;
+package Language::P::Toy::Opcodes::Regex;
 
 use strict;
 use warnings;
@@ -130,7 +130,7 @@ sub o_rx_match {
 
     my $match = $pattern->match( $runtime, $scalar->as_string );
 
-    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new
                                     ( { integer => $match->{matched} } );
 
     return $pc + 1;

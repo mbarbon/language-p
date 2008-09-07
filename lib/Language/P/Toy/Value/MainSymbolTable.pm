@@ -1,29 +1,29 @@
-package Language::P::Value::MainSymbolTable;
+package Language::P::Toy::Value::MainSymbolTable;
 
 use strict;
 use warnings;
-use base qw(Language::P::Value::SymbolTable);
+use base qw(Language::P::Toy::Value::SymbolTable);
 
-use Language::P::Value::ActiveScalar;
+use Language::P::Toy::Value::ActiveScalar;
 
 sub is_main { 1 }
 
 my %special_names =
   ( "\017"   => 1,
     );
-our %sigils; *sigils = \%Language::P::Value::SymbolTable::sigils;
+our %sigils; *sigils = \%Language::P::Toy::Value::SymbolTable::sigils;
 
 sub _tied_to_rt_variable {
     my( $name ) = @_;
 
     my $get = sub {
-        return Language::P::Value::StringNumber->new
-                   ( { string => $Language::P::Runtime::current
+        return Language::P::Toy::Value::StringNumber->new
+                   ( { string => $Language::P::Toy::Runtime::current
                                      ->{_variables}->{osname},
                        } );
     };
 
-    return Language::P::Value::ActiveScalarCallbacks->new
+    return Language::P::Toy::Value::ActiveScalarCallbacks->new
                ( { get_callback => $get,
                    } )
 }

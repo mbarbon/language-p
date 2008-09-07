@@ -4,12 +4,12 @@ use strict;
 use warnings;
 use Test::More tests => 2;
 
-use Language::P::Runtime;
-use Language::P::Opcodes qw(o);
-use Language::P::Value::Subroutine;
+use Language::P::Toy::Runtime;
+use Language::P::Toy::Opcodes qw(o);
+use Language::P::Toy::Value::Subroutine;
 use Language::P::ParseTree qw(:all);
 
-my $runtime = Language::P::Runtime->new;
+my $runtime = Language::P::Toy::Runtime->new;
 
 my @add_mul =
   ( o( 'start_list' ),
@@ -22,20 +22,20 @@ my @add_mul =
     o( 'return' ),
     );
 
-my $add_mul = Language::P::Value::Subroutine->new( { bytecode   => \@add_mul,
+my $add_mul = Language::P::Toy::Value::Subroutine->new( { bytecode   => \@add_mul,
                                                       stack_size => 1,
                                                       } );
 
 my @main =
   ( o( 'start_list' ),
     o( 'constant',
-       value => Language::P::Value::StringNumber->new( { integer => 1 } ),
+       value => Language::P::Toy::Value::StringNumber->new( { integer => 1 } ),
        ),
     o( 'constant',
-       value => Language::P::Value::StringNumber->new( { integer => 3 } ),
+       value => Language::P::Toy::Value::StringNumber->new( { integer => 3 } ),
        ),
     o( 'constant',
-       value => Language::P::Value::StringNumber->new( { integer => 7 } ),
+       value => Language::P::Toy::Value::StringNumber->new( { integer => 7 } ),
        ),
     o( 'end_list' ),
     o( 'constant', value => $add_mul ),

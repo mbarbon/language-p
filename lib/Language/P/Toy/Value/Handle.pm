@@ -1,8 +1,8 @@
-package Language::P::Value::Handle;
+package Language::P::Toy::Value::Handle;
 
 use strict;
 use warnings;
-use base qw(Language::P::Value::Any);
+use base qw(Language::P::Toy::Value::Any);
 
 __PACKAGE__->mk_ro_accessors( qw(handle) );
 

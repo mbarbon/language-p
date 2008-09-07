@@ -1,8 +1,8 @@
-package Language::P::Value::Array;
+package Language::P::Toy::Value::Array;
 
 use strict;
 use warnings;
-use base qw(Language::P::Value::Any);
+use base qw(Language::P::Toy::Value::Any);
 
 __PACKAGE__->mk_ro_accessors( qw(array) );
 
@@ -36,7 +36,7 @@ sub assign {
     my( $self, $other ) = @_;
 
     # FIXME multiple dispatch
-    if( $other->isa( 'Language::P::Value::Scalar' ) ) {
+    if( $other->isa( 'Language::P::Toy::Value::Scalar' ) ) {
         $self->{array} = [ $other->clone( 1 ) ];
     } else {
         # FIXME optimize: don't do it unless necessary
@@ -65,13 +65,13 @@ sub push {
 sub iterator {
     my( $self ) = @_;
 
-    return Language::P::Value::Array::Iterator->new( $self );
+    return Language::P::Toy::Value::Array::Iterator->new( $self );
 }
 
 sub iterator_from {
     my( $self, $index ) = @_;
 
-    return Language::P::Value::Array::Iterator->new( $self, $index );
+    return Language::P::Toy::Value::Array::Iterator->new( $self, $index );
 }
 
 sub get_item {
@@ -92,7 +92,7 @@ sub get_count {
 sub as_scalar {
     my( $self ) = @_;
 
-    return Language::P::Value::StringNumber->new( { integer => $self->get_count } );
+    return Language::P::Toy::Value::StringNumber->new( { integer => $self->get_count } );
 }
 
 sub as_boolean_int {
@@ -101,11 +101,11 @@ sub as_boolean_int {
     return $self->get_count ? 1 : 0;
 }
 
-package Language::P::Value::Array::Iterator;
+package Language::P::Toy::Value::Array::Iterator;
 
 use strict;
 use warnings;
-use base qw(Language::P::Value::Any);
+use base qw(Language::P::Toy::Value::Any);
 
 __PACKAGE__->mk_ro_accessors( qw(array index) );
 

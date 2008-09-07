@@ -1,10 +1,10 @@
-package Language::P::Value::ScratchPad;
+package Language::P::Toy::Value::ScratchPad;
 
 use strict;
 use warnings;
-use base qw(Language::P::Value::Any);
+use base qw(Language::P::Toy::Value::Any);
 
-use Language::P::Value::StringNumber;
+use Language::P::Toy::Value::StringNumber;
 
 __PACKAGE__->mk_ro_accessors( qw(outer names values is_subroutine
                                  all_in_pad) );
@@ -23,7 +23,7 @@ sub new_scope {
     my( $self, $outer_scope ) = @_;
 
     # FIXME lexical initialization
-    my @values = map { Language::P::Value::StringNumber->new }
+    my @values = map { Language::P::Toy::Value::StringNumber->new }
                      0 .. $#{$self->values};
     return ref( $self )->new( { outer  => $outer_scope,
                                 values => \@values,
@@ -90,7 +90,7 @@ sub add_value {
     my( $self, $sigil ) = @_;
 
     # FIXME lexical initialization
-    push @{$self->values}, Language::P::Value::StringNumber->new;
+    push @{$self->values}, Language::P::Toy::Value::StringNumber->new;
 
     return $#{$self->values};
 }

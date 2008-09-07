@@ -8,7 +8,7 @@ use Exporter 'import';
 use Language::P::Parser;
 use Language::P::Keywords;
 use Language::P::ParseTree qw(:all);
-use Language::P::Value::MainSymbolTable;
+use Language::P::Toy::Value::MainSymbolTable;
 
 our @EXPORT_OK = qw(fresh_parser parsed_program parse_and_diff
                     parse_and_diff_yaml);
@@ -39,7 +39,7 @@ my @lines;
     sub add_declaration {
         my( $self, $name ) = @_;
 
-        my $sub = Language::P::Value::Subroutine::Stub->new
+        my $sub = Language::P::Toy::Value::Subroutine::Stub->new
                       ( { name     => $name,
                           } );
         $self->runtime->symbol_table->set_symbol( $name, '&', $sub );
@@ -48,7 +48,7 @@ my @lines;
     package TestParserRuntime;
 
     sub new {
-        my $st = Language::P::Value::MainSymbolTable->new;
+        my $st = Language::P::Toy::Value::MainSymbolTable->new;
 
         return bless { symbol_table => $st }, __PACKAGE__;
     }

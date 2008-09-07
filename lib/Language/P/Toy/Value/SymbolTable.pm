@@ -1,12 +1,12 @@
-package Language::P::Value::SymbolTable;
+package Language::P::Toy::Value::SymbolTable;
 
 use strict;
 use warnings;
-use base qw(Language::P::Value::Any);
+use base qw(Language::P::Toy::Value::Any);
 
 __PACKAGE__->mk_ro_accessors( qw(symbols) );
 
-use Language::P::Value::Typeglob;
+use Language::P::Toy::Value::Typeglob;
 
 sub type { 7 }
 sub is_main { 0 }
@@ -29,13 +29,13 @@ sub get_package {
 }
 
 our %sigils =
-  ( '$'  => [ 'scalar',     'Language::P::Value::Scalar' ],
-    '@'  => [ 'array',      'Language::P::Value::Array' ],
-    '%'  => [ 'hash',       'Language::P::Value::Hash' ],
-    '&'  => [ 'subroutine', 'Language::P::Value::Subroutine' ],
-    '*'  => [ undef,        'Language::P::Value::Typeglob' ],
-    'I'  => [ 'io',         'Language::P::Value::Handle' ],
-    'F'  => [ 'format',     'Language::P::Value::Format' ],
+  ( '$'  => [ 'scalar',     'Language::P::Toy::Value::Scalar' ],
+    '@'  => [ 'array',      'Language::P::Toy::Value::Array' ],
+    '%'  => [ 'hash',       'Language::P::Toy::Value::Hash' ],
+    '&'  => [ 'subroutine', 'Language::P::Toy::Value::Subroutine' ],
+    '*'  => [ undef,        'Language::P::Toy::Value::Typeglob' ],
+    'I'  => [ 'io',         'Language::P::Toy::Value::Handle' ],
+    'F'  => [ 'format',     'Language::P::Toy::Value::Format' ],
     '::' => [ undef,        'language::P::Value::SymbolTable' ],
     );
 
@@ -64,7 +64,7 @@ sub _get_symbol {
             if( !$glob ) {
                 $created = 1;
                 $glob = $current->{symbols}{$package} =
-                    Language::P::Value::Typeglob->new;
+                    Language::P::Toy::Value::Typeglob->new;
             }
             return ( $glob, $created ) if $sigil eq '*';
             return ( $glob->get_slot( $sigils{$sigil}[0] ), $created );
@@ -74,7 +74,7 @@ sub _get_symbol {
                 return ( undef, 0 ) unless $create;
 
                 $current = $current->{symbols}{$subpackage} =
-                  Language::P::Value::SymbolTable->new;
+                  Language::P::Toy::Value::SymbolTable->new;
             } else {
                 $current = $current->{symbols}{$subpackage};
             }

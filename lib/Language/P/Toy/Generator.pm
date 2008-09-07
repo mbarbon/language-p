@@ -1,4 +1,4 @@
-package Language::P::Generator;
+package Language::P::Toy::Generator;
 
 use strict;
 use warnings;
@@ -6,11 +6,11 @@ use base qw(Language::P::ParseTree::Visitor);
 
 __PACKAGE__->mk_ro_accessors( qw(runtime) );
 
-use Language::P::Opcodes qw(o);
-use Language::P::Value::StringNumber;
-use Language::P::Value::Handle;
-use Language::P::Value::ScratchPad;
-use Language::P::Value::Regex;
+use Language::P::Toy::Opcodes qw(o);
+use Language::P::Toy::Value::StringNumber;
+use Language::P::Toy::Value::Handle;
+use Language::P::Toy::Value::ScratchPad;
+use Language::P::Toy::Value::Regex;
 use Language::P::ParseTree qw(:all);
 
 # global on purpose
@@ -96,7 +96,7 @@ sub process_pending {
 
 sub process_regex {
     my( $self, $regex ) = @_;
-    my $rx = Language::P::Value::Regex->new
+    my $rx = Language::P::Toy::Value::Regex->new
                  ( { bytecode   => [],
                      stack_size => 0,
                      } );
@@ -122,7 +122,7 @@ sub process_regex {
 sub add_declaration {
     my( $self, $name ) = @_;
 
-    my $sub = Language::P::Value::Subroutine::Stub->new
+    my $sub = Language::P::Toy::Value::Subroutine::Stub->new
                   ( { name     => $name,
                       } );
     $self->runtime->symbol_table->set_symbol( $name, '&', $sub );
@@ -134,7 +134,7 @@ sub finished {
     $self->process_pending;
     $self->_allocate_lexicals;
 
-    if( $code_stack[-1][0]->isa( 'Language::P::Value::Subroutine' ) ) {
+    if( $code_stack[-1][0]->isa( 'Language::P::Toy::Value::Subroutine' ) ) {
         # could be avoided in most cases, but simplifies code generation
         push @bytecode,
             o( 'start_list' ),
@@ -263,7 +263,7 @@ sub _indirect {
     if( $tree->indirect ) {
         $self->dispatch( $tree->indirect );
     } else {
-        my $out = Language::P::Value::Handle->new( { handle => \*STDOUT } );
+        my $out = Language::P::Toy::Value::Handle->new( { handle => \*STDOUT } );
         push @bytecode, o( 'constant', value => $out );
     }
 
@@ -279,7 +279,7 @@ sub _builtin {
 
     if( $tree->function eq 'undef' && !$tree->arguments ) {
         push @bytecode, o( 'constant',
-                           value => Language::P::Value::StringNumber->new );
+                           value => Language::P::Toy::Value::StringNumber->new );
     } elsif( $builtins_no_list{$tree->function} ) {
         foreach my $arg ( @{$tree->arguments || []} ) {
             $self->dispatch( $arg );
@@ -404,25 +404,25 @@ sub _constant {
 
     if( $tree->is_number ) {
         if( $tree->flags & NUM_INTEGER ) {
-            $v = Language::P::Value::StringNumber
+            $v = Language::P::Toy::Value::StringNumber
                      ->new( { integer => $tree->value } );
         } elsif( $tree->flags & NUM_FLOAT ) {
-            $v = Language::P::Value::StringNumber
+            $v = Language::P::Toy::Value::StringNumber
                      ->new( { float => $tree->value } );
         } elsif( $tree->flags & NUM_OCTAL ) {
-            $v = Language::P::Value::StringNumber
+            $v = Language::P::Toy::Value::StringNumber
                      ->new( { integer => oct '0' . $tree->value } );
         } elsif( $tree->flags & NUM_HEXADECIMAL ) {
-            $v = Language::P::Value::StringNumber
+            $v = Language::P::Toy::Value::StringNumber
                      ->new( { integer => oct '0x' . $tree->value } );
         } elsif( $tree->flags & NUM_BINARY ) {
-            $v = Language::P::Value::StringNumber
+            $v = Language::P::Toy::Value::StringNumber
                      ->new( { integer => oct '0b' . $tree->value } );
         } else {
             die "Unhandled flags value";
         }
     } elsif( $tree->is_string ) {
-        $v = Language::P::Value::StringNumber->new( { string => $tree->value } );
+        $v = Language::P::Toy::Value::StringNumber->new( { string => $tree->value } );
     } else {
         die "Neither number nor string";
     }
@@ -537,7 +537,7 @@ sub _subroutine_decl {
 sub _subroutine {
     my( $self, $tree ) = @_;
 
-    my $sub = Language::P::Value::Subroutine->new
+    my $sub = Language::P::Toy::Value::Subroutine->new
                   ( { bytecode => [],
                       name     => $tree->name,
                       } );
@@ -599,7 +599,7 @@ sub _pattern {
 sub _allocate_lexicals {
     my( $self ) = @_;
 
-    my $pad = Language::P::Value::ScratchPad->new;
+    my $pad = Language::P::Toy::Value::ScratchPad->new;
     my $has_pad;
     foreach my $op ( @bytecode ) {
         next if !$op->{lexical};

@@ -1,8 +1,8 @@
-package Language::P::Value::Subroutine;
+package Language::P::Toy::Value::Subroutine;
 
 use strict;
 use warnings;
-use base qw(Language::P::Value::Code);
+use base qw(Language::P::Toy::Value::Code);
 
 __PACKAGE__->mk_ro_accessors( qw(name) );
 
@@ -29,11 +29,11 @@ sub call {
     $stack->[$frame - 3] = $args;
 }
 
-package Language::P::Value::Subroutine::Stub;
+package Language::P::Toy::Value::Subroutine::Stub;
 
 use strict;
 use warnings;
-use base qw(Language::P::Value::Subroutine);
+use base qw(Language::P::Toy::Value::Subroutine);
 
 sub call { Carp::confess( "Called subroutine stub" ) }
 sub is_defined { 0 }

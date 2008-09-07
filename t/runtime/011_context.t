@@ -4,12 +4,12 @@ use strict;
 use warnings;
 use Test::More tests => 3;
 
-use Language::P::Runtime;
-use Language::P::Opcodes qw(o);
-use Language::P::Value::Subroutine;
+use Language::P::Toy::Runtime;
+use Language::P::Toy::Opcodes qw(o);
+use Language::P::Toy::Value::Subroutine;
 use Language::P::ParseTree qw(:all);
 
-my $runtime = Language::P::Runtime->new;
+my $runtime = Language::P::Toy::Runtime->new;
 
 my @wantarray =
   ( o( 'start_list' ),
@@ -18,7 +18,7 @@ my @wantarray =
     o( 'return' ),
     );
 
-my $want = Language::P::Value::Subroutine->new
+my $want = Language::P::Toy::Value::Subroutine->new
                ( { bytecode   => \@wantarray,
                    stack_size => 1,
                    } );

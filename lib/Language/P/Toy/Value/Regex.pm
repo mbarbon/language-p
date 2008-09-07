@@ -1,8 +1,8 @@
-package Language::P::Value::Regex;
+package Language::P::Toy::Value::Regex;
 
 use strict;
 use warnings;
-use base qw(Language::P::Value::Code);
+use base qw(Language::P::Toy::Value::Code);
 
 use Language::P::ParseTree qw(:all);
 

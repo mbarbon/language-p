@@ -1,8 +1,8 @@
-package Language::P::Value::Reference;
+package Language::P::Toy::Value::Reference;
 
 use strict;
 use warnings;
-use base qw(Language::P::Value::Scalar);
+use base qw(Language::P::Toy::Value::Scalar);
 
 __PACKAGE__->mk_ro_accessors( qw(reference) );
 
@@ -10,7 +10,7 @@ sub type { 10 }
 
 sub clone {
     my( $self, $level ) = @_;
-    my $clone = Language::P::Value::Reference->new( { reference => $self->{reference} } );
+    my $clone = Language::P::Toy::Value::Reference->new( { reference => $self->{reference} } );
 
     $clone->{reference} = $clone->{reference}->clone( $level -1 )
       if $level > 0;
@@ -29,35 +29,35 @@ sub assign {
 sub dereference_scalar {
     my( $self ) = @_;
 
-    die unless $self->{reference}->isa( 'Language::P::Value::Scalar' );
+    die unless $self->{reference}->isa( 'Language::P::Toy::Value::Scalar' );
     return $self->{reference};
 }
 
 sub dereference_hash {
     my( $self ) = @_;
 
-    die unless $self->{reference}->isa( 'Language::P::Value::Hash' );
+    die unless $self->{reference}->isa( 'Language::P::Toy::Value::Hash' );
     return $self->{reference};
 }
 
 sub dereference_array {
     my( $self ) = @_;
 
-    die unless $self->{reference}->isa( 'Language::P::Value::Array' );
+    die unless $self->{reference}->isa( 'Language::P::Toy::Value::Array' );
     return $self->{reference};
 }
 
 sub dereference_subroutine {
     my( $self ) = @_;
 
-    die unless $self->{reference}->isa( 'Language::P::Value::Subroutine' );
+    die unless $self->{reference}->isa( 'Language::P::Toy::Value::Subroutine' );
     return $self->{reference};
 }
 
 sub dereference_typeglob {
     my( $self ) = @_;
 
-    die unless $self->{reference}->isa( 'Language::P::Value::Typeglob' );
+    die unless $self->{reference}->isa( 'Language::P::Toy::Value::Typeglob' );
     return $self->{reference};
 }
 
@@ -65,11 +65,11 @@ sub as_string {
     my( $self ) = @_;
     my $ref = $self->{reference};
 
-    my $prefix = $ref->isa( 'Language::P::Value::Reference' ) ? 'REF' :
-                 $ref->isa( 'Language::P::Value::Scalar' ) ? 'SCALAR' :
-                 $ref->isa( 'Language::P::Value::Hash' ) ? 'HASH' :
-                 $ref->isa( 'Language::P::Value::Array' ) ? 'ARRAY' :
-                 $ref->isa( 'Language::P::Value::Typeglob' ) ? 'GLOB' :
+    my $prefix = $ref->isa( 'Language::P::Toy::Value::Reference' ) ? 'REF' :
+                 $ref->isa( 'Language::P::Toy::Value::Scalar' ) ? 'SCALAR' :
+                 $ref->isa( 'Language::P::Toy::Value::Hash' ) ? 'HASH' :
+                 $ref->isa( 'Language::P::Toy::Value::Array' ) ? 'ARRAY' :
+                 $ref->isa( 'Language::P::Toy::Value::Typeglob' ) ? 'GLOB' :
                                                             die "$ref";
 
     return sprintf '%s(0x%p)', $prefix, $ref;

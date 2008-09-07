@@ -1,8 +1,8 @@
-package Language::P::Value::Code;
+package Language::P::Toy::Value::Code;
 
 use strict;
 use warnings;
-use base qw(Language::P::Value::Any);
+use base qw(Language::P::Toy::Value::Any);
 
 __PACKAGE__->mk_ro_accessors( qw(bytecode stack_size lexicals outer) );
 
@@ -32,7 +32,7 @@ sub call {
     if( $self->stack_size ) {
         # FIXME lexical values initialization
         foreach my $slot ( 0 .. $self->stack_size ) {
-            $stack->[$frame - 2 - $slot] = Language::P::Value::StringNumber->new;
+            $stack->[$frame - 2 - $slot] = Language::P::Toy::Value::StringNumber->new;
         }
     }
     $stack->[$frame - 2] = [ $pc, $runtime->{_bytecode}, $context ];

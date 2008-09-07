@@ -4,20 +4,20 @@ use strict;
 use warnings;
 use Test::More tests => 2;
 
-use Language::P::Runtime;
-use Language::P::Opcodes qw(o);
-use Language::P::Value::Subroutine;
+use Language::P::Toy::Runtime;
+use Language::P::Toy::Opcodes qw(o);
+use Language::P::Toy::Value::Subroutine;
 use Language::P::ParseTree qw(:all);
 
-my $runtime = Language::P::Runtime->new;
+my $runtime = Language::P::Toy::Runtime->new;
 
-my $fib = Language::P::Value::Subroutine->new( { bytecode   => [],
+my $fib = Language::P::Toy::Value::Subroutine->new( { bytecode   => [],
                                                   stack_size => 1,
                                                   } );
 
 my @fib =
   ( o( 'constant',
-       value => Language::P::Value::StringNumber->new( { integer => 2 } ),
+       value => Language::P::Toy::Value::StringNumber->new( { integer => 2 } ),
        ),
     o( 'parameter_index', index => 0 ),
     o( 'compare_i_lt_int' ),
@@ -28,7 +28,7 @@ my @fib =
     # if n < 2
     o( 'start_list' ),
     o( 'constant',
-       value => Language::P::Value::StringNumber->new( { integer => 1 } ),
+       value => Language::P::Toy::Value::StringNumber->new( { integer => 1 } ),
        ),
     o( 'end_list' ),
     o( 'return' ),
@@ -37,7 +37,7 @@ my @fib =
     # fib( n - 1 )
     o( 'start_list' ),
     o( 'constant',
-       value => Language::P::Value::StringNumber->new( { integer => 1 } ),
+       value => Language::P::Toy::Value::StringNumber->new( { integer => 1 } ),
        ),
     o( 'parameter_index', index => 0 ),
     o( 'subtract' ),
@@ -47,7 +47,7 @@ my @fib =
     # fib( n - 2 )
     o( 'start_list' ),
     o( 'constant',
-       value => Language::P::Value::StringNumber->new( { integer => 2 } ),
+       value => Language::P::Toy::Value::StringNumber->new( { integer => 2 } ),
        ),
     o( 'parameter_index', index => 0 ),
     o( 'subtract' ),
@@ -65,7 +65,7 @@ $fib->{bytecode} = \@fib;
 my @main =
   ( o( 'start_list' ),
     o( 'constant',
-       value => Language::P::Value::StringNumber->new( { integer => 10 } ),
+       value => Language::P::Toy::Value::StringNumber->new( { integer => 10 } ),
        ),
     o( 'end_list' ),
     o( 'constant', value => $fib ),

@@ -1,16 +1,16 @@
-package Language::P::Opcodes;
+package Language::P::Toy::Opcodes;
 
 use strict;
 use warnings;
 use Exporter 'import';
 
-use Language::P::Value::StringNumber;
-use Language::P::Value::Reference;
-use Language::P::Value::Array;
-use Language::P::Value::List;
+use Language::P::Toy::Value::StringNumber;
+use Language::P::Toy::Value::Reference;
+use Language::P::Toy::Value::Array;
+use Language::P::Toy::Value::List;
 use Language::P::ParseTree qw(:all);
 
-use Language::P::Opcodes::Regex qw(:opcodes);
+use Language::P::Toy::Opcodes::Regex qw(:opcodes);
 
 our @EXPORT_OK = qw(o);
 
@@ -18,8 +18,8 @@ sub o {
     my( $name, %args ) = @_;
 
     Carp::confess "Invalid opcode '$name'"
-        unless defined $Language::P::Opcodes::{"o_$name"};
-    my $fun = *{$Language::P::Opcodes::{"o_$name"}}{CODE};
+        unless defined $Language::P::Toy::Opcodes::{"o_$name"};
+    my $fun = *{$Language::P::Toy::Opcodes::{"o_$name"}}{CODE};
     Carp::confess "Invalid opcode '$name'"
         unless defined $fun;
 
@@ -70,7 +70,7 @@ sub o_print {
     }
 
     # HACK
-    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new( { integer => 1 } );
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( { integer => 1 } );
 
     return $pc + 1;
 }
@@ -86,7 +86,7 @@ sub o_stringify {
     my( $op, $runtime, $pc ) = @_;
     my $v = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new( { string => $v->as_string } );
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( { string => $v->as_string } );
 
     return $pc + 1;
 }
@@ -102,7 +102,7 @@ sub %s {
     my $r = $v1->%s %s $v2->%s;
 
     push @{$runtime->{_stack}},
-         Language::P::Value::StringNumber->new( { %s => $r } );
+         Language::P::Toy::Value::StringNumber->new( { %s => $r } );
 
     return $pc + 1;
 }
@@ -161,7 +161,7 @@ sub o_end_list {
         last if $st->[$i] eq 'list_mark';
     }
     # create the list
-    my $list = $st->[$i] = Language::P::Value::List->new;
+    my $list = $st->[$i] = Language::P::Toy::Value::List->new;
     for( my $j = $i + 1; $j <= $#$st; ++$j ) {
         $list->push( $st->[$j] );
     }
@@ -183,11 +183,11 @@ sub o_want {
     my $v;
 
     if( $cxt == CXT_VOID ) {
-        $v = Language::P::Value::StringNumber->new;
+        $v = Language::P::Toy::Value::StringNumber->new;
     } elsif( $cxt == CXT_SCALAR ) {
-        $v = Language::P::Value::StringNumber->new( { string => '' } );
+        $v = Language::P::Toy::Value::StringNumber->new( { string => '' } );
     } elsif( $cxt == CXT_LIST ) {
-        $v = Language::P::Value::StringNumber->new( { integer => 1 } );
+        $v = Language::P::Toy::Value::StringNumber->new( { integer => 1 } );
     } else {
         die "Unknow context $cxt";
     }
@@ -216,7 +216,7 @@ sub o_return {
             push @{$runtime->{_stack}}, $rv->get_item( $rv->get_count - 1 )
                                            ->as_scalar;
         } else {
-            push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new;
+            push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new;
         }
     } elsif( $cxt == CXT_LIST ) {
         push @{$runtime->{_stack}}, $rv;
@@ -294,7 +294,7 @@ sub _make_compare {
 
     my $ret = $op->{new_type} eq 'int' ?
                   '$r' :
-                  'Language::P::Value::StringNumber->new( { integer => $r } )';
+                  'Language::P::Toy::Value::StringNumber->new( { integer => $r } )';
 
     eval sprintf <<'EOT',
 sub %s {
@@ -424,7 +424,7 @@ sub o_negate {
     my( $op, $runtime, $pc ) = @_;
     my $v = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new( { float => -$v->as_float } );
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( { float => -$v->as_float } );
 
     return $pc + 1;
 }
@@ -433,7 +433,7 @@ sub o_abs {
     my( $op, $runtime, $pc ) = @_;
     my $v = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new( { float => abs $v->as_float } );
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( { float => abs $v->as_float } );
 
     return $pc + 1;
 }
@@ -442,7 +442,7 @@ sub o_not {
     my( $op, $runtime, $pc ) = @_;
     my $v = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new( { integer => !$v->as_boolean_int } );
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( { integer => !$v->as_boolean_int } );
 
     return $pc + 1;
 }
@@ -490,7 +490,7 @@ sub o_unlink {
 
     my $ret = unlink @args;
 
-    push @{$runtime->{_stack}}, Language::P::Value::StringNumber( { integer => $ret } );
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber( { integer => $ret } );
     return $pc + 1;
 }
 
@@ -502,7 +502,7 @@ sub o_backtick {
     # context
     my $ret = `$command`;
 
-    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new( { string => $ret } );
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( { string => $ret } );
 
     return $pc + 1;
 }
@@ -531,7 +531,7 @@ sub o_array_size {
     my( $op, $runtime, $pc ) = @_;
     my $array = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, Language::P::Value::StringNumber->new( { integer => $array->get_count - 1 } );
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( { integer => $array->get_count - 1 } );
 
     return $pc + 1;
 }
@@ -540,7 +540,7 @@ sub o_reference {
     my( $op, $runtime, $pc ) = @_;
     my $value = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, Language::P::Value::Reference->new( { reference => $value } );
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::Reference->new( { reference => $value } );
 
     return $pc + 1;
 }
@@ -560,8 +560,8 @@ sub o_defined {
     my $defined = $value->is_defined;
 
     push @{$runtime->{_stack}}, $defined ?
-             Language::P::Value::StringNumber->new( { integer => 1 } ) :
-             Language::P::Value::StringNumber->new( { string => '' } );
+             Language::P::Toy::Value::StringNumber->new( { integer => 1 } ) :
+             Language::P::Toy::Value::StringNumber->new( { string => '' } );
 
     return $pc + 1;
 }

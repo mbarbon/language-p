@@ -1,5 +1,11 @@
 package Language::P;
 
+=head1 NAME
+
+Language::P - parsing/compiling Perl5 code using Perl5
+
+=cut
+
 use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
@@ -10,8 +16,8 @@ __PACKAGE__->mk_accessors( qw(program program_arguments) );
 our $VERSION = '0.01';
 
 use Language::P::Parser;
-use Language::P::Generator;
-use Language::P::Runtime;
+use Language::P::Toy::Generator;
+use Language::P::Toy::Runtime;
 
 sub new_from_argv {
     my( $class, $argv ) = @_;
@@ -34,8 +40,8 @@ sub new_from_argv {
 sub initialize {
     my( $self ) = @_;
 
-    my $runtime = Language::P::Runtime->new;
-    my $generator = Language::P::Generator->new( { runtime => $runtime } );
+    my $runtime = Language::P::Toy::Runtime->new;
+    my $generator = Language::P::Toy::Generator->new( { runtime => $runtime } );
     my $parser = Language::P::Parser->new( { generator => $generator,
                                              runtime   => $runtime,
                                              } );

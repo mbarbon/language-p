@@ -1,8 +1,8 @@
-package Language::P::Value::List;
+package Language::P::Toy::Value::List;
 
 use strict;
 use warnings;
-use base qw(Language::P::Value::Array);
+use base qw(Language::P::Toy::Value::Array);
 
 __PACKAGE__->mk_ro_accessors( qw() );
 
@@ -22,7 +22,7 @@ sub push {
     my( $self, @values ) = @_;
 
     foreach my $value ( @values ) {
-        if( $value->isa( 'Language::P::Value::Array' ) ) {
+        if( $value->isa( 'Language::P::Toy::Value::Array' ) ) {
             for( my $it = $value->iterator; $it->next; ) {
                 push @{$self->{array}}, $it->item;
             }
@@ -39,7 +39,7 @@ sub as_scalar {
 
     return @{$self->{array}} ? $self->{array}[-1]->as_scalar :
                                # FIXME real undef
-                               Language::P::Value::StringNumber->new;
+                               Language::P::Toy::Value::StringNumber->new;
 }
 
 1;

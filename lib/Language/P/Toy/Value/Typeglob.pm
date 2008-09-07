@@ -1,8 +1,8 @@
-package Language::P::Value::Typeglob;
+package Language::P::Toy::Value::Typeglob;
 
 use strict;
 use warnings;
-use base qw(Language::P::Value::Any);
+use base qw(Language::P::Toy::Value::Any);
 
 __PACKAGE__->mk_ro_accessors( qw(body) );
 
@@ -10,7 +10,7 @@ sub new {
     my( $class, $args ) = @_;
     my $self = $class->SUPER::new( $args );
 
-    $self->{body} ||= Language::P::Value::Typeglob::Body->new;
+    $self->{body} ||= Language::P::Toy::Value::Typeglob::Body->new;
 
     return $self;
 }
@@ -41,7 +41,7 @@ sub as_boolean_int {
     return 1;
 }
 
-package Language::P::Value::Typeglob::Body;
+package Language::P::Toy::Value::Typeglob::Body;
 
 use strict;
 use warnings;
@@ -49,20 +49,20 @@ use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_ro_accessors( qw(scalar array hash io format subroutine) );
 
-use Language::P::Value::Scalar;
-use Language::P::Value::Array;
-# use Language::P::Value::Hash;
-use Language::P::Value::Subroutine;
-use Language::P::Value::Handle;
-# use Language::P::Value::Format;
+use Language::P::Toy::Value::Scalar;
+use Language::P::Toy::Value::Array;
+# use Language::P::Toy::Value::Hash;
+use Language::P::Toy::Value::Subroutine;
+use Language::P::Toy::Value::Handle;
+# use Language::P::Toy::Value::Format;
 
 my %types =
-  ( scalar     => 'Language::P::Value::Scalar',
-    array      => 'Language::P::Value::Array',
-    hash       => 'Language::P::Value::Hash',
-    subroutine => 'Language::P::Value::Subroutine',
-    io         => 'Language::P::Value::Handle',
-    format     => 'Language::P::Value::Format',
+  ( scalar     => 'Language::P::Toy::Value::Scalar',
+    array      => 'Language::P::Toy::Value::Array',
+    hash       => 'Language::P::Toy::Value::Hash',
+    subroutine => 'Language::P::Toy::Value::Subroutine',
+    io         => 'Language::P::Toy::Value::Handle',
+    format     => 'Language::P::Toy::Value::Format',
     );
 
 sub set_slot {

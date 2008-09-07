@@ -1,8 +1,8 @@
-package Language::P::Value::StringNumber;
+package Language::P::Toy::Value::StringNumber;
 
 use strict;
 use warnings;
-use base qw(Language::P::Value::Scalar);
+use base qw(Language::P::Toy::Value::Scalar);
 
 __PACKAGE__->mk_ro_accessors( qw(string integer float) );
 
@@ -11,7 +11,7 @@ sub type { 11 }
 sub clone {
     my( $self, $level ) = @_;
 
-    return Language::P::Value::StringNumber->new( { string  => $self->{string},
+    return Language::P::Toy::Value::StringNumber->new( { string  => $self->{string},
                                                     integer => $self->{integer},
                                                     float   => $self->{float},
                                                     } );

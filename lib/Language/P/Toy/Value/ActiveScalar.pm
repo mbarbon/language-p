@@ -1,8 +1,8 @@
-package Language::P::Value::ActiveScalar;
+package Language::P::Toy::Value::ActiveScalar;
 
 use strict;
 use warnings;
-use base qw(Language::P::Value::Scalar);
+use base qw(Language::P::Toy::Value::Scalar);
 
 sub _get {
     my( $self ) = @_;
@@ -46,11 +46,11 @@ sub as_float {
     return $self->_get->as_float;
 }
 
-package Language::P::Value::ActiveScalarCallbacks;
+package Language::P::Toy::Value::ActiveScalarCallbacks;
 
 use strict;
 use warnings;
-use base qw(Language::P::Value::ActiveScalar);
+use base qw(Language::P::Toy::Value::ActiveScalar);
 
 __PACKAGE__->mk_ro_accessors( qw(get_callback set_callback) );
 

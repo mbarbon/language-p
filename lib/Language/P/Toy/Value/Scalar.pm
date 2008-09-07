@@ -1,8 +1,8 @@
-package Language::P::Value::Scalar;
+package Language::P::Toy::Value::Scalar;
 
 use strict;
 use warnings;
-use base qw(Language::P::Value::Any);
+use base qw(Language::P::Toy::Value::Any);
 
 sub type { 5 }
 

@@ -7,8 +7,8 @@ use base qw(Class::Accessor::Fast);
 use Language::P::Lexer qw(:all);
 use Language::P::ParseTree qw(:all);
 use Language::P::Parser::Regex;
-use Language::P::Value::ScratchPad;
-use Language::P::Value::Code;
+use Language::P::Toy::Value::ScratchPad;
+use Language::P::Toy::Value::Code;
 use Language::P::ParseTree::PropagateContext;
 use Language::P::Keywords;
 
@@ -146,7 +146,7 @@ sub _parse {
     $self->_lexicals( undef );
     $self->_enter_scope( 0 , 1 ); # FIXME eval
 
-    my $code = Language::P::Value::Code->new( { bytecode => [],
+    my $code = Language::P::Toy::Value::Code->new( { bytecode => [],
                                                  lexicals => $self->_lexicals } );
     $self->generator->push_code( $code );
     $self->_current_sub( $code );
@@ -169,7 +169,7 @@ sub _enter_scope {
     push @{$self->{_lexical_state}}, { package  => $self->_package,
                                        lexicals => $self->_lexicals,
                                        };
-    $self->_lexicals( Language::P::Value::ScratchPad->new
+    $self->_lexicals( Language::P::Toy::Value::ScratchPad->new
                           ( { outer         => $self->_lexicals,
                               is_subroutine => $is_sub || 0,
                               all_in_pad    => $all_in_pad || 0,

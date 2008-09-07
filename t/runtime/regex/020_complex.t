@@ -5,11 +5,11 @@ use warnings;
 use Test::More tests => 7;
 use Test::Differences;
 
-use Language::P::Runtime;
-use Language::P::Opcodes qw(o);
-use Language::P::Value::Regex;
+use Language::P::Toy::Runtime;
+use Language::P::Toy::Opcodes qw(o);
+use Language::P::Toy::Value::Regex;
 
-my $runtime = Language::P::Runtime->new;
+my $runtime = Language::P::Toy::Runtime->new;
 
 # a*(?:a|b|c)
 my @re4 =
@@ -30,7 +30,7 @@ my @re4 =
     # end alternation
     o( 'rx_accept',      groups   => 0 ), # 11
     );
-my $re4 = Language::P::Value::Regex->new
+my $re4 = Language::P::Toy::Value::Regex->new
               ( { bytecode   => \@re4,
                   stack_size => 0,
                   } );
@@ -58,7 +58,7 @@ my @re6 =
     # end capture
     o( 'rx_accept',      groups   => 1 ),
     );
-my $re6 = Language::P::Value::Regex->new
+my $re6 = Language::P::Toy::Value::Regex->new
               ( { bytecode   => \@re6,
                   stack_size => 0,
                   } );
@@ -94,7 +94,7 @@ my @re8 =
     o( 'rx_exact',       string   => 'w', length => 1 ), # 11
     o( 'rx_accept',      groups   => 3 ),
     );
-my $re8 = Language::P::Value::Regex->new
+my $re8 = Language::P::Toy::Value::Regex->new
               ( { bytecode   => \@re8,
                   stack_size => 0,
                   } );

@@ -5,8 +5,8 @@ use warnings;
 
 use Exporter 'import';
 
-use Language::P::Runtime;
-use Language::P::Generator;
+use Language::P::Toy::Runtime;
+use Language::P::Toy::Generator;
 use Language::P::Parser::Regex;
 
 our @EXPORT_OK = qw(match);
@@ -14,8 +14,8 @@ our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,
     );
 
-my $runtime = Language::P::Runtime->new;
-my $generator = Language::P::Generator->new( { runtime => $runtime } );
+my $runtime = Language::P::Toy::Runtime->new;
+my $generator = Language::P::Toy::Generator->new( { runtime => $runtime } );
 my $parser = Language::P::Parser::Regex->new( { runtime     => $runtime,
                                                 generator   => $generator,
                                                 interpolate => 1,

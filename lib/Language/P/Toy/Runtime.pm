@@ -1,10 +1,10 @@
-package Language::P::Runtime;
+package Language::P::Toy::Runtime;
 
 use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
-use Language::P::Value::MainSymbolTable;
+use Language::P::Toy::Value::MainSymbolTable;
 use Language::P::ParseTree qw(:all);
 
 __PACKAGE__->mk_ro_accessors( qw(symbol_table _variables) );
@@ -18,7 +18,7 @@ sub new {
 
     my $self = $class->SUPER::new( $args );
 
-    $self->{symbol_table} ||= Language::P::Value::MainSymbolTable->new;
+    $self->{symbol_table} ||= Language::P::Toy::Value::MainSymbolTable->new;
     $self->{_variables} = { osname      => $^O,
                             };
 

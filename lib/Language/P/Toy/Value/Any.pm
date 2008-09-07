@@ -1,4 +1,4 @@
-package Language::P::Value::Any;
+package Language::P::Toy::Value::Any;
 
 use strict;
 use warnings;
