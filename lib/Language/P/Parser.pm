@@ -7,14 +7,13 @@ use base qw(Class::Accessor::Fast);
 use Language::P::Lexer qw(:all);
 use Language::P::ParseTree qw(:all);
 use Language::P::Parser::Regex;
-use Language::P::Toy::Value::ScratchPad;
-use Language::P::Toy::Value::Code;
+use Language::P::Parser::Lexicals;
 use Language::P::ParseTree::PropagateContext;
 use Language::P::Keywords;
 
 __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime) );
 __PACKAGE__->mk_accessors( qw(_package _lexicals _pending_lexicals
-                              _current_sub _propagate_context
+                              _propagate_context
                               _lexical_state) );
 
 use constant
@@ -145,20 +144,14 @@ sub _parse {
     $self->_pending_lexicals( [] );
     $self->_lexicals( undef );
     $self->_enter_scope( 0 , 1 ); # FIXME eval
+    $self->_lexicals->keep_all_in_pad;
 
-    my $code = Language::P::Toy::Value::Code->new( { bytecode => [],
-                                                 lexicals => $self->_lexicals } );
-    $self->generator->push_code( $code );
-    $self->_current_sub( $code );
-
+    $self->generator->start_code_generation;
     while( my $line = _parse_line( $self ) ) {
         $self->_propagate_context->visit( $line, CXT_VOID );
         $self->generator->process( $line );
     }
-    $self->_lexicals->keep_all_in_pad;
-    $self->generator->finished;
-
-    $self->generator->pop_code;
+    my $code = $self->generator->end_code_generation;
 
     return $code;
 }
@@ -169,7 +162,7 @@ sub _enter_scope {
     push @{$self->{_lexical_state}}, { package  => $self->_package,
                                        lexicals => $self->_lexicals,
                                        };
-    $self->_lexicals( Language::P::Toy::Value::ScratchPad->new
+    $self->_lexicals( Language::P::Parser::Lexicals->new
                           ( { outer         => $self->_lexicals,
                               is_subroutine => $is_sub || 0,
                               all_in_pad    => $all_in_pad || 0,
@@ -310,20 +303,14 @@ sub _parse_sub {
 
     $self->_enter_scope( 1 );
     my $sub = Language::P::ParseTree::Subroutine->new
-                  ( { lexicals => $self->_lexicals,
-                      outer    => $self->_current_sub,
-                      name     => $fqname,
+                  ( { name     => $fqname,
                       } );
+    # add @_ to lexical scope
+    $self->_lexicals->add_name( VALUE_ARRAY, '_' );
 
-    # FIXME incestuos with runtime
-    my $args_slot = $self->_lexicals->add_name( VALUE_ARRAY, '_' );
-    $args_slot->{index} = $self->_lexicals->add_value;
-
-    $self->_current_sub( $sub );
     my $block = _parse_block_rest( $self, BLOCK_IMPLICIT_RETURN );
     $sub->{lines} = $block->{lines}; # FIXME encapsulation
     $self->_leave_scope;
-    $self->_current_sub( $sub->outer );
 
     $self->_propagate_context->visit( $sub, CXT_CALLER );
 

@@ -95,11 +95,9 @@ Refactoring:
 - replace all strings with integer constants/flags
   - move information about bultins/overridables to a separate module
     (currently in both lexer and parse-tree)
-- remove dependency from parser to implementation (::Values, scratchpad)
 - rewrite lexer to use /\G.../g instead of s///
   - assert unlexed tokens are relexed with the correct expectations
   - assert lex_string/lex unlex buffers do not intermingle
-- separate compile-time lexicals from run-time scratchpads
 - make regexp parser a full blown parser, not the hack it is;
   add a lexer subclass for parsing patterns
 - detect builtins that could have an indirect object as first argument

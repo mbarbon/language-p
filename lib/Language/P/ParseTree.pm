@@ -338,7 +338,7 @@ use base qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(name lines);
 
-__PACKAGE__->mk_ro_accessors( @FIELDS, qw(lexicals outer) );
+__PACKAGE__->mk_ro_accessors( @FIELDS );
 
 package Language::P::ParseTree::SubroutineDeclaration;
 

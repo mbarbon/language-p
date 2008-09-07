@@ -16,14 +16,12 @@ __PACKAGE__->mk_accessors( qw(program program_arguments) );
 our $VERSION = '0.01';
 
 use Language::P::Parser;
-use Language::P::Toy::Generator;
-use Language::P::Toy::Runtime;
 
 sub new_from_argv {
-    my( $class, $argv ) = @_;
+    my( $class, $argv, $args ) = @_;
     my $self = $class->SUPER::new;
 
-    $self->initialize;
+    $self->initialize( $args );
 
     if( @$argv ) {
         if( $argv->[0] =~ /^-/ ) {
@@ -38,16 +36,14 @@ sub new_from_argv {
 }
 
 sub initialize {
-    my( $self ) = @_;
+    my( $self, $args ) = @_;
 
-    my $runtime = Language::P::Toy::Runtime->new;
-    my $generator = Language::P::Toy::Generator->new( { runtime => $runtime } );
-    my $parser = Language::P::Parser->new( { generator => $generator,
-                                             runtime   => $runtime,
+    my $parser = Language::P::Parser->new( { generator => $args->{generator},
+                                             runtime   => $args->{runtime},
                                              } );
 
-    $self->{runtime} = $runtime;
-    $self->{generator} = $generator;
+    $self->{runtime} = $args->{runtime};
+    $self->{generator} = $args->{generator};
     $self->{parser} = $parser;
 }
 

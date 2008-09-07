@@ -10,6 +10,7 @@ use Language::P::Toy::Opcodes qw(o);
 use Language::P::Toy::Value::StringNumber;
 use Language::P::Toy::Value::Handle;
 use Language::P::Toy::Value::ScratchPad;
+use Language::P::Toy::Value::Code;
 use Language::P::Toy::Value::Regex;
 use Language::P::ParseTree qw(:all);
 
@@ -65,12 +66,14 @@ sub push_code {
 }
 
 sub pop_code {
-    my( $self, $code ) = @_;
+    my( $self ) = @_;
 
-    pop @code_stack;
+    my $code = pop @code_stack;
 
     # TODO do not use global
     *bytecode = @code_stack ? $code_stack[-1][0]->bytecode : [];
+
+    return $code->[0];
 }
 
 sub process {
@@ -131,10 +134,11 @@ sub add_declaration {
 sub finished {
     my( $self ) = @_;
 
+    my $is_sub = $code_stack[-1][0]->isa( 'Language::P::Toy::Value::Subroutine' );
     $self->process_pending;
-    $self->_allocate_lexicals;
+    $self->_allocate_lexicals( $is_sub );
 
-    if( $code_stack[-1][0]->isa( 'Language::P::Toy::Value::Subroutine' ) ) {
+    if( $is_sub ) {
         # could be avoided in most cases, but simplifies code generation
         push @bytecode,
             o( 'start_list' ),
@@ -143,6 +147,22 @@ sub finished {
     } else {
         push @bytecode, o( 'end' );
     }
+}
+
+sub start_code_generation {
+    my( $self ) = @_;
+
+    my $code = Language::P::Toy::Value::Code->new( { bytecode => [] } );
+    $self->push_code( $code );
+
+    return $code;
+}
+
+sub end_code_generation {
+    my( $self ) = @_;
+
+    $self->finished;
+    return $self->pop_code;
 }
 
 my %dispatch =
@@ -597,9 +617,10 @@ sub _pattern {
 }
 
 sub _allocate_lexicals {
-    my( $self ) = @_;
+    my( $self, $is_sub ) = @_;
 
     my $pad = Language::P::Toy::Value::ScratchPad->new;
+    my $sub_args = $is_sub ? $pad->add_value : -1;
     my $has_pad;
     foreach my $op ( @bytecode ) {
         next if !$op->{lexical};
@@ -608,8 +629,11 @@ sub _allocate_lexicals {
 #         print Dumper $op;
 
         # FIXME make the lexical slot an object with accessors
-        if( $op->{level} == 0 && $op->{lexical}->{index} == -100 ) {
-            if( $op->{lexical}->{in_pad} ) {
+        if( $op->{level} == 0 && !defined $op->{lexical}->{index} ) {
+            if(    $op->{lexical}->{name} eq '_'
+                && $op->{lexical}->{sigil} == VALUE_ARRAY ) {
+                $op->{lexical}->{index} = $sub_args;
+            } elsif( $op->{lexical}->{in_pad} ) {
                 if( !$has_pad ) {
                     $code_stack[-1][0]->{lexicals} = $pad;
                     $pad->{outer} = $code_stack[-1][0]->{outer};

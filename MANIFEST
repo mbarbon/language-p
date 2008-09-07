@@ -1,6 +1,7 @@
 Build.PL
 MANIFEST
 MANIFEST.SKIP
+META.yml
 TODO
 bin/p
 inc/Keywords.pm
@@ -12,6 +13,7 @@ lib/Language/P/ParseTree/DumpYAML.pm
 lib/Language/P/ParseTree/PropagateContext.pm
 lib/Language/P/ParseTree/Visitor.pm
 lib/Language/P/Parser.pm
+lib/Language/P/Parser/Lexicals.pm
 lib/Language/P/Parser/Regex.pm
 lib/Language/P/Toy/Generator.pm
 lib/Language/P/Toy/Opcodes.pm
@@ -100,4 +102,3 @@ t/runtime/regex/020_complex.t
 t/runtime/regex/040_generator.t
 t/runtime/regex/050_assert_start.t
 t/runtime/regex/051_assert_end.t
-META.yml

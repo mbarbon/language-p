@@ -35,6 +35,8 @@ my @lines;
     sub pop_code { }
     sub finished { }
     sub runtime { $_[0]->{runtime} }
+    sub start_code_generation {}
+    sub end_code_generation {}
 
     sub add_declaration {
         my( $self, $name ) = @_;

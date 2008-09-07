@@ -4,8 +4,15 @@ use strict;
 use warnings;
 use lib 'lib';
 
+use Language::P::Toy::Runtime;
+use Language::P::Toy::Generator;
 use Language::P;
 
-my $p = Language::P->new_from_argv( \@ARGV );
+my $runtime = Language::P::Toy::Runtime->new;
+my $generator = Language::P::Toy::Generator->new( { runtime => $runtime } );
+my $p = Language::P->new_from_argv( \@ARGV,
+                                    { runtime   => $runtime,
+                                      generator => $generator,
+                                      } );
 
 $p->run;
