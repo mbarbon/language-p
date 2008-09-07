@@ -6,3 +6,4 @@ t/perl5/[a-z]*
 cover_db
 TAGS
 lib/Language/P/Keywords.pm
+META.yml
