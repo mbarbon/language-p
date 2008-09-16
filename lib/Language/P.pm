@@ -4,6 +4,24 @@ package Language::P;
 
 Language::P - parsing/compiling Perl5 code using Perl5
 
+=head1 SYNOPSYS
+
+  my $p = Language::P->new_from_argv
+              ( \@ARGV,
+                { runtime   => $runtime,
+                  generator => $generator,
+                  } );
+
+  $p->run;
+
+=head1 DESCRIPTION
+
+An experiment: a perl 5 parser written in Perl 5, which might in time
+have multiple backends.  For now it only has a partial parser
+implementation and a toy runtime written in Perl 5.
+
+Time permitting it might acquire a Parrot (or Java or .Net runtime).
+
 =cut
 
 use strict;
@@ -13,7 +31,7 @@ use base qw(Class::Accessor::Fast);
 __PACKAGE__->mk_ro_accessors( qw(runtime parser generator) );
 __PACKAGE__->mk_accessors( qw(program program_arguments) );
 
-our $VERSION = '0.01';
+our $VERSION = '0.01_01';
 
 use Language::P::Parser;
 
@@ -76,5 +94,16 @@ sub run {
     my $code = $self->parser->parse_file( $self->program );
     $self->runtime->run_last_file( $code );
 }
+
+=head1 AUTHOR
+
+Mattia Barbon <mbarbon@cpan.org>
+
+=head1 LICENSE
+
+This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+=cut
 
 1;
