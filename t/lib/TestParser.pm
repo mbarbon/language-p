@@ -31,9 +31,6 @@ my @lines;
         push @lines, $_[1];
     }
 
-    sub push_code { }
-    sub pop_code { }
-    sub finished { }
     sub runtime { $_[0]->{runtime} }
     sub start_code_generation {}
     sub end_code_generation {}
