@@ -87,9 +87,15 @@ sub process {
 sub process_pending {
     my( $self ) = @_;
 
+    my $dump_yaml;
+    if( $debug_options{parse_tree} ) {
+        require Language::P::ParseTree::DumpYAML;
+        $dump_yaml = Language::P::ParseTree::DumpYAML->new;
+    }
+
     foreach my $tree ( @{$code_stack[-1][1]} ) {
         if( $debug_options{parse_tree} ) {
-            print STDERR $tree->pretty_print;
+            print STDERR $dump_yaml->dump( $tree );
         }
 
         $self->dispatch( $tree );

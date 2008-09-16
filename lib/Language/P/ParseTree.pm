@@ -142,59 +142,6 @@ sub _fields {
 
 sub fields { _fields( ref( $_[0] ) ) }
 
-sub pretty_print {
-    my( $self ) = @_;
-
-    return "root:\n" . $self->_pretty_print( 1 );
-}
-
-sub _print_value {
-    my( $self, $value, $level ) = @_;
-    my( $prefix ) = ( ' ' x ( $level * 4 ) );
-
-    if( !defined $value ) {
-        return $prefix . "undef\n";
-    } elsif( ref $value eq 'ARRAY' ) {
-        my $str = '';
-
-        foreach my $element ( @$value ) {
-            $str .= _print_value( $self, $element, $level + 1 );
-        }
-
-        return $str;
-    } elsif( ref $value eq 'HASH' ) {
-        die;
-    } elsif(    ref( $value )
-             && ref( $value )->isa( 'Language::P::ParseTree::Node' ) ) {
-        return $value->_pretty_print( $level + 1 );
-    } else {
-        return $prefix . $value . "\n";
-    }
-}
-
-sub _pretty_print {
-    my( $self, $level ) = @_;
-    my( $str, $prefix ) = ( '', ' ' x ( $level * 4 ) );
-
-    $str .= $prefix . 'class: ' . ref( $self ) . "\n";
-    foreach my $field ( $self->fields ) {
-        my $value = $self->$field;
-
-        if(    ref( $value )
-            && (    ref $value eq 'ARRAY'
-                 || ref $value eq 'HASH'
-                 || ref( $value )->isa( 'Language::P::ParseTree::Node' )
-                 ) ) {
-            $str .= $prefix . $field . ":\n";
-            $str .= _print_value( $self, $value, $level );
-        } else {
-            $str .= $prefix . $field . ": " . _print_value( $self, $value, 0 );
-        }
-    }
-
-    return $str;
-}
-
 package Language::P::ParseTree::Package;
 
 use strict;
