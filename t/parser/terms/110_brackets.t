@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 15;
+use Test::More tests => 17;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -137,6 +137,52 @@ function: !parsetree:Dereference
     context: CXT_SCALAR
     name: foo
     sigil: VALUE_SCALAR
+  op: VALUE_SUB
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+foo( 1 )->{2};
+EOP
+--- !parsetree:Subscript
+context: CXT_VOID
+reference: 1
+subscript: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
+  value: 2
+subscripted: !parsetree:FunctionCall
+  arguments:
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 1
+  context: CXT_SCALAR|CXT_VIVIFY
+  function: !parsetree:Symbol
+    context: CXT_SCALAR
+    name: foo
+    sigil: VALUE_SUB
+type: VALUE_HASH
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+foo( 1 )->( 2 );
+EOP
+--- !parsetree:FunctionCall
+arguments:
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
+    value: 2
+context: CXT_VOID
+function: !parsetree:Dereference
+  context: CXT_SCALAR
+  left: !parsetree:FunctionCall
+    arguments:
+      - !parsetree:Constant
+        flags: CONST_NUMBER|NUM_INTEGER
+        value: 1
+    context: CXT_SCALAR
+    function: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: foo
+      sigil: VALUE_SUB
   op: VALUE_SUB
 EOE
 

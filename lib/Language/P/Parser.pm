@@ -44,7 +44,7 @@ my %token_to_sigil =
     );
 
 my %prec_assoc_bin =
-  ( T_ARROW()       => [ 2,  ASSOC_LEFT ],
+  ( # T_ARROW()       => [ 2,  ASSOC_LEFT ],
     T_POWER()       => [ 4,  ASSOC_RIGHT, OP_POWER ],
     T_MATCH()       => [ 6,  ASSOC_LEFT,  OP_MATCH ],
     T_NOTMATCH()    => [ 6,  ASSOC_LEFT,  OP_NOT_MATCH ],
@@ -568,7 +568,7 @@ sub _find_symbol {
 }
 
 sub _parse_maybe_subscript_rest {
-    my( $self, $subscripted ) = @_;
+    my( $self, $subscripted, $arrow_only ) = @_;
     my $next = $self->lexer->peek( X_OPERATOR );
 
     # array/hash element
@@ -583,6 +583,8 @@ sub _parse_maybe_subscript_rest {
         } else {
             return _parse_maybe_direct_method_call( $self, $subscripted );
         }
+    } elsif( $arrow_only ) {
+        return $subscripted;
     } elsif(    $next->[0] == T_OPPAR
              || $next->[0] == T_OPSQ
              || $next->[0] == T_OPBRK ) {
@@ -943,7 +945,7 @@ sub _parse_term_terminal {
              || $token->[0] == T_STAR
              || $token->[0] == T_AMPERSAND
              || $token->[0] == T_ARYLEN ) {
-        return _parse_indirobj_maybe_subscripts( $self, $token );
+        return ( _parse_indirobj_maybe_subscripts( $self, $token ), 1 );
     } elsif(    $token->[0] == T_ID
              && (    $token->[2] == OP_MY || $token->[2] == OP_OUR
                   || $token->[2] == OP_STATE ) ) {
@@ -968,6 +970,14 @@ sub _parse_term_terminal {
     }
 
     return undef;
+}
+
+sub _parse_term_terminal_maybe_subscripts {
+    my( $self, $token, $is_bind ) = @_;
+    my( $term, $no_subscr ) = _parse_term_terminal( $self, $token, $is_bind );
+
+    return $term if $no_subscr || !$term;
+    return _parse_maybe_subscript_rest( $self, $term, 1 );
 }
 
 sub _parse_indirobj_maybe_subscripts {
@@ -1115,7 +1125,7 @@ sub _parse_lexical_variable {
 
 sub _parse_term_p {
     my( $self, $prec, $token, $lookahead, $is_bind ) = @_;
-    my $terminal = _parse_term_terminal( $self, $token, $is_bind );
+    my $terminal = _parse_term_terminal_maybe_subscripts( $self, $token, $is_bind );
 
     return $terminal if $terminal && !$lookahead;
 
