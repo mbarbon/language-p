@@ -123,13 +123,16 @@ sub _function_call {
     my( $self, $tree, $cxt ) = @_;
 
     $tree->{context} = $cxt;
-    my $arg_cxt = $tree->function eq 'return' ? CXT_CALLER : CXT_LIST;
+    my $arg_cxts = $tree->runtime_context || [ CXT_LIST ];
     $self->visit( $tree->function, CXT_SCALAR ) if ref $tree->function;
 
-    # FIXME prototypes
     if( $tree->arguments ) {
+        my $arg_index = 0;
         foreach my $arg ( @{$tree->arguments} ) {
+            my $arg_cxt = $arg_index <= $#$arg_cxts ? $arg_cxts->[$arg_index] :
+                                                      $arg_cxts->[-1];
             $self->visit( $arg, $arg_cxt );
+            ++$arg_index;
         }
     }
 }

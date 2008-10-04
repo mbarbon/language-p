@@ -39,7 +39,7 @@ EOP
 --- !parsetree:Builtin
 arguments:
   - !parsetree:Dereference
-    context: CXT_LIST
+    context: CXT_SCALAR
     left: !parsetree:Block
       lines:
         - !parsetree:Symbol

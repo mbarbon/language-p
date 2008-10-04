@@ -198,6 +198,7 @@ our @FIELDS = qw(function arguments context);
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub parsing_prototype { return Language::P::ParseTree::PROTO_DEFAULT }
+sub runtime_context   { return undef }
 
 package Language::P::ParseTree::SpecialFunctionCall;
 
@@ -488,7 +489,13 @@ my %prototype_bi =
           )
     );
 
+my %context_bi =
+  ( defined     => [ Language::P::ParseTree::CXT_SCALAR ],
+    return      => [ Language::P::ParseTree::CXT_CALLER ],
+    );
+
 sub parsing_prototype { return $prototype_bi{$_[0]->function} }
+sub runtime_context { return $context_bi{$_[0]->function} }
 sub can_implicit_return { return $_[0]->function eq 'return' ? 0 : 1 }
 
 package Language::P::ParseTree::BuiltinIndirect;
@@ -522,7 +529,12 @@ my %prototype_ov =
     wantarray   => [  0,  0, 0 ],
     );
 
+my %context_ov =
+  (
+    );
+
 sub parsing_prototype { return $prototype_ov{$_[0]->function} }
+sub runtime_context { return $context_ov{$_[0]->function} }
 
 package Language::P::ParseTree::Glob;
 
