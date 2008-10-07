@@ -972,7 +972,7 @@ sub _parse_term_terminal {
              && $token->[2] == KEY_LOCAL ) {
         return Language::P::ParseTree::Local->new
                    ( { op   => KEY_LOCAL,
-                       left => _parse_term( $self, PREC_NAMED_UNOP ),
+                       left => _parse_term_list_if_parens( $self, PREC_NAMED_UNOP ),
                        } );
     } elsif( $token->[0] == T_OPHASH ) {
         my $expr = _parse_bracketed_expr( $self, T_OPBRK, 1, 1 );
@@ -1089,7 +1089,7 @@ sub _parse_lexical {
     die $keyword unless $keyword == OP_MY || $keyword == OP_OUR;
 
     local $self->{_in_declaration} = 1;
-    my $term = _parse_term( $self, PREC_NAMED_UNOP );
+    my $term = _parse_term_list_if_parens( $self, PREC_NAMED_UNOP );
 
     return _process_declaration( $self, $term, $keyword );
 }
@@ -1103,11 +1103,6 @@ sub _process_declaration {
         }
 
         return $decl;
-    } elsif( $decl->isa( 'Language::P::ParseTree::Parentheses' ) ) {
-        my $variable = _process_declaration( $self, $decl->left, $keyword );
-        return Language::P::ParseTree::List->new
-                   ( { expressions => [ $variable ],
-                       } );
     } elsif( $decl->isa( 'Language::P::ParseTree::Symbol' ) ) {
         my $decl = Language::P::ParseTree::LexicalDeclaration->new
                        ( { name             => $decl->name,
@@ -1257,6 +1252,19 @@ sub _parse_term {
     $self->lexer->unlex( $token );
 
     return undef;
+}
+
+sub _parse_term_list_if_parens {
+    my( $self, $prec ) = @_;
+    my $term = _parse_term( $self, $prec );
+
+    if( $term->isa( 'Language::P::ParseTree::Parentheses' ) ) {
+        return Language::P::ParseTree::List->new
+                   ( { expressions => [ $term->left ],
+                       } );
+    }
+
+    return $term;
 }
 
 sub _add_implicit_return {

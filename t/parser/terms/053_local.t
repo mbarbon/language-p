@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 3;
+use Test::More tests => 4;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -16,6 +16,20 @@ left: !parsetree:Symbol
   context: CXT_VOID|CXT_LVALUE
   name: foo
   sigil: 1
+op: OP_LOCAL
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+local( ${foo} );
+EOP
+--- !parsetree:Local
+context: CXT_VOID
+left: !parsetree:List
+  expressions:
+    - !parsetree:Symbol
+      context: CXT_VOID|CXT_LVALUE
+      name: foo
+      sigil: VALUE_SCALAR
 op: OP_LOCAL
 EOE
 
