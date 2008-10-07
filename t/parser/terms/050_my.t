@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 5;
+use Test::More tests => 6;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -62,6 +62,18 @@ right: !parsetree:List
     - !parsetree:Constant
       flags: CONST_NUMBER|NUM_INTEGER
       value: 3
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+my( ${foo} );
+EOP
+--- !parsetree:List
+expressions:
+  - !parsetree:LexicalDeclaration
+    context: CXT_VOID
+    declaration_type: OP_MY
+    name: foo
+    sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

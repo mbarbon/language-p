@@ -1103,6 +1103,11 @@ sub _process_declaration {
         }
 
         return $decl;
+    } elsif( $decl->isa( 'Language::P::ParseTree::Parentheses' ) ) {
+        my $variable = _process_declaration( $self, $decl->left, $keyword );
+        return Language::P::ParseTree::List->new
+                   ( { expressions => [ $variable ],
+                       } );
     } elsif( $decl->isa( 'Language::P::ParseTree::Symbol' ) ) {
         my $decl = Language::P::ParseTree::LexicalDeclaration->new
                        ( { name             => $decl->name,
