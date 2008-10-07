@@ -15,7 +15,7 @@ context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_VOID|CXT_LVALUE
   name: foo
-  sigil: 1
+  sigil: VALUE_SCALAR
 op: OP_LOCAL
 EOE
 
@@ -50,7 +50,7 @@ left: !parsetree:Local
       context: CXT_LIST
       name: foo
       sigil: VALUE_HASH
-    type: 3
+    type: VALUE_HASH
   op: OP_LOCAL
 op: OP_ASSIGN
 right: !parsetree:Constant

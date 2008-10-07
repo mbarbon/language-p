@@ -135,9 +135,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 /$foo$/
 EOP
 --- !parsetree:BinOp
-context: 2
+context: CXT_VOID
 left: !parsetree:Symbol
-  context: 4
+  context: CXT_SCALAR
   name: _
   sigil: VALUE_SCALAR
 op: OP_MATCH
@@ -147,7 +147,7 @@ right: !parsetree:InterpolatedPattern
   string: !parsetree:QuotedString
     components:
       - !parsetree:Symbol
-        context: 4
+        context: CXT_SCALAR
         name: foo
         sigil: VALUE_SCALAR
       - !parsetree:Constant
@@ -159,9 +159,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 /$foo\w/
 EOP
 --- !parsetree:BinOp
-context: 2
+context: CXT_VOID
 left: !parsetree:Symbol
-  context: 4
+  context: CXT_SCALAR
   name: _
   sigil: VALUE_SCALAR
 op: OP_MATCH
@@ -171,7 +171,7 @@ right: !parsetree:InterpolatedPattern
   string: !parsetree:QuotedString
     components:
       - !parsetree:Symbol
-        context: 4
+        context: CXT_SCALAR
         name: foo
         sigil: VALUE_SCALAR
       - !parsetree:Constant

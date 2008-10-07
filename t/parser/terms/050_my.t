@@ -103,21 +103,21 @@ my $x;
 my $x = $x;
 EOP
 --- !parsetree:LexicalDeclaration
-context: 2
+context: CXT_VOID
 declaration_type: OP_MY
 name: x
-sigil: 1
+sigil: VALUE_SCALAR
 --- !parsetree:BinOp
-context: 2
+context: CXT_VOID
 left: !parsetree:LexicalDeclaration
-  context: 20
+  context: CXT_SCALAR|CXT_LVALUE
   declaration_type: OP_MY
   name: x
-  sigil: 1
-op: 29
+  sigil: VALUE_SCALAR
+op: OP_ASSIGN
 right: !parsetree:LexicalSymbol
-  context: 4
+  context: CXT_SCALAR
   name: x
-  sigil: 1
+  sigil: VALUE_SCALAR
 EOE
 
