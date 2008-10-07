@@ -249,7 +249,8 @@ sub _parse_line {
                            } );
         } elsif(    $token->[2] == OP_MY
                  || $token->[2] == OP_OUR
-                 || $token->[2] == OP_STATE ) {
+                 || $token->[2] == OP_STATE
+                 || $token->[2] == KEY_LOCAL ) {
             return _parse_sideff( $self );
         }
     } elsif( $special_sub{$token->[1]} ) {
@@ -967,6 +968,12 @@ sub _parse_term_terminal {
     } elsif(    $token->[0] == T_ID
              && !is_keyword( $token->[2] ) ) {
         return _parse_listop( $self, $token );
+    } elsif(    $token->[0] == T_ID
+             && $token->[2] == KEY_LOCAL ) {
+        return Language::P::ParseTree::Local->new
+                   ( { op   => KEY_LOCAL,
+                       left => _parse_term( $self, PREC_NAMED_UNOP ),
+                       } );
     } elsif( $token->[0] == T_OPHASH ) {
         my $expr = _parse_bracketed_expr( $self, T_OPBRK, 1, 1 );
 

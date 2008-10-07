@@ -103,6 +103,7 @@ redo                k
 my                  k       OP_MY
 our                 k       OP_OUR
 state               k       OP_STATE
+local               k       
 sub                 k       
 eval                b       
 package             k       

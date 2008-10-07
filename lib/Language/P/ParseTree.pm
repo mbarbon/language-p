@@ -17,7 +17,7 @@ BEGIN {
            OP_MINUS OP_LOG_NOT OP_REFERENCE OP_LOG_NOT OP_PARENTHESES
            OP_BIT_AND OP_BIT_OR OP_BIT_XOR
            OP_QL_S OP_QL_M OP_QL_TR OP_QL_QR OP_QL_QX OP_QL_LT OP_QL_QW
-           OP_BACKTICK
+           OP_BACKTICK OP_LOCAL
 
            OP_FT_EREADABLE OP_FT_EWRITABLE OP_FT_EEXECUTABLE OP_FT_EOWNED
            OP_FT_RREADABLE OP_FT_RWRITABLE OP_FT_REXECUTABLE OP_FT_ROWNED
@@ -326,6 +326,15 @@ use base qw(Language::P::ParseTree::UnOp);
 
 sub op { Language::P::ParseTree::OP_PARENTHESES }
 sub lvalue_context { Language::P::ParseTree::CXT_LIST }
+
+package Language::P::ParseTree::Local;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::UnOp);
+
+sub op { Language::P::ParseTree::OP_LOCAL }
+sub lvalue_context { $_[0]->left->lvalue_context }
 
 package Language::P::ParseTree::Dereference;
 

@@ -15,6 +15,7 @@ my %dispatch =
     'Language::P::ParseTree::UnOp'                   => '_unary_op',
     'Language::P::ParseTree::Parentheses'            => '_parentheses',
     'Language::P::ParseTree::Dereference'            => '_dereference',
+    'Language::P::ParseTree::Local'                  => '_local',
     'Language::P::ParseTree::BinOp'                  => '_binary_op',
     'Language::P::ParseTree::Symbol'                 => '_symbol',
     'Language::P::ParseTree::Constant'               => '_noop',
@@ -181,6 +182,13 @@ sub _dereference {
 
     $tree->{context} = $cxt | ( $cxt & CXT_LVALUE ? CXT_VIVIFY : 0 );
     $self->visit( $tree->left, CXT_SCALAR );
+}
+
+sub _local {
+    my( $self, $tree, $cxt ) = @_;
+
+    $tree->{context} = $cxt;
+    $self->visit( $tree->left, $cxt|CXT_LVALUE );
 }
 
 sub _binary_op {
