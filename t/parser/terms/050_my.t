@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 4;
+use Test::More tests => 5;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -85,3 +85,27 @@ expressions:
     name: x
     sigil: VALUE_SCALAR
 EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+my $x;
+my $x = $x;
+EOP
+--- !parsetree:LexicalDeclaration
+context: 2
+declaration_type: OP_MY
+name: x
+sigil: 1
+--- !parsetree:BinOp
+context: 2
+left: !parsetree:LexicalDeclaration
+  context: 20
+  declaration_type: OP_MY
+  name: x
+  sigil: 1
+op: 29
+right: !parsetree:LexicalSymbol
+  context: 4
+  name: x
+  sigil: 1
+EOE
+

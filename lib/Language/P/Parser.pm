@@ -13,7 +13,7 @@ use Language::P::Keywords;
 
 __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime) );
 __PACKAGE__->mk_accessors( qw(_package _lexicals _pending_lexicals
-                              _propagate_context
+                              _propagate_context _in_declaration
                               _lexical_state) );
 
 use constant
@@ -429,7 +429,16 @@ sub _parse_for {
     } elsif( $token->[0] == T_ID && (    $token->[2] == OP_MY
                                       || $token->[2] == OP_OUR
                                       || $token->[2] == OP_STATE ) ) {
-        $foreach_var = _parse_lexical_variable( $self, $token->[2] )
+        _lex_token( $self, T_DOLLAR );
+        my $name = $self->lexer->lex_identifier;
+        die "No name" unless $name;
+
+        # FIXME our() variable refers to package it was declared in
+        $foreach_var = Language::P::ParseTree::LexicalDeclaration->new
+                           ( { name             => $name->[1],
+                               sigil            => VALUE_SCALAR,
+                               declaration_type => $token->[2],
+                               } );
     } elsif( $token->[0] == T_DOLLAR ) {
         my $id = $self->lexer->lex_identifier;
         $foreach_var = _find_symbol( $self, VALUE_SCALAR, $id->[1], $id->[2] );
@@ -540,7 +549,12 @@ sub _parse_expr {
 sub _find_symbol {
     my( $self, $sigil, $name, $type ) = @_;
 
-    if( $type == T_FQ_ID ) {
+    if( $self->_in_declaration ) {
+        return Language::P::ParseTree::Symbol->new
+                   ( { name  => $name,
+                       sigil => $sigil,
+                       } );
+    } elsif( $type == T_FQ_ID ) {
         return Language::P::ParseTree::Symbol->new
                    ( { name  => _qualify( $self, $name, $type ),
                        sigil => $sigil,
@@ -1067,60 +1081,33 @@ sub _parse_lexical {
 
     die $keyword unless $keyword == OP_MY || $keyword == OP_OUR;
 
-    my $list = _parse_lexical_rest( $self, $keyword );
+    local $self->{_in_declaration} = 1;
+    my $term = _parse_term( $self, PREC_NAMED_UNOP );
 
-    return $list;
+    return _process_declaration( $self, $term, $keyword );
 }
 
-sub _parse_lexical_rest {
-    my( $self, $keyword ) = @_;
+sub _process_declaration {
+    my( $self, $decl, $keyword ) = @_;
 
-    my $token = $self->lexer->peek( X_TERM );
-
-    if( $token->[0] == T_OPPAR ) {
-        my @variables;
-
-        _lex_token( $self, T_OPPAR );
-
-        for(;;) {
-            push @variables, _parse_lexical_variable( $self, $keyword );
-            my $token = $self->lexer->peek( X_OPERATOR );
-
-            if( $token->[0] == T_COMMA ) {
-                _lex_token( $self, T_COMMA );
-            } elsif( $token->[0] == T_CLPAR ) {
-                _lex_token( $self, T_CLPAR );
-                last;
-            }
+    if( $decl->isa( 'Language::P::ParseTree::List' ) ) {
+        foreach my $e ( @{$decl->expressions} ) {
+            $e = _process_declaration( $self, $e, $keyword );
         }
 
-        push @{$self->_pending_lexicals}, @variables;
+        return $decl;
+    } elsif( $decl->isa( 'Language::P::ParseTree::Symbol' ) ) {
+        my $decl = Language::P::ParseTree::LexicalDeclaration->new
+                       ( { name             => $decl->name,
+                           sigil            => $decl->sigil,
+                           declaration_type => $keyword,
+                           } );
+        push @{$self->_pending_lexicals}, $decl;
 
-        return Language::P::ParseTree::List->new( { expressions => \@variables } );
+        return $decl;
     } else {
-        my $variable = _parse_lexical_variable( $self, $keyword );
-
-        push @{$self->_pending_lexicals}, $variable;
-
-        return $variable;
+        die 'Invalid node ', ref( $decl ), ' in declaration';
     }
-}
-
-sub _parse_lexical_variable {
-    my( $self, $keyword ) = @_;
-    my $sigil = $self->lexer->lex( X_TERM );
-
-    die $sigil->[0], ' ', $sigil->[1] unless $sigil->[1] =~ /^[\$\@\%]$/;
-
-    my $name = $self->lexer->lex_identifier;
-    die unless $name;
-
-    # FIXME our() variable refers to package it was declared in
-    return Language::P::ParseTree::LexicalDeclaration->new
-               ( { name             => $name->[1],
-                   sigil            => $token_to_sigil{$sigil->[0]},
-                   declaration_type => $keyword,
-                   } );
 }
 
 sub _parse_term_p {
