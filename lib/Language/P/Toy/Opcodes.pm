@@ -244,6 +244,23 @@ sub o_lexical {
     return $pc + 1;
 }
 
+sub o_lexical_set {
+    my( $op, $runtime, $pc ) = @_;
+    my $value = pop @{$runtime->{_stack}};
+
+    $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = $value;
+
+    return $pc + 1;
+}
+
+sub o_lexical_clear {
+    my( $op, $runtime, $pc ) = @_;
+
+    $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = undef;
+
+    return $pc + 1;
+}
+
 sub o_lexical_pad {
     my( $op, $runtime, $pc ) = @_;
     my $pad = $runtime->{_stack}->[$runtime->{_frame} - 1];
@@ -473,6 +490,18 @@ sub o_glob_slot {
     my $slot = $op->{slot};
 
     push @{$runtime->{_stack}}, $glob->get_slot( $slot, $op->{create} );
+
+    return $pc + 1;
+}
+
+sub o_glob_slot_set {
+    my( $op, $runtime, $pc ) = @_;
+
+    my $value = pop @{$runtime->{_stack}};
+    my $glob = pop @{$runtime->{_stack}};
+    my $slot = $op->{slot};
+
+    $glob->set_slot( $slot, $value );
 
     return $pc + 1;
 }

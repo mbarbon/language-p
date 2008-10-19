@@ -76,6 +76,30 @@ sub pop_code {
     return $code->[0];
 }
 
+our $current_block;
+
+sub push_block {
+    my( $self, $is_sub ) = @_;
+
+    $current_block =
+      { outer    => $current_block,
+        is_sub   => $is_sub || 0,
+        locals   => [],
+        lexicals => [],
+        };
+
+    return $current_block;
+}
+
+sub pop_block {
+    my( $self ) = @_;
+    my $to_ret = $current_block;
+
+    $current_block = $current_block->{outer};
+
+    return $to_ret;
+}
+
 sub process {
     my( $self, $tree ) = @_;
 
@@ -160,6 +184,7 @@ sub start_code_generation {
 
     my $code = Language::P::Toy::Value::Code->new( { bytecode => [] } );
     $self->push_code( $code );
+    $self->push_block;
 
     return $code;
 }
@@ -168,6 +193,7 @@ sub end_code_generation {
     my( $self ) = @_;
 
     $self->finished;
+    $self->pop_block;
     return $self->pop_code;
 }
 
@@ -177,6 +203,7 @@ my %dispatch =
     'Language::P::ParseTree::Overridable'            => '_builtin',
     'Language::P::ParseTree::BuiltinIndirect'        => '_indirect',
     'Language::P::ParseTree::UnOp'                   => '_unary_op',
+    'Language::P::ParseTree::Local'                  => '_local',
     'Language::P::ParseTree::BinOp'                  => '_binary_op',
     'Language::P::ParseTree::Constant'               => '_constant',
     'Language::P::ParseTree::Symbol'                 => '_symbol',
@@ -335,6 +362,14 @@ sub _function_call {
         $self->dispatch( $tree->function );
         push @bytecode, o( 'call', context => $tree->context & CXT_CALL_MASK );
     } else {
+        if( $tree->function eq 'return' ) {
+            my $block = $current_block;
+            while( $block ) {
+                _restore_locals( $self, $block );
+                last if $block->{is_sub};
+                $block = $block->{outer};
+            }
+        }
         push @bytecode, o( $builtins{$tree->function} );
     }
 }
@@ -359,6 +394,27 @@ sub _unary_op {
     $self->dispatch( $tree->left );
 
     push @bytecode, o( $unary{$tree->op} );
+}
+
+sub _local {
+    my( $self, $tree ) = @_;
+
+    # FIXME only works for plain scalars
+    my $index = $code_stack[-1][0]->stack_size;
+    ++$code_stack[-1][0]->{stack_size};
+
+    push @bytecode,
+         o( 'glob',          name => $tree->left->name, create => 1 ),
+         o( 'dup' ), o( 'dup' ),
+         o( 'glob_slot',     slot => 'scalar' ),
+         o( 'lexical_set',   index => $index ),
+         o( 'constant',      value => Language::P::Toy::Value::StringNumber->new ),
+         o( 'glob_slot_set', slot => 'scalar' ),
+         o( 'glob_slot',     slot => 'scalar' );
+
+    push @{$current_block->{locals}},
+         { name  => $tree->left->name,
+           index => $index };
 }
 
 sub _parentheses {
@@ -549,9 +605,14 @@ sub _ternary {
 sub _block {
     my( $self, $tree ) = @_;
 
+    $self->push_block;
+
     foreach my $line ( @{$tree->lines} ) {
         $self->dispatch( $line );
     }
+
+    _restore_locals( $self, $current_block );
+    $self->pop_block;
 }
 
 sub _subroutine_decl {
@@ -568,12 +629,14 @@ sub _subroutine {
                       name     => $tree->name,
                       } );
     $self->push_code( $sub );
+    $self->push_block( 1 );
 
     foreach my $line ( @{$tree->lines} ) {
         $self->dispatch( $line );
     }
 
     $self->finished;
+    $self->pop_block;
     $self->pop_code;
 
     $self->runtime->symbol_table->set_symbol( $tree->name, '&', $sub );
@@ -655,6 +718,18 @@ sub _allocate_lexicals {
         $op->{in_pad} = $op->{lexical}->{in_pad};
         $op->{index} = $op->{lexical}->{index};
         delete $op->{lexical};
+    }
+}
+
+sub _restore_locals {
+    my( $self, $block ) = @_;
+
+    foreach my $local ( reverse @{$block->{locals}} ) {
+        push @bytecode,
+             o( 'glob',          name => $local->{name} ),
+             o( 'lexical',       index => $local->{index} ),
+             o( 'glob_slot_set', slot => 'scalar' ),
+             o( 'lexical_clear', index => $local->{index} );
     }
 }
 

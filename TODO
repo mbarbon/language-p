@@ -8,7 +8,6 @@ Parsing:
     and add parsing prototype
 - stashes
 - global variables/symbols (STDOUT!)
-- local variables
 - scoping
 - do ...
 - labels
@@ -70,6 +69,7 @@ Parsing:
   - always a pattern after =~/!~
   - tr/// lexing/parsing
 - correct parsing of heredoc in substitutions (s//<<HEREDOC/e)
+- construct flow graph (or similar structure)
 
 Runtime:
 - integer -> float on overflow (also in parsing!)
@@ -90,6 +90,22 @@ Runtime:
   - check mixed assignments
 - garbage collection
 - do file/require/use/eval string
+- local()
+  - check code generation for all block types and
+    different cases for local() in conditions or in loop/conditional/continue
+    blocks
+  - local() ends at end of file
+  - code generation for return/die/last/redo/next, ...
+  - localization of scalar, array, hash, array/hash element
+  - check that when localizing a variable, it is always
+    a global/package variable
+  - magical/tied variables (probably add a localize() method to all types)
+- my()
+  - check code generation for all block types and
+    different cases for local() in conditions or in loop/conditional/continue
+    blocks
+  - my() at global scope does not end at end of file
+  - code generation for return/die/last/redo/next, ...
 
 Refactoring:
 - check offsets for call sequence, refactor stack handling
