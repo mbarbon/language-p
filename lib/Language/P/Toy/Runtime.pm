@@ -36,7 +36,8 @@ sub run_last_file {
     my( $self, $code ) = @_;
 
     $self->set_bytecode( $code->bytecode );
-    $self->{_stack} = [ [ -1, undef, CXT_VOID ], $code->lexicals ];
+    $self->{_stack} = [ (undef) x $code->stack_size,
+                        [ -1, undef, CXT_VOID ], $code->lexicals ];
     $self->{_frame} = @{$self->{_stack}};
     return $self->run;
 }
