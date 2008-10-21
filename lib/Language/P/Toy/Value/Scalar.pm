@@ -27,4 +27,10 @@ sub assign_iterator {
     $self->assign( $iter->item );
 }
 
+sub localize {
+    my( $self ) = @_;
+
+    return Language::P::Toy::Value::StringNumber->new;
+}
+
 1;

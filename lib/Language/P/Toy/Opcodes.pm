@@ -595,4 +595,28 @@ sub o_defined {
     return $pc + 1;
 }
 
+sub o_localize_glob_slot {
+    my( $op, $runtime, $pc ) = @_;
+    my $glob = $runtime->symbol_table->get_symbol( $op->{name}, '*', 1 );
+    my $to_save = $glob->get_slot( $op->{slot} );
+    my $saved = $to_save->localize;
+
+    $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = $to_save;
+    $glob->set_slot( $op->{slot}, $saved );
+    push @{$runtime->{_stack}}, $saved;
+
+    return $pc + 1;
+}
+
+sub o_restore_glob_slot {
+    my( $op, $runtime, $pc ) = @_;
+    my $glob = $runtime->symbol_table->get_symbol( $op->{name}, '*', 1 );
+    my $saved = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
+
+    $glob->set_slot( $op->{slot}, $saved );
+    $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = undef;
+
+    return $pc + 1;
+}
+
 1;

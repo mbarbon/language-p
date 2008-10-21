@@ -32,6 +32,12 @@ sub clone {
     return $clone;
 }
 
+sub localize {
+    my( $self ) = @_;
+
+    return __PACKAGE__->new;
+}
+
 sub assign {
     my( $self, $other ) = @_;
 

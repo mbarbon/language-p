@@ -100,6 +100,7 @@ Runtime:
   - check that when localizing a variable, it is always
     a global/package variable
   - magical/tied variables (probably add a localize() method to all types)
+  - localization of complex expressions (?:, lists, ...)
 - my()
   - check code generation for all block types and
     different cases for local() in conditions or in loop/conditional/continue
@@ -120,3 +121,5 @@ Refactoring:
   add a lexer subclass for parsing patterns
 - detect builtins that could have an indirect object as first argument
   earlier in the parsing
+- add structure to contain actions to be performed at block end,
+  and can generate code for them

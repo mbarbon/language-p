@@ -253,6 +253,12 @@ sub dispatch_regex {
     return $self->visit_map( \%dispatch_regex, $tree, $true, $false );
 }
 
+my %sigil_to_slot =
+  ( VALUE_SCALAR() => 'scalar',
+    VALUE_SUB()    => 'subroutine',
+    VALUE_ARRAY()  => 'array',
+    );
+
 my %conditionals =
   ( OP_NUM_LT() => 'compare_f_lt_int',
     OP_STR_LT() => 'compare_s_lt_int',
@@ -365,7 +371,7 @@ sub _function_call {
         if( $tree->function eq 'return' ) {
             my $block = $current_block;
             while( $block ) {
-                _restore_locals( $self, $block );
+                _exit_scope( $self, $block );
                 last if $block->{is_sub};
                 $block = $block->{outer};
             }
@@ -399,21 +405,23 @@ sub _unary_op {
 sub _local {
     my( $self, $tree ) = @_;
 
-    # FIXME only works for plain scalars
+    die "Can only localize global for now"
+        unless $tree->left->isa( 'Language::P::ParseTree::Symbol' );
+
     my $index = $code_stack[-1][0]->stack_size;
     ++$code_stack[-1][0]->{stack_size};
 
+    my $slot = $sigil_to_slot{$tree->left->sigil};
     push @bytecode,
-         o( 'glob',          name => $tree->left->name, create => 1 ),
-         o( 'dup' ), o( 'dup' ),
-         o( 'glob_slot',     slot => 'scalar' ),
-         o( 'lexical_set',   index => $index ),
-         o( 'constant',      value => Language::P::Toy::Value::StringNumber->new ),
-         o( 'glob_slot_set', slot => 'scalar' ),
-         o( 'glob_slot',     slot => 'scalar' );
+         o( 'localize_glob_slot',
+            name  => $tree->left->name,
+            slot  => $slot,
+            index => $index,
+            );
 
     push @{$current_block->{locals}},
          { name  => $tree->left->name,
+           slot  => $slot,
            index => $index };
 }
 
@@ -512,12 +520,6 @@ sub _constant {
     push @bytecode, o( 'constant', value => $v );
 }
 
-my %sigils =
-  ( VALUE_SCALAR() => 'scalar',
-    VALUE_SUB()    => 'subroutine',
-    VALUE_ARRAY()  => 'array',
-    );
-
 sub _symbol {
     my( $self, $tree ) = @_;
 
@@ -526,7 +528,7 @@ sub _symbol {
         return;
     }
 
-    my $slot = $sigils{$tree->sigil};
+    my $slot = $sigil_to_slot{$tree->sigil};
     die $tree->sigil unless $slot;
 
     push @bytecode,
@@ -611,7 +613,7 @@ sub _block {
         $self->dispatch( $line );
     }
 
-    _restore_locals( $self, $current_block );
+    _exit_scope( $self, $current_block );
     $self->pop_block;
 }
 
@@ -721,15 +723,16 @@ sub _allocate_lexicals {
     }
 }
 
-sub _restore_locals {
+sub _exit_scope {
     my( $self, $block ) = @_;
 
     foreach my $local ( reverse @{$block->{locals}} ) {
         push @bytecode,
-             o( 'glob',          name => $local->{name} ),
-             o( 'lexical',       index => $local->{index} ),
-             o( 'glob_slot_set', slot => 'scalar' ),
-             o( 'lexical_clear', index => $local->{index} );
+             o( 'restore_glob_slot',
+                name  => $local->{name},
+                slot  => $local->{slot},
+                index => $local->{index},
+                );
     }
 }
 
