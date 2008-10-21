@@ -22,11 +22,14 @@ our @METHODS = qw(as_integer as_float as_string as_scalar as_boolean_int
 sub type { 1 }
 sub is_defined { 1 }
 
-sub unimplemented { Carp::confess( "Unimplemented!\n" ) }
+sub unimplemented {
+    my $m = $_[0];
+    return sub { Carp::confess( "Unimplemented: $m!\n" ) };
+}
 
 foreach my $name ( @METHODS ) {
     no strict 'refs';
-    *{$name} = \&unimplemented;
+    *{$name} = unimplemented( $name );
 }
 
 1;
