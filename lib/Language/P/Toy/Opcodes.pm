@@ -270,6 +270,15 @@ sub o_lexical_pad {
     return $pc + 1;
 }
 
+sub o_lexical_pad_clear {
+    my( $op, $runtime, $pc ) = @_;
+    my $pad = $runtime->{_stack}->[$runtime->{_frame} - 1];
+
+    $pad->values->[$op->{index}] = undef;
+
+    return $pc + 1;
+}
+
 sub o_parameter_index {
     my( $op, $runtime, $pc ) = @_;
     my $value = $runtime->{_stack}->[$runtime->{_frame} - 3]->get_item( $op->{index} );
@@ -583,6 +592,15 @@ sub o_dereference_scalar {
     return $pc + 1;
 }
 
+sub o_dereference_subroutine {
+    my( $op, $runtime, $pc ) = @_;
+    my $ref = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $ref->dereference_subroutine;
+
+    return $pc + 1;
+}
+
 sub o_defined {
     my( $op, $runtime, $pc ) = @_;
     my $value = pop @{$runtime->{_stack}};
@@ -591,6 +609,32 @@ sub o_defined {
     push @{$runtime->{_stack}}, $defined ?
              Language::P::Toy::Value::StringNumber->new( { integer => 1 } ) :
              Language::P::Toy::Value::StringNumber->new( { string => '' } );
+
+    return $pc + 1;
+}
+
+sub o_make_closure {
+    my( $op, $runtime, $pc ) = @_;
+    my $sub = pop @{$runtime->{_stack}};
+    my $clone = Language::P::Toy::Value::Subroutine->new
+                    ( { bytecode   => $sub->bytecode,
+                        stack_size => $sub->stack_size,
+                        outer      => $sub->outer,
+                        lexicals   => $sub->lexicals->new_scope,
+                        } );
+
+    if( my $closed_values = $sub->closed ) {
+        my $outer = $runtime->{_stack}->[$runtime->{_frame} - 1];
+        my $pad = $clone->lexicals;
+
+        foreach my $from_to ( @$closed_values ) {
+            $pad->values->[$from_to->[1]] = $outer->values->[$from_to->[0]];
+        }
+    }
+
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::Reference->new
+                                    ( { reference => $clone,
+                                        } );
 
     return $pc + 1;
 }

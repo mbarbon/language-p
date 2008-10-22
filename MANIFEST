@@ -63,6 +63,7 @@ t/parser/statements/035_postfix.t
 t/parser/statements/040_if.t
 t/parser/statements/050_while.t
 t/parser/statements/055_for.t
+t/parser/statements/080_sub.t
 t/parser/statements/090_special_blocks.t
 t/parser/statements/120_package.t
 t/parser/terms/004_bareword.t
@@ -81,15 +82,18 @@ t/parser/terms/105_dereference.t
 t/parser/terms/106_dereference_sub.t
 t/parser/terms/110_brackets.t
 t/parser/terms/140_prototypes.t
+t/parser/terms/150_closure.t
 t/run/005_assignment.t
 t/run/006_brackets.t
 t/run/007_if.t
 t/run/008_while.t
 t/run/010_arithmetic.t
 t/run/015_defined.t
+t/run/020_lexicals.t
 t/run/035_local.t
 t/run/080_recursion.t
 t/run/081_context.t
+t/run/085_closure.t
 t/runtime/001_load.t
 t/runtime/002_base.t
 t/runtime/010_call.t

@@ -43,6 +43,12 @@ my %token_to_sigil =
     T_ARYLEN()    => VALUE_ARRAY_LENGTH,
     );
 
+my %declaration_to_flags =
+  ( OP_MY()       => DECLARATION_MY,
+    OP_OUR()      => DECLARATION_OUR,
+    OP_STATE()    => DECLARATION_STATE,
+    );
+
 my %prec_assoc_bin =
   ( # T_ARROW()       => [ 2,  ASSOC_LEFT ],
     T_POWER()       => [ 4,  ASSOC_RIGHT, OP_POWER ],
@@ -144,7 +150,6 @@ sub _parse {
     $self->_pending_lexicals( [] );
     $self->_lexicals( undef );
     $self->_enter_scope( 0 , 1 ); # FIXME eval
-    $self->_lexicals->keep_all_in_pad;
 
     $self->generator->start_code_generation;
     while( my $line = _parse_line( $self ) ) {
@@ -157,7 +162,7 @@ sub _parse {
 }
 
 sub _enter_scope {
-    my( $self, $is_sub, $all_in_pad ) = @_;
+    my( $self, $is_sub, $top_level ) = @_;
 
     push @{$self->{_lexical_state}}, { package  => $self->_package,
                                        lexicals => $self->_lexicals,
@@ -165,7 +170,7 @@ sub _enter_scope {
     $self->_lexicals( Language::P::Parser::Lexicals->new
                           ( { outer         => $self->_lexicals,
                               is_subroutine => $is_sub || 0,
-                              all_in_pad    => $all_in_pad || 0,
+                              top_level     => $top_level,
                               } ) );
 }
 
@@ -267,11 +272,7 @@ sub _add_pending_lexicals {
 
     # FIXME our() is different
     foreach my $lexical ( @{$self->_pending_lexicals} ) {
-        my( undef, $slot ) = $self->_lexicals->add_name( $lexical->sigil,
-                                                         $lexical->name );
-        $lexical->{slot} = { slot  => $slot,
-                             level => 0,
-                             };
+        $self->_lexicals->add_lexical( $lexical );
     }
 
     $self->_pending_lexicals( [] );
@@ -280,12 +281,12 @@ sub _add_pending_lexicals {
 sub _parse_sub {
     my( $self, $flags, $no_sub_token ) = @_;
     _lex_token( $self, T_ID ) unless $no_sub_token;
-    my $name = $self->lexer->lex_identifier;
+    my $name = $self->lexer->lex_alphabetic_identifier;
     my $fqname = $name ? _qualify( $self, $name->[1], $name->[2] ) : undef;
 
     # TODO prototypes
     if( $fqname ) {
-        die 'Syntax error: named sub' unless $flags & 1;
+        die "Syntax error: named sub '$fqname'" unless $flags & 1;
 
         my $next = $self->lexer->lex( X_OPERATOR );
 
@@ -299,13 +300,15 @@ sub _parse_sub {
             Carp::confess( $next->[0], ' ', $next->[1] );
         }
     } else {
+        _lex_token( $self, T_OPBRK );
         die 'Syntax error: anonymous sub' unless $flags & 2;
     }
 
     $self->_enter_scope( 1 );
-    my $sub = Language::P::ParseTree::Subroutine->new
-                  ( { name     => $fqname,
-                      } );
+    my $sub = $fqname ? Language::P::ParseTree::NamedSubroutine->new
+                            ( { name     => $fqname,
+                                } ) :
+                        Language::P::ParseTree::AnonymousSubroutine->new;
     # add @_ to lexical scope
     $self->_lexicals->add_name( VALUE_ARRAY, '_' );
 
@@ -436,9 +439,9 @@ sub _parse_for {
 
         # FIXME our() variable refers to package it was declared in
         $foreach_var = Language::P::ParseTree::LexicalDeclaration->new
-                           ( { name             => $name->[1],
-                               sigil            => VALUE_SCALAR,
-                               declaration_type => $token->[2],
+                           ( { name    => $name->[1],
+                               sigil   => VALUE_SCALAR,
+                               flags   => $declaration_to_flags{$token->[2]},
                                } );
     } elsif( $token->[0] == T_DOLLAR ) {
         my $id = $self->lexer->lex_identifier;
@@ -562,17 +565,14 @@ sub _find_symbol {
                        } );
     }
 
-    my( $crossed_sub, $slot ) = $self->_lexicals->find_name( $sigil . $name );
+    my( $level, $lex ) = $self->_lexicals->find_name( $sigil . "\0" . $name );
 
-    if( $slot ) {
-        $slot->{in_pad} ||= $crossed_sub ? 1 : 0;
+    if( $lex ) {
+        $lex->set_closed_over if $level > 0;
 
         return Language::P::ParseTree::LexicalSymbol->new
-                   ( { name  => $name,
-                       sigil => $sigil,
-                       slot  => { level => $crossed_sub,
-                                  slot  => $slot,
-                                  },
+                   ( { declaration => $lex,
+                       level       => $level,
                        } );
     }
 
@@ -965,6 +965,8 @@ sub _parse_term_terminal {
              && (    $token->[2] == OP_MY || $token->[2] == OP_OUR
                   || $token->[2] == OP_STATE ) ) {
         return _parse_lexical( $self, $token->[2] );
+    } elsif( $token->[0] == T_ID && $token->[2] == KEY_SUB ) {
+        return _parse_sub( $self, 2, 1 );
     } elsif(    $token->[0] == T_ID
              && !is_keyword( $token->[2] ) ) {
         return _parse_listop( $self, $token );
@@ -1105,9 +1107,9 @@ sub _process_declaration {
         return $decl;
     } elsif( $decl->isa( 'Language::P::ParseTree::Symbol' ) ) {
         my $decl = Language::P::ParseTree::LexicalDeclaration->new
-                       ( { name             => $decl->name,
-                           sigil            => $decl->sigil,
-                           declaration_type => $keyword,
+                       ( { name    => $decl->name,
+                           sigil   => $decl->sigil,
+                           flags   => $declaration_to_flags{$keyword},
                            } );
         push @{$self->_pending_lexicals}, $decl;
 
@@ -1278,7 +1280,7 @@ sub _add_implicit_return {
                        } );
     }
 
-    # compund and can implicitly return
+    # compound and can implicitly return
     if( $line->isa( 'Language::P::ParseTree::Block' ) && @{$line->lines} ) {
         $line->lines->[-1] = _add_implicit_return( $line->lines->[-1] );
     } elsif( $line->isa( 'Language::P::ParseTree::Conditional' ) ) {
@@ -1304,7 +1306,11 @@ sub _parse_block_rest {
         my $token = $self->lexer->lex( X_STATE );
         if( $token->[0] == $end_token ) {
             if( $flags & BLOCK_IMPLICIT_RETURN && @lines ) {
-                $lines[-1] = _add_implicit_return( $lines[-1] );
+                for( my $i = $#lines; $i >= 0; --$i ) {
+                    next if $lines[$i]->is_declaration;
+                    $lines[$i] = _add_implicit_return( $lines[$i] );
+                    last;
+                }
             }
 
             $self->_leave_scope if $flags & BLOCK_OPEN_SCOPE;

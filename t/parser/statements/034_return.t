@@ -12,7 +12,7 @@ sub x {
     return @y;
 }
 EOP
---- !parsetree:Subroutine
+--- !parsetree:NamedSubroutine
 lines:
   - !parsetree:Builtin
     arguments:
@@ -31,7 +31,7 @@ sub x {
     @y;
 }
 EOP
---- !parsetree:Subroutine
+--- !parsetree:NamedSubroutine
 lines:
   - !parsetree:Symbol
     context: CXT_VOID
@@ -55,7 +55,7 @@ sub x {
     }
 }
 EOP
---- !parsetree:Subroutine
+--- !parsetree:NamedSubroutine
 lines:
   - !parsetree:Conditional
     iffalse: ~

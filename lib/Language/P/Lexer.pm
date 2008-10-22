@@ -227,7 +227,7 @@ sub _skip_space {
         }
 
         $$buffer =~ s/^([ \t]+)// && defined wantarray and $retval .= $1;
-        if( $$buffer =~ s/^[\r\n]// ) {
+        if( $$buffer =~ s/^([\r\n])// ) {
             $retval .= $1 if defined wantarray;
             $self->{_start_of_line} = 1;
             ++$self->{line};
@@ -454,6 +454,21 @@ sub lex_quote {
     }
 
     die "Can't get there";
+}
+
+sub lex_alphabetic_identifier {
+    my( $self ) = @_;
+
+    if( @{$self->tokens} ) {
+        return undef if $self->tokens->[-1]->[0] != T_ID;
+        return pop @{$self->tokens};
+    }
+
+    local $_ = $self->buffer;
+
+    return undef unless $$_ =~ /^[ \t\r\n]*[':\w]/;
+
+    return lex_identifier( $self );
 }
 
 sub lex_identifier {

@@ -7,6 +7,7 @@ use base qw(Language::P::Toy::Value::Code);
 __PACKAGE__->mk_ro_accessors( qw(name) );
 
 sub type { 6 }
+sub is_subroutine { 1 }
 
 sub new {
     my( $class, $args ) = @_;

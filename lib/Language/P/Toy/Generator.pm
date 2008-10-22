@@ -59,7 +59,8 @@ my @code_stack;
 sub push_code {
     my( $self, $code ) = @_;
 
-    push @code_stack, [ $code, [] ];
+    my $pad = Language::P::Toy::Value::ScratchPad->new;
+    push @code_stack, [ $code, [], $pad ];
 
     # TODO do not use global
     *bytecode = $code->bytecode;
@@ -208,14 +209,15 @@ my %dispatch =
     'Language::P::ParseTree::Constant'               => '_constant',
     'Language::P::ParseTree::Symbol'                 => '_symbol',
     'Language::P::ParseTree::LexicalDeclaration'     => '_lexical_declaration',
-    'Language::P::ParseTree::LexicalSymbol'          => '_lexical_declaration',
+    'Language::P::ParseTree::LexicalSymbol'          => '_lexical_symbol',
     'Language::P::ParseTree::List'                   => '_list',
     'Language::P::ParseTree::Conditional'            => '_cond',
     'Language::P::ParseTree::ConditionalLoop'        => '_cond_loop',
     'Language::P::ParseTree::Ternary'                => '_ternary',
     'Language::P::ParseTree::Block'                  => '_block',
-    'Language::P::ParseTree::Subroutine'             => '_subroutine',
+    'Language::P::ParseTree::NamedSubroutine'        => '_subroutine',
     'Language::P::ParseTree::SubroutineDeclaration'  => '_subroutine_decl',
+    'Language::P::ParseTree::AnonymousSubroutine'    => '_anon_subroutine',
     'Language::P::ParseTree::QuotedString'           => '_quoted_string',
     'Language::P::ParseTree::Subscript'              => '_subscript',
     'Language::P::ParseTree::Pattern'                => '_pattern',
@@ -284,6 +286,7 @@ my %unary =
     OP_LOG_NOT()         => 'not',
     OP_REFERENCE()       => 'reference',
     VALUE_SCALAR()       => 'dereference_scalar',
+    VALUE_SUB()          => 'dereference_subroutine',
     VALUE_ARRAY_LENGTH() => 'array_size',
     OP_BACKTICK()        => 'backtick',
     );
@@ -536,18 +539,35 @@ sub _symbol {
          o( 'glob_slot_create', slot => $slot );
 }
 
+sub _lexical_symbol {
+    my( $self, $tree ) = @_;
+
+    _do_lexical_access( $self, $tree->declaration, 0 );
+    $bytecode[-1]->{level} = $tree->level;
+}
+
 sub _lexical_declaration {
     my( $self, $tree ) = @_;
 
-    die unless defined $tree->{slot}->{level};
-#     use Data::Dumper;
-#     print Dumper $tree;
-    my $in_pad = $tree->{slot}->{slot}->{in_pad};
+    _do_lexical_access( $self, $tree, 1 );
+}
+
+sub _do_lexical_access {
+    my( $self, $tree, $is_decl ) = @_;
+
+    my $in_pad = $tree->closed_over;
     push @bytecode,
         o( $in_pad ? 'lexical_pad' : 'lexical',
-           lexical  => $tree->{slot}->{slot},
-           level    => $tree->{slot}->{level},
+           lexical  => $tree,
+           level    => 0,
            );
+
+    if( $is_decl ) {
+        push @{$current_block->{lexicals}},
+             { lexical => $tree,
+               in_pad  => $in_pad,
+               };
+    }
 }
 
 sub _cond_loop {
@@ -623,6 +643,15 @@ sub _subroutine_decl {
     # nothing to do
 }
 
+sub _anon_subroutine {
+    my( $self, $tree ) = @_;
+    my $sub = _subroutine( $self, $tree );
+
+    push @bytecode,
+        o( 'constant', value => $sub ),
+        o( 'make_closure' );
+}
+
 sub _subroutine {
     my( $self, $tree ) = @_;
 
@@ -641,7 +670,10 @@ sub _subroutine {
     $self->pop_block;
     $self->pop_code;
 
-    $self->runtime->symbol_table->set_symbol( $tree->name, '&', $sub );
+    $self->runtime->symbol_table->set_symbol( $tree->name, '&', $sub )
+      if defined $tree->name;
+
+    return $sub;
 }
 
 sub _quoted_string {
@@ -687,40 +719,79 @@ sub _pattern {
     push @bytecode, o( 'constant', value => $re );
 }
 
+my %lex_map;
+
+sub _find_add_value {
+    my( $pad, $lexical ) = @_;
+
+    return $lex_map{$pad}{$lexical} if exists $lex_map{$pad}{$lexical};
+    return $lex_map{$pad}{$lexical} = $pad->add_value( $lexical );
+}
+
 sub _allocate_lexicals {
     my( $self, $is_sub ) = @_;
 
-    my $pad = Language::P::Toy::Value::ScratchPad->new;
-    my $sub_args = $is_sub ? $pad->add_value : -1;
+    my $pad = $code_stack[-1][2];
+    my %map = $pad->{map} ? %{ delete $lex_map{$pad} } : ();
+    my %clear;
     my $has_pad;
     foreach my $op ( @bytecode ) {
         next if !$op->{lexical};
 
-#         use Data::Dumper;
-#         print Dumper $op;
+        if( !exists $map{$op->{lexical}} ) {
+            if(    $op->{lexical}->name eq '_'
+                && $op->{lexical}->sigil == VALUE_ARRAY ) {
+                $map{$op->{lexical}} = 0; # arguments are always first
+            } elsif( $op->{lexical}->closed_over ) {
+                if( $op->{level} ) {
+                    my $code_from = $code_stack[-1 - $op->{level}][0];
+                    my $pad_from = $code_stack[-1 - $op->{level}][2];
+                    my $val = _find_add_value( $pad_from, $op->{lexical} );
+                    if( $code_from->is_subroutine ) {
+                        foreach my $index ( -$op->{level} .. -1 ) {
+                            my $outer_pad = $code_stack[$index - 1][2];
+                            my $inner_pad = $code_stack[$index][2];
 
-        # FIXME make the lexical slot an object with accessors
-        if( $op->{level} == 0 && !defined $op->{lexical}->{index} ) {
-            if(    $op->{lexical}->{name} eq '_'
-                && $op->{lexical}->{sigil} == VALUE_ARRAY ) {
-                $op->{lexical}->{index} = $sub_args;
-            } elsif( $op->{lexical}->{in_pad} ) {
-                if( !$has_pad ) {
-                    $code_stack[-1][0]->{lexicals} = $pad;
-                    $pad->{outer} = $code_stack[-1][0]->{outer};
-                    $has_pad = 1;
+                            my $outer_idx = _find_add_value( $outer_pad, $op->{lexical} );
+                            my $inner_idx = _find_add_value( $inner_pad, $op->{lexical} );
+                            push @{$code_stack[$index][0]->closed},
+                              [$outer_idx, $inner_idx];
+                            $map{$op->{lexical}} = $inner_idx
+                              if $index == -1;
+                        }
+                    } else {
+                        $map{$op->{lexical}} =
+                            $pad->add_value( $op->{lexical},
+                                             $pad_from->values->[ $val ] );
+                    }
+                } else {
+                    $map{$op->{lexical}} = _find_add_value( $pad, $op->{lexical} );
                 }
-                $op->{lexical}->{index} = $pad->add_value;
             } else {
-                $op->{lexical}->{index} = $code_stack[-1][0]->stack_size;
+                $map{$op->{lexical}} = $code_stack[-1][0]->stack_size;
                 ++$code_stack[-1][0]->{stack_size};
             }
         }
 
-        $op->{in_pad} = $op->{lexical}->{in_pad};
-        $op->{index} = $op->{lexical}->{index};
+        if( !$has_pad && $op->{lexical}->closed_over ) {
+            $code_stack[-1][0]->{lexicals} = $pad;
+            $pad->{outer} = $code_stack[-1][0]->{outer};
+            $has_pad = 1;
+        }
+        $op->{in_pad} = $op->{lexical}->closed_over;
+        $op->{index} = $map{$op->{lexical}};
+        $clear{$op->{index}} ||= 1 if $op->{in_pad} && !$op->{level};
         delete $op->{lexical};
+        delete $op->{level};
     }
+
+    $code_stack[-1][0]->{closed} = undef unless @{$code_stack[-1][0]->closed};
+    if( !$has_pad && $code_stack[-1][0]->closed ) {
+        $code_stack[-1][0]->{lexicals} = $pad;
+        # FIXME accessors
+        $pad->{outer} = $code_stack[-1][0]->{outer};
+    }
+    $pad->{clear} = [ keys %clear ];
 }
 
 sub _exit_scope {
@@ -732,6 +803,14 @@ sub _exit_scope {
                 name  => $local->{name},
                 slot  => $local->{slot},
                 index => $local->{index},
+                );
+    }
+
+    foreach my $lexical ( reverse @{$block->{lexicals}} ) {
+        push @bytecode,
+             o( $lexical->{in_pad} ? 'lexical_pad_clear' : 'lexical_clear',
+                lexical => $lexical->{lexical},
+                level   => 0,
                 );
     }
 }

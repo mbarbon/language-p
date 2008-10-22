@@ -103,7 +103,7 @@ right: !parsetree:Substitution
         context: CXT_VOID
         left: !parsetree:LexicalDeclaration
           context: CXT_SCALAR|CXT_LVALUE
-          declaration_type: OP_MY
+          flags: DECLARATION_MY
           name: x
           sigil: VALUE_SCALAR
         op: OP_ASSIGN
@@ -112,6 +112,7 @@ right: !parsetree:Substitution
           value: 1
       - !parsetree:LexicalSymbol
         context: CXT_SCALAR
+        level: 0
         name: x
         sigil: VALUE_SCALAR
 EOE

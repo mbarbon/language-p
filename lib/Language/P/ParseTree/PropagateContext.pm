@@ -27,6 +27,7 @@ my %dispatch =
     'Language::P::ParseTree::Ternary'                => '_ternary',
     'Language::P::ParseTree::Block'                  => '_block',
     'Language::P::ParseTree::Subroutine'             => '_subroutine',
+    'Language::P::ParseTree::AnonymousSubroutine'    => '_subroutine',
     'Language::P::ParseTree::SubroutineDeclaration'  => '_noop',
     'Language::P::ParseTree::QuotedString'           => '_quoted_string',
     'Language::P::ParseTree::Subscript'              => '_subscript',

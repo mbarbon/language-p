@@ -5,7 +5,7 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_ro_accessors( qw(outer names is_subroutine
-                                 all_in_pad) );
+                                 top_level) );
 
 sub new {
     my( $class, $args ) = @_;
@@ -17,12 +17,12 @@ sub new {
 }
 
 sub _find_name {
-    my( $self, $name, $crossed_sub ) = @_;
+    my( $self, $name, $level ) = @_;
 
-    return ( $crossed_sub, $self->names->{$name} )
+    return ( $level, $self->names->{$name} )
         if exists $self->names->{$name};
     return _find_name( $self->outer, $name,
-                       $crossed_sub + $self->is_subroutine ) if $self->outer;
+                       $level + $self->is_subroutine ) if $self->outer;
     return ( 0, undef );
 }
 
@@ -35,31 +35,17 @@ sub find_name {
 sub add_name {
     my( $self, $sigil, $name ) = @_;
 
-    my $s = $self->names->{$sigil . $name} =
-                { in_pad => $self->all_in_pad ? 1 : 0,
-                  name   => $name,
-                  sigil  => $sigil,
-                  };
-
-    return ( 0, $s );
+    $self->add_lexical( Language::P::ParseTree::LexicalDeclaration->new
+                            ( { name  => $name,
+                                sigil => $sigil,
+                                flags => 0,
+                                } ) );
 }
 
-sub keep_in_pad {
-    my( $self, $name ) = @_;
+sub add_lexical {
+    my( $self, $lexical ) = @_;
 
-    my $slot = $self->find_name( $name );
-    die "Missing name '$name'" unless $slot;
-
-    $slot->{in_pad} = 1;
-}
-
-sub keep_all_in_pad {
-    my( $self ) = @_;
-
-    foreach my $slot ( values %{$self->names} ) {
-        $slot->{in_pad} = 1;
-    }
-    $self->outer->keep_all_in_pad if $self->outer;
+    my $s = $self->names->{$lexical->symbol_name} = $lexical;
 }
 
 1;

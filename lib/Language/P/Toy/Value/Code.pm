@@ -4,15 +4,17 @@ use strict;
 use warnings;
 use base qw(Language::P::Toy::Value::Any);
 
-__PACKAGE__->mk_ro_accessors( qw(bytecode stack_size lexicals outer) );
+__PACKAGE__->mk_ro_accessors( qw(bytecode stack_size lexicals outer closed) );
 
 sub type { 9 }
+sub is_subroutine { 0 }
 
 sub new {
     my( $class, $args ) = @_;
     my $self = $class->SUPER::new( $args );
 
-    $self->{stack_size} = 0;
+    $self->{stack_size} ||= 0;
+    $self->{closed} ||= [];
 
     return $self;
 }
@@ -23,7 +25,6 @@ sub call {
 
     my $stack = $runtime->{_stack};
     if( $self->lexicals ) {
-        # FIXME copy closed-over scalars
         my $pad = $self->lexicals->new_scope( undef );
         $stack->[$frame - 1] = $pad;
     } else {

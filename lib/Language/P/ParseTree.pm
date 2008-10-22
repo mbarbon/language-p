@@ -47,6 +47,9 @@ our @EXPORT_OK =
 
        VALUE_SCALAR VALUE_ARRAY VALUE_HASH VALUE_SUB VALUE_GLOB
        VALUE_ARRAY_LENGTH
+
+       DECLARATION_MY DECLARATION_OUR DECLARATION_STATE
+       DECLARATION_CLOSED_OVER
        ), @OPERATIONS );
 our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,
@@ -113,6 +116,13 @@ use constant
     FLAG_RX_DELETE           => 2,
     FLAG_RX_SQUEEZE          => 4,
 
+    # declarations
+    DECLARATION_MY           => 1,
+    DECLARATION_OUR          => 2,
+    DECLARATION_STATE        => 4,
+    DECLARATION_CLOSED_OVER  => 8,
+    DECLARATION_TYPE_MASK    => 7,
+
     map { $OPERATIONS[$_] => $_ + 1 } 0 .. $#OPERATIONS,
     };
 
@@ -127,6 +137,7 @@ sub is_constant { 0 }
 sub is_symbol { 0 }
 sub is_compound { 0 }
 sub can_implicit_return { 1 }
+sub is_declaration { 0 }
 sub lvalue_context { Language::P::ParseTree::CXT_SCALAR }
 
 sub _fields {
@@ -252,7 +263,12 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Identifier);
 
-__PACKAGE__->mk_ro_accessors( qw(slot) );
+our @FIELDS = qw(level);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS, qw(declaration) );
+
+sub sigil { $_[0]->declaration->sigil }
+sub name { $_[0]->declaration->name }
 
 package Language::P::ParseTree::LexicalDeclaration;
 
@@ -260,11 +276,14 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Identifier);
 
-our @FIELDS = qw(declaration_type);
+our @FIELDS = qw(flags);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
-sub symbol_name { return $_[0]->sigil . $_[0]->name }
+sub symbol_name { return $_[0]->sigil . "\0" . $_[0]->name }
+sub declaration_type { $_[0]->{flags} & Language::P::ParseTree::DECLARATION_TYPE_MASK }
+sub closed_over { $_[0]->{flags} & Language::P::ParseTree::DECLARATION_CLOSED_OVER }
+sub set_closed_over { $_[0]->{flags} |= Language::P::ParseTree::DECLARATION_CLOSED_OVER }
 
 package Language::P::ParseTree::Block;
 
@@ -284,9 +303,21 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(name lines);
+our @FIELDS = qw(lines);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
+
+package Language::P::ParseTree::NamedSubroutine;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Subroutine);
+
+our @FIELDS = qw(name);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
+sub is_declaration { 1 }
 
 package Language::P::ParseTree::SubroutineDeclaration;
 
@@ -297,6 +328,16 @@ use base qw(Language::P::ParseTree::Node);
 our @FIELDS = qw(name);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
+
+sub is_declaration { 1 }
+
+package Language::P::ParseTree::AnonymousSubroutine;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Subroutine);
+
+sub name { undef }
 
 package Language::P::ParseTree::BinOp;
 

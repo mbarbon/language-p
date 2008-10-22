@@ -70,6 +70,7 @@ sub as_string {
                  $ref->isa( 'Language::P::Toy::Value::Hash' ) ? 'HASH' :
                  $ref->isa( 'Language::P::Toy::Value::Array' ) ? 'ARRAY' :
                  $ref->isa( 'Language::P::Toy::Value::Typeglob' ) ? 'GLOB' :
+                 $ref->isa( 'Language::P::Toy::Value::Subroutine' ) ? 'CODE' :
                                                             die "$ref";
 
     return sprintf '%s(0x%p)', $prefix, $ref;

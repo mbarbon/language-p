@@ -79,7 +79,7 @@ sub x { };
 
 x 1, 2;
 EOP
---- !parsetree:Subroutine
+--- !parsetree:NamedSubroutine
 lines: []
 name: x
 --- !parsetree:FunctionCall

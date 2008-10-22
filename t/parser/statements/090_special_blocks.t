@@ -12,7 +12,7 @@ BEGIN {
     1
 }
 EOP
---- !parsetree:Subroutine
+--- !parsetree:NamedSubroutine
 lines:
   - !parsetree:Builtin
     arguments:
@@ -29,7 +29,7 @@ sub END {
     1
 }
 EOP
---- !parsetree:Subroutine
+--- !parsetree:NamedSubroutine
 lines:
   - !parsetree:Builtin
     arguments:
@@ -46,7 +46,7 @@ END {
     1
 }
 EOP
---- !parsetree:Subroutine
+--- !parsetree:NamedSubroutine
 lines:
   - !parsetree:Builtin
     arguments:

@@ -96,17 +96,18 @@ Runtime:
     blocks
   - local() ends at end of file
   - code generation for return/die/last/redo/next, ...
-  - localization of scalar, array, hash, array/hash element
+  - localization of array, hash, glob, array/hash element
   - check that when localizing a variable, it is always
     a global/package variable
   - magical/tied variables (probably add a localize() method to all types)
   - localization of complex expressions (?:, lists, ...)
 - my()
   - check code generation for all block types and
-    different cases for local() in conditions or in loop/conditional/continue
+    different cases for my() in conditions or in loop/conditional/continue
     blocks
   - my() at global scope does not end at end of file
   - code generation for return/die/last/redo/next, ...
+  - test global my() vs. local my(), lexical arrays, hashes
 
 Refactoring:
 - check offsets for call sequence, refactor stack handling

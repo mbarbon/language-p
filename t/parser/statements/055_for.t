@@ -23,6 +23,7 @@ condition: !parsetree:BinOp
   context: CXT_SCALAR
   left: !parsetree:LexicalSymbol
     context: CXT_SCALAR
+    level: 0
     name: i
     sigil: VALUE_SCALAR
   op: OP_NUM_LT
@@ -33,7 +34,7 @@ initializer: !parsetree:BinOp
   context: CXT_VOID
   left: !parsetree:LexicalDeclaration
     context: CXT_SCALAR|CXT_LVALUE
-    declaration_type: OP_MY
+    flags: DECLARATION_MY
     name: i
     sigil: VALUE_SCALAR
   op: OP_ASSIGN
@@ -44,6 +45,7 @@ step: !parsetree:BinOp
   context: CXT_VOID
   left: !parsetree:LexicalSymbol
     context: CXT_SCALAR|CXT_LVALUE
+    level: 0
     name: i
     sigil: VALUE_SCALAR
   op: OP_ASSIGN
@@ -51,6 +53,7 @@ step: !parsetree:BinOp
     context: CXT_SCALAR
     left: !parsetree:LexicalSymbol
       context: CXT_SCALAR
+      level: 0
       name: i
       sigil: VALUE_SCALAR
     op: OP_ADD
@@ -118,7 +121,7 @@ expression: !parsetree:Symbol
   sigil: VALUE_ARRAY
 variable: !parsetree:LexicalDeclaration
   context: CXT_SCALAR
-  declaration_type: OP_MY
+  flags: DECLARATION_MY
   name: x
   sigil: VALUE_SCALAR
 EOE
