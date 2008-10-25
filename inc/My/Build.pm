@@ -4,6 +4,36 @@ use strict;
 use warnings;
 use base qw(Module::Build);
 
+use File::Basename;
+
+sub _compile_pir_pbc {
+    my( $self, $parrot, $pir_file ) = @_;
+    ( my $pbc_file = $pir_file ) =~ s/\.pir$/.pbc/;
+
+    return if $self->up_to_date( [ $pir_file ], [ $pbc_file ] );
+    $self->do_system( $parrot, '--output-pbc', '-o', $pbc_file, $pir_file );
+    $self->add_to_cleanup( $pbc_file );
+}
+
+sub ACTION_code_parrot {
+    my( $self ) = @_;
+    my $parrot_path = $self->args( 'parrot' );
+
+    if( !$self->up_to_date( [ 'inc/p_parrot' ], [ 'bin/p_parrot' ] ) ) {
+        require File::Slurp; File::Slurp->import( qw(read_file write_file) );
+
+        $self->log_info( "Creating 'bin/p_parrot'" );
+        write_file( 'bin/p_parrot',
+                    map { s/%PARROT%/$parrot_path/eg; $_ }
+                        read_file( 'inc/p_parrot' ) );
+        chmod 0755, 'bin/p_parrot';
+        $self->add_to_cleanup( 'bin/p_parrot' );
+    }
+    foreach my $pir_file ( glob 'support/parrot/runtime/*.pir' ) {
+        _compile_pir_pbc( $self, $parrot_path, $pir_file );
+    }
+}
+
 sub ACTION_code {
     my( $self ) = @_;
 
@@ -13,6 +43,7 @@ sub ACTION_code {
                           '--', 'lib/Language/P/Keywords.pm' );
         $self->add_to_cleanup( 'lib/Language/P/Keywords.pm' );
     }
+    $self->depends_on( 'code_parrot' ) if $self->args( 'parrot' );
 
     $self->SUPER::ACTION_code;
 }
@@ -61,7 +92,16 @@ my %test_tags =
     'perl5'      => [ [ 'bin/p', 't/perl5' ] ],
     'run'        => [ [ 'bin/p', 't/run' ] ],
     'all'        => [ 'parser', 'runtime', 'run', 'perl5' ],
+    'parrot'     => [ 'parser', 'parrot_run', 'parrot_perl5' ],
+    'parrot_run' => [ [ 'bin/p_parrot', 't/run' ] ],
+    'parrot_perl5'=>[ [ 'bin/p_parrot', 't/perl5' ] ],
     );
+sub ACTION_test_parser;
+sub ACTION_test_runtime;
+sub ACTION_test_runt;
+sub ACTION_test_perl5;
+sub ACTION_test_parrot_run;
+sub ACTION_test_parrot_perl5;
 
 sub _expand_tags {
     my( $self, $tag ) = @_;
@@ -91,6 +131,7 @@ our $AUTOLOAD;
 sub AUTOLOAD {
     ( my $function = $AUTOLOAD ) =~ s/^.*:://;
 
+    return if $function eq 'DESTROY';
     die "Unknown action '$function'"
         unless $function =~ /^ACTION_test_(\w+)/;
 

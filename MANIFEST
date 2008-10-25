@@ -7,8 +7,11 @@ TODO
 bin/p
 inc/Keywords.pm
 inc/My/Build.pm
+inc/p_parrot
 lib/Language/P.pm
 lib/Language/P/Lexer.pm
+lib/Language/P/Parrot/BootstrapRuntime.pm
+lib/Language/P/Parrot/Generator.pm
 lib/Language/P/ParseTree.pm
 lib/Language/P/ParseTree/DumpYAML.pm
 lib/Language/P/ParseTree/PropagateContext.pm
@@ -35,6 +38,14 @@ lib/Language/P/Toy/Value/StringNumber.pm
 lib/Language/P/Toy/Value/Subroutine.pm
 lib/Language/P/Toy/Value/SymbolTable.pm
 lib/Language/P/Toy/Value/Typeglob.pm
+support/parrot/runtime/p5array.pir
+support/parrot/runtime/p5glob.pir
+support/parrot/runtime/p5integer.pir
+support/parrot/runtime/p5list.pir
+support/parrot/runtime/p5runtime.pir
+support/parrot/runtime/p5scalar.pir
+support/parrot/runtime/p5string.pir
+support/parrot/runtime/p5undef.pir
 t/lib/TestParser.pm
 t/lib/TestRegex.pm
 t/parser/001_load.t
