@@ -781,13 +781,19 @@ sub lex {
     local $_ = $self->buffer;
     return [ T_EOF, '' ] unless length $$_;
 
+    # numbers
     $$_ =~ /^\d|^\.\d/ and return $self->lex_number;
+    # quote and quote-like operators
     $$_ =~ s/^(q|qq|qx|qw|m|qr|s|tr|y)(?=\W)//x and
         return _prepare_sublex( $self, $1, undef );
+    # 'x' operator special case
     $$_ =~ /^x[0-9]/ && $expect == X_OPERATOR and do {
         $$_ =~ s/^.//;
         return [ T_SSTAR, 'x' ];
     };
+    # anything that can start with alphabetic character: package name,
+    # label, identifier, fully qualified identifier, keyword, named
+    # operator
     $$_ =~ s/^(::)?(\w+)//x and do {
         my $ids = ( $1 || '' ) . $2;
         my $fqual = $1 ? 1 : 0;
@@ -851,6 +857,7 @@ sub lex {
         return [ T_ID, $ids, $type ];
     };
     $$_ =~ s/^(["'`])//x and return _prepare_sublex( $self, $1, $1 );
+    # < when not operator (<> glob, <> file read, << here doc)
     $$_ =~ /^</ and $expect != X_OPERATOR and do {
         $$_ =~ s/^(<<|<)//x;
 
@@ -860,6 +867,7 @@ sub lex {
             return _prepare_sublex_heredoc( $self );
         }
     };
+    # multi char operators
     $$_ =~ s/^(<=|>=|==|!=|=>|->
                 |=~|!~
                 |\.\.|\.\.\.
@@ -879,6 +887,7 @@ sub lex {
         }
         return [ $ops{'$'}, '$' ];
     };
+    # brackets (block, subscripting, anonymous ref constructors)
     $$_ =~ s/^([{}\[\]])// and do {
         my $brack = $1;
 
@@ -939,6 +948,7 @@ sub lex {
 
         return [ $ops{$brack}, $brack ];
     };
+    # / (either regex start or division operator)
     $$_ =~ s/^\///x and do {
         if( $expect == X_TERM || $expect == X_STATE ) {
             return _prepare_sublex( $self, 'm', '/' );
@@ -946,6 +956,7 @@ sub lex {
             return [ T_SLASH, '/' ];
         }
     };
+    # filetest operators
     $$_ =~ s/^-([rwxoRWXOezsfdlpSugkbctTBMMAC])(?=\W)// and do {
         my $op = $1;
         if( $$_ =~ /^[ \t]*=>/ ) {
@@ -955,6 +966,7 @@ sub lex {
 
         return [ T_FILETEST, $op, $filetest{$op} ];
     };
+    # single char operators
     $$_ =~ s/^([:;,()\?<>!=\/\\\+\-\.\|^\*%@&])//x and return [ $ops{$1}, $1 ];
 
     die "Lexer error: '$$_'";
