@@ -182,12 +182,6 @@ sub _leave_scope {
     $self->_lexicals( $state->{lexicals} );
 }
 
-sub _label {
-    my( $self ) = @_;
-
-    return undef;
-}
-
 sub _lex_token {
     my( $self, $type, $value, $expect ) = @_;
     my $token = $self->lexer->lex( $expect || X_NOTHING );
@@ -221,14 +215,28 @@ my %special_sub = map { $_ => 1 }
 
 sub _parse_line {
     my( $self ) = @_;
+    my $label = $self->lexer->peek( X_STATE );
 
-    my $label = _label( $self );
+    if( $label->[0] != T_LABEL ) {
+        return _parse_line_rest( $self, 1 );
+    } else {
+        _lex_token( $self, T_LABEL );
+
+        return Language::P::ParseTree::Label->new
+                   ( { name      => $label->[1],
+                       statement => _parse_line_rest( $self, 0 ),
+                       } );
+    }
+}
+
+sub _parse_line_rest {
+    my( $self, $no_empty ) = @_;
     my $token = $self->lexer->peek( X_STATE );
 
     if( $token->[0] == T_SEMICOLON ) {
         _lex_semicolon( $self );
 
-        return _parse_line( $self );
+        return $no_empty ? _parse_line_rest( $self, 1 ) : undef;
     } elsif( $token->[0] == T_OPBRK ) {
         _lex_token( $self, T_OPBRK );
 

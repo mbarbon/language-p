@@ -39,6 +39,7 @@ my %dispatch =
     'Language::P::ParseTree::Foreach'                => '_foreach',
     'Language::P::ParseTree::For'                    => '_for',
     'Language::P::ParseTree::Package'                => '_noop',
+    'Language::P::ParseTree::Label'                  => '_label',
     'DEFAULT'                                        => '_noisy_noop',
     );
 
@@ -288,6 +289,12 @@ sub _ref_constr {
     my( $self, $tree, $cxt ) = @_;
 
     $self->visit( $tree->expression, CXT_LIST ) if $tree->expression;
+}
+
+sub _label {
+    my( $self, $tree, $cxt ) = @_;
+
+    $self->visit( $tree->statement, $cxt ) if $tree->statement;
 }
 
 1;

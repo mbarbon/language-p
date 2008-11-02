@@ -25,7 +25,7 @@ BEGIN {
        T_MINUS T_STAR T_DOLLAR T_PERCENT T_AT T_AMPERSAND T_PLUSPLUS
        T_MINUSMINUS T_ANDAND T_OROR T_ARYLEN T_ARROW T_MATCH T_NOTMATCH
        T_ANDANDLOW T_ORORLOW T_NOTLOW T_XORLOW T_CMP T_SCMP T_SSTAR T_POWER
-       T_PLUSEQUAL T_MINUSEQUAL T_STAREQUAL T_SLASHEQUAL
+       T_PLUSEQUAL T_MINUSEQUAL T_STAREQUAL T_SLASHEQUAL T_LABEL
 
        T_CLASS_START T_CLASS_END T_CLASS T_QUANTIFIER T_ASSERTION T_ALTERNATE
        T_CLGROUP
@@ -828,6 +828,9 @@ sub lex {
             } else {
                 return [ T_STRING, $ids ];
             }
+        } elsif(    $expect == X_STATE && $type != T_FQ_ID
+                 && $$_ =~ s/^:(?!:)// ) {
+            return [ T_LABEL, $ids ];
         }
 
         if( $type == T_ID && $ids =~ /^__/ ) {
