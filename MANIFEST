@@ -38,6 +38,7 @@ lib/Language/P/Toy/Value/Typeglob.pm
 t/lib/TestParser.pm
 t/lib/TestRegex.pm
 t/parser/001_load.t
+t/parser/002_parent.t
 t/parser/expressions/002_method_call.t
 t/parser/expressions/005_unary.t
 t/parser/expressions/007_repeat.t

@@ -10,7 +10,7 @@ use Language::P::Keywords;
 use Language::P::ParseTree qw(:all);
 use Language::P::Toy::Value::MainSymbolTable;
 
-our @EXPORT_OK = qw(fresh_parser parsed_program parse_and_diff
+our @EXPORT_OK = qw(fresh_parser parsed_program
                     parse_and_diff_yaml);
 our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,

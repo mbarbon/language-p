@@ -132,6 +132,17 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
+use Scalar::Util ();
+
+sub new {
+    my( $class, $args ) = @_;
+    my $self = $class->SUPER::new( $args );
+
+    $self->set_parent_for_all_childs;
+
+    return $self;
+}
+
 sub is_bareword { 0 }
 sub is_constant { 0 }
 sub is_symbol { 0 }
@@ -139,6 +150,14 @@ sub is_compound { 0 }
 sub can_implicit_return { 1 }
 sub is_declaration { 0 }
 sub lvalue_context { Language::P::ParseTree::CXT_SCALAR }
+sub parent { $_[0]->{parent} }
+
+sub set_parent {
+    my( $self, $parent ) = @_;
+
+    $_[0]->{parent} = $parent;
+    Scalar::Util::weaken( $_[0]->{parent} );
+}
 
 sub _fields {
     no strict 'refs';
@@ -152,6 +171,24 @@ sub _fields {
 }
 
 sub fields { _fields( ref( $_[0] ) ) }
+
+sub set_parent_for_all_childs {
+    my( $self ) = @_;
+
+    foreach my $field ( $self->fields ) {
+        my $v = $self->$field;
+        next unless $v && ref( $v );
+
+        if( ref( $v ) eq 'ARRAY' ) {
+            $_->set_parent( $self ) foreach @$v;
+        } elsif( ref( $v ) eq 'HASH' ) {
+            die "No hash-ish field yet";
+        } else {
+            # can only be a node
+            $v->set_parent( $self );
+        }
+    }
+}
 
 package Language::P::ParseTree::Package;
 

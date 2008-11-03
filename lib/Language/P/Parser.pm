@@ -314,6 +314,7 @@ sub _parse_sub {
 
     my $block = _parse_block_rest( $self, BLOCK_IMPLICIT_RETURN );
     $sub->{lines} = $block->{lines}; # FIXME encapsulation
+    $sub->set_parent_for_all_childs;
     $self->_leave_scope;
 
     $self->_propagate_context->visit( $sub, CXT_CALLER );
@@ -373,14 +374,16 @@ sub _parse_cond {
                                           block      => $block,
                                           } )
         } else {
+            # FIXME encapsulation
             $if->{iffalse} = Language::P::ParseTree::ConditionalBlock->new
                                       ( { block_type => 'else',
                                           condition  => undef,
                                           block      => $block,
-                                          } )
+                                          } );
         }
     }
 
+    $if->set_parent_for_all_childs;
     $self->_leave_scope;
 
     return $if;
@@ -1221,7 +1224,10 @@ sub _parse_term_n {
 
             if( $token->[0] == T_COMMA ) {
                 if( $terminal->isa( 'Language::P::ParseTree::List' ) ) {
-                    push @{$terminal->expressions}, $rterm if $rterm;
+                    if( $rterm ) {
+                        push @{$terminal->expressions}, $rterm;
+                        $rterm->set_parent( $terminal );
+                    }
                 } else {
                     $terminal = Language::P::ParseTree::List->new
                         ( { expressions => [ $terminal, $rterm ? $rterm : () ],
@@ -1469,8 +1475,10 @@ sub _parse_listop_like {
                         arguments => $args,
                         indirect  => $fh,
                         } );
-    } else {
+    } elsif( $args ) {
+        # FIXME encapsulation
         $call->{arguments} = $args;
+        $_->set_parent( $call ) foreach @$args;
     }
 
     _apply_prototype( $self, $call );
