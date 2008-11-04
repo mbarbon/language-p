@@ -40,6 +40,18 @@ use constant
     X_BLOCK    => 4,
     X_REF      => 5,
 
+    O_TYPE            => 0,
+    O_VALUE           => 1,
+    O_ID_TYPE         => 2,
+    O_FT_OP           => 2,
+    O_QS_INTERPOLATE  => 2,
+    O_QS_BUFFER       => 3,
+    O_RX_REST         => 2,
+    O_RX_SECOND_HALF  => 4,
+    O_RX_FLAGS        => 5,
+    O_RX_INTERPOLATED => 6,
+    O_NUM_FLAGS       => 2,
+
     map { $TOKENS[$_] => $_ + 1 } 0 .. $#TOKENS,
     };
 
@@ -47,6 +59,8 @@ use Exporter qw(import);
 
 our @EXPORT_OK =
   ( qw(X_NOTHING X_STATE X_TERM X_OPERATOR X_BLOCK X_REF
+       O_TYPE O_VALUE O_ID_TYPE O_FT_OP O_QS_INTERPOLATE O_QS_BUFFER
+       O_RX_REST O_RX_SECOND_HALF O_RX_FLAGS O_RX_INTERPOLATED O_NUM_FLAGS
        ), @TOKENS );
 our %EXPORT_TAGS =
   ( all  => \@EXPORT_OK,
@@ -460,7 +474,7 @@ sub lex_alphabetic_identifier {
     my( $self ) = @_;
 
     if( @{$self->tokens} ) {
-        return undef if $self->tokens->[-1]->[0] != T_ID;
+        return undef if $self->tokens->[-1]->[O_TYPE] != T_ID;
         return pop @{$self->tokens};
     }
 
@@ -475,7 +489,7 @@ sub lex_identifier {
     my( $self ) = @_;
 
     if( @{$self->tokens} ) {
-        return undef if $self->tokens->[-1]->[0] != T_ID;
+        return undef if $self->tokens->[-1]->[O_TYPE] != T_ID;
         return pop @{$self->tokens};
     }
 
@@ -692,18 +706,18 @@ sub _prepare_sublex {
     my( $quote, $token ) = _find_end( $self, $op, $quote_start );
 
     # oops, found fat comma: not a quote-like operator
-    return $token if $token->[0] == T_STRING;
+    return $token if $token->[O_TYPE] == T_STRING;
 
     if( my $op_descr = $regex_flags{$op} ) {
         # scan second part of substitution/transliteration
         if( $op eq 's' || $op eq 'tr' || $op eq 'y' ) {
             my $quote_char = $quote_end{$quote} ? undef : $quote;
             my( undef, $rest ) = _find_end( $self, $op, $quote_char );
-            $token->[4] = $rest;
+            $token->[O_RX_SECOND_HALF] = $rest;
         }
 
         # scan regexp flags
-        $token->[1] = $op_descr->[0];
+        $token->[O_VALUE] = $op_descr->[0];
         my $fl_str = $op_descr->[1];
         local $_ = $self->buffer;
 
@@ -713,13 +727,13 @@ sub _prepare_sublex {
             substr $$_, 0, 1, '';
             $flags |= $op_descr->[$idx + 2];
         }
-        $token->[5] = $flags;
+        $token->[O_RX_FLAGS] = $flags;
     } elsif( $op eq 'qx' || $op eq "`" ) {
-        $token->[1] = OP_QL_QX;
+        $token->[O_VALUE] = OP_QL_QX;
     } elsif( $op eq 'qw' ) {
-        $token->[1] = OP_QL_QW;
+        $token->[O_VALUE] = OP_QL_QW;
     } elsif( $op eq '<' ) {
-        $token->[1] = OP_QL_LT;
+        $token->[O_VALUE] = OP_QL_LT;
     }
 
     return $token;
@@ -939,7 +953,7 @@ sub lex {
 
                     $self->_skip_space;
                     if(    $$_ =~ /^=>/
-                        || ( $$_ =~ /^,/ && $next->[0] != T_ID ) ) {
+                        || ( $$_ =~ /^,/ && $next->[O_TYPE] != T_ID ) ) {
                         return [ T_OPHASH, '{' ];
                     }
                 }
