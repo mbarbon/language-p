@@ -119,14 +119,15 @@ sub parse_file {
     open my $fh, '<', $file or die "open '$file': $!";
 
     $self->_package( 'main' );
-    $self->parse_stream( $fh );
+    $self->parse_stream( $fh, $file );
 }
 
 sub parse_stream {
-    my( $self, $stream ) = @_;
+    my( $self, $stream, $filename ) = @_;
 
     $self->{lexer} = Language::P::Lexer->new
                          ( { stream       => $stream,
+                             file         => $filename,
                              symbol_table => $self->runtime->symbol_table,
                              } );
     $self->{_lexical_state} = [];
