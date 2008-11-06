@@ -245,11 +245,13 @@ sub _skip_space {
             $retval .= $1 if defined wantarray;
             $self->{_start_of_line} = 1;
             ++$self->{line};
+            next;
         }
         if( $$buffer =~ s/^(#.*\n)// ) {
             $retval .= $1 if defined wantarray;
             $self->{_start_of_line} = 1;
             ++$self->{line};
+            next;
         }
 
         last if length $$buffer;
