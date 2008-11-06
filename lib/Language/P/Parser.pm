@@ -189,6 +189,14 @@ sub _label {
     return undef;
 }
 
+sub _syntax_error {
+    my( $self, $token ) = @_;
+
+    Carp::confess( sprintf "Unexpected token '%s' (%s) at %s:%d\n       ",
+                           $token->[O_VALUE], $token->[O_TYPE],
+                           $token->[O_POS][0], $token->[O_POS][1] );
+}
+
 sub _lex_token {
     my( $self, $type, $value, $expect ) = @_;
     my $token = $self->lexer->lex( $expect || X_NOTHING );
@@ -197,7 +205,7 @@ sub _lex_token {
 
     if(    ( $type && $type != $token->[O_TYPE] )
         || ( $value && $value eq $token->[O_VALUE] ) ) {
-        Carp::confess( $token->[O_TYPE], ' ', $token->[O_VALUE] );
+        _syntax_error( $self, $token );
     }
 
     return $token;
@@ -214,7 +222,7 @@ sub _lex_semicolon {
         return;
     }
 
-    Carp::confess( $token->[O_TYPE], ' ', $token->[O_VALUE] );
+    _syntax_error( $self, $token );
 }
 
 my %special_sub = map { $_ => 1 }
@@ -266,7 +274,7 @@ sub _parse_line {
         return _parse_sideff( $self );
     }
 
-    Carp::confess $token->[O_TYPE], ' ', $token->[O_VALUE];
+    _syntax_error( $self, $token );
 }
 
 sub _add_pending_lexicals {
@@ -299,7 +307,7 @@ sub _parse_sub {
                        ( { name => $fqname,
                            } );
         } elsif( $next->[O_TYPE] != T_OPBRK ) {
-            Carp::confess( $next->[O_TYPE], ' ', $next->[O_VALUE] );
+            _syntax_error( $self, $next );
         }
     } else {
         _lex_token( $self, T_OPBRK );
@@ -433,7 +441,7 @@ sub _parse_for {
 
             return $for;
         } else {
-            Carp::confess $sep->[O_TYPE], ' ', $sep->[O_VALUE];
+            _syntax_error( $self, $sep );
         }
     } elsif( $token->[O_TYPE] == T_ID && (    $token->[O_ID_TYPE] == OP_MY
                                            || $token->[O_ID_TYPE] == OP_OUR
@@ -452,7 +460,7 @@ sub _parse_for {
         my $id = $self->lexer->lex_identifier;
         $foreach_var = _find_symbol( $self, VALUE_SCALAR, $id->[O_VALUE], $id->[O_ID_TYPE] );
     } else {
-        Carp::confess $token->[O_TYPE], ' ', $token->[O_VALUE];
+        _syntax_error( $self, $token );
     }
 
     # if we get there it is not C-style for
@@ -748,7 +756,7 @@ sub _parse_maybe_direct_method_call {
         $method = _find_symbol( $self, VALUE_SCALAR, $id->[O_VALUE], $id->[O_ID_TYPE] );
         $indirect = 1;
     } else {
-        die $token->[O_TYPE], ' ', $token->[O_VALUE];
+        _syntax_error( $self, $token );
     }
 
     my $oppar = $self->lexer->peek( X_OPERATOR );
@@ -845,7 +853,7 @@ sub _parse_string_rest {
         } elsif( $value->[O_TYPE] == T_DOLLAR || $value->[O_TYPE] == T_AT ) {
             push @values, _parse_indirobj_maybe_subscripts( $self, $value );
         } else {
-            die $value->[O_TYPE], ' ', $value->[O_VALUE];
+            _syntax_error( $self, $value );
         }
     }
 
@@ -1146,7 +1154,7 @@ sub _parse_term_p {
             return _parse_term_n( $self, $binprec->[0],
                                   $terminal );
         } else {
-            Carp::confess $la->[O_TYPE], ' ', $la->[O_VALUE];
+            _syntax_error( $self, $la );
         }
     } elsif( $token->[O_TYPE] == T_FILETEST ) {
         return _parse_listop_like( $self, undef, 1,
@@ -1219,7 +1227,7 @@ sub _parse_term_n {
             $terminal = _parse_ternary( $self, PREC_TERNARY, $terminal );
         } else {
             # do not try to use colon as binary
-            Carp::confess $token->[O_TYPE], ' ', $token->[O_VALUE]
+            _syntax_error( $self, $token )
                 if $token->[O_TYPE] == T_COLON;
 
             my $q = $bin->[1] == ASSOC_RIGHT ? $bin->[0] : $bin->[0] - 1;
@@ -1365,7 +1373,7 @@ sub _parse_indirobj {
 
         return undef;
     } else {
-        die $token->[O_TYPE], ' ', $token->[O_VALUE];
+        _syntax_error( $self, $token );
     }
 }
 
@@ -1438,7 +1446,7 @@ sub _parse_listop_like {
                 # parsed as a normal sub call; go figure
                 $next = $la;
             } else {
-                Carp::confess( $la->[O_TYPE], ' ', $la->[O_VALUE] );
+                _syntax_error( $self, $la );
             }
         } elsif( !$declared && $next->[O_TYPE] != T_OPPAR ) {
             # not a declared subroutine, nor followed by parenthesis
