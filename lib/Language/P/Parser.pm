@@ -8,13 +8,11 @@ use Language::P::Lexer qw(:all);
 use Language::P::ParseTree qw(:all);
 use Language::P::Parser::Regex;
 use Language::P::Parser::Lexicals;
-use Language::P::ParseTree::PropagateContext;
 use Language::P::Keywords;
 
 __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime) );
 __PACKAGE__->mk_accessors( qw(_package _lexicals _pending_lexicals
-                              _propagate_context _in_declaration
-                              _lexical_state) );
+                              _in_declaration _lexical_state) );
 
 use constant
   { PREC_HIGHEST       => 0,
@@ -146,14 +144,12 @@ sub _qualify {
 sub _parse {
     my( $self ) = @_;
 
-    $self->_propagate_context( Language::P::ParseTree::PropagateContext->new );
     $self->_pending_lexicals( [] );
     $self->_lexicals( undef );
     $self->_enter_scope( 0 , 1 ); # FIXME eval
 
     $self->generator->start_code_generation;
     while( my $line = _parse_line( $self ) ) {
-        $self->_propagate_context->visit( $line, CXT_VOID );
         $self->generator->process( $line );
     }
     my $code = $self->generator->end_code_generation;
@@ -315,8 +311,6 @@ sub _parse_sub {
     my $block = _parse_block_rest( $self, BLOCK_IMPLICIT_RETURN );
     $sub->{lines} = $block->{lines}; # FIXME encapsulation
     $self->_leave_scope;
-
-    $self->_propagate_context->visit( $sub, CXT_CALLER );
 
     # add a subroutine declaration, the generator might
     # not create it until later
