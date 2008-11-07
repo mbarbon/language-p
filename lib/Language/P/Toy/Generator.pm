@@ -369,7 +369,7 @@ sub _function_call {
 
     if( ref( $tree->function ) ) {
         $self->dispatch( $tree->function );
-        push @bytecode, o( 'call', context => $tree->context & CXT_CALL_MASK );
+        push @bytecode, o( 'call', context => $tree->get_attribute( 'context' ) & CXT_CALL_MASK );
     } else {
         if( $tree->function eq 'return' ) {
             my $block = $current_block;

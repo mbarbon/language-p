@@ -246,7 +246,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(function arguments context);
+our @FIELDS = qw(function arguments);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -269,7 +269,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(invocant method arguments indirect context);
+our @FIELDS = qw(invocant method arguments indirect);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -279,7 +279,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(name sigil context);
+our @FIELDS = qw(name sigil);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -387,7 +387,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(op left right context);
+our @FIELDS = qw(op left right);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -397,7 +397,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(op left context);
+our @FIELDS = qw(op left);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -443,7 +443,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(subscripted subscript type reference context);
+our @FIELDS = qw(subscripted subscript type reference);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -455,7 +455,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(subscripted subscript type reference context);
+our @FIELDS = qw(subscripted subscript type reference);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -523,7 +523,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(condition iftrue iffalse context);
+our @FIELDS = qw(condition iftrue iffalse);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
