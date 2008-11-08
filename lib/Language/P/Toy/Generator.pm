@@ -5,6 +5,7 @@ use warnings;
 use base qw(Language::P::ParseTree::Visitor);
 
 __PACKAGE__->mk_ro_accessors( qw(runtime) );
+__PACKAGE__->mk_accessors( qw(_propagate_context) );
 
 use Language::P::Toy::Opcodes qw(o);
 use Language::P::Toy::Value::StringNumber;
@@ -12,7 +13,17 @@ use Language::P::Toy::Value::Handle;
 use Language::P::Toy::Value::ScratchPad;
 use Language::P::Toy::Value::Code;
 use Language::P::Toy::Value::Regex;
+use Language::P::ParseTree::PropagateContext;
 use Language::P::ParseTree qw(:all);
+
+sub new {
+    my( $class, $args ) = @_;
+    my $self = $class->SUPER::new( $args );
+
+    $self->_propagate_context( Language::P::ParseTree::PropagateContext->new );
+
+    return $self;
+}
 
 # global on purpose
 our %debug_options;
@@ -104,6 +115,7 @@ sub pop_block {
 sub process {
     my( $self, $tree ) = @_;
 
+    $self->_propagate_context->visit( $tree, CXT_VOID );
     push @{$code_stack[-1][1]}, $tree;
 
     return;
@@ -369,7 +381,7 @@ sub _function_call {
 
     if( ref( $tree->function ) ) {
         $self->dispatch( $tree->function );
-        push @bytecode, o( 'call', context => $tree->context & CXT_CALL_MASK );
+        push @bytecode, o( 'call', context => $tree->get_attribute( 'context' ) & CXT_CALL_MASK );
     } else {
         if( $tree->function eq 'return' ) {
             my $block = $current_block;

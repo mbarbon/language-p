@@ -34,35 +34,35 @@ sub _parse {
     for(;;) {
         my $value = $self->lexer->lex_quote;
 
-        if( $value->[0] == T_STRING ) {
-            push @$st,
-                Language::P::ParseTree::Constant->new( { flags => CONST_STRING,
-                                                         value => $value->[1],
-                                                         } );
-        } elsif( $value->[0] == T_PATTERN ) {
-            if( $value->[1] eq ')' ) {
+        if( $value->[O_TYPE] == T_STRING ) {
+            push @$st, Language::P::ParseTree::Constant->new
+                           ( { flags => CONST_STRING,
+                               value => $value->[O_VALUE],
+                               } );
+        } elsif( $value->[O_TYPE] == T_PATTERN ) {
+            if( $value->[O_VALUE] eq ')' ) {
                 die 'Unmatched ) in regex' unless $in_group;
 
                 --$in_group;
                 $st = pop @values;
-            } elsif( $value->[1] eq '(?' ) {
+            } elsif( $value->[O_VALUE] eq '(?' ) {
                 ++$in_group;
                 my $type = $self->lexer->lex_pattern_group;
 
-                if( $type->[1] eq ':' ) {
+                if( $type->[O_VALUE] eq ':' ) {
                     push @$st, Language::P::ParseTree::RXGroup->new
                                    ( { components => [],
                                        capture    => 0,
                                        } );
                 } else {
                     # remaining (?...) constructs
-                    die "Unhandled (?$type->[1]) in regex";
+                    die "Unhandled (?" . $type->[O_VALUE] . ") in regex";
                 }
 
                 my $nst = $st->[-1]->components;
                 push @values, $st;
                 $st = $nst;
-            } elsif( $value->[1] eq '(' ) {
+            } elsif( $value->[O_VALUE] eq '(' ) {
                 ++$in_group;
                 push @$st, Language::P::ParseTree::RXGroup->new
                                ( { components => [],
@@ -71,14 +71,14 @@ sub _parse {
                 my $nst = $st->[-1]->components;
                 push @values, $st;
                 $st = $nst;
-            } elsif( $value->[1] eq '|' ) {
+            } elsif( $value->[O_VALUE] eq '|' ) {
                 my $alt = Language::P::ParseTree::RXAlternation->new
                               ( { left  => [ @$st ],
                                   right => [],
                                   } );
                 @$st = $alt;
                 $st = $alt->right;
-            } elsif( $value->[2]->[0] == T_QUANTIFIER ) {
+            } elsif( $value->[O_RX_REST]->[0] == T_QUANTIFIER ) {
                 die 'Nothing to quantify in regex' unless @$st;
 
                 if(    $st->[-1]->is_constant
@@ -93,32 +93,32 @@ sub _parse {
 
                 $st->[-1] = Language::P::ParseTree::RXQuantifier->new
                                 ( { node   => $st->[-1],
-                                    min    => $value->[2]->[1],
-                                    max    => $value->[2]->[2],
-                                    greedy => $value->[2]->[3],
+                                    min    => $value->[O_RX_REST]->[1],
+                                    max    => $value->[O_RX_REST]->[2],
+                                    greedy => $value->[O_RX_REST]->[3],
                                     } );
-            } elsif( $value->[2]->[0] == T_ASSERTION ) {
+            } elsif( $value->[O_RX_REST]->[0] == T_ASSERTION ) {
                 push @$st, Language::P::ParseTree::RXAssertion->new
-                               ( { type => $value->[2]->[1],
+                               ( { type => $value->[O_RX_REST]->[1],
                                    } );
-            } elsif( $value->[2]->[0] == T_CLASS ) {
+            } elsif( $value->[O_RX_REST]->[0] == T_CLASS ) {
                 push @$st, Language::P::ParseTree::RXSpecialClass->new
-                               ( { type => $value->[2]->[1],
+                               ( { type => $value->[O_RX_REST]->[1],
                                    } );
-            } elsif( $value->[2]->[0] == T_CLASS_START ) {
+            } elsif( $value->[O_RX_REST]->[0] == T_CLASS_START ) {
                 push @$st, Language::P::ParseTree::RXClass->new
                                ( { elements => [],
                                    } );
 
                 _parse_charclass( $self, $st->[-1] );
             } else {
-                Carp::confess $value->[0], ' ', $value->[1], ' ',
-                              $value->[2]->[0];
+                Carp::confess $value->[O_TYPE], ' ', $value->[O_VALUE], ' ',
+                              $value->[O_RX_REST]->[0];
             }
-        } elsif( $value->[0] == T_EOF ) {
+        } elsif( $value->[O_TYPE] == T_EOF ) {
             last;
-        } elsif( $value->[0] == T_DOLLAR || $value->[0] == T_AT ) {
-                Carp::confess $value->[0], ' ', $value->[1];
+        } elsif( $value->[O_TYPE] == T_DOLLAR || $value->[O_TYPE] == T_AT ) {
+                Carp::confess $value->[O_TYPE], ' ', $value->[O_VALUE];
         }
     }
 
@@ -134,16 +134,16 @@ sub _parse_charclass {
 
     for(;;) {
         my $value = @la ? pop @la : $self->lexer->lex_charclass;
-        last if $value->[0] == T_CLASS_END;
-        if( $value->[0] == T_STRING ) {
+        last if $value->[O_TYPE] == T_CLASS_END;
+        if( $value->[O_TYPE] == T_STRING ) {
             my $next = $self->lexer->lex_charclass;
 
-            if( $next->[0] == T_MINUS ) {
+            if( $next->[O_TYPE] == T_MINUS ) {
                 my $next_next = $self->lexer->lex_charclass;
-                if( $next_next->[0] == T_STRING ) {
+                if( $next_next->[O_TYPE] == T_STRING ) {
                     push @$st, Language::P::ParseTree::RXRange->new
-                                   ( { start => $value->[1],
-                                       end   => $next_next->[1],
+                                   ( { start => $value->[O_VALUE],
+                                       end   => $next_next->[O_VALUE],
                                        } );
                     next;
                 } else {
@@ -152,14 +152,14 @@ sub _parse_charclass {
             } else {
                 push @la, $next;
             }
-        } elsif( $value->[0] == T_CLASS ) {
+        } elsif( $value->[O_TYPE] == T_CLASS ) {
             push @$st, Language::P::ParseTree::RXSpecialClass->new
-                           ( { type => $value->[1],
+                           ( { type => $value->[O_VALUE],
                                 } );
             next;
         }
 
-        push @$st, $value->[1];
+        push @$st, $value->[O_VALUE];
     }
 }
 

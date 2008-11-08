@@ -8,9 +8,10 @@ use Exporter 'import';
 use Language::P::Parser;
 use Language::P::Keywords;
 use Language::P::ParseTree qw(:all);
+use Language::P::ParseTree::PropagateContext;
 use Language::P::Toy::Value::MainSymbolTable;
 
-our @EXPORT_OK = qw(fresh_parser parsed_program parse_and_diff
+our @EXPORT_OK = qw(fresh_parser parsed_program
                     parse_and_diff_yaml);
 our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,
@@ -23,11 +24,13 @@ my @lines;
 
     sub new {
         @lines = ();
+        $_[1]->{_propagate_context} = Language::P::ParseTree::PropagateContext->new;
 
         return bless $_[1], __PACKAGE__;
     }
 
     sub process {
+        $_[0]->{_propagate_context}->visit( $_[1], TestParser::CXT_VOID );
         push @lines, $_[1];
     }
 
