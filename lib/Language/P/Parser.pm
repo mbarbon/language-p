@@ -261,7 +261,7 @@ sub _parse_line_rest {
             return _parse_for( $self );
         } elsif( $tokidt == KEY_PACKAGE ) {
             _lex_token( $self, T_ID );
-            my $id = $self->lexer->lex_identifier;
+            my $id = $self->lexer->lex_identifier( 0 );
             _lex_semicolon( $self );
 
             $self->_package( $id->[O_VALUE] );
@@ -298,7 +298,7 @@ sub _add_pending_lexicals {
 sub _parse_sub {
     my( $self, $flags, $no_sub_token ) = @_;
     _lex_token( $self, T_ID ) unless $no_sub_token;
-    my $name = $self->lexer->lex_alphabetic_identifier;
+    my $name = $self->lexer->lex_alphabetic_identifier( 0 );
     my $fqname = $name ? _qualify( $self, $name->[O_VALUE], $name->[O_ID_TYPE] ) : undef;
 
     # TODO prototypes
@@ -452,7 +452,7 @@ sub _parse_for {
                                            || $token->[O_ID_TYPE] == OP_OUR
                                            || $token->[O_ID_TYPE] == OP_STATE ) ) {
         _lex_token( $self, T_DOLLAR );
-        my $name = $self->lexer->lex_identifier;
+        my $name = $self->lexer->lex_identifier( 0 );
         die "No name" unless $name;
 
         # FIXME our() variable refers to package it was declared in
@@ -462,7 +462,7 @@ sub _parse_for {
                                flags   => $declaration_to_flags{$token->[O_ID_TYPE]},
                                } );
     } elsif( $token->[O_TYPE] == T_DOLLAR ) {
-        my $id = $self->lexer->lex_identifier;
+        my $id = $self->lexer->lex_identifier( 0 );
         $foreach_var = _find_symbol( $self, VALUE_SCALAR, $id->[O_VALUE], $id->[O_ID_TYPE] );
     } else {
         _syntax_error( $self, $token );
@@ -757,7 +757,7 @@ sub _parse_maybe_direct_method_call {
     if( $token->[O_TYPE] == T_ID ) {
         ( $method, $indirect ) = ( $token->[O_VALUE], 0 );
     } elsif( $token->[O_TYPE] == T_DOLLAR ) {
-        my $id = $self->lexer->lex_identifier;
+        my $id = $self->lexer->lex_identifier( 0 );
         $method = _find_symbol( $self, VALUE_SCALAR, $id->[O_VALUE], $id->[O_ID_TYPE] );
         $indirect = 1;
     } else {
@@ -918,7 +918,7 @@ sub _parse_term_terminal {
                     # FIXME simpler method, make lex_identifier static
                     my $lexer = Language::P::Lexer->new
                                     ( { string => $qstring->value } );
-                    my $id = $lexer->lex_identifier;
+                    my $id = $lexer->lex_identifier( 0 );
 
                     if( $id && !length( ${$lexer->buffer} ) ) {
                         my $glob = Language::P::ParseTree::Symbol->new
@@ -1350,7 +1350,7 @@ sub _parse_block_rest {
 
 sub _parse_indirobj {
     my( $self, $allow_fail ) = @_;
-    my $id = $self->lexer->lex_identifier;
+    my $id = $self->lexer->lex_identifier( 0 );
 
     if( $id ) {
         return $id;

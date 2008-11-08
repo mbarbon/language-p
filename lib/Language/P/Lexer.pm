@@ -53,6 +53,8 @@ use constant
     O_RX_INTERPOLATED => 7,
     O_NUM_FLAGS       => 3,
 
+    LEX_NO_PACKAGE    => 1,
+
     map { $TOKENS[$_] => $_ + 1 } 0 .. $#TOKENS,
     };
 
@@ -62,6 +64,7 @@ our @EXPORT_OK =
   ( qw(X_NOTHING X_STATE X_TERM X_OPERATOR X_BLOCK X_REF
        O_POS O_TYPE O_VALUE O_ID_TYPE O_FT_OP O_QS_INTERPOLATE O_QS_BUFFER
        O_RX_REST O_RX_SECOND_HALF O_RX_FLAGS O_RX_INTERPOLATED O_NUM_FLAGS
+       LEX_NO_PACKAGE
        ), @TOKENS );
 our %EXPORT_TAGS =
   ( all  => \@EXPORT_OK,
@@ -483,7 +486,7 @@ sub lex_quote {
 }
 
 sub lex_alphabetic_identifier {
-    my( $self ) = @_;
+    my( $self, $flags ) = @_;
 
     if( @{$self->tokens} ) {
         return undef if $self->tokens->[-1]->[O_TYPE] != T_ID;
@@ -492,13 +495,17 @@ sub lex_alphabetic_identifier {
 
     local $_ = $self->buffer;
 
-    return undef unless $$_ =~ /^[ \t\r\n]*[':\w]/;
+    if( $flags & LEX_NO_PACKAGE ) {
+        return undef unless $$_ =~ /^[ \t\r\n]*\w/;
+    } else {
+        return undef unless $$_ =~ /^[ \t\r\n]*[':\w]/;
+    }
 
-    return lex_identifier( $self );
+    return lex_identifier( $self, $flags );
 }
 
 sub lex_identifier {
-    my( $self ) = @_;
+    my( $self, $flags ) = @_;
 
     if( @{$self->tokens} ) {
         return undef if $self->tokens->[-1]->[O_TYPE] != T_ID;
@@ -520,6 +527,10 @@ sub lex_identifier {
         $id = [ $self->{pos}, T_ID, 'main::', T_FQ_ID ];
     };
     $id or $$_ =~ s/^(\'|::)?(\w+)//x and do {
+        if( $flags & LEX_NO_PACKAGE ) {
+            return [ $self->{pos}, T_ID, $2, T_ID ];
+        }
+
         my $ids = defined $1 ? '::' . $2 : $2;
         my $idt = defined $1 ? T_FQ_ID : T_ID;
 
@@ -908,7 +919,7 @@ sub lex {
                 |\&\&|\|\|)//x and return [ $self->{pos}, $ops{$1}, $1 ];
     $$_ =~ s/^\$//x and do {
         if( $$_ =~ /^\#/ ) {
-            my $id = $self->lex_identifier;
+            my $id = $self->lex_identifier( 0 );
 
             if( $id ) {
                 $self->unlex( $id );
