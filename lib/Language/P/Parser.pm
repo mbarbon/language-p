@@ -226,11 +226,11 @@ sub _parse_line {
         return _parse_line_rest( $self, 1 );
     } else {
         _lex_token( $self, T_LABEL );
+        my $statement = _parse_line_rest( $self, 0 );
 
-        return Language::P::ParseTree::Label->new
-                   ( { name      => $label->[O_VALUE],
-                       statement => _parse_line_rest( $self, 0 ),
-                       } );
+        $statement->set_attribute( 'label', $label->[O_VALUE] );
+
+        return $statement;
     }
 }
 
@@ -242,7 +242,10 @@ sub _parse_line_rest {
     if( $token->[O_TYPE] == T_SEMICOLON ) {
         _lex_semicolon( $self );
 
-        return $no_empty ? _parse_line_rest( $self, 1 ) : undef;
+        return $no_empty ? _parse_line_rest( $self, 1 ) :
+                           Language::P::ParseTree::Empty->new;
+    } elsif( $token->[O_TYPE] == T_EOF ) {
+        return $no_empty ? undef : Language::P::ParseTree::Empty->new;
     } elsif( $token->[O_TYPE] == T_OPBRK ) {
         _lex_token( $self, T_OPBRK );
 
