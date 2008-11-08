@@ -272,6 +272,10 @@ sub _parse_line_rest {
         } elsif(    $tokidt == OP_MY
                  || $tokidt == OP_OUR
                  || $tokidt == OP_STATE
+                 || $tokidt == OP_GOTO
+                 || $tokidt == OP_LAST
+                 || $tokidt == OP_NEXT
+                 || $tokidt == OP_REDO
                  || $tokidt == KEY_LOCAL ) {
             return _parse_sideff( $self );
         }
@@ -981,22 +985,39 @@ sub _parse_term_terminal {
              || $token->[O_TYPE] == T_AMPERSAND
              || $token->[O_TYPE] == T_ARYLEN ) {
         return ( _parse_indirobj_maybe_subscripts( $self, $token ), 1 );
-    } elsif(    $token->[O_TYPE] == T_ID
-             && (    $token->[O_ID_TYPE] == OP_MY
-                  || $token->[O_ID_TYPE] == OP_OUR
-                  || $token->[O_ID_TYPE] == OP_STATE ) ) {
-        return _parse_lexical( $self, $token->[O_ID_TYPE] );
-    } elsif( $token->[O_TYPE] == T_ID && $token->[O_ID_TYPE] == KEY_SUB ) {
-        return _parse_sub( $self, 2, 1 );
-    } elsif(    $token->[O_TYPE] == T_ID
-             && !is_keyword( $token->[O_ID_TYPE] ) ) {
-        return _parse_listop( $self, $token );
-    } elsif(    $token->[O_TYPE] == T_ID
-             && $token->[O_ID_TYPE] == KEY_LOCAL ) {
-        return Language::P::ParseTree::Local->new
-                   ( { op   => KEY_LOCAL,
-                       left => _parse_term_list_if_parens( $self, PREC_NAMED_UNOP ),
-                       } );
+    } elsif(    $token->[O_TYPE] == T_ID ) {
+        my $tokidt = $token->[O_ID_TYPE];
+
+        if( !is_keyword( $token->[O_ID_TYPE] ) ) {
+            return _parse_listop( $self, $token );
+        } elsif(    $tokidt == OP_MY
+                 || $tokidt == OP_OUR
+                 || $tokidt == OP_STATE ) {
+            return _parse_lexical( $self, $token->[O_ID_TYPE] );
+        } elsif( $tokidt == KEY_SUB ) {
+            return _parse_sub( $self, 2, 1 );
+        } elsif(    $tokidt == OP_GOTO
+                 || $tokidt == OP_LAST
+                 || $tokidt == OP_NEXT
+                 || $tokidt == OP_REDO ) {
+            my $id = $self->lexer->lex_alphabetic_identifier( LEX_NO_PACKAGE );
+            my $dest = $id ? $id->[O_VALUE] : _parse_term( $self, PREC_LOWEST );
+            if( !$id && $dest ) {
+                $dest = $dest->left if $dest->isa( 'Language::P::ParseTree::Parentheses' );
+                $dest = $dest->value if $dest->is_constant;
+            }
+
+            my $jump = Language::P::ParseTree::Jump->new
+                           ( { op   => $tokidt,
+                               left => $dest,
+                               } );
+
+            return $jump;
+        } elsif( $tokidt == KEY_LOCAL ) {
+            return Language::P::ParseTree::Local->new
+                       ( { left => _parse_term_list_if_parens( $self, PREC_NAMED_UNOP ),
+                           } );
+        }
     } elsif( $token->[O_TYPE] == T_OPHASH ) {
         my $expr = _parse_bracketed_expr( $self, T_OPBRK, 1, 1 );
 

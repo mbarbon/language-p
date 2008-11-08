@@ -97,9 +97,10 @@ foreach             k
 while               k       
 until               k       
 do                  k       
-last                k       
-next                k       
-redo                k       
+last                k       OP_LAST
+next                k       OP_NEXT
+redo                k       OP_REDO
+goto                k       OP_GOTO
 my                  k       OP_MY
 our                 k       OP_OUR
 state               k       OP_STATE

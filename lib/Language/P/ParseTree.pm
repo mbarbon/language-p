@@ -425,6 +425,12 @@ use base qw(Language::P::ParseTree::UnOp);
 sub op { Language::P::ParseTree::OP_LOCAL }
 sub lvalue_context { $_[0]->left->lvalue_context }
 
+package Language::P::ParseTree::Jump;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::UnOp);
+
 package Language::P::ParseTree::Dereference;
 
 use strict;

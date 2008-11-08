@@ -16,6 +16,7 @@ my %dispatch =
     'Language::P::ParseTree::Parentheses'            => '_parentheses',
     'Language::P::ParseTree::Dereference'            => '_dereference',
     'Language::P::ParseTree::Local'                  => '_local',
+    'Language::P::ParseTree::Jump'                   => '_jump',
     'Language::P::ParseTree::BinOp'                  => '_binary_op',
     'Language::P::ParseTree::Symbol'                 => '_symbol',
     'Language::P::ParseTree::Constant'               => '_noop',
@@ -56,7 +57,7 @@ sub _noop {
 sub _noisy_noop {
     my( $self, $tree, $cxt ) = @_;
 
-    Carp::confess( "Unhandled context for ", ref( $tree ), "\n" );
+    Carp::confess( "Unhandled context for ", ref( $tree ) || $tree, "\n" );
 }
 
 sub _symbol {
@@ -191,6 +192,12 @@ sub _local {
 
     $tree->set_attribute( 'context', $cxt );
     $self->visit( $tree->left, $cxt|CXT_LVALUE );
+}
+
+sub _jump {
+    my( $self, $tree, $cxt ) = @_;
+
+    $self->visit( $tree->left, CXT_SCALAR ) if ref $tree->left;
 }
 
 sub _binary_op {
