@@ -216,6 +216,8 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
+sub can_implicit_return { 0 }
+
 package Language::P::ParseTree::Constant;
 
 use strict;
