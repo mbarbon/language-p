@@ -192,8 +192,13 @@ sub set_parent_for_all_childs {
 
 sub has_attribute  { $_[0]->{attributes} && exists $_[0]->{attributes}->{$_[1]} }
 sub get_attribute  { $_[0]->{attributes} && $_[0]->{attributes}->{$_[1]} }
-sub set_attribute  { $_[0]->{attributes}->{$_[1]} = $_[2] }
 sub get_attributes { $_[0]->{attributes} }
+sub set_attribute  {
+    my( $self, $name, $value, $weak ) = @_;
+
+    $self->{attributes}->{$name} = $value;
+    Scalar::Util::weaken( $self->{attributes}->{$name} ) if $weak;
+}
 
 package Language::P::ParseTree::Package;
 
