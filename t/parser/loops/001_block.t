@@ -13,7 +13,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
     $y = 2
 }
 EOP
---- !parsetree:Block
+--- !parsetree:BareBlock
 lines:
   - !parsetree:BinOp
     context: CXT_VOID
