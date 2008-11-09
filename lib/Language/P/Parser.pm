@@ -14,6 +14,8 @@ __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime) );
 __PACKAGE__->mk_accessors( qw(_package _lexicals _pending_lexicals
                               _in_declaration _lexical_state) );
 
+sub _lexical_sub_state { $_[0]->{_lexical_state}->[-1]->{sub} }
+
 use constant
   { PREC_HIGHEST       => 0,
     PREC_NAMED_UNOP    => 10,
@@ -108,7 +110,7 @@ sub parse_string {
     open my $fh, '<', \$string;
 
     $self->_package( $package );
-    $self->parse_stream( $fh );
+    $self->parse_stream( $fh, '<string>' );
 }
 
 sub parse_file {
@@ -147,12 +149,13 @@ sub _parse {
 
     $self->_pending_lexicals( [] );
     $self->_lexicals( undef );
-    $self->_enter_scope( 0 , 1 ); # FIXME eval
+    $self->_enter_scope( 0, 1 ); # FIXME eval
 
     $self->generator->start_code_generation;
     while( my $line = _parse_line( $self ) ) {
         $self->generator->process( $line );
     }
+    $self->_leave_scope;
     my $code = $self->generator->end_code_generation;
 
     return $code;
@@ -163,7 +166,16 @@ sub _enter_scope {
 
     push @{$self->{_lexical_state}}, { package  => $self->_package,
                                        lexicals => $self->_lexicals,
+                                       is_sub   => $is_sub,
+                                       top_level=> $top_level,
                                        };
+    if( $is_sub || $top_level ) {
+        $self->{_lexical_state}[-1]{sub} = { labels  => {},
+                                             jumps   => [],
+                                             };
+    } elsif( @{$self->{_lexical_state}} > 1 ) {
+        $self->{_lexical_state}[-1]{sub} = $self->{_lexical_state}[-2]{sub};
+    }
     $self->_lexicals( Language::P::Parser::Lexicals->new
                           ( { outer         => $self->_lexicals,
                               is_subroutine => $is_sub || 0,
@@ -177,6 +189,18 @@ sub _leave_scope {
     my $state = pop @{$self->{_lexical_state}};
     $self->_package( $state->{package} );
     $self->_lexicals( $state->{lexicals} );
+    _patch_gotos( $self, $state ) if $state->{is_sub} || $state->{top_level};
+}
+
+sub _patch_gotos {
+    my( $self, $state ) = @_;
+    my $labels = $state->{sub}{labels};
+
+    foreach my $goto ( @{$state->{sub}{jumps}} ) {
+        if( $labels->{$goto->left} ) {
+            $goto->set_attribute( 'target', $labels->{$goto->left}, 1 );
+        }
+    }
 }
 
 sub _syntax_error {
@@ -230,6 +254,7 @@ sub _parse_line {
                         || Language::P::ParseTree::Empty->new;
 
         $statement->set_attribute( 'label', $label->[O_VALUE] );
+        $self->_lexical_sub_state->{labels}{$label->[O_VALUE]} ||= $statement;
 
         return $statement;
     }
@@ -1009,6 +1034,8 @@ sub _parse_term_terminal {
                            ( { op   => $tokidt,
                                left => $dest,
                                } );
+            push @{$self->_lexical_state->[-1]{sub}{jumps}}, $jump
+              if $tokidt == OP_GOTO && !ref( $dest );
 
             return $jump;
         } elsif( $tokidt == KEY_LOCAL ) {

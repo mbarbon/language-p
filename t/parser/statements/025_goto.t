@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 6;
+use Test::More tests => 11;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -67,3 +67,25 @@ name: foo
 left: foo
 op: OP_GOTO
 EOE
+
+# check goto targets are linked correctly
+my $tree = parse_string( <<EOP );
+BAR:;
+FOO:;
+FOO:
+sub moo {
+    goto FOO;
+    goto BAR;
+    BAR:;
+}
+goto FOO;
+EOP
+
+is( @$tree, 4 );
+# in main
+is( $tree->[3]->get_attribute( 'target' ), $tree->[1] );
+# in sub
+my $lines = $tree->[2]->lines;
+is( @$lines, 3 );
+is( $lines->[0]->get_attribute( 'target' ), undef );
+is( $lines->[1]->get_attribute( 'target' ), $lines->[2] );
