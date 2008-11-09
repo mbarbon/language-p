@@ -42,7 +42,7 @@ EOP
 context: CXT_VOID
 name: x
 sigil: VALUE_SCALAR
---- !parsetree:Block
+--- !parsetree:BareBlock
 lines:
   - !parsetree:Package
     name: x

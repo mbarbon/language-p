@@ -352,6 +352,12 @@ __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub is_compound { 1 }
 
+package Language::P::ParseTree::BareBlock;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Block);
+
 package Language::P::ParseTree::Subroutine;
 
 use strict;

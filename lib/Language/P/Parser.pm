@@ -28,6 +28,7 @@ use constant
 
     BLOCK_OPEN_SCOPE      => 1,
     BLOCK_IMPLICIT_RETURN => 2,
+    BLOCK_BARE            => 4,
 
     ASSOC_LEFT         => 1,
     ASSOC_RIGHT        => 2,
@@ -272,7 +273,7 @@ sub _parse_line_rest {
     } elsif( $token->[O_TYPE] == T_OPBRK ) {
         _lex_token( $self, T_OPBRK );
 
-        return _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
+        return _parse_block_rest( $self, BLOCK_OPEN_SCOPE|BLOCK_BARE );
     } elsif( $token->[O_TYPE] == T_ID && is_keyword( $tokidt ) ) {
         if( $tokidt == KEY_SUB ) {
             return _parse_sub( $self, 1 | 2 );
@@ -1384,7 +1385,15 @@ sub _parse_block_rest {
             }
 
             $self->_leave_scope if $flags & BLOCK_OPEN_SCOPE;
-            return Language::P::ParseTree::Block->new( { lines => \@lines } );
+            if( $flags & BLOCK_BARE ) {
+                return Language::P::ParseTree::BareBlock->new
+                           ( { lines => \@lines,
+                               } );
+            } else {
+                return Language::P::ParseTree::Block->new
+                           ( { lines => \@lines,
+                               } );
+            }
         } else {
             $self->lexer->unlex( $token );
             my $line = _parse_line( $self );

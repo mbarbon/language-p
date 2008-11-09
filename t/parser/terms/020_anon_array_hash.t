@@ -63,7 +63,7 @@ EOE
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 {1}
 EOP
---- !parsetree:Block
+--- !parsetree:BareBlock
 lines:
   - !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
