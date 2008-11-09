@@ -96,6 +96,7 @@ for                 k
 foreach             k       
 while               k       
 until               k       
+continue            k       
 do                  k       
 last                k       
 next                k       

@@ -457,11 +457,12 @@ sub _parse_for {
     _lex_token( $self, T_OPBRK, undef, X_BLOCK );
 
     my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
-
+    my $continue = _parse_continue( $self );
     my $for = Language::P::ParseTree::Foreach->new
                   ( { expression => $foreach_expr,
                       block      => $block,
                       variable   => $foreach_var,
+                      continue   => $continue,
                       } );
 
     $self->_leave_scope;
@@ -483,16 +484,28 @@ sub _parse_while {
     _lex_token( $self, T_OPBRK, undef, X_BLOCK );
 
     my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
-
+    my $continue = _parse_continue( $self );
     my $while = Language::P::ParseTree::ConditionalLoop
                     ->new( { condition  => $expr,
                              block      => $block,
                              block_type => $keyword->[O_VALUE],
+                             continue   => $continue,
                              } );
 
     $self->_leave_scope;
 
     return $while;
+}
+
+sub _parse_continue {
+    my( $self ) = @_;
+    my $token = $self->lexer->peek( X_STATE );
+    return unless $token->[0] == T_ID && $token->[2] == KEY_CONTINUE;
+
+    _lex_token( $self, T_ID );
+    _lex_token( $self, T_OPBRK, undef, X_BLOCK );
+
+    return _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
 }
 
 sub _parse_sideff {
@@ -1314,8 +1327,10 @@ sub _parse_block_rest {
 
             $self->_leave_scope if $flags & BLOCK_OPEN_SCOPE;
             if( $flags & BLOCK_BARE ) {
+                my $continue = _parse_continue( $self );
                 return Language::P::ParseTree::BareBlock->new
-                           ( { lines => \@lines,
+                           ( { lines    => \@lines,
+                               continue => $continue,
                                } );
             } else {
                 return Language::P::ParseTree::Block->new

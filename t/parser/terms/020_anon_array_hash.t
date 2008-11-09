@@ -64,6 +64,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 {1}
 EOP
 --- !parsetree:BareBlock
+continue: ~
 lines:
   - !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
