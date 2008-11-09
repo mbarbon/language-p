@@ -358,6 +358,10 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Block);
 
+our @FIELDS = qw(continue);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
 package Language::P::ParseTree::Subroutine;
 
 use strict;
@@ -514,6 +518,10 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::ConditionalBlock);
 
+our @FIELDS = qw(continue);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
 sub can_implicit_return { 0 }
 sub is_compound { 1 }
 
@@ -535,7 +543,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(expression block variable);
+our @FIELDS = qw(expression block variable continue);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 

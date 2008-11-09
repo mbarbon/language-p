@@ -24,6 +24,7 @@ condition: !parsetree:BinOp
   right: !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
+continue: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -43,6 +44,7 @@ block_type: until
 condition: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
+continue: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -96,6 +98,7 @@ EOP
 block: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
+continue: ~
 expression: !parsetree:List
   expressions:
     - !parsetree:Constant

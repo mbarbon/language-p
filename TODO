@@ -30,7 +30,6 @@ Parsing:
   - check invalid declarations
   - check non-lvaluable expressions
 - implicit $_ in various builtins
-- parsing of loop + continue
 - scope handling of conditional/while/continue
 - handling of parse errors with recovery
 - lexical pragmas/hints
