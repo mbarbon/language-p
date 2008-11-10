@@ -57,6 +57,7 @@ block: !parsetree:Block
       context: CXT_VOID
       function: print
       indirect: ~
+continue: ~
 expression: !parsetree:BinOp
   context: CXT_LIST
   left: !parsetree:Constant

@@ -1037,11 +1037,18 @@ sub _parse_term_terminal {
                  || $tokidt == OP_LAST
                  || $tokidt == OP_NEXT
                  || $tokidt == OP_REDO ) {
-            my $id = $self->lexer->lex_alphabetic_identifier( LEX_NO_PACKAGE );
-            my $dest = $id ? $id->[O_VALUE] : _parse_term( $self, PREC_LOWEST );
-            if( !$id && $dest ) {
-                $dest = $dest->left if $dest->isa( 'Language::P::ParseTree::Parentheses' );
-                $dest = $dest->value if $dest->is_constant;
+            my $id = $self->lexer->lex;
+            my $dest;
+            if( $id->[O_TYPE] == T_ID && $id->[O_ID_TYPE] == T_ID ) {
+                $dest = $id->[O_VALUE];
+            } else {
+                $self->lexer->unlex( $id );
+                $dest = _parse_term( $self, PREC_LOWEST );
+                if( $dest ) {
+                    $dest = $dest->left
+                        if $dest->isa( 'Language::P::ParseTree::Parentheses' );
+                    $dest = $dest->value if $dest->is_constant;
+                }
             }
 
             my $jump = Language::P::ParseTree::Jump->new

@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 2;
+use Test::More tests => 3;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -22,6 +22,7 @@ block_type: while
 condition: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
+continue: ~
 label: FOO
 EOE
 
@@ -40,5 +41,22 @@ block_type: while
 condition: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
+continue: ~
 label: FOO
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+last if 1;
+EOP
+--- !parsetree:Conditional
+iffalse: ~
+iftrues:
+  - !parsetree:ConditionalBlock
+    block: !parsetree:Jump
+      left: ~
+      op: OP_LAST
+    block_type: if
+    condition: !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 1
 EOE
