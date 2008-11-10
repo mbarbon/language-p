@@ -585,39 +585,43 @@ sub _do_lexical_access {
 sub _cond_loop {
     my( $self, $tree ) = @_;
 
-    die $tree->block_type unless $tree->block_type eq 'while';
+    my $is_until = $tree->block_type eq 'until';
+    my( $start_cond, $start_loop, $start_continue, $end_loop ) =
+      ( _new_label, _new_label, _new_label, _new_label );
+    _set_label( $start_cond, scalar @bytecode );
 
-    my( $start, $true, $false ) = ( _new_label, _new_label, _new_label );
-    _set_label( $start, scalar @bytecode );
-
-    $self->dispatch_cond( $tree->condition, $true, $false );
-    _set_label( $true, scalar @bytecode );
+    $self->dispatch_cond( $tree->condition,
+                          $is_until ? ( $end_loop, $start_loop ) :
+                                      ( $start_loop, $end_loop ) );
+    _set_label( $start_loop, scalar @bytecode );
     $self->dispatch( $tree->block );
+    _set_label( $start_continue, scalar @bytecode );
+    $self->dispatch( $tree->continue ) if $tree->continue;
     push @bytecode, o( 'jump' );
-    _to_label( $start, $bytecode[-1] );
-    _set_label( $false, scalar @bytecode );
+    _to_label( $start_cond, $bytecode[-1] );
+    _set_label( $end_loop, scalar @bytecode );
 }
 
 sub _cond {
     my( $self, $tree ) = @_;
 
-    my $end = _new_label;
+    my $end_cond = _new_label;
     foreach my $elsif ( @{$tree->iftrues} ) {
         my $is_unless = $elsif->block_type eq 'unless';
-        my( $true, $false ) = ( _new_label, _new_label );
+        my( $then_block, $else_block ) = ( _new_label, _new_label );
         $self->dispatch_cond( $elsif->condition,
-                              $is_unless ? ( $false, $true ) :
-                                           ( $true, $false ) );
-        _set_label( $true, scalar @bytecode );
+                              $is_unless ? ( $else_block, $then_block ) :
+                                           ( $then_block, $else_block ) );
+        _set_label( $then_block, scalar @bytecode );
         $self->dispatch( $elsif->block );
         push @bytecode, o( 'jump' );
-        _to_label( $end, $bytecode[-1] );
-        _set_label( $false, scalar @bytecode );
+        _to_label( $end_cond, $bytecode[-1] );
+        _set_label( $else_block, scalar @bytecode );
     }
     if( $tree->iffalse ) {
         $self->dispatch( $tree->iffalse->block );
     }
-    _set_label( $end, scalar @bytecode );
+    _set_label( $end_cond, scalar @bytecode );
 }
 
 sub _ternary {
