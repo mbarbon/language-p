@@ -237,7 +237,8 @@ sub o_glob {
 
 sub o_lexical {
     my( $op, $runtime, $pc ) = @_;
-    my $value = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
+    my $value = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}]
+                  ||= Language::P::Toy::Value::StringNumber->new;
 
     push @{$runtime->{_stack}}, $value;
 
