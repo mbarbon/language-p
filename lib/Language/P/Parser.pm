@@ -14,6 +14,8 @@ __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime) );
 __PACKAGE__->mk_accessors( qw(_package _lexicals _pending_lexicals
                               _in_declaration _lexical_state) );
 
+sub _lexical_sub_state { $_[0]->{_lexical_state}->[-1]->{sub} }
+
 use constant
   { PREC_HIGHEST       => 0,
     PREC_NAMED_UNOP    => 10,
@@ -109,7 +111,7 @@ sub parse_string {
     open my $fh, '<', \$string;
 
     $self->_package( $package );
-    $self->parse_stream( $fh );
+    $self->parse_stream( $fh, '<string>' );
 }
 
 sub parse_file {
@@ -118,14 +120,15 @@ sub parse_file {
     open my $fh, '<', $file or die "open '$file': $!";
 
     $self->_package( 'main' );
-    $self->parse_stream( $fh );
+    $self->parse_stream( $fh, $file );
 }
 
 sub parse_stream {
-    my( $self, $stream ) = @_;
+    my( $self, $stream, $filename ) = @_;
 
     $self->{lexer} = Language::P::Lexer->new
                          ( { stream       => $stream,
+                             file         => $filename,
                              symbol_table => $self->runtime->symbol_table,
                              } );
     $self->{_lexical_state} = [];
@@ -147,12 +150,13 @@ sub _parse {
 
     $self->_pending_lexicals( [] );
     $self->_lexicals( undef );
-    $self->_enter_scope( 0 , 1 ); # FIXME eval
+    $self->_enter_scope( 0, 1 ); # FIXME eval
 
     $self->generator->start_code_generation;
     while( my $line = _parse_line( $self ) ) {
         $self->generator->process( $line );
     }
+    $self->_leave_scope;
     my $code = $self->generator->end_code_generation;
 
     return $code;
@@ -163,7 +167,16 @@ sub _enter_scope {
 
     push @{$self->{_lexical_state}}, { package  => $self->_package,
                                        lexicals => $self->_lexicals,
+                                       is_sub   => $is_sub,
+                                       top_level=> $top_level,
                                        };
+    if( $is_sub || $top_level ) {
+        $self->{_lexical_state}[-1]{sub} = { labels  => {},
+                                             jumps   => [],
+                                             };
+    } elsif( @{$self->{_lexical_state}} > 1 ) {
+        $self->{_lexical_state}[-1]{sub} = $self->{_lexical_state}[-2]{sub};
+    }
     $self->_lexicals( Language::P::Parser::Lexicals->new
                           ( { outer         => $self->_lexicals,
                               is_subroutine => $is_sub || 0,
@@ -177,12 +190,26 @@ sub _leave_scope {
     my $state = pop @{$self->{_lexical_state}};
     $self->_package( $state->{package} );
     $self->_lexicals( $state->{lexicals} );
+    _patch_gotos( $self, $state ) if $state->{is_sub} || $state->{top_level};
 }
 
-sub _label {
-    my( $self ) = @_;
+sub _patch_gotos {
+    my( $self, $state ) = @_;
+    my $labels = $state->{sub}{labels};
 
-    return undef;
+    foreach my $goto ( @{$state->{sub}{jumps}} ) {
+        if( $labels->{$goto->left} ) {
+            $goto->set_attribute( 'target', $labels->{$goto->left}, 1 );
+        }
+    }
+}
+
+sub _syntax_error {
+    my( $self, $token ) = @_;
+
+    Carp::confess( sprintf "Unexpected token '%s' (%s) at %s:%d\n       ",
+                           $token->[O_VALUE], $token->[O_TYPE],
+                           $token->[O_POS][0], $token->[O_POS][1] );
 }
 
 sub _lex_token {
@@ -193,7 +220,7 @@ sub _lex_token {
 
     if(    ( $type && $type != $token->[O_TYPE] )
         || ( $value && $value eq $token->[O_VALUE] ) ) {
-        Carp::confess( $token->[O_TYPE], ' ', $token->[O_VALUE] );
+        _syntax_error( $self, $token );
     }
 
     return $token;
@@ -210,7 +237,7 @@ sub _lex_semicolon {
         return;
     }
 
-    Carp::confess( $token->[O_TYPE], ' ', $token->[O_VALUE] );
+    _syntax_error( $self, $token );
 }
 
 my %special_sub = map { $_ => 1 }
@@ -218,15 +245,31 @@ my %special_sub = map { $_ => 1 }
 
 sub _parse_line {
     my( $self ) = @_;
+    my $label = $self->lexer->peek( X_STATE );
 
-    my $label = _label( $self );
+    if( $label->[O_TYPE] != T_LABEL ) {
+        return _parse_line_rest( $self, 1 );
+    } else {
+        _lex_token( $self, T_LABEL );
+        my $statement =    _parse_line_rest( $self, 0 )
+                        || Language::P::ParseTree::Empty->new;
+
+        $statement->set_attribute( 'label', $label->[O_VALUE] );
+        $self->_lexical_sub_state->{labels}{$label->[O_VALUE]} ||= $statement;
+
+        return $statement;
+    }
+}
+
+sub _parse_line_rest {
+    my( $self, $no_empty ) = @_;
     my $token = $self->lexer->peek( X_STATE );
     my $tokidt = $token->[O_ID_TYPE];
 
     if( $token->[O_TYPE] == T_SEMICOLON ) {
         _lex_semicolon( $self );
 
-        return _parse_line( $self );
+        return $no_empty ? _parse_line_rest( $self, 1 ) : undef;
     } elsif( $token->[O_TYPE] == T_OPBRK ) {
         _lex_token( $self, T_OPBRK );
 
@@ -242,7 +285,7 @@ sub _parse_line {
             return _parse_for( $self );
         } elsif( $tokidt == KEY_PACKAGE ) {
             _lex_token( $self, T_ID );
-            my $id = $self->lexer->lex_identifier;
+            my $id = $self->lexer->lex_identifier( 0 );
             _lex_semicolon( $self );
 
             $self->_package( $id->[O_VALUE] );
@@ -253,6 +296,10 @@ sub _parse_line {
         } elsif(    $tokidt == OP_MY
                  || $tokidt == OP_OUR
                  || $tokidt == OP_STATE
+                 || $tokidt == OP_GOTO
+                 || $tokidt == OP_LAST
+                 || $tokidt == OP_NEXT
+                 || $tokidt == OP_REDO
                  || $tokidt == KEY_LOCAL ) {
             return _parse_sideff( $self );
         }
@@ -262,7 +309,7 @@ sub _parse_line {
         return _parse_sideff( $self );
     }
 
-    Carp::confess $token->[O_TYPE], ' ', $token->[O_VALUE];
+    _syntax_error( $self, $token );
 }
 
 sub _add_pending_lexicals {
@@ -279,7 +326,7 @@ sub _add_pending_lexicals {
 sub _parse_sub {
     my( $self, $flags, $no_sub_token ) = @_;
     _lex_token( $self, T_ID ) unless $no_sub_token;
-    my $name = $self->lexer->lex_alphabetic_identifier;
+    my $name = $self->lexer->lex_alphabetic_identifier( 0 );
     my $fqname = $name ? _qualify( $self, $name->[O_VALUE], $name->[O_ID_TYPE] ) : undef;
 
     # TODO prototypes
@@ -295,7 +342,7 @@ sub _parse_sub {
                        ( { name => $fqname,
                            } );
         } elsif( $next->[O_TYPE] != T_OPBRK ) {
-            Carp::confess( $next->[O_TYPE], ' ', $next->[O_VALUE] );
+            _syntax_error( $self, $next );
         }
     } else {
         _lex_token( $self, T_OPBRK );
@@ -312,6 +359,7 @@ sub _parse_sub {
 
     my $block = _parse_block_rest( $self, BLOCK_IMPLICIT_RETURN );
     $sub->{lines} = $block->{lines}; # FIXME encapsulation
+    $sub->set_parent_for_all_childs;
     $self->_leave_scope;
 
     # add a subroutine declaration, the generator might
@@ -369,14 +417,16 @@ sub _parse_cond {
                                           block      => $block,
                                           } )
         } else {
+            # FIXME encapsulation
             $if->{iffalse} = Language::P::ParseTree::ConditionalBlock->new
                                       ( { block_type => 'else',
                                           condition  => undef,
                                           block      => $block,
-                                          } )
+                                          } );
         }
     }
 
+    $if->set_parent_for_all_childs;
     $self->_leave_scope;
 
     return $if;
@@ -424,13 +474,13 @@ sub _parse_for {
 
             return $for;
         } else {
-            Carp::confess $sep->[O_TYPE], ' ', $sep->[O_VALUE];
+            _syntax_error( $self, $sep );
         }
     } elsif( $token->[O_TYPE] == T_ID && (    $token->[O_ID_TYPE] == OP_MY
                                            || $token->[O_ID_TYPE] == OP_OUR
                                            || $token->[O_ID_TYPE] == OP_STATE ) ) {
         _lex_token( $self, T_DOLLAR );
-        my $name = $self->lexer->lex_identifier;
+        my $name = $self->lexer->lex_identifier( 0 );
         die "No name" unless $name;
 
         # FIXME our() variable refers to package it was declared in
@@ -440,10 +490,10 @@ sub _parse_for {
                                flags   => $declaration_to_flags{$token->[O_ID_TYPE]},
                                } );
     } elsif( $token->[O_TYPE] == T_DOLLAR ) {
-        my $id = $self->lexer->lex_identifier;
+        my $id = $self->lexer->lex_identifier( 0 );
         $foreach_var = _find_symbol( $self, VALUE_SCALAR, $id->[O_VALUE], $id->[O_ID_TYPE] );
     } else {
-        Carp::confess $token->[O_TYPE], ' ', $token->[O_VALUE];
+        _syntax_error( $self, $token );
     }
 
     # if we get there it is not C-style for
@@ -500,7 +550,7 @@ sub _parse_while {
 sub _parse_continue {
     my( $self ) = @_;
     my $token = $self->lexer->peek( X_STATE );
-    return unless $token->[0] == T_ID && $token->[2] == KEY_CONTINUE;
+    return unless $token->[O_TYPE] == T_ID && $token->[O_ID_TYPE] == KEY_CONTINUE;
 
     _lex_token( $self, T_ID );
     _lex_token( $self, T_OPBRK, undef, X_BLOCK );
@@ -748,11 +798,11 @@ sub _parse_maybe_direct_method_call {
     if( $token->[O_TYPE] == T_ID ) {
         ( $method, $indirect ) = ( $token->[O_VALUE], 0 );
     } elsif( $token->[O_TYPE] == T_DOLLAR ) {
-        my $id = $self->lexer->lex_identifier;
+        my $id = $self->lexer->lex_identifier( 0 );
         $method = _find_symbol( $self, VALUE_SCALAR, $id->[O_VALUE], $id->[O_ID_TYPE] );
         $indirect = 1;
     } else {
-        die $token->[O_TYPE], ' ', $token->[O_VALUE];
+        _syntax_error( $self, $token );
     }
 
     my $oppar = $self->lexer->peek( X_OPERATOR );
@@ -849,7 +899,7 @@ sub _parse_string_rest {
         } elsif( $value->[O_TYPE] == T_DOLLAR || $value->[O_TYPE] == T_AT ) {
             push @values, _parse_indirobj_maybe_subscripts( $self, $value );
         } else {
-            die $value->[O_TYPE], ' ', $value->[O_VALUE];
+            _syntax_error( $self, $value );
         }
     }
 
@@ -909,7 +959,7 @@ sub _parse_term_terminal {
                     # FIXME simpler method, make lex_identifier static
                     my $lexer = Language::P::Lexer->new
                                     ( { string => $qstring->value } );
-                    my $id = $lexer->lex_identifier;
+                    my $id = $lexer->lex_identifier( 0 );
 
                     if( $id && !length( ${$lexer->buffer} ) ) {
                         my $glob = Language::P::ParseTree::Symbol->new
@@ -972,22 +1022,48 @@ sub _parse_term_terminal {
              || $token->[O_TYPE] == T_AMPERSAND
              || $token->[O_TYPE] == T_ARYLEN ) {
         return ( _parse_indirobj_maybe_subscripts( $self, $token ), 1 );
-    } elsif(    $token->[O_TYPE] == T_ID
-             && (    $token->[O_ID_TYPE] == OP_MY
-                  || $token->[O_ID_TYPE] == OP_OUR
-                  || $token->[O_ID_TYPE] == OP_STATE ) ) {
-        return _parse_lexical( $self, $token->[O_ID_TYPE] );
-    } elsif( $token->[O_TYPE] == T_ID && $token->[O_ID_TYPE] == KEY_SUB ) {
-        return _parse_sub( $self, 2, 1 );
-    } elsif(    $token->[O_TYPE] == T_ID
-             && !is_keyword( $token->[O_ID_TYPE] ) ) {
-        return _parse_listop( $self, $token );
-    } elsif(    $token->[O_TYPE] == T_ID
-             && $token->[O_ID_TYPE] == KEY_LOCAL ) {
-        return Language::P::ParseTree::Local->new
-                   ( { op   => KEY_LOCAL,
-                       left => _parse_term_list_if_parens( $self, PREC_NAMED_UNOP ),
-                       } );
+    } elsif(    $token->[O_TYPE] == T_ID ) {
+        my $tokidt = $token->[O_ID_TYPE];
+
+        if( !is_keyword( $token->[O_ID_TYPE] ) ) {
+            return _parse_listop( $self, $token );
+        } elsif(    $tokidt == OP_MY
+                 || $tokidt == OP_OUR
+                 || $tokidt == OP_STATE ) {
+            return _parse_lexical( $self, $token->[O_ID_TYPE] );
+        } elsif( $tokidt == KEY_SUB ) {
+            return _parse_sub( $self, 2, 1 );
+        } elsif(    $tokidt == OP_GOTO
+                 || $tokidt == OP_LAST
+                 || $tokidt == OP_NEXT
+                 || $tokidt == OP_REDO ) {
+            my $id = $self->lexer->lex;
+            my $dest;
+            if( $id->[O_TYPE] == T_ID && $id->[O_ID_TYPE] == T_ID ) {
+                $dest = $id->[O_VALUE];
+            } else {
+                $self->lexer->unlex( $id );
+                $dest = _parse_term( $self, PREC_LOWEST );
+                if( $dest ) {
+                    $dest = $dest->left
+                        if $dest->isa( 'Language::P::ParseTree::Parentheses' );
+                    $dest = $dest->value if $dest->is_constant;
+                }
+            }
+
+            my $jump = Language::P::ParseTree::Jump->new
+                           ( { op   => $tokidt,
+                               left => $dest,
+                               } );
+            push @{$self->_lexical_state->[-1]{sub}{jumps}}, $jump
+              if $tokidt == OP_GOTO && !ref( $dest );
+
+            return $jump;
+        } elsif( $tokidt == KEY_LOCAL ) {
+            return Language::P::ParseTree::Local->new
+                       ( { left => _parse_term_list_if_parens( $self, PREC_NAMED_UNOP ),
+                           } );
+        }
     } elsif( $token->[O_TYPE] == T_OPHASH ) {
         my $expr = _parse_bracketed_expr( $self, T_OPBRK, 1, 1 );
 
@@ -1150,7 +1226,7 @@ sub _parse_term_p {
             return _parse_term_n( $self, $binprec->[0],
                                   $terminal );
         } else {
-            Carp::confess $la->[O_TYPE], ' ', $la->[O_VALUE];
+            _syntax_error( $self, $la );
         }
     } elsif( $token->[O_TYPE] == T_FILETEST ) {
         return _parse_listop_like( $self, undef, 1,
@@ -1223,7 +1299,7 @@ sub _parse_term_n {
             $terminal = _parse_ternary( $self, PREC_TERNARY, $terminal );
         } else {
             # do not try to use colon as binary
-            Carp::confess $token->[O_TYPE], ' ', $token->[O_VALUE]
+            _syntax_error( $self, $token )
                 if $token->[O_TYPE] == T_COLON;
 
             my $q = $bin->[1] == ASSOC_RIGHT ? $bin->[0] : $bin->[0] - 1;
@@ -1233,7 +1309,10 @@ sub _parse_term_n {
 
             if( $token->[O_TYPE] == T_COMMA ) {
                 if( $terminal->isa( 'Language::P::ParseTree::List' ) ) {
-                    push @{$terminal->expressions}, $rterm if $rterm;
+                    if( $rterm ) {
+                        push @{$terminal->expressions}, $rterm;
+                        $rterm->set_parent( $terminal );
+                    }
                 } else {
                     $terminal = Language::P::ParseTree::List->new
                         ( { expressions => [ $terminal, $rterm ? $rterm : () ],
@@ -1348,7 +1427,7 @@ sub _parse_block_rest {
 
 sub _parse_indirobj {
     my( $self, $allow_fail ) = @_;
-    my $id = $self->lexer->lex_identifier;
+    my $id = $self->lexer->lex_identifier( 0 );
 
     if( $id ) {
         return $id;
@@ -1376,7 +1455,7 @@ sub _parse_indirobj {
 
         return undef;
     } else {
-        die $token->[O_TYPE], ' ', $token->[O_VALUE];
+        _syntax_error( $self, $token );
     }
 }
 
@@ -1449,7 +1528,7 @@ sub _parse_listop_like {
                 # parsed as a normal sub call; go figure
                 $next = $la;
             } else {
-                Carp::confess( $la->[O_TYPE], ' ', $la->[O_VALUE] );
+                _syntax_error( $self, $la );
             }
         } elsif( !$declared && $next->[O_TYPE] != T_OPPAR ) {
             # not a declared subroutine, nor followed by parenthesis
@@ -1493,8 +1572,10 @@ sub _parse_listop_like {
                         arguments => $args,
                         indirect  => $fh,
                         } );
-    } else {
+    } elsif( $args ) {
+        # FIXME encapsulation
         $call->{arguments} = $args;
+        $_->set_parent( $call ) foreach @$args;
     }
 
     _apply_prototype( $self, $call );

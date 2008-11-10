@@ -237,7 +237,8 @@ sub o_glob {
 
 sub o_lexical {
     my( $op, $runtime, $pc ) = @_;
-    my $value = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
+    my $value = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}]
+                  ||= Language::P::Toy::Value::StringNumber->new;
 
     push @{$runtime->{_stack}}, $value;
 
@@ -657,7 +658,7 @@ sub o_restore_glob_slot {
     my $glob = $runtime->symbol_table->get_symbol( $op->{name}, '*', 1 );
     my $saved = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
 
-    $glob->set_slot( $op->{slot}, $saved );
+    $glob->set_slot( $op->{slot}, $saved ) if $saved;
     $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = undef;
 
     return $pc + 1;

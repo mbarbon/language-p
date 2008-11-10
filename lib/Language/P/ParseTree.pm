@@ -132,13 +132,33 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
+use Scalar::Util ();
+
+sub new {
+    my( $class, $args ) = @_;
+    my $self = $class->SUPER::new( $args );
+
+    $self->set_parent_for_all_childs;
+
+    return $self;
+}
+
 sub is_bareword { 0 }
 sub is_constant { 0 }
 sub is_symbol { 0 }
 sub is_compound { 0 }
+sub is_loop { 0 }
 sub can_implicit_return { 1 }
 sub is_declaration { 0 }
 sub lvalue_context { Language::P::ParseTree::CXT_SCALAR }
+sub parent { $_[0]->{parent} }
+
+sub set_parent {
+    my( $self, $parent ) = @_;
+
+    $_[0]->{parent} = $parent;
+    Scalar::Util::weaken( $_[0]->{parent} );
+}
 
 sub _fields {
     no strict 'refs';
@@ -153,6 +173,34 @@ sub _fields {
 
 sub fields { _fields( ref( $_[0] ) ) }
 
+sub set_parent_for_all_childs {
+    my( $self ) = @_;
+
+    foreach my $field ( $self->fields ) {
+        my $v = $self->$field;
+        next unless $v && ref( $v );
+
+        if( ref( $v ) eq 'ARRAY' ) {
+            $_->set_parent( $self ) foreach @$v;
+        } elsif( ref( $v ) eq 'HASH' ) {
+            die "No hash-ish field yet";
+        } else {
+            # can only be a node
+            $v->set_parent( $self );
+        }
+    }
+}
+
+sub has_attribute  { $_[0]->{attributes} && exists $_[0]->{attributes}->{$_[1]} }
+sub get_attribute  { $_[0]->{attributes} && $_[0]->{attributes}->{$_[1]} }
+sub get_attributes { $_[0]->{attributes} }
+sub set_attribute  {
+    my( $self, $name, $value, $weak ) = @_;
+
+    $self->{attributes}->{$name} = $value;
+    Scalar::Util::weaken( $self->{attributes}->{$name} ) if $weak;
+}
+
 package Language::P::ParseTree::Package;
 
 use strict;
@@ -162,6 +210,14 @@ use base qw(Language::P::ParseTree::Node);
 our @FIELDS = qw(name);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
+
+package Language::P::ParseTree::Empty;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+sub can_implicit_return { 0 }
 
 package Language::P::ParseTree::Constant;
 
@@ -204,7 +260,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(function arguments context);
+our @FIELDS = qw(function arguments);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -227,7 +283,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(invocant method arguments indirect context);
+our @FIELDS = qw(invocant method arguments indirect);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -237,7 +293,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(name sigil context);
+our @FIELDS = qw(name sigil);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -307,6 +363,8 @@ our @FIELDS = qw(continue);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub is_loop { 1 }
+
 package Language::P::ParseTree::Subroutine;
 
 use strict;
@@ -355,7 +413,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(op left right context);
+our @FIELDS = qw(op left right);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -365,7 +423,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(op left context);
+our @FIELDS = qw(op left);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -386,6 +444,12 @@ use base qw(Language::P::ParseTree::UnOp);
 
 sub op { Language::P::ParseTree::OP_LOCAL }
 sub lvalue_context { $_[0]->left->lvalue_context }
+
+package Language::P::ParseTree::Jump;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::UnOp);
 
 package Language::P::ParseTree::Dereference;
 
@@ -411,7 +475,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(subscripted subscript type reference context);
+our @FIELDS = qw(subscripted subscript type reference);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -423,7 +487,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(subscripted subscript type reference context);
+our @FIELDS = qw(subscripted subscript type reference);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -463,6 +527,7 @@ __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub can_implicit_return { 0 }
 sub is_compound { 1 }
+sub is_loop { 1 }
 
 package Language::P::ParseTree::For;
 
@@ -475,6 +540,7 @@ our @FIELDS = qw(initializer step);
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub is_compound { 1 }
+sub is_loop { 1 }
 
 package Language::P::ParseTree::Foreach;
 
@@ -488,6 +554,7 @@ __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub can_implicit_return { 0 }
 sub is_compound { 1 }
+sub is_loop { 1 }
 
 package Language::P::ParseTree::Ternary;
 
@@ -495,7 +562,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(condition iftrue iffalse context);
+our @FIELDS = qw(condition iftrue iffalse);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
