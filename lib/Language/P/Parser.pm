@@ -550,7 +550,7 @@ sub _parse_while {
 sub _parse_continue {
     my( $self ) = @_;
     my $token = $self->lexer->peek( X_STATE );
-    return unless $token->[0] == T_ID && $token->[2] == KEY_CONTINUE;
+    return unless $token->[O_TYPE] == T_ID && $token->[O_ID_TYPE] == KEY_CONTINUE;
 
     _lex_token( $self, T_ID );
     _lex_token( $self, T_OPBRK, undef, X_BLOCK );
