@@ -147,6 +147,7 @@ sub is_bareword { 0 }
 sub is_constant { 0 }
 sub is_symbol { 0 }
 sub is_compound { 0 }
+sub is_loop { 0 }
 sub can_implicit_return { 1 }
 sub is_declaration { 0 }
 sub lvalue_context { Language::P::ParseTree::CXT_SCALAR }
@@ -362,6 +363,8 @@ our @FIELDS = qw(continue);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub is_loop { 1 }
+
 package Language::P::ParseTree::Subroutine;
 
 use strict;
@@ -524,6 +527,7 @@ __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub can_implicit_return { 0 }
 sub is_compound { 1 }
+sub is_loop { 1 }
 
 package Language::P::ParseTree::For;
 
@@ -536,6 +540,7 @@ our @FIELDS = qw(initializer step);
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub is_compound { 1 }
+sub is_loop { 1 }
 
 package Language::P::ParseTree::Foreach;
 
@@ -549,6 +554,7 @@ __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub can_implicit_return { 0 }
 sub is_compound { 1 }
+sub is_loop { 1 }
 
 package Language::P::ParseTree::Ternary;
 

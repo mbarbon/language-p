@@ -49,6 +49,9 @@ BEGIN {
 our @EXPORT = ( @KEYWORDS, @BUILTINS, @OVERRIDABLES,
                 qw(is_keyword is_builtin is_overridable is_id)
                 );
+our %%EXPORT_TAGS =
+  ( all  => \@EXPORT,
+    );
 
 use constant +
   { ID_MASK          => 0x00003, # 2

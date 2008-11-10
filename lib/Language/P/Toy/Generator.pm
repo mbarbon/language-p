@@ -15,6 +15,7 @@ use Language::P::Toy::Value::Code;
 use Language::P::Toy::Value::Regex;
 use Language::P::ParseTree::PropagateContext;
 use Language::P::ParseTree qw(:all);
+use Language::P::Keywords qw(:all);
 
 sub new {
     my( $class, $args ) = @_;
@@ -232,6 +233,7 @@ my %dispatch =
     'Language::P::ParseTree::AnonymousSubroutine'    => '_anon_subroutine',
     'Language::P::ParseTree::QuotedString'           => '_quoted_string',
     'Language::P::ParseTree::Subscript'              => '_subscript',
+    'Language::P::ParseTree::Jump'                   => '_jump',
     'Language::P::ParseTree::Pattern'                => '_pattern',
     'Language::P::ParseTree::Parentheses'            => '_parentheses',
     );
@@ -331,6 +333,7 @@ my %builtins_no_list =
 
 sub _indirect {
     my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
 
     push @bytecode, o( 'start_list' );
 
@@ -352,9 +355,11 @@ sub _builtin {
     my( $self, $tree ) = @_;
 
     if( $tree->function eq 'undef' && !$tree->arguments ) {
+        _emit_label( $self, $tree );
         push @bytecode, o( 'constant',
                            value => Language::P::Toy::Value::StringNumber->new );
     } elsif( $builtins_no_list{$tree->function} ) {
+        _emit_label( $self, $tree );
         foreach my $arg ( @{$tree->arguments || []} ) {
             $self->dispatch( $arg );
         }
@@ -367,6 +372,7 @@ sub _builtin {
 
 sub _function_call {
     my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
 
     push @bytecode, o( 'start_list' );
 
@@ -397,6 +403,7 @@ sub _function_call {
 
 sub _list {
     my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
 
     push @bytecode, o( 'start_list' );
 
@@ -409,6 +416,7 @@ sub _list {
 
 sub _unary_op {
     my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
 
     die $tree->op unless $unary{$tree->op};
 
@@ -419,6 +427,7 @@ sub _unary_op {
 
 sub _local {
     my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
 
     die "Can only localize global for now"
         unless $tree->left->isa( 'Language::P::ParseTree::Symbol' );
@@ -448,6 +457,7 @@ sub _parentheses {
 
 sub _binary_op {
     my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
 
     die $tree->op unless $builtins{$tree->op};
 
@@ -484,6 +494,7 @@ sub _binary_op_cond {
         return;
     }
 
+    _emit_label( $self, $tree );
     $self->dispatch( $tree->right );
     $self->dispatch( $tree->left );
 
@@ -505,6 +516,7 @@ sub _anything_cond {
 
 sub _constant {
     my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
     my $v;
 
     if( $tree->is_number ) {
@@ -537,6 +549,7 @@ sub _constant {
 
 sub _symbol {
     my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
 
     if( $tree->sigil == VALUE_GLOB ) {
         push @bytecode, o( 'glob', name => $tree->name, create => 1 );
@@ -553,6 +566,7 @@ sub _symbol {
 
 sub _lexical_symbol {
     my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
 
     _do_lexical_access( $self, $tree->declaration, 0 );
     $bytecode[-1]->{level} = $tree->level;
@@ -560,6 +574,7 @@ sub _lexical_symbol {
 
 sub _lexical_declaration {
     my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
 
     _do_lexical_access( $self, $tree, 1 );
 }
@@ -584,10 +599,15 @@ sub _do_lexical_access {
 
 sub _cond_loop {
     my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
 
     my $is_until = $tree->block_type eq 'until';
     my( $start_cond, $start_loop, $start_continue, $end_loop ) =
       ( _new_label, _new_label, _new_label, _new_label );
+    $tree->set_attribute( 'toy_next', $tree->continue ? $start_continue :
+                                                        $start_cond );
+    $tree->set_attribute( 'toy_last', $end_loop );
+    $tree->set_attribute( 'toy_redo', $start_loop );
     _set_label( $start_cond, scalar @bytecode );
 
     $self->dispatch_cond( $tree->condition,
@@ -604,6 +624,7 @@ sub _cond_loop {
 
 sub _cond {
     my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
 
     my $end_cond = _new_label;
     foreach my $elsif ( @{$tree->iftrues} ) {
@@ -626,6 +647,7 @@ sub _cond {
 
 sub _ternary {
     my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
 
     my( $end, $true, $false ) = ( _new_label, _new_label, _new_label );
     $self->dispatch_cond( $tree->condition, $true, $false );
@@ -642,6 +664,7 @@ sub _ternary {
 
 sub _block {
     my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
 
     $self->push_block;
 
@@ -670,6 +693,7 @@ sub _anon_subroutine {
 
 sub _subroutine {
     my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
 
     my $sub = Language::P::Toy::Value::Subroutine->new
                   ( { bytecode => [],
@@ -694,6 +718,7 @@ sub _subroutine {
 
 sub _quoted_string {
     my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
 
     if( @{$tree->components} == 1 ) {
         $self->dispatch( $tree->components->[0] );
@@ -713,6 +738,7 @@ sub _quoted_string {
 
 sub _subscript {
     my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
 
     die if $tree->reference;
 
@@ -725,6 +751,110 @@ sub _subscript {
         push @bytecode, o( 'hash_element' );
     } else {
         die $tree->type;
+    }
+}
+
+# find the node that is the target of a goto or the loop node that
+# last/redo/next controls
+sub _find_jump_target {
+    my( $self, $node ) = @_;
+    return $node->get_attribute( 'target' ) if $node->has_attribute( 'target' );
+    return if ref $node->left; # dynamic jump
+    return if $node->op == OP_GOTO;
+
+    # search for the closest loop (for unlabeled jumps) or the closest
+    # loop with matching label
+    my $target_label = $node->left;
+    while( $node ) {
+        $node = $node->parent;
+        last if $node->isa( 'Language::P::ParseTree::Subroutine' );
+        next unless $node->is_loop;
+        # found loop
+        return $node if !$target_label;
+        next unless $node->has_attribute( 'label' );
+        return $node if $node->get_attribute( 'label' ) eq $target_label;
+    }
+
+    return;
+}
+
+# number of blocks to unwind when jumping out of a loop/nested scope
+sub _unwind_level {
+    my( $self, $node, $to_outer ) = @_;
+    my $level = 0;
+
+    while( $node && ( !$to_outer || $node != $to_outer ) ) {
+        ++$level if $node->isa( 'Language::P::ParseTree::Block' );
+        $node = $node->parent;
+    }
+
+    return $level;
+}
+
+# find the common ancestor of two nodes (assuming they are in the same
+# subroutine)
+sub _find_ancestor {
+    my( $self, $from, $to ) = @_;
+    my %parents;
+
+    for( my $node = $from; $node; $node = $node->parent ) {
+        $parents{$node} = 1;
+        last if $node->isa( 'Language::P::ParseTree::Subroutine' );
+    }
+
+    for( my $node = $to; $node; $node = $node->parent ) {
+        return $node if $parents{$node};
+        die "Can't happen" if $node->isa( 'Language::P::ParseTree::Subroutine' );
+    }
+
+    return;
+}
+
+sub _jump {
+    my( $self, $tree ) = @_;
+    my $target = _find_jump_target( $self, $tree );
+
+    die "Jump without static target" unless $target; # requires stack unwinding
+
+    my $unwind_to = $tree->op == OP_GOTO ?
+                        _find_ancestor( $self, $tree, $target ) :
+                        $target;
+    my $level = _unwind_level( $self, $tree, $unwind_to );
+
+    my $block = $current_block;
+    foreach ( 1 .. $level ) {
+        _exit_scope( $self, $block );
+        $block = $block->{outer};
+    }
+
+    my $label_to;
+    if( $tree->op == OP_GOTO ) {
+        $label_to = $target->get_attribute( 'toy_label' );
+        if( !$label_to ) {
+            $target->set_attribute( 'toy_label', $label_to = _new_label );
+        }
+    } else {
+        my $label = $tree->op == OP_NEXT ? 'toy_next' :
+                    $tree->op == OP_LAST ? 'toy_last' :
+                                           'toy_redo';
+        $label_to = $target->get_attribute( $label )
+            or die "Missing loop control label";
+    }
+
+    push @bytecode, o( 'jump' );
+    _to_label( $label_to, $bytecode[-1] );
+}
+
+sub _emit_label {
+    my( $self, $tree ) = @_;
+    return unless $tree->has_attribute( 'label' );
+
+    if( $tree->has_attribute( 'toy_label' ) ) {
+        _set_label( $tree->get_attribute( 'toy_label' ), scalar @bytecode );
+    } else {
+        my $label_to = _new_label;
+        _set_label( $label_to, scalar @bytecode );
+        $tree->set_attribute( 'toy_label', $label_to );
     }
 }
 

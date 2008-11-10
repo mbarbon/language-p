@@ -6,11 +6,12 @@ Parsing:
   - after filetest, foo and _ are not barewords
   - parse using normal parsing for named unary operators,
     and add parsing prototype
-- stashes
+- stash access through hash syntax
+- glob access through hash syntax
 - global variables/symbols (STDOUT!)
 - scoping
 - do ...
-- labels
+- attributes
 - formats
 - add operator descriptor and do parse tree modifications
   - like: defined &foo; pipe X, Y; etc.
@@ -18,7 +19,6 @@ Parsing:
   - find more corner cases
 - list slices ( ... )[ ... ]
 - test all unary/binary operator
-- anonymous sub
 - subroutine prototypes
   - declaration
   - parsing
@@ -87,8 +87,13 @@ Runtime:
 - array/list/hash assignment
   - optimize lists with common assignments
   - check mixed assignments
-- garbage collection
+- garbage collection and/or reference counting
 - do file/require/use/eval string
+- stack unwinding
+  - eval/die
+  - nonlocal redo/last/next/goto
+- code generation fo all loop tpes and bare blocks
+- computed goto/next/last/redo
 - local()
   - check code generation for all block types and
     different cases for local() in conditions or in loop/conditional/continue
@@ -123,3 +128,5 @@ Refactoring:
   earlier in the parsing
 - add structure to contain actions to be performed at block end,
   and can generate code for them
+- make the top level of a file/string/... a new parse tree node
+  (or a special type of block)
