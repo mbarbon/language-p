@@ -1,11 +1,9 @@
 Parsing:
-- scalar/array/void context
+- context handling
   - prototypes
   - splice/substr/lvalue subroutines
 - filetest
   - after filetest, foo and _ are not barewords
-  - parse using normal parsing for named unary operators,
-    and add parsing prototype
 - stash access through hash syntax
 - glob access through hash syntax
 - global variables/symbols (STDOUT!)
@@ -30,7 +28,7 @@ Parsing:
   - check invalid declarations
   - check non-lvaluable expressions
 - implicit $_ in various builtins
-- scope handling of conditional/while/continue
+- scope handling of conditionals/while/continue
 - handling of parse errors with recovery
 - lexical pragmas/hints
   - strictures
@@ -42,9 +40,6 @@ Parsing:
 - special treatment for glob()
 - simplify detection of <foo> vs. <foo >, avoid constructing a lexer
 - packages
-  - add subpackages to runtime
-  - when searching prototypes/definitions/variables at parse time,
-    use the correct package name
   - package handling in our()
 - parsing of nullary/unary vs. list operators
 - => auto-quoting
@@ -77,7 +72,7 @@ Runtime:
 - proper handling of function return values
   - implicit return
   - context
-- encapsulate lexical lookup/closure
+- encapsulate lexical lookup/closure, for eval ""
 - better handling of sub calls
   - encapsulate enter/leave
 - proper morphing on scalar assignment
