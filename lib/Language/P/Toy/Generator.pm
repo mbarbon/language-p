@@ -226,6 +226,7 @@ my %dispatch =
     'Language::P::ParseTree::List'                   => '_list',
     'Language::P::ParseTree::Conditional'            => '_cond',
     'Language::P::ParseTree::ConditionalLoop'        => '_cond_loop',
+    'Language::P::ParseTree::For'                    => '_for',
     'Language::P::ParseTree::Ternary'                => '_ternary',
     'Language::P::ParseTree::Block'                  => '_block',
     'Language::P::ParseTree::NamedSubroutine'        => '_subroutine',
@@ -617,6 +618,30 @@ sub _cond_loop {
     $self->dispatch( $tree->block );
     _set_label( $start_continue, scalar @bytecode );
     $self->dispatch( $tree->continue ) if $tree->continue;
+    push @bytecode, o( 'jump' );
+    _to_label( $start_cond, $bytecode[-1] );
+    _set_label( $end_loop, scalar @bytecode );
+}
+
+sub _for {
+    my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
+
+    my( $start_cond, $start_loop, $start_step, $end_loop ) =
+      ( _new_label, _new_label, _new_label, _new_label );
+    $tree->set_attribute( 'toy_next', $start_step );
+    $tree->set_attribute( 'toy_last', $end_loop );
+    $tree->set_attribute( 'toy_redo', $start_loop );
+
+    $self->dispatch( $tree->initializer );
+
+    _set_label( $start_cond, scalar @bytecode );
+
+    $self->dispatch_cond( $tree->condition, $start_loop, $end_loop );
+    _set_label( $start_loop, scalar @bytecode );
+    $self->dispatch( $tree->block );
+    _set_label( $start_step, scalar @bytecode );
+    $self->dispatch( $tree->step );
     push @bytecode, o( 'jump' );
     _to_label( $start_cond, $bytecode[-1] );
     _set_label( $end_loop, scalar @bytecode );

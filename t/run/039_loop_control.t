@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..11\n";
+print "1..13\n";
 
 $i = 1;
 
@@ -55,3 +55,8 @@ OUTER: while( $k < 2 ) {
 
 print $v == 2 ? "ok 10\n" : "not ok 10\n";
 print $t == 5 ? "ok 11\n" : "not ok 11\n";
+
+for( $x = 7; $x < 14; $x = $x + 1 ) {
+    next if $x <= 11;
+    print "ok $x\n";
+}
