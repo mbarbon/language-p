@@ -484,11 +484,12 @@ sub _parse_for {
         die "No name" unless $name;
 
         # FIXME our() variable refers to package it was declared in
-        $foreach_var = Language::P::ParseTree::LexicalDeclaration->new
+        $foreach_var = Language::P::ParseTree::Symbol->new
                            ( { name    => $name->[O_VALUE],
                                sigil   => VALUE_SCALAR,
-                               flags   => $declaration_to_flags{$token->[O_ID_TYPE]},
                                } );
+        $foreach_var = _process_declaration( $self, $foreach_var,
+                                             $token->[O_ID_TYPE] );
     } elsif( $token->[O_TYPE] == T_DOLLAR ) {
         my $id = $self->lexer->lex_identifier( 0 );
         $foreach_var = _find_symbol( $self, VALUE_SCALAR, $id->[O_VALUE], $id->[O_ID_TYPE] );

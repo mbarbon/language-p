@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 5;
+use Test::More tests => 6;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -155,5 +155,29 @@ expression: !parsetree:Symbol
 variable: !parsetree:Symbol
   context: CXT_SCALAR
   name: _
+  sigil: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+for my $x ( 8 ) {
+  $x;
+}
+EOP
+--- !parsetree:Foreach
+block: !parsetree:Block
+  lines:
+    - !parsetree:LexicalSymbol
+      context: CXT_VOID
+      level: 0
+      name: x
+      sigil: VALUE_SCALAR
+continue: ~
+expression: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
+  value: 8
+variable: !parsetree:LexicalDeclaration
+  context: CXT_SCALAR
+  flags: DECLARATION_MY
+  name: x
   sigil: VALUE_SCALAR
 EOE
