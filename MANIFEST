@@ -91,7 +91,7 @@ t/parser/terms/150_closure.t
 t/run/005_assignment.t
 t/run/006_brackets.t
 t/run/007_if.t
-t/run/008_while.t
+t/run/008_loops.t
 t/run/010_arithmetic.t
 t/run/015_defined.t
 t/run/020_lexicals.t
