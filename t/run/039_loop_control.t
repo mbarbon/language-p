@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..13\n";
+print "1..15\n";
 
 $i = 1;
 
@@ -59,4 +59,12 @@ print $t == 5 ? "ok 11\n" : "not ok 11\n";
 for( $x = 7; $x < 14; $x = $x + 1 ) {
     next if $x <= 11;
     print "ok $x\n";
+}
+
+foreach my $x ( 13, 15 ) {
+    next if $x < 14;
+    print "ok $x\n";
+    last;
+} continue {
+    print "ok 14\n";
 }

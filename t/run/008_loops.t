@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..7\n";
+print "1..10\n";
 
 $i = 0;
 $j = 1;
@@ -23,3 +23,7 @@ for( $k = 5, $l = 4; $k < 7; $k = $k + 1 ) {
 }
 
 print "ok $k\n";
+
+for my $x ( 8, 9, 10 ) {
+    print "ok $x\n";
+}

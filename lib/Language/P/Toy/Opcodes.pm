@@ -316,6 +316,13 @@ sub o_jump_if_true {
     return $v1->as_boolean_int ? $op->{to} : $pc + 1;
 }
 
+sub o_jump_if_undef {
+    my( $op, $runtime, $pc ) = @_;
+    my $v1 = pop @{$runtime->{_stack}};
+
+    return !defined $v1 ? $op->{to} : $pc + 1;
+}
+
 sub _make_compare {
     my( $op ) = @_;
 
@@ -660,6 +667,25 @@ sub o_restore_glob_slot {
 
     $glob->set_slot( $op->{slot}, $saved ) if $saved;
     $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = undef;
+
+    return $pc + 1;
+}
+
+sub o_iterator {
+    my( $op, $runtime, $pc ) = @_;
+    my $list = pop @{$runtime->{_stack}};
+    my $iter = $list->iterator;
+
+    push @{$runtime->{_stack}}, $iter;
+
+    return $pc + 1;
+}
+
+sub o_iterator_next {
+    my( $op, $runtime, $pc ) = @_;
+    my $iter = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $iter->next ? $iter->item : undef;
 
     return $pc + 1;
 }

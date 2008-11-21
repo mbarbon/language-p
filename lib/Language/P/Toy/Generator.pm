@@ -227,6 +227,7 @@ my %dispatch =
     'Language::P::ParseTree::Conditional'            => '_cond',
     'Language::P::ParseTree::ConditionalLoop'        => '_cond_loop',
     'Language::P::ParseTree::For'                    => '_for',
+    'Language::P::ParseTree::Foreach'                => '_foreach',
     'Language::P::ParseTree::Ternary'                => '_ternary',
     'Language::P::ParseTree::Block'                  => '_block',
     'Language::P::ParseTree::NamedSubroutine'        => '_subroutine',
@@ -623,6 +624,54 @@ sub _cond_loop {
     _set_label( $end_loop, scalar @bytecode );
 }
 
+sub _foreach {
+    my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
+
+    die $tree->variable unless $tree->variable->isa( 'Language::P::ParseTree::LexicalDeclaration' );
+
+    my( $start_step, $start_loop, $start_continue, $end_loop ) =
+      ( _new_label, _new_label, _new_label, _new_label );
+    $tree->set_attribute( 'toy_next', $tree->continue ? $start_continue :
+                                                        $start_step );
+    $tree->set_attribute( 'toy_last', $end_loop );
+    $tree->set_attribute( 'toy_redo', $start_loop );
+
+    my $iter_index = $code_stack[-1][0]->stack_size;
+    my $var_index = $code_stack[-1][0]->stack_size + 1;
+    $code_stack[-1][0]->{stack_size} += 2;
+
+    _add_value( $code_stack[-1][2], $tree->variable, $var_index );
+
+    push @bytecode, o( 'start_list' );
+    $self->dispatch( $tree->expression );
+    push @bytecode, o( 'end_list' );
+
+
+    push @bytecode,
+        o( 'iterator' ),
+        o( 'lexical_set', index => $iter_index );
+
+    _set_label( $start_step, scalar @bytecode );
+
+    push @bytecode,
+        o( 'lexical',      index => $iter_index ),
+        o( 'iterator_next' ),
+        o( 'dup' ),
+        o( 'jump_if_undef' ),
+        o( 'lexical_set',  index => $var_index );
+
+    _to_label( $end_loop, $bytecode[-2] );
+    _set_label( $start_loop, scalar @bytecode );
+
+    $self->dispatch( $tree->block );
+    _set_label( $start_continue, scalar @bytecode );
+    $self->dispatch( $tree->continue ) if $tree->continue;
+    push @bytecode, o( 'jump' );
+    _to_label( $start_step, $bytecode[-1] );
+    _set_label( $end_loop, scalar @bytecode );
+}
+
 sub _for {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
@@ -899,11 +948,17 @@ sub _find_add_value {
     return $lex_map{$pad}{$lexical} = $pad->add_value( $lexical );
 }
 
+sub _add_value {
+    my( $pad, $lexical, $index ) = @_;
+
+    $lex_map{$pad}{$lexical} = $index;
+}
+
 sub _allocate_lexicals {
     my( $self, $is_sub ) = @_;
 
     my $pad = $code_stack[-1][2];
-    my %map = $pad->{map} ? %{ delete $lex_map{$pad} } : ();
+    my %map = $lex_map{$pad} ? %{ delete $lex_map{$pad} } : ();
     my %clear;
     my $has_pad;
     foreach my $op ( @bytecode ) {
