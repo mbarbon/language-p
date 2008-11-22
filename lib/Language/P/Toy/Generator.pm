@@ -632,7 +632,7 @@ sub _foreach {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
-    die $tree->variable unless $tree->variable->isa( 'Language::P::ParseTree::LexicalDeclaration' );
+    my $is_lexical = $tree->variable->isa( 'Language::P::ParseTree::LexicalDeclaration' );
 
     my( $start_step, $start_loop, $start_continue, $end_loop ) =
       ( _new_label, _new_label, _new_label, _new_label );
@@ -643,29 +643,63 @@ sub _foreach {
 
     my $iter_index = $code_stack[-1][0]->stack_size;
     my $var_index = $code_stack[-1][0]->stack_size + 1;
+    my $old_value;
     $code_stack[-1][0]->{stack_size} += 2;
 
-    _add_value( $code_stack[-1][2], $tree->variable, $var_index );
+    if( $is_lexical ) {
+        _add_value( $code_stack[-1][2], $tree->variable, $var_index );
+    }
 
     push @bytecode, o( 'start_list' );
     $self->dispatch( $tree->expression );
     push @bytecode, o( 'end_list' );
 
-
     push @bytecode,
         o( 'iterator' ),
         o( 'lexical_set', index => $iter_index );
 
+    if( !$is_lexical ) {
+        $old_value = $code_stack[-1][0]->stack_size;
+        ++$code_stack[-1][0]->{stack_size};
+
+        push @bytecode,
+            o( 'glob',        name  => $tree->variable->name, create => 1 ),
+            o( 'dup' ),
+            o( 'glob_slot',   slot  => 'scalar' ),
+            o( 'lexical_set', index => $old_value ),
+            o( 'lexical_set', index => $var_index );
+
+        push @{$current_block->{bytecode}},
+             [ o( 'lexical',       index => $var_index ),
+               o( 'lexical',       index => $old_value ),
+               o( 'glob_slot_set', slot  => 'scalar' ),
+               ];
+    }
+
     _set_label( $start_step, scalar @bytecode );
 
-    push @bytecode,
-        o( 'lexical',      index => $iter_index ),
-        o( 'iterator_next' ),
-        o( 'dup' ),
-        o( 'jump_if_undef' ),
-        o( 'lexical_set',  index => $var_index );
+    if( !$is_lexical ) {
+        push @bytecode,
+            o( 'lexical',       index => $iter_index ),
+            o( 'iterator_next' ),
+            o( 'dup' ),
+            o( 'jump_if_undef' ),
+            o( 'lexical',       index => $var_index ),
+            o( 'swap' ),
+            o( 'glob_slot_set', slot  => 'scalar' );
 
-    _to_label( $end_loop, $bytecode[-2] );
+        _to_label( $end_loop, $bytecode[-4] );
+    } else {
+        push @bytecode,
+            o( 'lexical',      index => $iter_index ),
+            o( 'iterator_next' ),
+            o( 'dup' ),
+            o( 'jump_if_undef' ),
+            o( 'lexical_set',  index => $var_index );
+
+        _to_label( $end_loop, $bytecode[-2] );
+    }
+
     _set_label( $start_loop, scalar @bytecode );
 
     $self->dispatch( $tree->block );

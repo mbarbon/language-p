@@ -52,6 +52,16 @@ sub o_dup {
     return $pc + 1;
 }
 
+sub o_swap {
+    my( $op, $runtime, $pc ) = @_;
+    my $t = $runtime->{_stack}->[-1];
+
+    $runtime->{_stack}->[-1] = $runtime->{_stack}->[-2];
+    $runtime->{_stack}->[-2] = $t;
+
+    return $pc + 1;
+}
+
 sub o_pop {
     my( $op, $runtime, $pc ) = @_;
 
