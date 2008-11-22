@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..15\n";
+print "1..18\n";
 
 $i = 1;
 
@@ -68,3 +68,15 @@ foreach my $x ( 13, 15 ) {
 } continue {
     print "ok 14\n";
 }
+
+{
+    print "ok 16\n" if $x == 15;
+    $x = $x + 1;
+    redo if $x == 15;
+    print "ok 17\n";
+    last;
+} continue {
+    print "not ok 18\n";
+}
+
+print "ok 18\n";

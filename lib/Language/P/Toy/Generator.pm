@@ -229,6 +229,7 @@ my %dispatch =
     'Language::P::ParseTree::Foreach'                => '_foreach',
     'Language::P::ParseTree::Ternary'                => '_ternary',
     'Language::P::ParseTree::Block'                  => '_block',
+    'Language::P::ParseTree::BareBlock'              => '_bare_block',
     'Language::P::ParseTree::NamedSubroutine'        => '_subroutine',
     'Language::P::ParseTree::SubroutineDeclaration'  => '_subroutine_decl',
     'Language::P::ParseTree::AnonymousSubroutine'    => '_anon_subroutine',
@@ -806,6 +807,32 @@ sub _block {
 
     _exit_scope( $self, $current_block );
     $self->pop_block;
+}
+
+sub _bare_block {
+    my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
+
+    my( $start_loop, $start_continue, $end_loop ) =
+      ( _new_label, _new_label, _new_label );
+    $tree->set_attribute( 'toy_next', $end_loop );
+    $tree->set_attribute( 'toy_last', $end_loop );
+    $tree->set_attribute( 'toy_redo', $start_loop );
+
+    _set_label( $start_loop, scalar @bytecode );
+
+    $self->push_block;
+
+    foreach my $line ( @{$tree->lines} ) {
+        $self->dispatch( $line );
+    }
+
+    _exit_scope( $self, $current_block );
+    $self->pop_block;
+
+    _set_label( $start_continue, scalar @bytecode );
+    $self->dispatch( $tree->continue ) if $tree->continue;
+    _set_label( $end_loop, scalar @bytecode );
 }
 
 sub _subroutine_decl {
