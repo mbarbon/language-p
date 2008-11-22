@@ -616,6 +616,8 @@ sub _cond_loop {
     $tree->set_attribute( 'toy_redo', $start_loop );
     _set_label( $start_cond, scalar @bytecode );
 
+    $self->push_block;
+
     $self->dispatch_cond( $tree->condition,
                           $is_until ? ( $end_loop, $start_loop ) :
                                       ( $start_loop, $end_loop ) );
@@ -626,6 +628,9 @@ sub _cond_loop {
     push @bytecode, o( 'jump' );
     _to_label( $start_cond, $bytecode[-1] );
     _set_label( $end_loop, scalar @bytecode );
+
+    _exit_scope( $self, $current_block );
+    $self->pop_block;
 }
 
 sub _foreach {
@@ -645,6 +650,8 @@ sub _foreach {
     my $var_index = $code_stack[-1][0]->stack_size + 1;
     my $old_value;
     $code_stack[-1][0]->{stack_size} += 2;
+
+    $self->push_block;
 
     if( $is_lexical ) {
         _add_value( $code_stack[-1][2], $tree->variable, $var_index );
@@ -708,6 +715,9 @@ sub _foreach {
     push @bytecode, o( 'jump' );
     _to_label( $start_step, $bytecode[-1] );
     _set_label( $end_loop, scalar @bytecode );
+
+    _exit_scope( $self, $current_block );
+    $self->pop_block;
 }
 
 sub _for {
@@ -719,6 +729,8 @@ sub _for {
     $tree->set_attribute( 'toy_next', $start_step );
     $tree->set_attribute( 'toy_last', $end_loop );
     $tree->set_attribute( 'toy_redo', $start_loop );
+
+    $self->push_block;
 
     $self->dispatch( $tree->initializer );
 
@@ -732,11 +744,16 @@ sub _for {
     push @bytecode, o( 'jump' );
     _to_label( $start_cond, $bytecode[-1] );
     _set_label( $end_loop, scalar @bytecode );
+
+    _exit_scope( $self, $current_block );
+    $self->pop_block;
 }
 
 sub _cond {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
+
+    $self->push_block;
 
     my $end_cond = _new_label;
     foreach my $elsif ( @{$tree->iftrues} ) {
@@ -755,6 +772,9 @@ sub _cond {
         $self->dispatch( $tree->iffalse->block );
     }
     _set_label( $end_cond, scalar @bytecode );
+
+    _exit_scope( $self, $current_block );
+    $self->pop_block;
 }
 
 sub _ternary {
@@ -896,7 +916,9 @@ sub _unwind_level {
     my $level = 0;
 
     while( $node && ( !$to_outer || $node != $to_outer ) ) {
-        ++$level if $node->isa( 'Language::P::ParseTree::Block' );
+        ++$level if    $node->isa( 'Language::P::ParseTree::Block' )
+                    && !$node->isa( 'Language::P::ParseTree::BareBlock' );
+        ++$level if $node->is_loop;
         $node = $node->parent;
     }
 
