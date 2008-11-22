@@ -97,8 +97,7 @@ sub push_block {
     $current_block =
       { outer    => $current_block,
         is_sub   => $is_sub || 0,
-        locals   => [],
-        lexicals => [],
+        bytecode => [],
         };
 
     return $current_block;
@@ -445,10 +444,13 @@ sub _local {
             index => $index,
             );
 
-    push @{$current_block->{locals}},
-         { name  => $tree->left->name,
-           slot  => $slot,
-           index => $index };
+    push @{$current_block->{bytecode}},
+         [ o( 'restore_glob_slot',
+              name  => $tree->left->name,
+              slot  => $slot,
+              index => $index,
+              ),
+           ];
 }
 
 sub _parentheses {
@@ -592,10 +594,12 @@ sub _do_lexical_access {
            );
 
     if( $is_decl ) {
-        push @{$current_block->{lexicals}},
-             { lexical => $tree,
-               in_pad  => $in_pad,
-               };
+        push @{$current_block->{bytecode}},
+             [ o( $in_pad ? 'lexical_pad_clear' : 'lexical_clear',
+                  lexical => $tree,
+                  level   => 0,
+                  ),
+               ];
     }
 }
 
@@ -1023,21 +1027,8 @@ sub _allocate_lexicals {
 sub _exit_scope {
     my( $self, $block ) = @_;
 
-    foreach my $local ( reverse @{$block->{locals}} ) {
-        push @bytecode,
-             o( 'restore_glob_slot',
-                name  => $local->{name},
-                slot  => $local->{slot},
-                index => $local->{index},
-                );
-    }
-
-    foreach my $lexical ( reverse @{$block->{lexicals}} ) {
-        push @bytecode,
-             o( $lexical->{in_pad} ? 'lexical_pad_clear' : 'lexical_clear',
-                lexical => $lexical->{lexical},
-                level   => 0,
-                );
+    foreach my $code ( reverse @{$block->{bytecode}} ) {
+        push @bytecode, @$code;
     }
 }
 
