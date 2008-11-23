@@ -49,6 +49,8 @@ support/parrot/runtime/p5undef.pir
 t/lib/TestParser.pm
 t/lib/TestRegex.pm
 t/parser/001_load.t
+t/parser/002_parent.t
+t/parser/003_position.t
 t/parser/expressions/002_method_call.t
 t/parser/expressions/005_unary.t
 t/parser/expressions/007_repeat.t
@@ -69,6 +71,9 @@ t/parser/loops/001_block.t
 t/parser/regex/002_base.t
 t/parser/regex/010_character_classes.t
 t/parser/regex/011_character_class_intuit.t
+t/parser/statements/020_labels.t
+t/parser/statements/025_goto.t
+t/parser/statements/026_loop_control.t
 t/parser/statements/034_return.t
 t/parser/statements/035_postfix.t
 t/parser/statements/040_if.t
@@ -98,11 +103,13 @@ t/run/001_hello.t
 t/run/005_assignment.t
 t/run/006_brackets.t
 t/run/007_if.t
-t/run/008_while.t
+t/run/008_loops.t
 t/run/010_arithmetic.t
 t/run/015_defined.t
 t/run/020_lexicals.t
 t/run/035_local.t
+t/run/038_goto.t
+t/run/039_loop_control.t
 t/run/080_recursion.t
 t/run/081_context.t
 t/run/085_closure.t

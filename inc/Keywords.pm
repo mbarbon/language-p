@@ -49,6 +49,9 @@ BEGIN {
 our @EXPORT = ( @KEYWORDS, @BUILTINS, @OVERRIDABLES,
                 qw(is_keyword is_builtin is_overridable is_id)
                 );
+our %%EXPORT_TAGS =
+  ( all  => \@EXPORT,
+    );
 
 use constant +
   { ID_MASK          => 0x00003, # 2
@@ -96,10 +99,12 @@ for                 k
 foreach             k       
 while               k       
 until               k       
+continue            k       
 do                  k       
-last                k       
-next                k       
-redo                k       
+last                k       OP_LAST
+next                k       OP_NEXT
+redo                k       OP_REDO
+goto                k       OP_GOTO
 my                  k       OP_MY
 our                 k       OP_OUR
 state               k       OP_STATE

@@ -16,11 +16,11 @@ Language::P - parsing/compiling Perl5 code using Perl5
 
 =head1 DESCRIPTION
 
-An experiment: a perl 5 parser written in Perl 5, which might in time
+An experiment: a Perl 5 parser written in Perl 5, which might in time
 have multiple backends.  For now it only has a partial parser
 implementation and a toy runtime written in Perl 5.
 
-Time permitting it might acquire a Parrot (or Java or .Net runtime).
+Time permitting it will acquire a Parrot (or Java or .Net runtime).
 
 =cut
 
@@ -103,6 +103,11 @@ Mattia Barbon <mbarbon@cpan.org>
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
+
+=head1 SOURCES
+
+The latest sources can be found on GitHub at
+L<http://github.com/mbarbon/language-p/tree>
 
 =cut
 

@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 2;
+use Test::More tests => 3;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -29,6 +29,7 @@ condition: !parsetree:BinOp
   right: !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
+continue: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -53,4 +54,36 @@ condition: !parsetree:BinOp
   right: !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
+continue: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+while( $a > 2 ) {
+    1;
+} continue {
+    2;
+}
+EOP
+--- !parsetree:ConditionalLoop
+block: !parsetree:Block
+  lines:
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 1
+block_type: while
+condition: !parsetree:BinOp
+  context: CXT_SCALAR
+  left: !parsetree:Symbol
+    context: CXT_SCALAR
+    name: a
+    sigil: VALUE_SCALAR
+  op: OP_NUM_GT
+  right: !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
+    value: 2
+continue: !parsetree:Block
+  lines:
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 2
 EOE

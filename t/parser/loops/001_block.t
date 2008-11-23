@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 1;
+use Test::More tests => 2;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -13,7 +13,8 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
     $y = 2
 }
 EOP
---- !parsetree:Block
+--- !parsetree:BareBlock
+continue: ~
 lines:
   - !parsetree:BinOp
     context: CXT_VOID
@@ -35,4 +36,23 @@ lines:
     right: !parsetree:Constant
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+{
+    1;
+} continue {
+    2;
+}
+EOP
+--- !parsetree:BareBlock
+continue: !parsetree:Block
+  lines:
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 2
+lines:
+  - !parsetree:Constant
+    flags: CONST_NUMBER|NUM_INTEGER
+    value: 1
 EOE

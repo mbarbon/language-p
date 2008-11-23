@@ -30,6 +30,12 @@ sub _filter_fields {
         $clone->{$field} = ref( $v ) ? $self->visit( $v ) : $v;
     }
 
+    foreach my $attr ( qw(context label) ) {
+        if( $tree->has_attribute( $attr ) ) {
+            $clone->{$attr} = $tree->get_attribute( $attr );
+        }
+    }
+
     ( my $tag = ref $tree ) =~ s/^.*::/parsetree:/;
     Bless( $clone )->tag( $tag );
 

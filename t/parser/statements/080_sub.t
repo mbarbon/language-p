@@ -127,7 +127,8 @@ context: CXT_VOID
 flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
 name: x
 sigil: VALUE_SCALAR
---- !parsetree:Block
+--- !parsetree:BareBlock
+continue: ~
 lines:
   - !parsetree:NamedSubroutine
     lines:
@@ -151,7 +152,8 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
   }
 }
 EOP
---- !parsetree:Block
+--- !parsetree:BareBlock
+continue: ~
 lines:
   - !parsetree:LexicalDeclaration
     context: CXT_VOID

@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 4;
+use Test::More tests => 6;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -30,6 +30,7 @@ condition: !parsetree:BinOp
   right: !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
     value: 10
+continue: ~
 initializer: !parsetree:BinOp
   context: CXT_VOID
   left: !parsetree:LexicalDeclaration
@@ -73,6 +74,7 @@ block: !parsetree:Block
     - !parsetree:Constant
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
+continue: ~
 expression: !parsetree:Symbol
   context: CXT_LIST
   name: a
@@ -94,6 +96,7 @@ block: !parsetree:Block
     - !parsetree:Constant
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
+continue: ~
 expression: !parsetree:Symbol
   context: CXT_LIST
   name: a
@@ -115,10 +118,63 @@ block: !parsetree:Block
     - !parsetree:Constant
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
+continue: ~
 expression: !parsetree:Symbol
   context: CXT_LIST
   name: a
   sigil: VALUE_ARRAY
+variable: !parsetree:LexicalDeclaration
+  context: CXT_SCALAR
+  flags: DECLARATION_MY
+  name: x
+  sigil: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+foreach ( @a ) {
+    1;
+} continue {
+    2;
+}
+EOP
+--- !parsetree:Foreach
+block: !parsetree:Block
+  lines:
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 1
+continue: !parsetree:Block
+  lines:
+    - !parsetree:Constant
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 2
+expression: !parsetree:Symbol
+  context: CXT_LIST
+  name: a
+  sigil: VALUE_ARRAY
+variable: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: _
+  sigil: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+for my $x ( 8 ) {
+  $x;
+}
+EOP
+--- !parsetree:Foreach
+block: !parsetree:Block
+  lines:
+    - !parsetree:LexicalSymbol
+      context: CXT_VOID
+      level: 0
+      name: x
+      sigil: VALUE_SCALAR
+continue: ~
+expression: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
+  value: 8
 variable: !parsetree:LexicalDeclaration
   context: CXT_SCALAR
   flags: DECLARATION_MY

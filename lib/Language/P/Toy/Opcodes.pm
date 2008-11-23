@@ -52,6 +52,16 @@ sub o_dup {
     return $pc + 1;
 }
 
+sub o_swap {
+    my( $op, $runtime, $pc ) = @_;
+    my $t = $runtime->{_stack}->[-1];
+
+    $runtime->{_stack}->[-1] = $runtime->{_stack}->[-2];
+    $runtime->{_stack}->[-2] = $t;
+
+    return $pc + 1;
+}
+
 sub o_pop {
     my( $op, $runtime, $pc ) = @_;
 
@@ -237,7 +247,8 @@ sub o_glob {
 
 sub o_lexical {
     my( $op, $runtime, $pc ) = @_;
-    my $value = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
+    my $value = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}]
+                  ||= Language::P::Toy::Value::StringNumber->new;
 
     push @{$runtime->{_stack}}, $value;
 
@@ -313,6 +324,13 @@ sub o_jump_if_true {
     my $v1 = pop @{$runtime->{_stack}};
 
     return $v1->as_boolean_int ? $op->{to} : $pc + 1;
+}
+
+sub o_jump_if_undef {
+    my( $op, $runtime, $pc ) = @_;
+    my $v1 = pop @{$runtime->{_stack}};
+
+    return !defined $v1 ? $op->{to} : $pc + 1;
 }
 
 sub _make_compare {
@@ -657,8 +675,27 @@ sub o_restore_glob_slot {
     my $glob = $runtime->symbol_table->get_symbol( $op->{name}, '*', 1 );
     my $saved = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
 
-    $glob->set_slot( $op->{slot}, $saved );
+    $glob->set_slot( $op->{slot}, $saved ) if $saved;
     $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = undef;
+
+    return $pc + 1;
+}
+
+sub o_iterator {
+    my( $op, $runtime, $pc ) = @_;
+    my $list = pop @{$runtime->{_stack}};
+    my $iter = $list->iterator;
+
+    push @{$runtime->{_stack}}, $iter;
+
+    return $pc + 1;
+}
+
+sub o_iterator_next {
+    my( $op, $runtime, $pc ) = @_;
+    my $iter = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $iter->next ? $iter->item : undef;
 
     return $pc + 1;
 }
