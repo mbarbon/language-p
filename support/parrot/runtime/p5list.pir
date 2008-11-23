@@ -1,4 +1,4 @@
-.HLL 'parrot', ''
+.HLL 'parrot'
 
 .sub list_load :load :anon
   .local pmc p5array, p5list

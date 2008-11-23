@@ -82,10 +82,10 @@ sub start_code_generation {
     $self->{_out} = $out;
 #    $self->{_out} = \*STDOUT;
 
-    print {$self->_out} ".HLL 'P5', ''\n";
+    print {$self->_out} ".HLL 'P5'\n";
     print {$self->_out} ".loadlib 'support/parrot/runtime/p5runtime.pbc'\n";
-    print {$self->_out} ".HLL_map 'Integer', 'P5Integer'\n";
-    print {$self->_out} ".HLL_map 'String', 'P5String'\n";
+    print {$self->_out} ".HLL_map 'Integer' = 'P5Integer'\n";
+    print {$self->_out} ".HLL_map 'String' = 'P5String'\n";
     print {$self->_out} ".sub main :main\n";
     $on_load .= "  load_bytecode 'support/parrot/runtime/p5runtime.pbc'\n";
     $on_load .= "  .local pmc sym\n";

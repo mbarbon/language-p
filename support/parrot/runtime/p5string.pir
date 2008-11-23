@@ -1,4 +1,4 @@
-.HLL 'parrot', ''
+.HLL 'parrot'
 
 .sub string_load :load :anon
   .local pmc p5string, pstring, p5scalar

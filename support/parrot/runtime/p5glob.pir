@@ -1,4 +1,4 @@
-.HLL 'parrot', ''
+.HLL 'parrot'
 
 .sub typeglob_load :load :anon
   .local pmc p5typeglob, p5typeglobbody

@@ -1,4 +1,4 @@
-.HLL 'parrot', ''
+.HLL 'parrot'
 
 .sub undef_load :load :anon
   .local pmc p5undef, pundef, p5scalar

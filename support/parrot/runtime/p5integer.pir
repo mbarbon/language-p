@@ -1,4 +1,4 @@
-.HLL 'parrot', ''
+.HLL 'parrot'
 
 .sub integer_load :load :anon
   .local pmc p5integer, pinteger, p5scalar
