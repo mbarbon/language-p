@@ -133,7 +133,7 @@ sub _constant {
         my $str = $tree->value;
         $str =~ s/([^\x20-\x7f])/sprintf "\\x%02x", ord $1/eg;
         printf {$self->_out} "  .local pmc %s\n", $const;
-        printf {$self->_out} "  %s = new 'P5String'\n", $const;
+        printf {$self->_out} "  new %s, 'P5String'\n", $const;
         printf {$self->_out} "  set %s, \"%s\"\n", $const, $str;
 #        printf "  .const string %s = \"%s\"\n", $const, $str;
 
@@ -142,7 +142,7 @@ sub _constant {
         my $const = _const_name;
         my $int = $tree->value;
         printf {$self->_out} "  .local pmc %s\n", $const;
-        printf {$self->_out} "  %s = new 'P5Integer'\n", $const;
+        printf {$self->_out} "  new %s, 'P5Integer'\n", $const;
         printf {$self->_out} "  set %s, %s\n", $const, $int;
 #        printf "  .const int %s = %s\n", $const, $int;
 
@@ -159,10 +159,10 @@ sub _unary_op {
         my( $res, $int ) = ( _local_name, _local_name );
         printf {$self->_out} "  .local pmc %s\n", $res;
         printf {$self->_out} "  .local int %s\n", $int;
-        printf {$self->_out} "  %s = %s\n", $int, $v;
-        printf {$self->_out} "  %s = %s - 1\n", $int, $int;
-        printf {$self->_out} "  %s = new 'P5Integer'\n", $res;
-        printf {$self->_out} "  %s = %s\n", $res, $int;
+        printf {$self->_out} "  set %s, %s\n", $int, $v;
+        printf {$self->_out} "  sub %s, %s, 1\n", $int, $int;
+        printf {$self->_out} "  new %s, 'P5Integer'\n", $res;
+        printf {$self->_out} "  set %s, %s\n", $res, $int;
 
         return $res;
     } else {
@@ -212,7 +212,7 @@ sub _anything_cond {
 
     my $v = $self->visit( $tree );
     # jump to $false if false, fall trough if true
-    printf {$self->_out} "  unless %s goto %s\n", $v, $false;
+    printf {$self->_out} "  unless %s, %s\n", $v, $false;
 }
 
 sub _list {
@@ -220,7 +220,7 @@ sub _list {
 
     my $thelist = _local_name;
     printf {$self->_out} "  .local pmc %s\n", $thelist;
-    printf {$self->_out} "  %s = new 'P5List'\n", $thelist;
+    printf {$self->_out} "  new %s, 'P5List'\n", $thelist;
 
     my @v;
     foreach my $arg ( @{$tree->expressions} ) {
@@ -240,12 +240,12 @@ sub _symbol {
 
     my $symbol = _local_name;
     printf {$self->_out} "  .local pmc %s\n", $symbol;
-    printf {$self->_out} "  %s = get_root_global ['main'], '%s'\n", $symbol, $tree->name;
+    printf {$self->_out} "  get_root_global %s, ['main'], '%s'\n", $symbol, $tree->name;
 
     if( !$created{$tree->name} ) {
         $created{$tree->name} = 1;
         my $goto_ok = _label_name;
-        $on_load .= sprintf "  sym = get_root_global ['main'], '%s'\n", $tree->name;
+        $on_load .= sprintf "  get_root_global sym, ['main'], '%s'\n", $tree->name;
         $on_load .= sprintf "  unless_null sym, %s\n", $goto_ok;
         $on_load .= sprintf "  sym = new 'P5Undef'\n";
         $on_load .= sprintf "  set_root_global ['main'], '%s', sym\n", $tree->name;
@@ -269,7 +269,7 @@ sub _quoted_string {
 
     my $res = _local_name;
     printf {$self->_out} "  .local pmc %s\n", $res;
-    printf {$self->_out} "  %s = new 'P5String'\n", $res;
+    printf {$self->_out} "  new %s, 'P5String'\n", $res;
 
     foreach my $e ( @{$tree->components} ) {
         my $ev = $self->visit( $e );
@@ -288,11 +288,11 @@ sub _ternary {
     $self->visit_map( \%method_map_cond, $tree->condition, $true, $false );
     printf {$self->_out} "%s:\n", $true;
     my $t = $self->visit( $tree->iftrue );
-    printf {$self->_out} "  %s = %s\n", $res, $t;
+    printf {$self->_out} "  set %s, %s\n", $res, $t;
     printf {$self->_out} "  goto %s\n", $end;
     printf {$self->_out} "%s:\n", $false;
     my $f = $self->visit( $tree->iffalse );
-    printf {$self->_out} "  %s = %s\n", $res, $f;
+    printf {$self->_out} "  set %s, %s\n", $res, $f;
     printf {$self->_out} "%s:\n", $end;
 
     return $res;
