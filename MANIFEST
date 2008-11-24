@@ -9,6 +9,7 @@ inc/Keywords.pm
 inc/My/Build.pm
 inc/p_parrot
 lib/Language/P.pm
+lib/Language/P/Assembly.pm
 lib/Language/P/Lexer.pm
 lib/Language/P/Parrot/BootstrapRuntime.pm
 lib/Language/P/Parrot/Generator.pm
