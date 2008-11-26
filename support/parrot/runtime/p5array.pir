@@ -1,4 +1,4 @@
-.HLL 'parrot'
+.HLL 'p5'
 
 .sub list_load :load :anon
   .local pmc p5array, plist
@@ -7,7 +7,7 @@
   addparent p5array, plist
 .end
 
-.namespace [ 'P5Array' ]
+.namespace ['P5Array']
 
 .sub assign_pmc :vtable
   .param pmc other

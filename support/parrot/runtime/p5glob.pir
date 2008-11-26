@@ -1,4 +1,4 @@
-.HLL 'parrot'
+.HLL 'p5'
 
 .sub typeglob_load :load :anon
   .local pmc p5typeglob, p5typeglobbody
@@ -13,6 +13,6 @@
   addattribute p5typeglob, 'subroutine'
 .end
 
-.namespace [ 'P5Typeglob' ]
+.namespace ['P5Typeglob']
 
-.namespace [ 'P5TypeglobBody' ]
+.namespace ['P5TypeglobBody']

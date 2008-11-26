@@ -5,9 +5,11 @@ use warnings;
 use base qw(Language::P::ParseTree::Visitor);
 
 __PACKAGE__->mk_accessors( qw(file_name) );
-__PACKAGE__->mk_ro_accessors( qw(parrot _out) );
+__PACKAGE__->mk_ro_accessors( qw(parrot _body _onload _body_segments
+                                 _lexical_map _global_allocated) );
 
 use Language::P::ParseTree qw(:all);
+use Language::P::Assembly qw(:all);
 
 my %method_map =
   ( DEFAULT                                          => '_confess',
@@ -19,6 +21,13 @@ my %method_map =
     'Language::P::ParseTree::Symbol'                 => '_symbol',
     'Language::P::ParseTree::QuotedString'           => '_quoted_string',
     'Language::P::ParseTree::Ternary'                => '_ternary',
+    'Language::P::ParseTree::NamedSubroutine'        => '_named_subroutine',
+    'Language::P::ParseTree::LexicalDeclaration'     => '_lexical_declaration',
+    'Language::P::ParseTree::LexicalSymbol'          => '_lexical_symbol',
+    'Language::P::ParseTree::Conditional'            => '_cond',
+    'Language::P::ParseTree::Block'                  => '_block',
+    'Language::P::ParseTree::Builtin'                => '_builtin',
+    'Language::P::ParseTree::FunctionCall'           => '_function_call',
     );
 
 my %method_map_cond =
@@ -47,7 +56,7 @@ my %short_circuit =
     OP_LOG_OR()  => 1,
     );
 
-my %unary =
+my %unary_op =
   ( OP_MINUS()           => '',
     OP_LOG_NOT()         => '',
     OP_REFERENCE()       => '',
@@ -56,12 +65,22 @@ my %unary =
     OP_BACKTICK()        => '',
     );
 
+my %binary_op =
+  ( OP_SUBTRACT()        => 'sub',
+    OP_ADD()             => 'add',
+    );
+
+my %builtins =
+  ( return               => 'magic',
+    );
+
 my $local = 0;
 sub _local_name { sprintf "loc%d", ++$local }
 my $constant = 0;
 sub _const_name { sprintf "const%d", ++$constant }
 my $label = 0;
 sub _label_name { sprintf "lbl%d", ++$label }
+sub local_pmc { literal( sprintf '  .local pmc %s', $_[0] ) }
 
 sub method_map { \%method_map }
 
@@ -71,44 +90,62 @@ sub _confess {
     Carp::confess( ref( $tree ) );
 }
 
-# FIXME
-my $on_load = '';
+sub _add {
+    my( $self, @insns ) = @_;
+
+    push @{$self->{_body}}, @insns;
+}
 
 sub start_code_generation {
     my( $self ) = @_;
 
-    open my $out, '| ' . $self->parrot . ' -L support/parrot --output-pbc -o ' .
-                         $self->file_name . ' -' or die $!;
-    $self->{_out} = $out;
-#    $self->{_out} = \*STDOUT;
+    $self->{_body} = [];
+    $self->{_onload} = [];
+    $self->{_body_segments} = [ $self->{_body} ];
+    $self->{_lexical_map} = {};
+    $self->{_global_allocated} = {};
 
-    print {$self->_out} ".HLL 'P5'\n";
-    print {$self->_out} ".loadlib 'support/parrot/runtime/p5runtime.pbc'\n";
-    print {$self->_out} ".HLL_map 'Integer' = 'P5Integer'\n";
-    print {$self->_out} ".HLL_map 'String' = 'P5String'\n";
-    print {$self->_out} ".sub main :main\n";
-    $on_load .= "  load_bytecode 'support/parrot/runtime/p5runtime.pbc'\n";
-    $on_load .= "  .local pmc sym\n";
+    _add $self,
+         literal( ".HLL 'P5'" ),
+         literal( ".loadlib 'support/parrot/runtime/p5runtime.pbc'" ),
+         literal( ".include 'support/parrot/runtime/p5macros.pir'" ),
+         literal( ".HLL_map 'Integer' = 'P5Integer'" ),
+         literal( ".HLL_map 'String' = 'P5String'" ),
+         literal( ".namespace ['main']" ),
+         literal( ".sub main :main" );
+    push @{$self->_onload},
+         literal( "  load_bytecode 'support/parrot/runtime/p5runtime.pbc'" ),
+         literal( "  .local pmc sym" );
 }
 
 sub end_code_generation {
     my( $self ) = @_;
 
-    print {$self->_out} ".end\n";
-    print {$self->_out} ".sub on_load :init :load\n";
-    print {$self->_out} $on_load;
-    print {$self->_out} ".end\n";
+    open my $out, '| ' . $self->parrot . ' -L support/parrot --output-pbc -o ' .
+                         $self->file_name . ' -' or die $!;
+    _add $self, literal( '.end' );
 
-    close $self->_out;
+    foreach my $sub ( @{$self->_body_segments} ) {
+        print $out $_->as_string foreach @$sub;
+    }
+
+    print $out ".sub on_load :init :load\n";
+    print $out $_->as_string foreach @{$self->_onload};
+    print $out ".end\n";
+
+    close $out;
 
     return $self->file_name;
 }
 
+sub add_declaration {
+    my( $self, $name ) = @_;
+
+    # needs to pass-through to a Toy runtime when bootstrapping
+}
+
 sub process {
     my( $self, $tree ) = @_;
-
-#     use Data::Dumper;
-#     print Dumper $tree;
 
     $self->visit( $tree );
 }
@@ -120,7 +157,8 @@ sub _indirect {
 
     if( $tree->function eq 'print' ) {
         foreach my $name ( @names ) {
-            print {$self->_out} "  print $name\n";
+            _add $self,
+                 opcode( 'print', $name );
         }
     }
 }
@@ -132,19 +170,17 @@ sub _constant {
         my $const = _const_name;
         my $str = $tree->value;
         $str =~ s/([^\x20-\x7f])/sprintf "\\x%02x", ord $1/eg;
-        printf {$self->_out} "  .local pmc %s\n", $const;
-        printf {$self->_out} "  new %s, 'P5String'\n", $const;
-        printf {$self->_out} "  set %s, \"%s\"\n", $const, $str;
-#        printf "  .const string %s = \"%s\"\n", $const, $str;
+        _add $self,
+             local_pmc( $const ),
+             literal( sprintf '  .make_string(%s, "%s")', $const, $str );
 
         return $const;
     } elsif( $tree->is_number ) {
         my $const = _const_name;
         my $int = $tree->value;
-        printf {$self->_out} "  .local pmc %s\n", $const;
-        printf {$self->_out} "  new %s, 'P5Integer'\n", $const;
-        printf {$self->_out} "  set %s, %s\n", $const, $int;
-#        printf "  .const int %s = %s\n", $const, $int;
+        _add $self,
+             local_pmc( $const ),
+             literal( sprintf '  .make_integer(%s, %s)', $const, $int );
 
         return $const;
     }
@@ -157,12 +193,12 @@ sub _unary_op {
 
     if( $tree->op == VALUE_ARRAY_LENGTH ) {
         my( $res, $int ) = ( _local_name, _local_name );
-        printf {$self->_out} "  .local pmc %s\n", $res;
-        printf {$self->_out} "  .local int %s\n", $int;
-        printf {$self->_out} "  set %s, %s\n", $int, $v;
-        printf {$self->_out} "  sub %s, %s, 1\n", $int, $int;
-        printf {$self->_out} "  new %s, 'P5Integer'\n", $res;
-        printf {$self->_out} "  set %s, %s\n", $res, $int;
+        _add $self,
+             local_pmc( $res ),
+             literal( sprintf '  .local int %s', $int ),
+             opcode( 'set', $int, $v ),
+             opcode( 'sub', $int, $int, 1 ),
+             literal( sprintf '  .make_integer(%s, %s)', $res, $int );
 
         return $res;
     } else {
@@ -173,20 +209,28 @@ sub _unary_op {
 sub _binary_op {
     my( $self, $tree ) = @_;
 
-    if(    $tree->op == OP_ASSIGN
-        && $tree->left->isa( 'Language::P::ParseTree::List' )
-        ) {
+    if( $tree->op == OP_ASSIGN ) {
         my $l = $self->visit( $tree->left );
         my $r = $self->visit( $tree->right );
 
-        printf {$self->_out} "  assign %s, %s\n", $l, $r;
+        _add $self, opcode( 'assign', $l, $r );
+
+        return $l;
     } else {
+        die "No op for " . $tree->op unless $binary_op{$tree->op};
+
+        my( $res, $resr ) = ( _local_name, _local_name );
         my $l = $self->visit( $tree->left );
         my $r = $self->visit( $tree->right );
 
-        printf {$self->_out} "  assign %s, %s\n", $l, $r;
+        _add $self,
+             local_pmc( $res ),
+             local_pmc( $resr ),
+             opcode( $binary_op{$tree->op}, $res, $l, $r ),
+             opcode( 'new', $resr, "'Ref'" ),
+             opcode( 'assign', $resr, $res );
 
-        return $r;
+        return $resr;
     }
 }
 
@@ -203,8 +247,7 @@ sub _binary_op_cond {
     my $r = $self->visit( $tree->right );
 
     # jump to $false if false, fall trough if true
-    printf {$self->_out} " %s %s, %s, %s\n", $conditionals{$tree->op},
-                         $l, $r, $false;
+    _add $self, opcode( $conditionals{$tree->op}, $l, $r, $false );
 }
 
 sub _anything_cond {
@@ -212,44 +255,59 @@ sub _anything_cond {
 
     my $v = $self->visit( $tree );
     # jump to $false if false, fall trough if true
-    printf {$self->_out} "  unless %s, %s\n", $v, $false;
+    _add $self, opcode( 'unless', $v, $false );
 }
 
 sub _list {
     my( $self, $tree ) = @_;
 
+    return _make_list( $self, $tree->expressions );
+}
+
+sub _make_list {
+    my( $self, $expressions ) = @_;
+
     my $thelist = _local_name;
-    printf {$self->_out} "  .local pmc %s\n", $thelist;
-    printf {$self->_out} "  new %s, 'P5List'\n", $thelist;
+    _add $self,
+         local_pmc( $thelist ),
+         opcode( 'new', $thelist, '"P5List"' );
 
     my @v;
-    foreach my $arg ( @{$tree->expressions} ) {
+    foreach my $arg ( @$expressions ) {
         push @v, $self->visit( $arg );
     }
 
-    printf {$self->_out} "  push %s, %s\n", $thelist, $_ foreach @v;
+    _add $self, opcode( 'push', $thelist, $_ ) foreach @v;
 
     return $thelist;
 }
 
-# FIXME
-my %created;
+sub _add_global {
+    my( $self, $name, $bytecode ) = @_;
+    my $qname = sprintf "'%s'", $name;
+
+    my $goto_ok = _label_name;
+    push @{$self->_onload},
+         opcode( 'get_root_global', 'sym', '["main"]', $qname ),
+         opcode( 'unless_null', 'sym', $goto_ok ),
+         @$bytecode,
+         opcode( 'set_root_global', '["main"]', $qname, 'sym' ),
+         label( $goto_ok );
+}
 
 sub _symbol {
     my( $self, $tree ) = @_;
 
     my $symbol = _local_name;
-    printf {$self->_out} "  .local pmc %s\n", $symbol;
-    printf {$self->_out} "  get_root_global %s, ['main'], '%s'\n", $symbol, $tree->name;
+    my $qname = sprintf "'%s'", $tree->name;
+    _add $self,
+         local_pmc( $symbol ),
+         opcode( 'get_root_global', $symbol, '["main"]', $qname );
 
-    if( !$created{$tree->name} ) {
-        $created{$tree->name} = 1;
-        my $goto_ok = _label_name;
-        $on_load .= sprintf "  get_root_global sym, ['main'], '%s'\n", $tree->name;
-        $on_load .= sprintf "  unless_null sym, %s\n", $goto_ok;
-        $on_load .= sprintf "  sym = new 'P5Undef'\n";
-        $on_load .= sprintf "  set_root_global ['main'], '%s', sym\n", $tree->name;
-        $on_load .= sprintf "%s:\n", $goto_ok;
+    if( !$self->_global_allocated->{$tree->name} && $tree->sigil != VALUE_SUB ) {
+        $self->_global_allocated->{$tree->name} = 1;
+        _add_global( $self, $tree->name,
+                     [ literal( '  .make_undef(sym)' ) ] );
     }
 
     return $symbol;
@@ -268,12 +326,13 @@ sub _quoted_string {
     }
 
     my $res = _local_name;
-    printf {$self->_out} "  .local pmc %s\n", $res;
-    printf {$self->_out} "  new %s, 'P5String'\n", $res;
+    _add $self,
+         local_pmc( $res ),
+         literal( sprintf '  .make_string(%s, "")', $res );
 
     foreach my $e ( @{$tree->components} ) {
         my $ev = $self->visit( $e );
-        printf {$self->_out} "  concat %s, %s\n", $res, $ev;
+        _add $self, opcode( 'concat', $res, $ev );
     }
 
     return $res;
@@ -283,17 +342,173 @@ sub _ternary {
     my( $self, $tree ) = @_;
 
     my $res = _local_name;
-    printf {$self->_out} "  .local pmc %s\n", $res;
+    _add $self, local_pmc( $res );
     my( $end, $true, $false ) = ( _label_name, _label_name, _label_name );
     $self->visit_map( \%method_map_cond, $tree->condition, $true, $false );
-    printf {$self->_out} "%s:\n", $true;
+    _add $self, label( $true );
     my $t = $self->visit( $tree->iftrue );
-    printf {$self->_out} "  set %s, %s\n", $res, $t;
-    printf {$self->_out} "  goto %s\n", $end;
-    printf {$self->_out} "%s:\n", $false;
+    _add $self,
+         opcode( 'set', $res, $t ),
+         opcode( 'goto', $end ),
+         label( $false );
     my $f = $self->visit( $tree->iffalse );
-    printf {$self->_out} "  set %s, %s\n", $res, $f;
-    printf {$self->_out} "%s:\n", $end;
+    _add $self,
+         opcode( 'set', $res, $f ),
+         label( $end );
+
+    return $res;
+}
+
+sub _named_subroutine {
+    my( $self, $tree ) = @_;
+    my $old_body = $self->{_body};
+    push @{$self->_body_segments}, ( $self->{_body} = [] );
+
+    _add $self,
+         literal( sprintf '.sub %s :outer(main)', $tree->name ),
+         literal( '  .param pmc args' ); # XXX :slurpy
+
+    foreach my $line ( @{$tree->lines} ) {
+        $self->visit( $line );
+    }
+
+    _add $self,
+         literal( '.end' );
+
+    $self->{_body} = $old_body;
+
+    my $cs = _const_name;
+    _add_global( $self, $tree->name,
+                 [ literal( sprintf '  .const "Sub" %s = "%s"', $cs,
+                            $tree->name ),
+                   opcode( 'set', 'sym', $cs ),
+                   ] );
+}
+
+sub _lexical_symbol {
+    my( $self, $tree ) = @_;
+
+    die "No closures yet" if $tree->declaration->closed_over;
+    unless( $self->_lexical_map->{$tree->declaration} ) {
+        # params array
+        if( $tree->declaration->name eq '_' ) {
+            $self->_lexical_map->{$tree->declaration} = 'args';
+        } else {
+            die "Can't have symbol without declaration";
+        }
+    }
+
+    return $self->_lexical_map->{$tree->declaration};
+}
+
+sub _lexical_declaration {
+    my( $self, $tree ) = @_;
+
+    die "No closures yet" if $tree->closed_over;
+    my $res = _local_name;
+
+    _add $self,
+         literal( "  # $res = " . $tree->name ),
+         local_pmc( $res ),
+         literal( sprintf '  .make_undef(%s)', $res );
+
+    $self->_lexical_map->{$tree} = $res;
+
+    return $res;
+}
+
+sub _block {
+    my( $self, $tree ) = @_;
+
+    foreach my $line ( @{$tree->lines} ) {
+        $self->visit( $line );
+    }
+}
+
+sub _cond {
+    my( $self, $tree ) = @_;
+
+    my $end_cond = _label_name;
+    foreach my $elsif ( @{$tree->iftrues} ) {
+        my $is_unless = $elsif->block_type eq 'unless';
+        my( $then_block, $else_block ) = ( _label_name, _label_name );
+        $self->visit_map( \%method_map_cond, $elsif->condition,
+                          $is_unless ? ( $else_block, $then_block ) :
+                                       ( $then_block, $else_block ) );
+        _add $self, label( $then_block );
+        $self->visit( $elsif->block );
+        _add $self,
+             opcode( 'goto', $end_cond ),
+             label( $else_block );
+    }
+    if( $tree->iffalse ) {
+        $self->visit( $tree->iffalse->block );
+    }
+    _add $self, label( $end_cond );
+}
+
+sub _builtin {
+    my( $self, $tree ) = @_;
+
+    if( $tree->function eq 'undef' && !$tree->arguments ) {
+#         _emit_label( $self, $tree );
+#         push @bytecode, o( 'constant',
+#                            value => Language::P::Toy::Value::StringNumber->new );
+#     } elsif( $builtins_no_list{$tree->function} ) {
+#         _emit_label( $self, $tree );
+#         foreach my $arg ( @{$tree->arguments || []} ) {
+#             $self->dispatch( $arg );
+#         }
+
+#         push @bytecode, o( $builtins_no_list{$tree->function} );
+    } else {
+        return _function_call( $self, $tree );
+    }
+}
+
+sub _function_call {
+    my( $self, $tree ) = @_;
+#     _emit_label( $self, $tree );
+
+#     push @bytecode, o( 'start_list' );
+
+    my $args = _make_list( $self, $tree->arguments || [] );
+
+#     push @bytecode, o( 'end_list' );
+
+    Carp::confess( "Unknown '" . $tree->function . "'" )
+        unless ref( $tree->function ) || $builtins{$tree->function};
+
+    my $res = _local_name;
+    _add $self, local_pmc( $res );
+    if( ref( $tree->function ) ) {
+        my $f = $self->visit( $tree->function );
+        _add $self,
+             literal( '  .begin_call' ),
+             literal( sprintf '    .set_arg %s', $args ), # XXX :flat
+             literal( sprintf '    .call %s', $f ),
+             literal( sprintf '    .result %s', $res ),
+             literal( '  .end_call' );
+    } else {
+        if( $tree->function eq 'return' ) {
+            my( $int, $nonzero, $end ) = ( _local_name, _label_name,
+                                           _label_name );
+
+            _add $self,
+                 literal( sprintf '  .local int %s', $int ),
+                 opcode( 'elements', $int, $args ),
+                 opcode( 'ne', $int, 0, $nonzero ),
+                 literal( sprintf '  .make_undef(%s)', $args ),
+                 opcode( 'goto', $end ),
+                 label( $nonzero ),
+                 opcode( 'set', $args, "$args\[0\]" ),
+                 label( $end ),
+                 literal( sprintf '  .return (%s)', $args );
+            return;
+        }
+        die;
+#         push @bytecode, o( $builtins{$tree->function} );
+    }
 
     return $res;
 }
