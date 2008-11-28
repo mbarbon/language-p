@@ -21,3 +21,10 @@
   assign .res, t3
 .endm
 
+.macro make_float(res, value)
+  .local pmc t4
+  new t4, 'P5Float'
+  set t4, .value
+  new .res, 'Ref'
+  assign .res, t4
+.endm

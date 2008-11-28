@@ -28,6 +28,7 @@ my %method_map =
     'Language::P::ParseTree::Block'                  => '_block',
     'Language::P::ParseTree::Builtin'                => '_builtin',
     'Language::P::ParseTree::FunctionCall'           => '_function_call',
+    'Language::P::ParseTree::Parentheses'            => '_parentheses',
     );
 
 my %method_map_cond =
@@ -68,6 +69,7 @@ my %unary_op =
 my %binary_op =
   ( OP_SUBTRACT()        => 'sub',
     OP_ADD()             => 'add',
+    OP_MULTIPLY()        => 'mul',
     );
 
 my %builtins =
@@ -110,6 +112,7 @@ sub start_code_generation {
          literal( ".loadlib 'support/parrot/runtime/p5runtime.pbc'" ),
          literal( ".include 'support/parrot/runtime/p5macros.pir'" ),
          literal( ".HLL_map 'Integer' = 'P5Integer'" ),
+         literal( ".HLL_map 'Float' = 'P5Float'" ),
          literal( ".HLL_map 'String' = 'P5String'" ),
          literal( ".namespace ['main']" ),
          literal( ".sub main :main" );
@@ -180,7 +183,7 @@ sub _constant {
         my $int = $tree->value;
         _add $self,
              local_pmc( $const ),
-             literal( sprintf '  .make_integer(%s, %s)', $const, $int );
+             literal( sprintf '  .make_float(%s, %s)', $const, $int );
 
         return $const;
     }
@@ -198,12 +201,18 @@ sub _unary_op {
              literal( sprintf '  .local int %s', $int ),
              opcode( 'set', $int, $v ),
              opcode( 'sub', $int, $int, 1 ),
-             literal( sprintf '  .make_integer(%s, %s)', $res, $int );
+             literal( sprintf '  .make_float(%s, %s)', $res, $int );
 
         return $res;
     } else {
         die $tree->op;
     }
+}
+
+sub _parentheses {
+    my( $self, $tree ) = @_;
+
+    $self->visit( $tree->left );
 }
 
 sub _binary_op {

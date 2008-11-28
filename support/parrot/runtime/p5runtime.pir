@@ -3,6 +3,7 @@
 .sub load_classes :load :anon
   load_bytecode 'support/parrot/runtime/p5scalar.pbc'
   load_bytecode 'support/parrot/runtime/p5undef.pbc'
+  load_bytecode 'support/parrot/runtime/p5float.pbc'
   load_bytecode 'support/parrot/runtime/p5integer.pbc'
   load_bytecode 'support/parrot/runtime/p5string.pbc'
   load_bytecode 'support/parrot/runtime/p5array.pbc'
