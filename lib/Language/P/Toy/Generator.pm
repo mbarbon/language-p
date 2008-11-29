@@ -26,13 +26,10 @@ sub new {
     return $self;
 }
 
-# global on purpose
-our %debug_options;
-
-sub set_debug {
+sub set_option {
     my( $class, $option, $value ) = @_;
 
-    $debug_options{$option} = defined $value ? $value : 1;
+    return 0;
 }
 
 # HACK
@@ -124,17 +121,7 @@ sub process {
 sub process_pending {
     my( $self ) = @_;
 
-    my $dump_yaml;
-    if( $debug_options{parse_tree} ) {
-        require Language::P::ParseTree::DumpYAML;
-        $dump_yaml = Language::P::ParseTree::DumpYAML->new;
-    }
-
     foreach my $tree ( @{$code_stack[-1][1]} ) {
-        if( $debug_options{parse_tree} ) {
-            print STDERR $dump_yaml->dump( $tree );
-        }
-
         $self->dispatch( $tree );
     }
     $code_stack[-1][1] = []

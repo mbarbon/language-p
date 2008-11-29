@@ -12,7 +12,8 @@ use Language::P::Keywords;
 
 __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime) );
 __PACKAGE__->mk_accessors( qw(_package _lexicals _pending_lexicals
-                              _in_declaration _lexical_state) );
+                              _in_declaration _lexical_state
+                              _options) );
 
 sub _lexical_sub_state { $_[0]->{_lexical_state}->[-1]->{sub} }
 
@@ -105,6 +106,25 @@ my %prec_assoc_un =
     T_NOTLOW()      => [ 22, ASSOC_RIGHT, OP_LOG_NOT ],
     );
 
+sub new {
+    my( $class, $args ) = @_;
+    my $self = $class->SUPER::new( $args );
+
+    $self->_options( {} ) unless $self->_options;
+
+    return $self;
+}
+
+sub set_option {
+    my( $self, $option, $value ) = @_;
+
+    if( $option eq 'dump-parse-tree' ) {
+        $self->_options->{$option} = 1;
+    }
+
+    return 0;
+}
+
 sub parse_string {
     my( $self, $string, $package ) = @_;
 
@@ -148,12 +168,25 @@ sub _qualify {
 sub _parse {
     my( $self ) = @_;
 
+    my $dumper;
+    if(    $self->_options->{'dump-parse-tree'}
+        && -f $self->lexer->file ) {
+        require Language::P::ParseTree::DumpYAML;
+        ( my $outfile = $self->lexer->file ) =~ s/(\.\w+)?$/.pt/;
+        open my $out, '>', $outfile || die "Can't open '$outfile': $!";
+        my $dumpyml = Language::P::ParseTree::DumpYAML->new;
+        $dumper = sub {
+            print $out $dumpyml->dump( $_[0] );
+        };
+    }
+
     $self->_pending_lexicals( [] );
     $self->_lexicals( undef );
     $self->_enter_scope( 0, 1 ); # FIXME eval
 
     $self->generator->start_code_generation;
     while( my $line = _parse_line( $self ) ) {
+        $dumper->( $line ) if $dumper;
         $self->generator->process( $line );
     }
     $self->_leave_scope;
