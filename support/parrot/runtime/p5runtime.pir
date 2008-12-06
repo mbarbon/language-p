@@ -1,12 +1,12 @@
 .HLL 'p5'
 
-.sub load_classes :load :anon
-  load_bytecode 'support/parrot/runtime/p5scalar.pbc'
-  load_bytecode 'support/parrot/runtime/p5undef.pbc'
-  load_bytecode 'support/parrot/runtime/p5float.pbc'
-  load_bytecode 'support/parrot/runtime/p5integer.pbc'
-  load_bytecode 'support/parrot/runtime/p5string.pbc'
-  load_bytecode 'support/parrot/runtime/p5array.pbc'
-  load_bytecode 'support/parrot/runtime/p5list.pbc'
-  load_bytecode 'support/parrot/runtime/p5glob.pbc'
-.end
+.include 'support/parrot/runtime/p5macros.pir'
+.include 'support/parrot/runtime/p5scalar.pir'
+.include 'support/parrot/runtime/p5undef.pir'
+.include 'support/parrot/runtime/p5float.pir'
+.include 'support/parrot/runtime/p5integer.pir'
+.include 'support/parrot/runtime/p5string.pir'
+.include 'support/parrot/runtime/p5array.pir'
+.include 'support/parrot/runtime/p5list.pir'
+.include 'support/parrot/runtime/p5glob.pir'
+.include 'support/parrot/runtime/p5print.pir'

@@ -7,10 +7,11 @@ use base qw(Module::Build);
 use File::Basename;
 
 sub _compile_pir_pbc {
-    my( $self, $parrot, $pir_file ) = @_;
+    my( $self, $parrot, $pir_file, $deps ) = @_;
     ( my $pbc_file = $pir_file ) =~ s/\.pir$/.pbc/;
 
-    return if $self->up_to_date( [ $pir_file ], [ $pbc_file ] );
+    return if $self->up_to_date( [ $pir_file, @$deps, $parrot ],
+                                 [ $pbc_file ] );
     $self->do_system( $parrot, '--output-pbc', '-o', $pbc_file, $pir_file );
     $self->add_to_cleanup( $pbc_file );
 }
@@ -29,8 +30,9 @@ sub ACTION_code_parrot {
         chmod 0755, 'bin/p_parrot';
         $self->add_to_cleanup( 'bin/p_parrot' );
     }
-    foreach my $pir_file ( glob 'support/parrot/runtime/*.pir' ) {
-        _compile_pir_pbc( $self, $parrot_path, $pir_file );
+    foreach my $pir_file ( 'support/parrot/runtime/p5runtime.pir' ) {
+        _compile_pir_pbc( $self, $parrot_path, $pir_file,
+                          [ glob 'support/parrot/runtime/*.pir' ] );
     }
 }
 

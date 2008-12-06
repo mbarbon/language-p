@@ -1,3 +1,4 @@
+# common macros
 .macro make_undef(res)
   .local pmc t1
   new t1, 'P5Undef'
