@@ -92,6 +92,14 @@ sub o_constant {
     return $pc + 1;
 }
 
+sub o_fresh_string {
+    my( $op, $runtime, $pc ) = @_;
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new
+                                    ( { string => $op->{value} } );
+
+    return $pc + 1;
+}
+
 sub o_stringify {
     my( $op, $runtime, $pc ) = @_;
     my $v = pop @{$runtime->{_stack}};
@@ -107,9 +115,9 @@ sub _make_binary_op {
     eval sprintf <<'EOT',
 sub %s {
     my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->{_stack}};
-    my $v2 = pop @{$runtime->{_stack}};
-    my $r = $v1->%s %s $v2->%s;
+    my $vr = pop @{$runtime->{_stack}};
+    my $vl = pop @{$runtime->{_stack}};
+    my $r = $vl->%s %s $vr->%s;
 
     push @{$runtime->{_stack}},
          Language::P::Toy::Value::StringNumber->new( { %s => $r } );
@@ -119,6 +127,27 @@ sub %s {
 EOT
         $op->{name}, $op->{convert}, $op->{operator}, $op->{convert},
         $op->{new_type};
+    die $@ if $@;
+}
+
+sub _make_binary_op_assign {
+    my( $op ) = @_;
+
+    eval sprintf <<'EOT',
+sub %s {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = pop @{$runtime->{_stack}};
+    my $vl = $runtime->{_stack}[-1];
+    my $r = $vl->%s %s $vr->%s;
+
+    $vl->{%s} = $r;
+
+    return $pc + 1;
+}
+EOT
+        $op->{name}, $op->{convert}, $op->{operator}, $op->{convert},
+        $op->{new_type};
+    die $@ if $@;
 }
 
 _make_binary_op( $_ ) foreach
@@ -154,29 +183,30 @@ _make_binary_op( $_ ) foreach
       },
     );
 
-sub o_start_list {
-    my( $op, $runtime, $pc ) = @_;
-    push @{$runtime->{_stack}}, 'list_mark';
+_make_binary_op_assign( $_ ) foreach
+  ( { name     => 'o_concat_assign',
+      convert  => 'as_string',
+      operator => '.',
+      new_type => 'string',
+      },
+    );
 
-    return $pc + 1;
-}
-
-sub o_end_list {
+sub o_make_list {
     my( $op, $runtime, $pc ) = @_;
     my $st = $runtime->{_stack};
 
-    # find the mark
-    my $i;
-    for( $i = $#$st; $i >= 0; --$i ) {
-        last if $st->[$i] eq 'list_mark';
-    }
     # create the list
-    my $list = $st->[$i] = Language::P::Toy::Value::List->new;
-    for( my $j = $i + 1; $j <= $#$st; ++$j ) {
-        $list->push( $st->[$j] );
+    my $list = Language::P::Toy::Value::List->new;
+    if( $op->{count} ) {
+        for( my $j = $#$st - $op->{count} + 1; $j <= $#$st; ++$j ) {
+            $list->push( $st->[$j] );
+        }
+        # clear the stack
+        $#$st -= $op->{count} - 1;
+        $st->[-1] = $list;
+    } else {
+        push @$st, $list;
     }
-    # clear the stack
-    $#$st = $i;
 
     return $pc + 1;
 }
@@ -215,6 +245,8 @@ sub o_call {
     return 0;
 }
 
+my $empty_list = Language::P::Toy::Value::List->new;
+
 sub o_return {
     my( $op, $runtime, $pc ) = @_;
     my $cxt = _context( undef, $runtime );
@@ -230,6 +262,10 @@ sub o_return {
         }
     } elsif( $cxt == CXT_LIST ) {
         push @{$runtime->{_stack}}, $rv;
+    } elsif( $cxt == CXT_VOID ) {
+        # it is easier to generate code if a subroutine
+        # always returns a value (even if a dummy one)
+        push @{$runtime->{_stack}}, $empty_list;
     }
 
     return $rpc + 1;
@@ -333,6 +369,74 @@ sub o_jump_if_undef {
     return !defined $v1 ? $op->{to} : $pc + 1;
 }
 
+sub _make_cond_jump {
+    my( $op ) = @_;
+
+    eval sprintf <<'EOT',
+sub %s {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = pop @{$runtime->{_stack}};
+    my $vl = pop @{$runtime->{_stack}};
+
+    return $vl->%s %s $vr->%s ? $op->{to} : $pc + 1;
+}
+EOT
+        $op->{name}, $op->{convert}, $op->{operator}, $op->{convert};
+}
+
+_make_cond_jump( $_ ) foreach
+  ( { name     => 'o_jump_if_i_lt',
+      convert  => 'as_integer',
+      operator => '<',
+      },
+    { name     => 'o_jump_if_i_le',
+      convert  => 'as_integer',
+      operator => '<=',
+      },
+    { name     => 'o_jump_if_i_eq',
+      convert  => 'as_integer',
+      operator => '==',
+      },
+    { name     => 'o_jump_if_i_ge',
+      convert  => 'as_integer',
+      operator => '>=',
+      },
+    { name     => 'o_jump_if_i_gt',
+      convert  => 'as_integer',
+      operator => '>',
+      },
+
+    { name     => 'o_jump_if_f_lt',
+      convert  => 'as_float',
+      operator => '<',
+      },
+    { name     => 'o_jump_if_f_le',
+      convert  => 'as_float',
+      operator => '<=',
+      },
+    { name     => 'o_jump_if_f_eq',
+      convert  => 'as_float',
+      operator => '==',
+      },
+    { name     => 'o_jump_if_f_ge',
+      convert  => 'as_float',
+      operator => '>=',
+      },
+    { name     => 'o_jump_if_f_gt',
+      convert  => 'as_float',
+      operator => '>',
+      },
+
+    { name     => 'o_jump_if_s_eq',
+      convert  => 'as_string',
+      operator => 'eq',
+      },
+    { name     => 'o_jump_if_s_ne',
+      convert  => 'as_string',
+      operator => 'ne',
+      },
+    );
+
 sub _make_compare {
     my( $op ) = @_;
 
@@ -343,9 +447,9 @@ sub _make_compare {
     eval sprintf <<'EOT',
 sub %s {
     my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->{_stack}};
-    my $v2 = pop @{$runtime->{_stack}};
-    my $r = $v1->%s %s $v2->%s ? 1 : 0;
+    my $vr = pop @{$runtime->{_stack}};
+    my $vl = pop @{$runtime->{_stack}};
+    my $r = $vl->%s %s $vr->%s ? 1 : 0;
 
     push @{$runtime->{_stack}}, %s;
 
@@ -493,10 +597,10 @@ sub o_not {
 
 sub o_assign {
     my( $op, $runtime, $pc ) = @_;
-    my $v1 = pop @{$runtime->{_stack}};
-    my $v2 = pop @{$runtime->{_stack}};
+    my $vr = pop @{$runtime->{_stack}};
+    my $vl = $runtime->{_stack}[-1];
 
-    $v1->assign( $v2 );
+    $vl->assign( $vr );
 
     return $pc + 1;
 }

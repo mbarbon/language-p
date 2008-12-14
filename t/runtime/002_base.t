@@ -21,12 +21,11 @@ my $runtime = Language::P::Toy::Runtime->new;
 my( $out1, $fh1 ) = _oth();
 
 my @program1 =
-  ( o( 'start_list' ),
-    o( 'constant', value => $fh1 ),
+  ( o( 'constant', value => $fh1 ),
     o( 'constant',
        value => Language::P::Toy::Value::StringNumber->new( { string => "Hello, world!\n" } ),
        ),
-    o( 'end_list' ),
+    o( 'make_list', count => 2 ),
     o( 'print' ),
     o( 'end' ),
   );
@@ -39,8 +38,7 @@ is( $$out1, "Hello, world!\n" );
 my( $out2, $fh2 ) = _oth();
 
 my @program2 =
-  ( o( 'start_list' ),
-    o( 'constant', value => $fh2 ),
+  ( o( 'constant', value => $fh2 ),
     o( 'constant',
        value => Language::P::Toy::Value::StringNumber->new( { string => "Hello, " } ),
        ),
@@ -50,7 +48,7 @@ my @program2 =
     o( 'constant',
        value => Language::P::Toy::Value::StringNumber->new( { string => "\n" } ),
        ),
-    o( 'end_list' ),
+    o( 'make_list', count => 4 ),
     o( 'print' ),
     o( 'end' ),
     );

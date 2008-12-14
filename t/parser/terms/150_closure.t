@@ -27,7 +27,7 @@ right: !parsetree:AnonymousSubroutine
           flags: CONST_NUMBER|NUM_INTEGER
           value: 1
       context: CXT_CALLER
-      function: return
+      function: OP_RETURN
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -64,7 +64,7 @@ right: !parsetree:AnonymousSubroutine
           name: d
           sigil: VALUE_SCALAR
       context: CXT_CALLER
-      function: return
+      function: OP_RETURN
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -161,10 +161,10 @@ lines:
                           name: z
                           sigil: VALUE_SCALAR
                     context: CXT_CALLER
-                    function: return
+                    function: OP_RETURN
             context: CXT_CALLER
-            function: return
+            function: OP_RETURN
     context: CXT_CALLER
-    function: return
+    function: OP_RETURN
 name: add3
 EOE

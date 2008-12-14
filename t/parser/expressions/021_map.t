@@ -22,7 +22,7 @@ arguments:
     flags: CONST_NUMBER|NUM_INTEGER
     value: 3
 context: CXT_VOID
-function: map
+function: OP_MAP
 indirect: !parsetree:Block
   lines:
     - !parsetree:FunctionCall
@@ -49,7 +49,7 @@ arguments:
     flags: CONST_NUMBER|NUM_INTEGER
     value: 3
 context: CXT_VOID
-function: map
+function: OP_MAP
 indirect: !parsetree:Block
   lines:
     - !parsetree:FunctionCall
@@ -83,6 +83,6 @@ arguments:
     flags: CONST_NUMBER|NUM_INTEGER
     value: 3
 context: CXT_VOID
-function: map
+function: OP_MAP
 indirect: ~
 EOE

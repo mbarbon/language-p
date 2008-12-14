@@ -32,7 +32,7 @@ if( $a < 2 ) {
     print "ok 3\n";
 }
 
-unless( $a > 2 ) {
+unless( $a < 2 ) {
     print "ok 4\n";
 } else {
     print "not ok 4\n";

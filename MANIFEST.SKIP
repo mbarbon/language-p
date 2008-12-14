@@ -1,5 +1,6 @@
 # Avoid build files
 ^lib/Language/P/Keywords.pm$
+^lib/Language/P/Opcodes.pm$
 ^bin/p_parrot$
 ^t/.*/.*\.pbc$
 ^support/parrot/runtime/.*\.pbc$

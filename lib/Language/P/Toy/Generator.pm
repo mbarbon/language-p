@@ -5,151 +5,62 @@ use warnings;
 use base qw(Language::P::ParseTree::Visitor);
 
 __PACKAGE__->mk_ro_accessors( qw(runtime) );
-__PACKAGE__->mk_accessors( qw(_propagate_context) );
+__PACKAGE__->mk_accessors( qw(_code _pending _block_map _temporary_map
+                              _options _generated _intermediate) );
 
+use Language::P::Intermediate::Generator;
+use Language::P::Opcodes qw(:all);
 use Language::P::Toy::Opcodes qw(o);
 use Language::P::Toy::Value::StringNumber;
 use Language::P::Toy::Value::Handle;
 use Language::P::Toy::Value::ScratchPad;
 use Language::P::Toy::Value::Code;
 use Language::P::Toy::Value::Regex;
-use Language::P::ParseTree::PropagateContext;
 use Language::P::ParseTree qw(:all);
 use Language::P::Keywords qw(:all);
+
+my %sigil_to_slot =
+  ( VALUE_SCALAR() => 'scalar',
+    VALUE_SUB()    => 'subroutine',
+    VALUE_ARRAY()  => 'array',
+    VALUE_HANDLE() => 'io',
+    );
 
 sub new {
     my( $class, $args ) = @_;
     my $self = $class->SUPER::new( $args );
 
-    $self->_propagate_context( Language::P::ParseTree::PropagateContext->new );
+    $self->_options( {} );
+    $self->_intermediate( Language::P::Intermediate::Generator->new
+                              ( { file_name => 'a.ir',
+                                   } ) );
 
     return $self;
 }
 
 sub set_option {
-    my( $class, $option, $value ) = @_;
+    my( $self, $option, $value ) = @_;
+
+    if( $option eq 'dump-ir' ) {
+        $self->_options->{$option} = 1;
+        $self->_intermediate->set_option( 'dump-ir' );
+    }
 
     return 0;
 }
 
-# HACK
-our @bytecode;
-our %labels;
-our %patch;
-our $label_count = 0;
-our $group_count;
+sub _add {
+    my( $self, @bytecode ) = @_;
 
-sub _new_label {
-    ++$label_count;
-    $labels{$label_count} = undef;
-
-    return $label_count;
-}
-
-sub _set_label {
-    my( $label, $to ) = @_;
-
-    die if $labels{$label};
-    $labels{$label} = $to;
-
-    $_->{to} = $to foreach @{$patch{$label} || []};
-    delete $patch{$label};
-}
-
-sub _to_label {
-    my( $label, $op ) = @_;
-
-    $op->{to} = $labels{$label} if $labels{$label};
-    push @{$patch{$label} ||= []}, $op;
-}
-
-my @code_stack;
-
-sub push_code {
-    my( $self, $code ) = @_;
-
-    my $pad = Language::P::Toy::Value::ScratchPad->new;
-    push @code_stack, [ $code, [], $pad ];
-
-    # TODO do not use global
-    *bytecode = $code->bytecode;
-}
-
-sub pop_code {
-    my( $self ) = @_;
-
-    my $code = pop @code_stack;
-
-    # TODO do not use global
-    *bytecode = @code_stack ? $code_stack[-1][0]->bytecode : [];
-
-    return $code->[0];
-}
-
-our $current_block;
-
-sub push_block {
-    my( $self, $is_sub ) = @_;
-
-    $current_block =
-      { outer    => $current_block,
-        is_sub   => $is_sub || 0,
-        bytecode => [],
-        };
-
-    return $current_block;
-}
-
-sub pop_block {
-    my( $self ) = @_;
-    my $to_ret = $current_block;
-
-    $current_block = $current_block->{outer};
-
-    return $to_ret;
+    push @{$self->_code->bytecode}, @bytecode;
 }
 
 sub process {
     my( $self, $tree ) = @_;
 
-    $self->_propagate_context->visit( $tree, CXT_VOID );
-    push @{$code_stack[-1][1]}, $tree;
+    push @{$self->{_pending}}, $tree;
 
     return;
-}
-
-sub process_pending {
-    my( $self ) = @_;
-
-    foreach my $tree ( @{$code_stack[-1][1]} ) {
-        $self->dispatch( $tree );
-    }
-    $code_stack[-1][1] = []
-}
-
-sub process_regex {
-    my( $self, $regex ) = @_;
-    my $rx = Language::P::Toy::Value::Regex->new
-                 ( { bytecode   => [],
-                     stack_size => 0,
-                     } );
-    $group_count = 0;
-
-    $self->push_code( $rx );
-
-    push @bytecode, o( 'rx_start_match' );
-
-    foreach my $e ( @{$regex->components} ) {
-        $self->dispatch_regex( $e );
-    }
-
-    push @bytecode, o( 'rx_accept', groups => $group_count );
-
-    $self->pop_code;
-
-    die "Flags not supported" if $regex->flags;
-
-    return $rx;
 }
 
 sub add_declaration {
@@ -161,856 +72,332 @@ sub add_declaration {
     $self->runtime->symbol_table->set_symbol( $name, '&', $sub );
 }
 
-sub finished {
-    my( $self ) = @_;
+my %opcode_map =
+  ( OP_GLOBAL()                      => \&_global,
+    OP_LEXICAL()                     => \&_lexical,
+    OP_LEXICAL_CLEAR()               => \&_lexical_clear,
+    OP_CONSTANT_STRING()             => \&_const_string,
+    OP_FRESH_STRING()                => \&_fresh_string,
+    OP_CONSTANT_INTEGER()            => \&_const_integer,
+    OP_CONSTANT_FLOAT()              => \&_const_float,
+    OP_CONSTANT_UNDEF()              => \&_const_undef,
+    OP_CONSTANT_SUB()                => \&_const_codelike,
+    OP_CONSTANT_REGEX()              => \&_const_codelike,
+    OP_JUMP_IF_TRUE()                => \&_cond_jump_simple,
+    OP_JUMP_IF_FALSE()               => \&_cond_jump_simple,
+    OP_JUMP_IF_F_LT()                => \&_cond_jump_simple,
+    OP_JUMP_IF_S_LT()                => \&_cond_jump_simple,
+    OP_JUMP_IF_F_GT()                => \&_cond_jump_simple,
+    OP_JUMP_IF_S_GT()                => \&_cond_jump_simple,
+    OP_JUMP_IF_F_LE()                => \&_cond_jump_simple,
+    OP_JUMP_IF_S_LE()                => \&_cond_jump_simple,
+    OP_JUMP_IF_F_GE()                => \&_cond_jump_simple,
+    OP_JUMP_IF_S_GE()                => \&_cond_jump_simple,
+    OP_JUMP_IF_F_EQ()                => \&_cond_jump_simple,
+    OP_JUMP_IF_S_EQ()                => \&_cond_jump_simple,
+    OP_JUMP_IF_F_NE()                => \&_cond_jump_simple,
+    OP_JUMP_IF_S_NE()                => \&_cond_jump_simple,
+    OP_JUMP_IF_UNDEF()               => \&_cond_jump_simple,
+    OP_JUMP()                        => \&_direct_jump,
+    OP_TEMPORARY()                   => \&_temporary,
+    OP_TEMPORARY_SET()               => \&_temporary_set,
+    OP_LOCALIZE_GLOB_SLOT()          => \&_map_slot_index,
+    OP_RESTORE_GLOB_SLOT()           => \&_map_slot_index,
 
-    my $is_sub = $code_stack[-1][0]->isa( 'Language::P::Toy::Value::Subroutine' );
-    $self->process_pending;
+    OP_RX_QUANTIFIER()               => \&_rx_quantifier,
+    OP_RX_START_GROUP()              => \&_direct_jump,
+    OP_RX_TRY()                      => \&_direct_jump,
+    );
+
+sub _generate_segment {
+    my( $self, $segment, $outer ) = @_;
+    my $is_sub = $segment->type == 2;
+    my $is_regex = $segment->type == 3;
+    my $pad = Language::P::Toy::Value::ScratchPad->new;
+
+    my $code;
+    if( $is_sub ) {
+        $code = Language::P::Toy::Value::Subroutine->new
+                    ( { bytecode => [],
+                        name     => $segment->name,
+                        lexicals => $pad,
+                        outer    => $outer,
+                        } );
+    } elsif( $is_regex ) {
+        $code = Language::P::Toy::Value::Regex->new
+                    ( { bytecode   => [],
+                        stack_size => 0,
+                        } );
+    } else {
+        $code = Language::P::Toy::Value::Code->new
+                    ( { bytecode => [],
+                        lexicals => $pad,
+                        outer    => $outer,
+                        } );
+    }
+
+    $self->_generated->{$segment} = $code;
+
+    foreach my $inner ( @{$segment->inner} ) {
+        _generate_segment( $self, $inner, $code );
+    }
+
+    $self->_code( $code );
+    $self->_block_map( {} );
+    $self->_temporary_map( {} );
+
+    my @converted;
+    foreach my $block ( @{$segment->basic_blocks} ) {
+        my @bytecode;
+        push @converted, [ $block, \@bytecode ];
+
+        foreach my $ins ( @{$block->bytecode} ) {
+            next if $ins->{label};
+            my $name = $NUMBER_TO_NAME{$ins->{opcode_n}};
+
+            die "Invalid $ins->{opcode}/$ins->{opcode_n}" unless $name;
+
+            if( my $sub = $opcode_map{$ins->{opcode_n}} ) {
+                $sub->( $self, \@bytecode, $ins );
+            } else {
+                my %p = $ins->{parameters} ? %{$ins->{parameters}} : ();
+                $p{slot} = $sigil_to_slot{$p{slot}} if $p{slot};
+                push @bytecode, o( $name, %p );
+            }
+        }
+    }
+
+    foreach my $block ( @converted ) {
+        my $start = @{$self->_code->bytecode};
+        push @{$self->_code->bytecode}, @{$block->[1]};
+
+        foreach my $op ( @{$self->_block_map->{$block->[0]}} ) {
+            $op->{to} = $start;
+        }
+    }
+
     $self->_allocate_lexicals( $is_sub );
 
     if( $is_sub ) {
         # could be avoided in most cases, but simplifies code generation
-        push @bytecode,
-            o( 'start_list' ),
-            o( 'end_list' ),
+        _add $self,
+            o( 'make_list', count => 0 ),
             o( 'return' );
     } else {
-        push @bytecode, o( 'end' );
+        _add $self, o( 'end' );
     }
+
+    $self->runtime->symbol_table->set_symbol( $segment->name, '&', $code )
+      if defined $segment->name;
+
+    return $code;
+}
+
+sub process_regex {
+    my( $self, $regex ) = @_;
+
+    $self->start_code_generation;
+
+    return $self->_process_code_segments
+               ( $self->_intermediate->generate_regex( $regex ) );
+}
+
+sub finished {
+    my( $self ) = @_;
+    my $pending = $self->_pending;
+
+    return $self->_process_code_segments
+               ( $self->_intermediate->generate_bytecode( $pending ) );
+}
+
+sub _process_code_segments {
+    my( $self, $code_segments ) = @_;
+
+    $self->_generated( {} );
+    foreach my $segment ( @$code_segments ) {
+        next if $self->_generated->{$segment};
+        _generate_segment( $self, $segment, undef );
+    }
+
+    my $res = $self->_generated->{$code_segments->[0]};
+
+    $self->_cleanup;
+
+    return $res;
+}
+
+sub _cleanup {
+    my( $self ) = @_;
+
+    $self->_pending( [] );
+    $self->_code( undef );
+    $self->_block_map( undef );
+    $self->_temporary_map( undef );
+    $self->_generated( undef );
 }
 
 sub start_code_generation {
     my( $self ) = @_;
 
-    my $code = Language::P::Toy::Value::Code->new( { bytecode => [] } );
-    $self->push_code( $code );
-    $self->push_block;
-
-    return $code;
+    $self->_pending( [] );
 }
 
 sub end_code_generation {
     my( $self ) = @_;
+    my $res = $self->finished;
 
-    $self->finished;
-    $self->pop_block;
-    return $self->pop_code;
+    return $res;
 }
 
-my %dispatch =
-  ( 'Language::P::ParseTree::FunctionCall'           => '_function_call',
-    'Language::P::ParseTree::Builtin'                => '_builtin',
-    'Language::P::ParseTree::Overridable'            => '_builtin',
-    'Language::P::ParseTree::BuiltinIndirect'        => '_indirect',
-    'Language::P::ParseTree::UnOp'                   => '_unary_op',
-    'Language::P::ParseTree::Local'                  => '_local',
-    'Language::P::ParseTree::BinOp'                  => '_binary_op',
-    'Language::P::ParseTree::Constant'               => '_constant',
-    'Language::P::ParseTree::Symbol'                 => '_symbol',
-    'Language::P::ParseTree::LexicalDeclaration'     => '_lexical_declaration',
-    'Language::P::ParseTree::LexicalSymbol'          => '_lexical_symbol',
-    'Language::P::ParseTree::List'                   => '_list',
-    'Language::P::ParseTree::Conditional'            => '_cond',
-    'Language::P::ParseTree::ConditionalLoop'        => '_cond_loop',
-    'Language::P::ParseTree::For'                    => '_for',
-    'Language::P::ParseTree::Foreach'                => '_foreach',
-    'Language::P::ParseTree::Ternary'                => '_ternary',
-    'Language::P::ParseTree::Block'                  => '_block',
-    'Language::P::ParseTree::BareBlock'              => '_bare_block',
-    'Language::P::ParseTree::NamedSubroutine'        => '_subroutine',
-    'Language::P::ParseTree::SubroutineDeclaration'  => '_subroutine_decl',
-    'Language::P::ParseTree::AnonymousSubroutine'    => '_anon_subroutine',
-    'Language::P::ParseTree::QuotedString'           => '_quoted_string',
-    'Language::P::ParseTree::Subscript'              => '_subscript',
-    'Language::P::ParseTree::Jump'                   => '_jump',
-    'Language::P::ParseTree::Pattern'                => '_pattern',
-    'Language::P::ParseTree::Parentheses'            => '_parentheses',
-    );
+sub _global {
+    my( $self, $bytecode, $op ) = @_;
 
-my %dispatch_cond =
-  ( 'Language::P::ParseTree::BinOp'          => '_binary_op_cond',
-    'DEFAULT'                                => '_anything_cond',
-    );
-
-my %dispatch_regex =
-  ( 'Language::P::ParseTree::RXQuantifier'   => '_regex_quantifier',
-    'Language::P::ParseTree::RXGroup'        => '_regex_group',
-    'Language::P::ParseTree::Constant'       => '_regex_exact',
-    'Language::P::ParseTree::RXAlternation'  => '_regex_alternate',
-    'Language::P::ParseTree::RXAssertion'    => '_regex_assertion',
-    );
-
-sub dispatch {
-    my( $self, $tree, @args ) = @_;
-
-    return $self->visit_map( \%dispatch, $tree, @args );
-}
-
-sub dispatch_cond {
-    my( $self, $tree, $true, $false ) = @_;
-
-    return $self->visit_map( \%dispatch_cond, $tree, $true, $false );
-}
-
-sub dispatch_regex {
-    my( $self, $tree, $true, $false ) = @_;
-
-    return $self->visit_map( \%dispatch_regex, $tree, $true, $false );
-}
-
-my %sigil_to_slot =
-  ( VALUE_SCALAR() => 'scalar',
-    VALUE_SUB()    => 'subroutine',
-    VALUE_ARRAY()  => 'array',
-    );
-
-my %conditionals =
-  ( OP_NUM_LT() => 'compare_f_lt_int',
-    OP_STR_LT() => 'compare_s_lt_int',
-    OP_NUM_GT() => 'compare_f_gt_int',
-    OP_STR_GT() => 'compare_s_gt_int',
-    OP_NUM_LE() => 'compare_f_le_int',
-    OP_STR_LE() => 'compare_s_le_int',
-    OP_NUM_GE() => 'compare_f_ge_int',
-    OP_STR_GE() => 'compare_s_ge_int',
-    OP_NUM_EQ() => 'compare_f_eq_int',
-    OP_STR_EQ() => 'compare_s_eq_int',
-    OP_NUM_NE() => 'compare_f_ne_int',
-    OP_STR_NE() => 'compare_s_ne_int',
-    );
-
-my %short_circuit =
-  ( OP_LOG_AND() => 'jump_if_false',
-    OP_LOG_OR()  => 'jump_if_true',
-    );
-
-my %unary =
-  ( OP_MINUS()           => 'negate',
-    OP_LOG_NOT()         => 'not',
-    OP_REFERENCE()       => 'reference',
-    VALUE_SCALAR()       => 'dereference_scalar',
-    VALUE_SUB()          => 'dereference_subroutine',
-    VALUE_ARRAY_LENGTH() => 'array_size',
-    OP_BACKTICK()        => 'backtick',
-    );
-
-my %builtins =
-  ( print    => 'print',
-    return   => 'return',
-    unlink   => 'unlink',
-    %short_circuit,
-    OP_CONCATENATE()            => 'concat',
-    OP_ADD()                    => 'add',
-    OP_MULTIPLY()               => 'multiply',
-    OP_SUBTRACT()               => 'subtract',
-    OP_MATCH()                  => 'rx_match',
-    OP_ASSIGN()                 => 'assign',
-    OP_NUM_LE()                 => 'compare_f_le_scalar',
-    OP_STR_LE()                 => 'compare_s_le_scalar',
-    OP_NUM_EQ()                 => 'compare_f_eq_scalar',
-    OP_STR_EQ()                 => 'compare_s_eq_scalar',
-    OP_NUM_NE()                 => 'compare_f_ne_scalar',
-    OP_STR_NE()                 => 'compare_s_ne_scalar',
-    );
-
-my %builtins_no_list =
-  ( abs      => 'abs',
-    defined  => 'defined',
-    undef    => 'undef',
-    wantarray=> 'want',
-    );
-
-sub _indirect {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
-
-    push @bytecode, o( 'start_list' );
-
-    if( $tree->indirect ) {
-        $self->dispatch( $tree->indirect );
-    } else {
-        my $out = Language::P::Toy::Value::Handle->new( { handle => \*STDOUT } );
-        push @bytecode, o( 'constant', value => $out );
-    }
-
-    foreach my $arg ( @{$tree->arguments} ) {
-        $self->dispatch( $arg );
-    }
-
-    push @bytecode, o( 'end_list' ), o( $builtins{$tree->function} );
-}
-
-sub _builtin {
-    my( $self, $tree ) = @_;
-
-    if( $tree->function eq 'undef' && !$tree->arguments ) {
-        _emit_label( $self, $tree );
-        push @bytecode, o( 'constant',
-                           value => Language::P::Toy::Value::StringNumber->new );
-    } elsif( $builtins_no_list{$tree->function} ) {
-        _emit_label( $self, $tree );
-        foreach my $arg ( @{$tree->arguments || []} ) {
-            $self->dispatch( $arg );
-        }
-
-        push @bytecode, o( $builtins_no_list{$tree->function} );
-    } else {
-        return _function_call( $self, $tree );
-    }
-}
-
-sub _function_call {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
-
-    push @bytecode, o( 'start_list' );
-
-    foreach my $arg ( @{$tree->arguments || []} ) {
-        $self->dispatch( $arg );
-    }
-
-    push @bytecode, o( 'end_list' );
-
-    Carp::confess( "Unknown '" . $tree->function . "'" )
-        unless ref( $tree->function ) || $builtins{$tree->function};
-
-    if( ref( $tree->function ) ) {
-        $self->dispatch( $tree->function );
-        push @bytecode, o( 'call', context => $tree->get_attribute( 'context' ) & CXT_CALL_MASK );
-    } else {
-        if( $tree->function eq 'return' ) {
-            my $block = $current_block;
-            while( $block ) {
-                _exit_scope( $self, $block );
-                last if $block->{is_sub};
-                $block = $block->{outer};
-            }
-        }
-        push @bytecode, o( $builtins{$tree->function} );
-    }
-}
-
-sub _list {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
-
-    push @bytecode, o( 'start_list' );
-
-    foreach my $arg ( @{$tree->expressions} ) {
-        $self->dispatch( $arg );
-    }
-
-    push @bytecode, o( 'end_list' );
-}
-
-sub _unary_op {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
-
-    die $tree->op unless $unary{$tree->op};
-
-    $self->dispatch( $tree->left );
-
-    push @bytecode, o( $unary{$tree->op} );
-}
-
-sub _local {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
-
-    die "Can only localize global for now"
-        unless $tree->left->isa( 'Language::P::ParseTree::Symbol' );
-
-    my $index = $code_stack[-1][0]->stack_size;
-    ++$code_stack[-1][0]->{stack_size};
-
-    my $slot = $sigil_to_slot{$tree->left->sigil};
-    push @bytecode,
-         o( 'localize_glob_slot',
-            name  => $tree->left->name,
-            slot  => $slot,
-            index => $index,
-            );
-
-    push @{$current_block->{bytecode}},
-         [ o( 'restore_glob_slot',
-              name  => $tree->left->name,
-              slot  => $slot,
-              index => $index,
-              ),
-           ];
-}
-
-sub _parentheses {
-    my( $self, $tree ) = @_;
-
-    $self->dispatch( $tree->left );
-}
-
-sub _binary_op {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
-
-    die $tree->op unless $builtins{$tree->op};
-
-    if( $short_circuit{$tree->op} ) {
-        $self->dispatch( $tree->left );
-
-        my $end = _new_label;
-
-        # jump to $end if evalutating right is not necessary
-        push @bytecode,
-             o( 'dup' ),
-             o( $short_circuit{$tree->op} ),
-             o( 'pop' );
-        _to_label( $end, $bytecode[-2] );
-
-        # evalutates right only if this is the correct return value
-        $self->dispatch( $tree->right );
-
-        _set_label( $end, scalar @bytecode );
-    } else {
-        $self->dispatch( $tree->right );
-        $self->dispatch( $tree->left );
-
-        push @bytecode, o( $builtins{$tree->op} );
-    }
-}
-
-sub _binary_op_cond {
-    my( $self, $tree, $true, $false ) = @_;
-
-    if( !$conditionals{$tree->op} ) {
-        _anything_cond( $self, $tree, $true, $false );
-
+    if( $op->{parameters}{slot} == VALUE_GLOB ) {
+        push @$bytecode,
+             o( 'glob', name => $op->{parameters}{name}, create => 1 );
         return;
     }
 
-    _emit_label( $self, $tree );
-    $self->dispatch( $tree->right );
-    $self->dispatch( $tree->left );
+    my $slot = $sigil_to_slot{$op->{parameters}{slot}};
+    die $op->{parameters}{slot} unless $slot;
 
-    push @bytecode, o( $conditionals{$tree->op} );
-    # jump to $false if false, fall trough if true
-    push @bytecode, o( 'jump_if_eq_immed', value => 0 );
-    _to_label( $false, $bytecode[-1] );
-}
-
-sub _anything_cond {
-    my( $self, $tree, $true, $false ) = @_;
-
-    $self->dispatch( $tree );
-
-    # jump to $false if false, fall trough if true
-    push @bytecode, o( 'jump_if_false' );
-    _to_label( $false, $bytecode[-1] );
-}
-
-sub _constant {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
-    my $v;
-
-    if( $tree->is_number ) {
-        if( $tree->flags & NUM_INTEGER ) {
-            $v = Language::P::Toy::Value::StringNumber
-                     ->new( { integer => $tree->value } );
-        } elsif( $tree->flags & NUM_FLOAT ) {
-            $v = Language::P::Toy::Value::StringNumber
-                     ->new( { float => $tree->value } );
-        } elsif( $tree->flags & NUM_OCTAL ) {
-            $v = Language::P::Toy::Value::StringNumber
-                     ->new( { integer => oct '0' . $tree->value } );
-        } elsif( $tree->flags & NUM_HEXADECIMAL ) {
-            $v = Language::P::Toy::Value::StringNumber
-                     ->new( { integer => oct '0x' . $tree->value } );
-        } elsif( $tree->flags & NUM_BINARY ) {
-            $v = Language::P::Toy::Value::StringNumber
-                     ->new( { integer => oct '0b' . $tree->value } );
-        } else {
-            die "Unhandled flags value";
-        }
-    } elsif( $tree->is_string ) {
-        $v = Language::P::Toy::Value::StringNumber->new( { string => $tree->value } );
-    } else {
-        die "Neither number nor string";
-    }
-
-    push @bytecode, o( 'constant', value => $v );
-}
-
-sub _symbol {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
-
-    if( $tree->sigil == VALUE_GLOB ) {
-        push @bytecode, o( 'glob', name => $tree->name, create => 1 );
-        return;
-    }
-
-    my $slot = $sigil_to_slot{$tree->sigil};
-    die $tree->sigil unless $slot;
-
-    push @bytecode,
-         o( 'glob',             name => $tree->name, create => 1 ),
+    push @$bytecode,
+         o( 'glob',             name => $op->{parameters}{name}, create => 1 ),
          o( 'glob_slot_create', slot => $slot );
 }
 
-sub _lexical_symbol {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
+sub _lexical {
+    my( $self, $bytecode, $op ) = @_;
 
-    _do_lexical_access( $self, $tree->declaration, 0 );
-    $bytecode[-1]->{level} = $tree->level;
+    push @$bytecode,
+         o( $op->{parameters}{lexical}->closed_over ? 'lexical_pad' : 'lexical',
+            lexical => $op->{parameters}{lexical},
+            level   => $op->{parameters}{level},
+            );
 }
 
-sub _lexical_declaration {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
+sub _lexical_clear {
+    my( $self, $bytecode, $op ) = @_;
 
-    _do_lexical_access( $self, $tree, 1 );
+    push @$bytecode,
+         o( $op->{parameters}{lexical}->closed_over ? 'lexical_pad_clear' : 'lexical_clear',
+            lexical => $op->{parameters}{lexical},
+            level   => $op->{parameters}{level},
+            );
 }
 
-sub _do_lexical_access {
-    my( $self, $tree, $is_decl ) = @_;
+sub _const_string {
+    my( $self, $bytecode, $op ) = @_;
 
-    my $in_pad = $tree->closed_over;
-    push @bytecode,
-        o( $in_pad ? 'lexical_pad' : 'lexical',
-           lexical  => $tree,
-           level    => 0,
-           );
-
-    if( $is_decl ) {
-        push @{$current_block->{bytecode}},
-             [ o( $in_pad ? 'lexical_pad_clear' : 'lexical_clear',
-                  lexical => $tree,
-                  level   => 0,
-                  ),
-               ];
-    }
+    my $v = Language::P::Toy::Value::StringNumber->new
+                ( { string => $op->{parameters}[0] } );
+    push @$bytecode,
+         o( 'constant', value => $v );
 }
 
-sub _cond_loop {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
+sub _fresh_string {
+    my( $self, $bytecode, $op ) = @_;
 
-    my $is_until = $tree->block_type eq 'until';
-    my( $start_cond, $start_loop, $start_continue, $end_loop ) =
-      ( _new_label, _new_label, _new_label, _new_label );
-    $tree->set_attribute( 'toy_next', $tree->continue ? $start_continue :
-                                                        $start_cond );
-    $tree->set_attribute( 'toy_last', $end_loop );
-    $tree->set_attribute( 'toy_redo', $start_loop );
-    _set_label( $start_cond, scalar @bytecode );
-
-    $self->push_block;
-
-    $self->dispatch_cond( $tree->condition,
-                          $is_until ? ( $end_loop, $start_loop ) :
-                                      ( $start_loop, $end_loop ) );
-    _set_label( $start_loop, scalar @bytecode );
-    $self->dispatch( $tree->block );
-    _set_label( $start_continue, scalar @bytecode );
-    $self->dispatch( $tree->continue ) if $tree->continue;
-    push @bytecode, o( 'jump' );
-    _to_label( $start_cond, $bytecode[-1] );
-    _set_label( $end_loop, scalar @bytecode );
-
-    _exit_scope( $self, $current_block );
-    $self->pop_block;
+    push @$bytecode,
+         o( 'fresh_string', value => $op->{parameters}[0] );
 }
 
-sub _foreach {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
+sub _const_integer {
+    my( $self, $bytecode, $op ) = @_;
 
-    my $is_lexical = $tree->variable->isa( 'Language::P::ParseTree::LexicalDeclaration' );
-
-    my( $start_step, $start_loop, $start_continue, $end_loop ) =
-      ( _new_label, _new_label, _new_label, _new_label );
-    $tree->set_attribute( 'toy_next', $tree->continue ? $start_continue :
-                                                        $start_step );
-    $tree->set_attribute( 'toy_last', $end_loop );
-    $tree->set_attribute( 'toy_redo', $start_loop );
-
-    my $iter_index = $code_stack[-1][0]->stack_size;
-    my $var_index = $code_stack[-1][0]->stack_size + 1;
-    my $old_value;
-    $code_stack[-1][0]->{stack_size} += 2;
-
-    $self->push_block;
-
-    if( $is_lexical ) {
-        _add_value( $code_stack[-1][2], $tree->variable, $var_index );
-    }
-
-    push @bytecode, o( 'start_list' );
-    $self->dispatch( $tree->expression );
-    push @bytecode, o( 'end_list' );
-
-    push @bytecode,
-        o( 'iterator' ),
-        o( 'lexical_set', index => $iter_index );
-
-    if( !$is_lexical ) {
-        $old_value = $code_stack[-1][0]->stack_size;
-        ++$code_stack[-1][0]->{stack_size};
-
-        push @bytecode,
-            o( 'glob',        name  => $tree->variable->name, create => 1 ),
-            o( 'dup' ),
-            o( 'glob_slot',   slot  => 'scalar' ),
-            o( 'lexical_set', index => $old_value ),
-            o( 'lexical_set', index => $var_index );
-
-        push @{$current_block->{bytecode}},
-             [ o( 'lexical',       index => $var_index ),
-               o( 'lexical',       index => $old_value ),
-               o( 'glob_slot_set', slot  => 'scalar' ),
-               ];
-    }
-
-    _set_label( $start_step, scalar @bytecode );
-
-    if( !$is_lexical ) {
-        push @bytecode,
-            o( 'lexical',       index => $iter_index ),
-            o( 'iterator_next' ),
-            o( 'dup' ),
-            o( 'jump_if_undef' ),
-            o( 'lexical',       index => $var_index ),
-            o( 'swap' ),
-            o( 'glob_slot_set', slot  => 'scalar' );
-
-        _to_label( $end_loop, $bytecode[-4] );
-    } else {
-        push @bytecode,
-            o( 'lexical',      index => $iter_index ),
-            o( 'iterator_next' ),
-            o( 'dup' ),
-            o( 'jump_if_undef' ),
-            o( 'lexical_set',  index => $var_index );
-
-        _to_label( $end_loop, $bytecode[-2] );
-    }
-
-    _set_label( $start_loop, scalar @bytecode );
-
-    $self->dispatch( $tree->block );
-    _set_label( $start_continue, scalar @bytecode );
-    $self->dispatch( $tree->continue ) if $tree->continue;
-    push @bytecode, o( 'jump' );
-    _to_label( $start_step, $bytecode[-1] );
-    _set_label( $end_loop, scalar @bytecode );
-
-    _exit_scope( $self, $current_block );
-    $self->pop_block;
+    my $v = Language::P::Toy::Value::StringNumber->new
+                ( { integer => $op->{parameters}[0] } );
+    push @$bytecode,
+         o( 'constant', value => $v );
 }
 
-sub _for {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
+sub _const_float {
+    my( $self, $bytecode, $op ) = @_;
 
-    my( $start_cond, $start_loop, $start_step, $end_loop ) =
-      ( _new_label, _new_label, _new_label, _new_label );
-    $tree->set_attribute( 'toy_next', $start_step );
-    $tree->set_attribute( 'toy_last', $end_loop );
-    $tree->set_attribute( 'toy_redo', $start_loop );
-
-    $self->push_block;
-
-    $self->dispatch( $tree->initializer );
-
-    _set_label( $start_cond, scalar @bytecode );
-
-    $self->dispatch_cond( $tree->condition, $start_loop, $end_loop );
-    _set_label( $start_loop, scalar @bytecode );
-    $self->dispatch( $tree->block );
-    _set_label( $start_step, scalar @bytecode );
-    $self->dispatch( $tree->step );
-    push @bytecode, o( 'jump' );
-    _to_label( $start_cond, $bytecode[-1] );
-    _set_label( $end_loop, scalar @bytecode );
-
-    _exit_scope( $self, $current_block );
-    $self->pop_block;
+    my $v = Language::P::Toy::Value::StringNumber->new
+                ( { float => $op->{parameters}[0] } );
+    push @$bytecode,
+         o( 'constant', value => $v );
 }
 
-sub _cond {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
+sub _const_undef {
+    my( $self, $bytecode, $op ) = @_;
 
-    $self->push_block;
-
-    my $end_cond = _new_label;
-    foreach my $elsif ( @{$tree->iftrues} ) {
-        my $is_unless = $elsif->block_type eq 'unless';
-        my( $then_block, $else_block ) = ( _new_label, _new_label );
-        $self->dispatch_cond( $elsif->condition,
-                              $is_unless ? ( $else_block, $then_block ) :
-                                           ( $then_block, $else_block ) );
-        _set_label( $then_block, scalar @bytecode );
-        $self->dispatch( $elsif->block );
-        push @bytecode, o( 'jump' );
-        _to_label( $end_cond, $bytecode[-1] );
-        _set_label( $else_block, scalar @bytecode );
-    }
-    if( $tree->iffalse ) {
-        $self->dispatch( $tree->iffalse->block );
-    }
-    _set_label( $end_cond, scalar @bytecode );
-
-    _exit_scope( $self, $current_block );
-    $self->pop_block;
+    my $v = Language::P::Toy::Value::StringNumber->new;
+    push @$bytecode,
+         o( 'constant', value => $v );
 }
 
-sub _ternary {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
+sub _const_codelike {
+    my( $self, $bytecode, $op ) = @_;
 
-    my( $end, $true, $false ) = ( _new_label, _new_label, _new_label );
-    $self->dispatch_cond( $tree->condition, $true, $false );
-    _set_label( $true, scalar @bytecode );
-    $self->dispatch( $tree->iftrue );
-    push @bytecode, o( 'jump' );
-    _to_label( $end, $bytecode[-1] );
-    _set_label( $false, scalar @bytecode );
-
-    $self->dispatch( $tree->iffalse );
-
-    _set_label( $end, scalar @bytecode );
+    my $sub = $self->_generated->{$op->{parameters}[0]};
+    push @$bytecode,
+         o( 'constant', value => $sub );
 }
 
-sub _block {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
-
-    $self->push_block;
-
-    foreach my $line ( @{$tree->lines} ) {
-        $self->dispatch( $line );
-    }
-
-    _exit_scope( $self, $current_block );
-    $self->pop_block;
+sub _temporary_index {
+    my( $self, $index ) = @_;
+    return $self->_temporary_map->{$index}
+        if exists $self->_temporary_map->{$index};
+    my $offset = $self->_temporary_map->{$index} = $self->_code->stack_size;
+    ++$self->_code->{stack_size};
+    return $offset;
 }
 
-sub _bare_block {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
+sub _temporary {
+    my( $self, $bytecode, $op ) = @_;
 
-    my( $start_loop, $start_continue, $end_loop ) =
-      ( _new_label, _new_label, _new_label );
-    $tree->set_attribute( 'toy_next', $end_loop );
-    $tree->set_attribute( 'toy_last', $end_loop );
-    $tree->set_attribute( 'toy_redo', $start_loop );
-
-    _set_label( $start_loop, scalar @bytecode );
-
-    $self->push_block;
-
-    foreach my $line ( @{$tree->lines} ) {
-        $self->dispatch( $line );
-    }
-
-    _exit_scope( $self, $current_block );
-    $self->pop_block;
-
-    _set_label( $start_continue, scalar @bytecode );
-    $self->dispatch( $tree->continue ) if $tree->continue;
-    _set_label( $end_loop, scalar @bytecode );
+    push @$bytecode,
+         o( 'lexical', index => _temporary_index( $self, $op->{parameters}{index} ) );
 }
 
-sub _subroutine_decl {
-    my( $self, $tree ) = @_;
+sub _temporary_set {
+    my( $self, $bytecode, $op ) = @_;
 
-    # nothing to do
+    push @$bytecode,
+         o( 'lexical_set', index => _temporary_index( $self, $op->{parameters}{index} ) );
 }
 
-sub _anon_subroutine {
-    my( $self, $tree ) = @_;
-    my $sub = _subroutine( $self, $tree );
+sub _map_slot_index {
+    my( $self, $bytecode, $op ) = @_;
 
-    push @bytecode,
-        o( 'constant', value => $sub ),
-        o( 'make_closure' );
+    push @$bytecode,
+         o( $NUMBER_TO_NAME{$op->{opcode_n}},
+            name  => $op->{parameters}{name},
+            slot  => $sigil_to_slot{$op->{parameters}{slot}},
+            index => _temporary_index( $self, $op->{parameters}{index} ),
+            );
 }
 
-sub _subroutine {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
+sub _direct_jump {
+    my( $self, $bytecode, $op ) = @_;
 
-    my $sub = Language::P::Toy::Value::Subroutine->new
-                  ( { bytecode => [],
-                      name     => $tree->name,
-                      } );
-    $self->push_code( $sub );
-    $self->push_block( 1 );
-
-    foreach my $line ( @{$tree->lines} ) {
-        $self->dispatch( $line );
-    }
-
-    $self->finished;
-    $self->pop_block;
-    $self->pop_code;
-
-    $self->runtime->symbol_table->set_symbol( $tree->name, '&', $sub )
-      if defined $tree->name;
-
-    return $sub;
+    push @$bytecode,
+         o( $NUMBER_TO_NAME{$op->{opcode_n}} );
+    push @{$self->_block_map->{$op->{parameters}{to}}}, $bytecode->[-1];
 }
 
-sub _quoted_string {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
+sub _cond_jump_simple {
+    my( $self, $bytecode, $op ) = @_;
 
-    if( @{$tree->components} == 1 ) {
-        $self->dispatch( $tree->components->[0] );
-
-        push @bytecode, o( 'stringify' );
-
-        return;
-    }
-
-    $self->dispatch( $tree->components->[-1] );
-    for( my $i = @{$tree->components} - 2; $i >= 0; --$i ) {
-        $self->dispatch( $tree->components->[$i] );
-
-        push @bytecode, o( 'concat' );
-    }
+    push @$bytecode,
+         o( $NUMBER_TO_NAME{$op->{opcode_n}} ),
+         o( 'jump' );
+    push @{$self->_block_map->{$op->{parameters}{true}}}, $bytecode->[-2];
+    push @{$self->_block_map->{$op->{parameters}{false}}}, $bytecode->[-1];
 }
 
-sub _subscript {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
+sub _rx_quantifier {
+    my( $self, $bytecode, $op ) = @_;
+    my %params = %{$op->{parameters}};
+    delete $params{true}; delete $params{false};
 
-    die if $tree->reference;
-
-    $self->dispatch( $tree->subscript );
-    $self->dispatch( $tree->subscripted );
-
-    if( $tree->type == VALUE_ARRAY ) {
-        push @bytecode, o( 'array_element' );
-    } elsif( $tree->type == VALUE_HASH ) {
-        push @bytecode, o( 'hash_element' );
-    } else {
-        die $tree->type;
-    }
-}
-
-# find the node that is the target of a goto or the loop node that
-# last/redo/next controls
-sub _find_jump_target {
-    my( $self, $node ) = @_;
-    return $node->get_attribute( 'target' ) if $node->has_attribute( 'target' );
-    return if ref $node->left; # dynamic jump
-    return if $node->op == OP_GOTO;
-
-    # search for the closest loop (for unlabeled jumps) or the closest
-    # loop with matching label
-    my $target_label = $node->left;
-    while( $node ) {
-        $node = $node->parent;
-        last if $node->isa( 'Language::P::ParseTree::Subroutine' );
-        next unless $node->is_loop;
-        # found loop
-        return $node if !$target_label;
-        next unless $node->has_attribute( 'label' );
-        return $node if $node->get_attribute( 'label' ) eq $target_label;
-    }
-
-    return;
-}
-
-# number of blocks to unwind when jumping out of a loop/nested scope
-sub _unwind_level {
-    my( $self, $node, $to_outer ) = @_;
-    my $level = 0;
-
-    while( $node && ( !$to_outer || $node != $to_outer ) ) {
-        ++$level if    $node->isa( 'Language::P::ParseTree::Block' )
-                    && !$node->isa( 'Language::P::ParseTree::BareBlock' );
-        ++$level if $node->is_loop;
-        $node = $node->parent;
-    }
-
-    return $level;
-}
-
-# find the common ancestor of two nodes (assuming they are in the same
-# subroutine)
-sub _find_ancestor {
-    my( $self, $from, $to ) = @_;
-    my %parents;
-
-    for( my $node = $from; $node; $node = $node->parent ) {
-        $parents{$node} = 1;
-        last if $node->isa( 'Language::P::ParseTree::Subroutine' );
-    }
-
-    for( my $node = $to; $node; $node = $node->parent ) {
-        return $node if $parents{$node};
-        die "Can't happen" if $node->isa( 'Language::P::ParseTree::Subroutine' );
-    }
-
-    return;
-}
-
-sub _jump {
-    my( $self, $tree ) = @_;
-    my $target = _find_jump_target( $self, $tree );
-
-    die "Jump without static target" unless $target; # requires stack unwinding
-
-    my $unwind_to = $tree->op == OP_GOTO ?
-                        _find_ancestor( $self, $tree, $target ) :
-                        $target;
-    my $level = _unwind_level( $self, $tree, $unwind_to );
-
-    my $block = $current_block;
-    foreach ( 1 .. $level ) {
-        _exit_scope( $self, $block );
-        $block = $block->{outer};
-    }
-
-    my $label_to;
-    if( $tree->op == OP_GOTO ) {
-        $label_to = $target->get_attribute( 'toy_label' );
-        if( !$label_to ) {
-            $target->set_attribute( 'toy_label', $label_to = _new_label );
-        }
-    } else {
-        my $label = $tree->op == OP_NEXT ? 'toy_next' :
-                    $tree->op == OP_LAST ? 'toy_last' :
-                                           'toy_redo';
-        $label_to = $target->get_attribute( $label )
-            or die "Missing loop control label";
-    }
-
-    push @bytecode, o( 'jump' );
-    _to_label( $label_to, $bytecode[-1] );
-}
-
-sub _emit_label {
-    my( $self, $tree ) = @_;
-    return unless $tree->has_attribute( 'label' );
-
-    if( $tree->has_attribute( 'toy_label' ) ) {
-        _set_label( $tree->get_attribute( 'toy_label' ), scalar @bytecode );
-    } else {
-        my $label_to = _new_label;
-        _set_label( $label_to, scalar @bytecode );
-        $tree->set_attribute( 'toy_label', $label_to );
-    }
-}
-
-sub _pattern {
-    my( $self, $tree ) = @_;
-
-    my $re = $self->process_regex( $tree );
-    push @bytecode, o( 'constant', value => $re );
+    push @$bytecode,
+         o( 'rx_quantifier', %params ),
+         o( 'jump' );
+    push @{$self->_block_map->{$op->{parameters}{true}}}, $bytecode->[-2];
+    push @{$self->_block_map->{$op->{parameters}{false}}}, $bytecode->[-1];
 }
 
 my %lex_map;
@@ -1022,20 +409,23 @@ sub _find_add_value {
     return $lex_map{$pad}{$lexical} = $pad->add_value( $lexical );
 }
 
-sub _add_value {
-    my( $pad, $lexical, $index ) = @_;
+sub _uplevel {
+    my( $code, $level ) = @_;
 
-    $lex_map{$pad}{$lexical} = $index;
+    $code = $code->outer foreach 1 .. $level;
+
+    return $code;
 }
 
 sub _allocate_lexicals {
     my( $self, $is_sub ) = @_;
 
-    my $pad = $code_stack[-1][2];
+    my $pad = $self->_code->lexicals;
+    return unless $pad;
     my %map = $lex_map{$pad} ? %{ delete $lex_map{$pad} } : ();
     my %clear;
-    my $has_pad;
-    foreach my $op ( @bytecode ) {
+    my $needs_pad;
+    foreach my $op ( @{$self->_code->bytecode} ) {
         next if !$op->{lexical};
 
         if( !exists $map{$op->{lexical}} ) {
@@ -1043,19 +433,23 @@ sub _allocate_lexicals {
                 && $op->{lexical}->sigil == VALUE_ARRAY ) {
                 $map{$op->{lexical}} = 0; # arguments are always first
             } elsif( $op->{lexical}->closed_over ) {
-                if( $op->{level} ) {
-                    my $code_from = $code_stack[-1 - $op->{level}][0];
-                    my $pad_from = $code_stack[-1 - $op->{level}][2];
+                my $level = $op->{level};
+
+                if( $level ) {
+                    my $code_from = _uplevel( $self->_code, $level );
+                    my $pad_from = $code_from->lexicals;
                     my $val = _find_add_value( $pad_from, $op->{lexical} );
                     if( $code_from->is_subroutine ) {
-                        foreach my $index ( -$op->{level} .. -1 ) {
-                            my $outer_pad = $code_stack[$index - 1][2];
-                            my $inner_pad = $code_stack[$index][2];
+                        foreach my $index ( -$level .. -1 ) {
+                            my $inner_code = _uplevel( $self->_code, -$index - 1 );
+                            my $outer_code = _uplevel( $inner_code, 1 );
+                            my $outer_pad = $outer_code->lexicals;
+                            my $inner_pad = $inner_code->lexicals;
 
                             my $outer_idx = _find_add_value( $outer_pad, $op->{lexical} );
                             my $inner_idx = _find_add_value( $inner_pad, $op->{lexical} );
-                            push @{$code_stack[$index][0]->closed},
-                              [$outer_idx, $inner_idx];
+                            push @{$inner_code->closed},
+                                 [$outer_idx, $inner_idx];
                             $map{$op->{lexical}} = $inner_idx
                               if $index == -1;
                         }
@@ -1068,135 +462,25 @@ sub _allocate_lexicals {
                     $map{$op->{lexical}} = _find_add_value( $pad, $op->{lexical} );
                 }
             } else {
-                $map{$op->{lexical}} = $code_stack[-1][0]->stack_size;
-                ++$code_stack[-1][0]->{stack_size};
+                $map{$op->{lexical}} = $self->_code->stack_size;
+                ++$self->_code->{stack_size};
             }
         }
 
-        if( !$has_pad && $op->{lexical}->closed_over ) {
-            $code_stack[-1][0]->{lexicals} = $pad;
-            $pad->{outer} = $code_stack[-1][0]->{outer};
-            $has_pad = 1;
+        if( $op->{lexical}->closed_over ) {
+            $needs_pad = 1;
         }
-        $op->{in_pad} = $op->{lexical}->closed_over;
         $op->{index} = $map{$op->{lexical}};
-        $clear{$op->{index}} ||= 1 if $op->{in_pad} && !$op->{level};
+        $clear{$op->{index}} ||= 1 if $op->{lexical}->closed_over && !$op->{level};
         delete $op->{lexical};
         delete $op->{level};
     }
 
-    $code_stack[-1][0]->{closed} = undef unless @{$code_stack[-1][0]->closed};
-    if( !$has_pad && $code_stack[-1][0]->closed ) {
-        $code_stack[-1][0]->{lexicals} = $pad;
-        # FIXME accessors
-        $pad->{outer} = $code_stack[-1][0]->{outer};
+    $self->_code->{closed} = undef unless @{$self->_code->closed};
+    if( !$needs_pad ) {
+        $self->_code->{lexicals} = undef;
     }
     $pad->{clear} = [ keys %clear ];
-}
-
-sub _exit_scope {
-    my( $self, $block ) = @_;
-
-    foreach my $code ( reverse @{$block->{bytecode}} ) {
-        push @bytecode, @$code;
-    }
-}
-
-my %regex_assertions =
-  ( START_SPECIAL => 'rx_start_special',
-    END_SPECIAL   => 'rx_end_special',
-    );
-
-sub _regex_assertion {
-    my( $self, $tree ) = @_;
-    my $type = $tree->type;
-
-    die "Unsupported assertion '$type'" unless $regex_assertions{$type};
-
-    push @bytecode, o( $regex_assertions{$type} );
-}
-
-sub _regex_quantifier {
-    my( $self, $tree ) = @_;
-
-    my( $start, $quant ) = ( _new_label, _new_label );
-    push @bytecode, o( 'rx_start_group' );
-    _to_label( $quant, $bytecode[-1] );
-    _set_label( $start, scalar @bytecode );
-
-    my $is_group = $tree->node->isa( 'Language::P::ParseTree::RXGroup' );
-    my $capture = $is_group ? $tree->node->capture : 0;
-    my $start_group = $group_count;
-    ++$group_count if $capture;
-
-    if( $capture ) {
-        foreach my $c ( @{$tree->node->components} ) {
-            $self->dispatch_regex( $c );
-        }
-    } else {
-        $self->dispatch_regex( $tree->node );
-    }
-
-    _set_label( $quant, scalar @bytecode );
-    push @bytecode, o( 'rx_quantifier', min => $tree->min, max => $tree->max,
-                                        greedy => $tree->greedy,
-                                        group => ( $capture ? $start_group : undef ),
-                                        subgroups_start => $start_group,
-                                        subgroups_end => $group_count );
-    _to_label( $start, $bytecode[-1] );
-}
-
-sub _regex_group {
-    my( $self, $tree ) = @_;
-
-    if( $tree->capture ) {
-        push @bytecode, o( 'rx_capture_start', group => $group_count );
-    }
-
-    foreach my $c ( @{$tree->components} ) {
-        $self->dispatch_regex( $c );
-    }
-
-    if( $tree->capture ) {
-        push @bytecode, o( 'rx_capture_end', group => $group_count );
-        ++$group_count;
-    }
-}
-
-sub _regex_exact {
-    my( $self, $tree ) = @_;
-
-    push @bytecode, o( 'rx_exact', string => $tree->value,
-                                   length => length( $tree->value ) );
-}
-
-sub _regex_alternate {
-    my( $self, $tree, $end ) = @_;
-    my $is_last = !$tree->right->[0]
-                        ->isa( 'Language::P::ParseTree::RXAlternation' );
-    my( $next_l, $next_r ) = ( _new_label, _new_label );
-    $end ||= _new_label;
-
-    push @bytecode, o( 'rx_try' );
-    _to_label( $next_l, $bytecode[-1] );
-
-    foreach my $c ( @{$tree->left} ) {
-        $self->dispatch_regex( $c );
-    }
-
-    push @bytecode, o( 'jump' );
-    _to_label( $end, $bytecode[-1] );
-    _set_label( $next_l, scalar @bytecode );
-
-    if( !$is_last ) {
-        _regex_alternate( $self, $tree->right->[0], $end );
-    } else {
-        foreach my $c ( @{$tree->right} ) {
-            $self->dispatch_regex( $c );
-        }
-
-        _set_label( $end, scalar @bytecode );
-    }
 }
 
 1;

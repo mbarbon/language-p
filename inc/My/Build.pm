@@ -45,6 +45,13 @@ sub ACTION_code {
                           '--', 'lib/Language/P/Keywords.pm' );
         $self->add_to_cleanup( 'lib/Language/P/Keywords.pm' );
     }
+    if( !$self->up_to_date( [ 'inc/Opcodes.pm', 'lib/Language/P/Keywords.pm' ],
+                            [ 'lib/Language/P/Opcodes.pm' ] ) ) {
+        $self->do_system( $^X, '-Iinc', '-Ilib',
+                          '-MOpcodes', '-e', 'write_opcodes',
+                          '--', 'lib/Language/P/Opcodes.pm' );
+        $self->add_to_cleanup( 'lib/Language/P/Opcodes.pm' );
+    }
     $self->depends_on( 'code_parrot' ) if $self->args( 'parrot' );
 
     $self->SUPER::ACTION_code;
@@ -91,16 +98,18 @@ sub _run_p_tests {
 my %test_tags =
   ( 'parser'     => [ [ undef,   't/parser' ] ],
     'runtime'    => [ [ undef,   't/runtime' ] ],
+    'intermediate' => [ [ undef, 't/intermediate' ] ],
     'perl5'      => [ [ 'bin/p', 't/perl5' ] ],
     'run'        => [ [ 'bin/p', 't/run' ] ],
-    'all'        => [ 'parser', 'runtime', 'run', 'perl5' ],
-    'parrot'     => [ 'parser', 'parrot_run', 'parrot_perl5' ],
+    'all'        => [ 'parser', 'intermediate', 'runtime', 'run', 'perl5' ],
+    'parrot'     => [ 'parser', 'intermediate', 'parrot_run', 'parrot_perl5' ],
     'parrot_run' => [ [ 'bin/p_parrot', 't/run' ] ],
     'parrot_perl5'=>[ [ 'bin/p_parrot', 't/perl5' ] ],
     );
 sub ACTION_test_parser;
+sub ACTION_test_intermediate;
 sub ACTION_test_runtime;
-sub ACTION_test_runt;
+sub ACTION_test_run;
 sub ACTION_test_perl5;
 sub ACTION_test_parrot_run;
 sub ACTION_test_parrot_perl5;

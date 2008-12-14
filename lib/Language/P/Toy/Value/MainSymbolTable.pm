@@ -13,6 +13,16 @@ my %special_names =
     );
 our %sigils; *sigils = \%Language::P::Toy::Value::SymbolTable::sigils;
 
+sub new {
+    my( $class, $args ) = @_;
+    my $self = $class->SUPER::new( $args );
+
+    my $out = Language::P::Toy::Value::Handle->new( { handle => \*STDOUT } );
+    $self->set_symbol( 'STDOUT', 'I', $out );
+
+    return $self;
+}
+
 sub _tied_to_rt_variable {
     my( $name ) = @_;
 

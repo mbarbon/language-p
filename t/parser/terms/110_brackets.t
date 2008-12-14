@@ -137,7 +137,7 @@ function: !parsetree:Dereference
     context: CXT_SCALAR
     name: foo
     sigil: VALUE_SCALAR
-  op: VALUE_SUB
+  op: OP_DEREFERENCE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -183,7 +183,7 @@ function: !parsetree:Dereference
       context: CXT_SCALAR
       name: foo
       sigil: VALUE_SUB
-  op: VALUE_SUB
+  op: OP_DEREFERENCE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -207,7 +207,7 @@ function: !parsetree:Dereference
     context: CXT_SCALAR
     name: foo
     sigil: VALUE_SCALAR
-  op: VALUE_SUB
+  op: OP_DEREFERENCE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -363,10 +363,10 @@ function: !parsetree:Dereference
                 sigil: VALUE_ARRAY
               type: VALUE_ARRAY
             type: VALUE_HASH
-          op: VALUE_SUB
+          op: OP_DEREFERENCE_SUB
       type: VALUE_ARRAY
     type: VALUE_HASH
-  op: VALUE_SUB
+  op: OP_DEREFERENCE_SUB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

@@ -44,7 +44,7 @@ arguments:
     right: !parsetree:Overridable
       arguments: ~
       context: CXT_SCALAR
-      function: die
+      function: OP_DIE
 context: CXT_VOID
 function: !parsetree:Symbol
   context: CXT_SCALAR
@@ -106,7 +106,7 @@ expressions:
   - !parsetree:BuiltinIndirect
     arguments: ~
     context: CXT_VOID
-    function: print
+    function: OP_PRINT
     indirect: ~
   - !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
@@ -114,7 +114,7 @@ expressions:
   - !parsetree:BuiltinIndirect
     arguments: ~
     context: CXT_VOID
-    function: print
+    function: OP_PRINT
     indirect: ~
   - !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER
@@ -130,7 +130,7 @@ expressions:
   - !parsetree:BuiltinIndirect
     arguments: ~
     context: CXT_VOID
-    function: print
+    function: OP_PRINT
     indirect: ~
   - !parsetree:Constant
     flags: CONST_NUMBER|NUM_INTEGER

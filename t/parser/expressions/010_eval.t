@@ -17,7 +17,7 @@ arguments:
     name: foo
     sigil: VALUE_SCALAR
 context: CXT_VOID
-function: eval
+function: OP_EVAL
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -36,7 +36,7 @@ arguments:
             flags: CONST_NUMBER|NUM_INTEGER
             value: 1
 context: CXT_VOID
-function: eval
+function: OP_EVAL
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -58,7 +58,7 @@ arguments:
       type: VALUE_HASH
     op: OP_PLUS
 context: CXT_VOID
-function: eval
+function: OP_EVAL
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -77,5 +77,5 @@ arguments:
           value: 1
     type: VALUE_HASH
 context: CXT_VOID
-function: eval
+function: OP_EVAL
 EOE

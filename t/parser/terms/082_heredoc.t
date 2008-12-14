@@ -18,7 +18,7 @@ arguments:
     flags: CONST_STRING
     value: "test\n"
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: ~
 EOE
 
@@ -39,7 +39,7 @@ arguments:
         flags: CONST_STRING
         value: "\n"
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: ~
 EOE
 
@@ -60,7 +60,7 @@ arguments:
         flags: CONST_STRING
         value: "\n"
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: ~
 EOE
 
@@ -75,7 +75,7 @@ arguments:
     flags: CONST_STRING
     value: "$a\n"
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: ~
 EOE
 
@@ -93,6 +93,6 @@ arguments:
       value: "ls\n"
     op: OP_BACKTICK
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: ~
 EOE

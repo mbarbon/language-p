@@ -68,7 +68,7 @@ op: OP_LOG_OR
 right: !parsetree:Overridable
   arguments: ~
   context: CXT_VOID
-  function: die
+  function: OP_DIE
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -85,7 +85,7 @@ arguments:
       value: foo
     method: boo
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: ~
 EOE
 
@@ -99,7 +99,7 @@ arguments:
     name: foo
     sigil: VALUE_SCALAR
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: !parsetree:Symbol
   context: CXT_SCALAR
   name: boo
@@ -122,10 +122,10 @@ arguments:
         name: foo
         sigil: VALUE_ARRAY
     context: CXT_LIST
-    function: map
+    function: OP_MAP
     indirect: ~
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: ~
 EOE
 
@@ -141,7 +141,7 @@ arguments:
       value: boo
     op: OP_PLUS
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: !parsetree:Symbol
   context: CXT_SCALAR
   name: foo
@@ -170,7 +170,7 @@ arguments:
       name: foo
       sigil: VALUE_SUB
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: ~
 EOE
 
@@ -189,7 +189,7 @@ arguments:
       flags: CONST_STRING|STRING_BARE
       value: boo
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: ~
 EOE
 
@@ -206,7 +206,7 @@ arguments:
       name: moo
       sigil: VALUE_SUB
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: ~
 EOE
 
@@ -216,7 +216,7 @@ EOP
 --- !parsetree:BuiltinIndirect
 arguments: []
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: !parsetree:Symbol
   context: CXT_SCALAR
   name: moo

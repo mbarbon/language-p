@@ -21,13 +21,13 @@ left: !parsetree:BuiltinIndirect
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
   context: CXT_SCALAR
-  function: print
+  function: OP_PRINT
   indirect: ~
 op: OP_LOG_OR
 right: !parsetree:Overridable
   arguments: ~
   context: CXT_VOID
-  function: die
+  function: OP_DIE
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -50,5 +50,5 @@ op: OP_LOG_OR
 right: !parsetree:Overridable
   arguments: ~
   context: CXT_VOID
-  function: die
+  function: OP_DIE
 EOE

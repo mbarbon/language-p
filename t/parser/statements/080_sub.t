@@ -30,7 +30,7 @@ lines:
         name: x
         sigil: VALUE_SCALAR
     context: CXT_CALLER
-    function: return
+    function: OP_RETURN
 name: name
 EOE
 
@@ -55,7 +55,7 @@ lines:
         name: x
         sigil: VALUE_SCALAR
     context: CXT_CALLER
-    function: return
+    function: OP_RETURN
 name: name
 EOE
 
@@ -80,7 +80,7 @@ lines:
         name: x
         sigil: VALUE_SCALAR
     context: CXT_CALLER
-    function: return
+    function: OP_RETURN
 name: name
 EOE
 
@@ -109,7 +109,7 @@ lines:
             name: x
             sigil: VALUE_SCALAR
         context: CXT_CALLER
-        function: return
+        function: OP_RETURN
     name: name2
 name: name
 EOE
@@ -140,7 +140,7 @@ lines:
             name: x
             sigil: VALUE_SCALAR
         context: CXT_CALLER
-        function: return
+        function: OP_RETURN
     name: name
 EOE
 
@@ -170,6 +170,6 @@ lines:
             name: x
             sigil: VALUE_SCALAR
         context: CXT_CALLER
-        function: return
+        function: OP_RETURN
     name: name
 EOE

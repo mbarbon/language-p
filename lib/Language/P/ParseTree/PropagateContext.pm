@@ -160,7 +160,7 @@ sub _builtin_indirect {
 
     $self->_function_call( $tree, $cxt );
     if( $tree->indirect ) {
-        my $arg_cxt = $tree->function eq 'map' || $tree->function eq 'grep' ?
+        my $arg_cxt = $tree->function == OP_MAP || $tree->function == OP_GREP ?
                           CXT_LIST : CXT_SCALAR;
         $self->visit( $tree->indirect, $arg_cxt );
     }

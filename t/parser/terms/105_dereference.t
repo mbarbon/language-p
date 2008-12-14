@@ -16,7 +16,7 @@ left: !parsetree:Symbol
   context: CXT_SCALAR
   name: a
   sigil: VALUE_SCALAR
-op: VALUE_SCALAR
+op: OP_DEREFERENCE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -32,9 +32,9 @@ left: !parsetree:Dereference
       context: CXT_SCALAR
       name: a
       sigil: VALUE_SCALAR
-    op: VALUE_SCALAR
-  op: VALUE_SCALAR
-op: VALUE_SCALAR
+    op: OP_DEREFERENCE_SCALAR
+  op: OP_DEREFERENCE_SCALAR
+op: OP_DEREFERENCE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -48,8 +48,8 @@ left: !parsetree:Dereference
     context: CXT_SCALAR
     name: a
     sigil: VALUE_SCALAR
-  op: VALUE_SCALAR
-op: VALUE_SCALAR
+  op: OP_DEREFERENCE_SCALAR
+op: OP_DEREFERENCE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -63,8 +63,8 @@ left: !parsetree:Dereference
     context: CXT_SCALAR
     name: a
     sigil: VALUE_SCALAR
-  op: VALUE_SCALAR
-op: VALUE_SCALAR
+  op: OP_DEREFERENCE_SCALAR
+op: OP_DEREFERENCE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -85,7 +85,7 @@ left: !parsetree:Block
         context: CXT_SCALAR
         name: b
         sigil: VALUE_SCALAR
-op: VALUE_SCALAR
+op: OP_DEREFERENCE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -99,7 +99,7 @@ left: !parsetree:Dereference
     context: CXT_SCALAR
     name: a
     sigil: VALUE_SCALAR
-  op: VALUE_SCALAR
+  op: OP_DEREFERENCE_SCALAR
 op: OP_ASSIGN
 right: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
@@ -119,7 +119,7 @@ left: !parsetree:Dereference
         context: CXT_SCALAR
         name: a
         sigil: VALUE_SCALAR
-  op: VALUE_SCALAR
+  op: OP_DEREFERENCE_SCALAR
 op: OP_ASSIGN
 right: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
@@ -135,7 +135,7 @@ left: !parsetree:Symbol
   context: CXT_SCALAR
   name: a
   sigil: VALUE_SCALAR
-op: VALUE_HASH
+op: OP_DEREFERENCE_HASH
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -147,7 +147,7 @@ left: !parsetree:Symbol
   context: CXT_SCALAR
   name: a
   sigil: VALUE_SCALAR
-op: VALUE_GLOB
+op: OP_DEREFERENCE_GLOB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

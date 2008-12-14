@@ -192,7 +192,7 @@ arguments:
         name: y
         sigil: VALUE_SCALAR
 context: CXT_VOID
-function: glob
+function: OP_GLOB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -205,7 +205,7 @@ arguments:
     name: foo
     sigil: VALUE_GLOB
 context: CXT_VOID
-function: readline
+function: OP_READLINE
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -218,7 +218,7 @@ arguments:
     name: foo::moo::boo
     sigil: VALUE_GLOB
 context: CXT_VOID
-function: readline
+function: OP_READLINE
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -231,7 +231,7 @@ arguments:
     name: foo::boo
     sigil: VALUE_GLOB
 context: CXT_VOID
-function: readline
+function: OP_READLINE
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -243,7 +243,7 @@ arguments:
     flags: CONST_STRING
     value: 'foo '
 context: CXT_VOID
-function: glob
+function: OP_GLOB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -256,7 +256,7 @@ arguments:
     name: x
     sigil: VALUE_SCALAR
 context: CXT_VOID
-function: readline
+function: OP_READLINE
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -269,7 +269,7 @@ arguments:
     name: x
     sigil: VALUE_SCALAR
 context: CXT_VOID
-function: readline
+function: OP_READLINE
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -297,5 +297,5 @@ arguments:
         flags: CONST_STRING
         value: "'"
 context: CXT_VOID
-function: glob
+function: OP_GLOB
 EOE

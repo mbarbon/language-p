@@ -31,7 +31,7 @@ sub match {
 #    use Data::Dumper; print Dumper $parsed_rx;
 
     my $re = $generator->process_regex( $pattern );
-#    use Data::Dumper; print Dumper $code;
+#    use Data::Dumper; print Dumper $re;
     my $match = $re->match( $runtime, $string );
 
     return $match;

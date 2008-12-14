@@ -46,4 +46,6 @@ sub add_value {
     return $#{$self->values};
 }
 
+sub is_empty { return $#{$_[0]->values} == -1 ? 1 : 0 }
+
 1;

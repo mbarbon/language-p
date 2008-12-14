@@ -20,7 +20,7 @@ lines:
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
     context: CXT_CALLER
-    function: return
+    function: OP_RETURN
 name: BEGIN
 EOE
 
@@ -37,7 +37,7 @@ lines:
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
     context: CXT_CALLER
-    function: return
+    function: OP_RETURN
 name: END
 EOE
 
@@ -54,6 +54,6 @@ lines:
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
     context: CXT_CALLER
-    function: return
+    function: OP_RETURN
 name: END
 EOE

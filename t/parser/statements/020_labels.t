@@ -55,7 +55,7 @@ block: !parsetree:Block
           flags: CONST_NUMBER|NUM_INTEGER
           value: 42
       context: CXT_VOID
-      function: print
+      function: OP_PRINT
       indirect: ~
 continue: ~
 expression: !parsetree:BinOp

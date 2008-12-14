@@ -6,6 +6,7 @@ _build
 blib
 t/perl5/[a-z]*
 lib/Language/P/Keywords.pm
+lib/Language/P/Opcodes.pm
 META.yml
 
 # Misc
