@@ -237,8 +237,10 @@ sub _cleanup {
 }
 
 sub start_code_generation {
-    my( $self ) = @_;
+    my( $self, $args ) = @_;
 
+    $self->_intermediate->file_name( $args->{file_name} )
+      if $args && $args->{file_name};
     $self->_pending( [] );
 }
 

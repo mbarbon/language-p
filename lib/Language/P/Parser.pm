@@ -193,7 +193,8 @@ sub _parse {
     $self->_lexicals( undef );
     $self->_enter_scope( 0, 1 ); # FIXME eval
 
-    $self->generator->start_code_generation;
+    $self->generator->start_code_generation( { file_name => $self->lexer->file,
+                                               } );
     while( my $line = _parse_line( $self ) ) {
         $dumper->( $line ) if $dumper;
         $self->generator->process( $line );

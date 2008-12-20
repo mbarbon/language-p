@@ -4,10 +4,9 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Visitor);
 
-__PACKAGE__->mk_ro_accessors( qw(file_name) );
 __PACKAGE__->mk_accessors( qw(_code_segments _current_basic_block _options
                               _label_count _temporary_count _current_block
-                              _group_count) );
+                              _group_count file_name) );
 
 use Scalar::Util qw();
 
