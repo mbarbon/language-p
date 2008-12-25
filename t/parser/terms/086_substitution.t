@@ -26,6 +26,7 @@ right: !parsetree:Substitution
     flags: FLAG_RX_GLOBAL
     op: OP_QL_S
   replacement: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_STRING
     value: bar
 EOE
@@ -75,6 +76,7 @@ right: !parsetree:Substitution
     flags: 0
     op: OP_QL_S
   replacement: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_STRING
     value: $1
 EOE
@@ -108,6 +110,7 @@ right: !parsetree:Substitution
           sigil: VALUE_SCALAR
         op: OP_ASSIGN
         right: !parsetree:Constant
+          context: CXT_SCALAR
           flags: CONST_NUMBER|NUM_INTEGER
           value: 1
       - !parsetree:LexicalSymbol
@@ -138,6 +141,7 @@ right: !parsetree:Substitution
           name: foo
           sigil: VALUE_SCALAR
   replacement: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_STRING
     value: bar
 EOE
@@ -163,6 +167,7 @@ right: !parsetree:Substitution
     flags: FLAG_RX_GLOBAL
     op: OP_QL_S
   replacement: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_STRING
     value: bar
 EOE

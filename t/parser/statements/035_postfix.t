@@ -12,16 +12,19 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:ConditionalLoop
 block: !parsetree:Constant
+  context: CXT_VOID
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 block_type: while
 condition: !parsetree:BinOp
   context: CXT_SCALAR
   left: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   op: OP_NUM_LT
   right: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 continue: ~
@@ -34,14 +37,17 @@ EOP
 block: !parsetree:BinOp
   context: CXT_VOID
   left: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   op: OP_ADD
   right: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 block_type: until
 condition: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 continue: ~
@@ -57,14 +63,17 @@ iftrues:
     block: !parsetree:BinOp
       context: CXT_VOID
       left: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
       op: OP_ADD
       right: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
     block_type: if
     condition: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 EOE
@@ -79,14 +88,17 @@ iftrues:
     block: !parsetree:BinOp
       context: CXT_VOID
       left: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
       op: OP_ADD
       right: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
     block_type: unless
     condition: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 EOE
@@ -96,15 +108,19 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:Foreach
 block: !parsetree:Constant
+  context: CXT_VOID
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 continue: ~
 expression: !parsetree:List
+  context: CXT_LIST
   expressions:
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
 variable: !parsetree:Symbol

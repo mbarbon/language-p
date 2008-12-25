@@ -13,10 +13,12 @@ EOP
 --- !parsetree:BinOp
 context: CXT_VOID
 left: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING|STRING_BARE
   value: moo
 op: OP_CONCATENATE
 right: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING|STRING_BARE
   value: boo
 EOE
@@ -27,10 +29,12 @@ EOP
 --- !parsetree:BinOp
 context: CXT_VOID
 left: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING|STRING_BARE
   value: moo::moo
 op: OP_CONCATENATE
 right: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING|STRING_BARE
   value: 'boo::boo::'
 EOE
@@ -41,10 +45,12 @@ EOP
 --- !parsetree:BinOp
 context: CXT_VOID
 left: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING|STRING_BARE
   value: ::moo
 op: OP_CONCATENATE
 right: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING|STRING_BARE
   value: ::boo
 EOE

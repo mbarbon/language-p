@@ -24,6 +24,7 @@ right: !parsetree:AnonymousSubroutine
     - !parsetree:Builtin
       arguments:
         - !parsetree:Constant
+          context: CXT_CALLER
           flags: CONST_NUMBER|NUM_INTEGER
           value: 1
       context: CXT_CALLER
@@ -45,6 +46,7 @@ left: !parsetree:LexicalDeclaration
   sigil: VALUE_SCALAR
 op: OP_ASSIGN
 right: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 --- !parsetree:BinOp
@@ -87,6 +89,7 @@ lines:
   - !parsetree:BinOp
     context: CXT_VOID
     left: !parsetree:List
+      context: CXT_LIST|CXT_LVALUE
       expressions:
         - !parsetree:LexicalDeclaration
           context: CXT_SCALAR|CXT_LVALUE
@@ -106,6 +109,7 @@ lines:
           - !parsetree:BinOp
             context: CXT_VOID
             left: !parsetree:List
+              context: CXT_LIST|CXT_LVALUE
               expressions:
                 - !parsetree:LexicalDeclaration
                   context: CXT_SCALAR|CXT_LVALUE
@@ -125,6 +129,7 @@ lines:
                   - !parsetree:BinOp
                     context: CXT_VOID
                     left: !parsetree:List
+                      context: CXT_LIST|CXT_LVALUE
                       expressions:
                         - !parsetree:LexicalDeclaration
                           context: CXT_SCALAR|CXT_LVALUE

@@ -13,9 +13,11 @@ EOP
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID
@@ -33,11 +35,14 @@ arguments:
   - !parsetree:BinOp
     context: CXT_LIST
     left: !parsetree:List
+      context: CXT_SCALAR
       expressions:
         - !parsetree:Constant
+          context: CXT_VOID
           flags: CONST_NUMBER|NUM_INTEGER
           value: 1
         - !parsetree:Constant
+          context: CXT_SCALAR
           flags: CONST_NUMBER|NUM_INTEGER
           value: 2
     op: OP_LOG_OR
@@ -62,9 +67,11 @@ name: x
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID
@@ -85,9 +92,11 @@ name: x
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID
@@ -102,6 +111,7 @@ print, 1,
 print, 1;
 EOP
 --- !parsetree:List
+context: CXT_VOID
 expressions:
   - !parsetree:BuiltinIndirect
     arguments: ~
@@ -109,6 +119,7 @@ expressions:
     function: OP_PRINT
     indirect: ~
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   - !parsetree:BuiltinIndirect
@@ -117,6 +128,7 @@ expressions:
     function: OP_PRINT
     indirect: ~
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 EOE
@@ -126,6 +138,7 @@ print, 1,
 print => 1;
 EOP
 --- !parsetree:List
+context: CXT_VOID
 expressions:
   - !parsetree:BuiltinIndirect
     arguments: ~
@@ -133,12 +146,15 @@ expressions:
     function: OP_PRINT
     indirect: ~
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_STRING
     value: print
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 EOE

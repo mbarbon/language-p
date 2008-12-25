@@ -19,6 +19,7 @@ L2:
   jump_if_true false=L5, true=L3
 L3:
   constant_integer 1
+  pop
   jump to=L2
 L5:
 EOI
@@ -35,6 +36,7 @@ L2:
   jump_if_true false=L3, true=L5
 L3:
   constant_integer 1
+  pop
   jump to=L2
 L5:
 EOI

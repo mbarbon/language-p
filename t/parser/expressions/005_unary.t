@@ -13,6 +13,7 @@ EOP
 --- !parsetree:UnOp
 context: CXT_VOID
 left: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 12
 op: OP_PLUS
@@ -24,6 +25,7 @@ EOP
 --- !parsetree:UnOp
 context: CXT_VOID
 left: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 12
 op: OP_MINUS
@@ -37,6 +39,7 @@ context: CXT_VOID
 left: !parsetree:Parentheses
   context: CXT_SCALAR
   left: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   op: OP_PARENTHESES
@@ -61,6 +64,7 @@ EOP
 --- !parsetree:UnOp
 context: CXT_VOID
 left: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 op: OP_REFERENCE

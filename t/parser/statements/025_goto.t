@@ -47,11 +47,14 @@ goto ("FOO", "X");
 EOP
 --- !parsetree:Jump
 left: !parsetree:List
+  context: CXT_SCALAR
   expressions:
     - !parsetree:Constant
+      context: CXT_VOID
       flags: CONST_STRING
       value: FOO
     - !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_STRING
       value: X
 op: OP_GOTO

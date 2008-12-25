@@ -11,6 +11,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 q<$e>;
 EOP
 --- !parsetree:Constant
+context: CXT_VOID
 flags: CONST_STRING
 value: $e
 EOE
@@ -19,6 +20,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 q "$e";
 EOP
 --- !parsetree:Constant
+context: CXT_VOID
 flags: CONST_STRING
 value: $e
 EOE
@@ -27,6 +29,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 qq();
 EOP
 --- !parsetree:Constant
+context: CXT_VOID
 flags: CONST_STRING
 value: ''
 EOE
@@ -37,6 +40,7 @@ EOP
 --- !parsetree:QuotedString
 components:
   - !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_STRING
     value: ab
   - !parsetree:Symbol
@@ -44,6 +48,7 @@ components:
     name: e
     sigil: VALUE_SCALAR
   - !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_STRING
     value: cdefg
 EOE
@@ -54,6 +59,7 @@ EOP
 --- !parsetree:QuotedString
 components:
   - !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_STRING
     value: a(
   - !parsetree:Symbol
@@ -61,6 +67,7 @@ components:
     name: e
     sigil: VALUE_SCALAR
   - !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_STRING
     value: (d)e)f)g
 EOE
@@ -97,6 +104,7 @@ EOP
 --- !parsetree:UnOp
 context: CXT_VOID
 left: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING
   value: $e
 op: OP_BACKTICK
@@ -120,6 +128,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 qw!!;
 EOP
 --- !parsetree:List
+context: CXT_VOID
 expressions: []
 EOE
 
@@ -128,17 +137,22 @@ qw zaaa bbb
     eee fz;
 EOP
 --- !parsetree:List
+context: CXT_VOID
 expressions:
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_STRING
     value: aaa
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_STRING
     value: bbb
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_STRING
     value: eee
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_STRING
     value: f
 EOE

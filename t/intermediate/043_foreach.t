@@ -35,6 +35,7 @@ L3:
   swap
   glob_slot_set slot=1
   constant_integer 3
+  pop
   jump to=L2
 L5:
   pop

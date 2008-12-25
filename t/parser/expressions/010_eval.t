@@ -28,11 +28,14 @@ arguments:
   - !parsetree:Block
     lines:
       - !parsetree:List
+        context: CXT_LIST
         expressions:
           - !parsetree:Constant
+            context: CXT_LIST
             flags: CONST_NUMBER|NUM_INTEGER
             value: 1
           - !parsetree:Constant
+            context: CXT_LIST
             flags: CONST_NUMBER|NUM_INTEGER
             value: 1
 context: CXT_VOID
@@ -48,11 +51,14 @@ arguments:
     context: CXT_LIST
     left: !parsetree:ReferenceConstructor
       expression: !parsetree:List
+        context: CXT_LIST
         expressions:
           - !parsetree:Constant
+            context: CXT_LIST
             flags: CONST_NUMBER|NUM_INTEGER
             value: 1
           - !parsetree:Constant
+            context: CXT_LIST
             flags: CONST_NUMBER|NUM_INTEGER
             value: 1
       type: VALUE_HASH
@@ -68,11 +74,14 @@ EOP
 arguments:
   - !parsetree:ReferenceConstructor
     expression: !parsetree:List
+      context: CXT_LIST
       expressions:
         - !parsetree:Constant
+          context: CXT_LIST
           flags: CONST_NUMBER|NUM_INTEGER
           value: 1
         - !parsetree:Constant
+          context: CXT_LIST
           flags: CONST_NUMBER|NUM_INTEGER
           value: 1
     type: VALUE_HASH

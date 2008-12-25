@@ -25,6 +25,7 @@ EOP
 --- !parsetree:Local
 context: CXT_VOID
 left: !parsetree:List
+  context: CXT_VOID|CXT_LVALUE
   expressions:
     - !parsetree:Symbol
       context: CXT_VOID|CXT_LVALUE
@@ -44,6 +45,7 @@ left: !parsetree:Local
     context: CXT_SCALAR|CXT_LVALUE
     reference: 0
     subscript: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_STRING
       value: x
     subscripted: !parsetree:Symbol
@@ -54,6 +56,7 @@ left: !parsetree:Local
   op: OP_LOCAL
 op: OP_ASSIGN
 right: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 EOE
@@ -66,6 +69,7 @@ context: CXT_VOID
 left: !parsetree:Local
   context: CXT_LIST|CXT_LVALUE
   left: !parsetree:List
+    context: CXT_LIST|CXT_LVALUE
     expressions:
       - !parsetree:Symbol
         context: CXT_SCALAR|CXT_LVALUE
@@ -78,11 +82,14 @@ left: !parsetree:Local
   op: OP_LOCAL
 op: OP_ASSIGN
 right: !parsetree:List
+  context: CXT_LIST
   expressions:
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
 EOE

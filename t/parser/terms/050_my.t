@@ -29,6 +29,7 @@ left: !parsetree:LexicalDeclaration
   sigil: VALUE_SCALAR
 op: OP_ASSIGN
 right: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 EOE
@@ -39,6 +40,7 @@ EOP
 --- !parsetree:BinOp
 context: CXT_VOID
 left: !parsetree:List
+  context: CXT_LIST|CXT_LVALUE
   expressions:
     - !parsetree:LexicalDeclaration
       context: CXT_SCALAR|CXT_LVALUE
@@ -52,14 +54,18 @@ left: !parsetree:List
       sigil: VALUE_ARRAY
 op: OP_ASSIGN
 right: !parsetree:List
+  context: CXT_LIST
   expressions:
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 3
 EOE
@@ -68,6 +74,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 my( ${foo} );
 EOP
 --- !parsetree:List
+context: CXT_VOID
 expressions:
   - !parsetree:LexicalDeclaration
     context: CXT_VOID
@@ -80,6 +87,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 my( ${foo}, @{b}, $x );
 EOP
 --- !parsetree:List
+context: CXT_VOID
 expressions:
   - !parsetree:LexicalDeclaration
     context: CXT_VOID

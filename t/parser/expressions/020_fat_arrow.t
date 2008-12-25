@@ -11,11 +11,14 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 foo => 1
 EOP
 --- !parsetree:List
+context: CXT_VOID
 expressions:
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_STRING
     value: foo
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 EOE
@@ -24,11 +27,14 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 foo::x => 1
 EOP
 --- !parsetree:List
+context: CXT_VOID
 expressions:
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_STRING
     value: foo::x
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 EOE
@@ -40,6 +46,7 @@ EOP
 --- !parsetree:SubroutineDeclaration
 name: foo::q
 --- !parsetree:List
+context: CXT_VOID
 expressions:
   - !parsetree:FunctionCall
     arguments: ~
@@ -49,6 +56,7 @@ expressions:
       name: foo::q
       sigil: VALUE_SUB
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 EOE
@@ -57,11 +65,14 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 s => 1
 EOP
 --- !parsetree:List
+context: CXT_VOID
 expressions:
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_STRING
     value: s
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 EOE
@@ -77,18 +88,23 @@ iftrues:
     block: !parsetree:Block
       lines:
         - !parsetree:Constant
+          context: CXT_VOID
           flags: CONST_NUMBER|NUM_INTEGER
           value: 2
     block_type: if
     condition: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 --- !parsetree:List
+context: CXT_VOID
 expressions:
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_STRING
     value: elsif
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 EOE

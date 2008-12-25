@@ -15,6 +15,7 @@ arguments: ~
 context: CXT_VOID
 indirect: 0
 invocant: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING
   value: Foo
 method: foo
@@ -26,17 +27,21 @@ EOP
 --- !parsetree:MethodCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 3
 context: CXT_VOID
 indirect: 0
 invocant: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING
   value: Foo
 method: foo
@@ -50,17 +55,21 @@ context: CXT_VOID
 left: !parsetree:MethodCall
   arguments:
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 3
   context: CXT_SCALAR
   indirect: 0
   invocant: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_STRING
     value: Foo
   method: foo
@@ -81,6 +90,7 @@ arguments:
     context: CXT_LIST
     indirect: 0
     invocant: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_STRING
       value: foo
     method: boo
@@ -137,6 +147,7 @@ arguments:
   - !parsetree:UnOp
     context: CXT_LIST
     left: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_STRING|STRING_BARE
       value: boo
     op: OP_PLUS
@@ -161,6 +172,7 @@ arguments:
       - !parsetree:UnOp
         context: CXT_LIST
         left: !parsetree:Constant
+          context: CXT_SCALAR
           flags: CONST_STRING|STRING_BARE
           value: boo
         op: OP_PLUS
@@ -182,10 +194,12 @@ arguments:
   - !parsetree:BinOp
     context: CXT_LIST
     left: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_STRING|STRING_BARE
       value: foo
     op: OP_CONCATENATE
     right: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_STRING|STRING_BARE
       value: boo
 context: CXT_VOID
@@ -235,6 +249,7 @@ invocant: !parsetree:MethodCall
   context: CXT_SCALAR
   indirect: 0
   invocant: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_STRING
     value: boo
   method: moo
@@ -247,11 +262,13 @@ EOP
 --- !parsetree:MethodCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_STRING|STRING_BARE
     value: foo
 context: CXT_VOID
 indirect: 0
 invocant: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING
   value: boo
 method: moo

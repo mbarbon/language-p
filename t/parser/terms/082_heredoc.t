@@ -15,6 +15,7 @@ EOP
 --- !parsetree:BuiltinIndirect
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_STRING
     value: "test\n"
 context: CXT_VOID
@@ -36,6 +37,7 @@ arguments:
         name: a
         sigil: VALUE_SCALAR
       - !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_STRING
         value: "\n"
 context: CXT_VOID
@@ -57,6 +59,7 @@ arguments:
         name: a
         sigil: VALUE_SCALAR
       - !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_STRING
         value: "\n"
 context: CXT_VOID
@@ -72,6 +75,7 @@ EOP
 --- !parsetree:BuiltinIndirect
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_STRING
     value: "$a\n"
 context: CXT_VOID
@@ -89,6 +93,7 @@ arguments:
   - !parsetree:UnOp
     context: CXT_LIST
     left: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_STRING
       value: "ls\n"
     op: OP_BACKTICK

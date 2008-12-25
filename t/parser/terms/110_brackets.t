@@ -14,6 +14,7 @@ EOP
 context: CXT_VOID
 reference: 0
 subscript: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 subscripted: !parsetree:Symbol
@@ -30,6 +31,7 @@ EOP
 context: CXT_VOID
 reference: 0
 subscript: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 subscripted: !parsetree:Symbol
@@ -46,6 +48,7 @@ EOP
 context: CXT_VOID
 reference: 0
 subscript: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 subscripted: !parsetree:Symbol
@@ -62,6 +65,7 @@ EOP
 context: CXT_VOID
 reference: 0
 subscript: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 2
 subscripted: !parsetree:Symbol
@@ -78,6 +82,7 @@ EOP
 context: CXT_VOID
 reference: 0
 subscript: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING
   value: qq
 subscripted: !parsetree:Symbol
@@ -94,6 +99,7 @@ EOP
 context: CXT_VOID
 reference: 0
 subscript: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING
   value: HASH
 subscripted: !parsetree:Symbol
@@ -112,10 +118,12 @@ reference: 0
 subscript: !parsetree:BinOp
   context: CXT_SCALAR
   left: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
   op: OP_ADD
   right: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 3
 subscripted: !parsetree:Symbol
@@ -147,11 +155,13 @@ EOP
 context: CXT_VOID
 reference: 1
 subscript: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 2
 subscripted: !parsetree:FunctionCall
   arguments:
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
   context: CXT_SCALAR|CXT_VIVIFY
@@ -168,6 +178,7 @@ EOP
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID
@@ -176,6 +187,7 @@ function: !parsetree:Dereference
   left: !parsetree:FunctionCall
     arguments:
       - !parsetree:Constant
+        context: CXT_LIST
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
     context: CXT_SCALAR
@@ -194,10 +206,12 @@ arguments:
   - !parsetree:BinOp
     context: CXT_LIST
     left: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
     op: OP_ADD
     right: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
 context: CXT_VOID
@@ -217,20 +231,25 @@ EOP
 context: CXT_VOID
 reference: 0
 subscript: !parsetree:List
+  context: CXT_LIST
   expressions:
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_STRING
       value: xx
     - !parsetree:BinOp
       context: CXT_LIST
       left: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 3
       op: OP_ADD
       right: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 4
 subscripted: !parsetree:Symbol
@@ -247,20 +266,25 @@ EOP
 context: CXT_VOID
 reference: 0
 subscript: !parsetree:List
+  context: CXT_LIST
   expressions:
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_STRING
       value: xx
     - !parsetree:BinOp
       context: CXT_LIST
       left: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 3
       op: OP_ADD
       right: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 4
 subscripted: !parsetree:Symbol
@@ -277,14 +301,18 @@ EOP
 context: CXT_VOID
 reference: 1
 subscript: !parsetree:List
+  context: CXT_LIST
   expressions:
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 3
 subscripted: !parsetree:Block
@@ -300,6 +328,7 @@ subscripted: !parsetree:Block
           sigil: VALUE_SUB
       op: OP_CONCATENATE
       right: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_STRING
         value: x
 type: VALUE_ARRAY
@@ -315,14 +344,17 @@ arguments:
     left: !parsetree:BinOp
       context: CXT_SCALAR
       left: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
       op: OP_ADD
       right: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 2
     op: OP_ADD
     right: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 3
 context: CXT_VOID
@@ -332,12 +364,14 @@ function: !parsetree:Dereference
     context: CXT_SCALAR
     reference: 1
     subscript: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 5
     subscripted: !parsetree:Subscript
       context: CXT_SCALAR|CXT_VIVIFY
       reference: 1
       subscript: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 3
       subscripted: !parsetree:FunctionCall
@@ -349,12 +383,14 @@ function: !parsetree:Dereference
             context: CXT_SCALAR
             reference: 1
             subscript: !parsetree:Constant
+              context: CXT_SCALAR
               flags: CONST_NUMBER|NUM_INTEGER
               value: 2
             subscripted: !parsetree:Subscript
               context: CXT_SCALAR|CXT_VIVIFY
               reference: 0
               subscript: !parsetree:Constant
+                context: CXT_SCALAR
                 flags: CONST_NUMBER|NUM_INTEGER
                 value: 1
               subscripted: !parsetree:Symbol
@@ -376,6 +412,7 @@ EOP
 context: CXT_VOID
 reference: 0
 subscript: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 subscripted: !parsetree:Symbol
@@ -392,6 +429,7 @@ EOP
 context: CXT_VOID
 reference: 1
 subscript: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 subscripted: !parsetree:Block
@@ -407,6 +445,7 @@ subscripted: !parsetree:Block
           sigil: VALUE_SUB
       op: OP_CONCATENATE
       right: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_STRING
         value: x
 type: VALUE_ARRAY

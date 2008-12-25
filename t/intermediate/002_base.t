@@ -16,6 +16,7 @@ L1:
   constant_integer 2
   add
   assign
+  pop
 EOI
 
 generate_and_diff( <<'EOP', <<'EOI' );
@@ -27,4 +28,5 @@ L1:
   not
   make_list count=2
   print
+  pop
 EOI

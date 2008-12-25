@@ -15,9 +15,11 @@ context: CXT_VOID
 left: !parsetree:BuiltinIndirect
   arguments:
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
   context: CXT_SCALAR
@@ -36,14 +38,18 @@ EOP
 --- !parsetree:BinOp
 context: CXT_VOID
 left: !parsetree:List
+  context: CXT_SCALAR
   expressions:
     - !parsetree:Constant
+      context: CXT_VOID
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
     - !parsetree:Constant
+      context: CXT_VOID
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
     - !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 3
 op: OP_LOG_OR

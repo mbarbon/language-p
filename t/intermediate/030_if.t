@@ -20,6 +20,7 @@ L3:
   jump_if_f_lt false=L4, true=L2
 L4:
   constant_integer 1
+  pop
   jump to=L2
 L2:
 EOI
@@ -37,6 +38,7 @@ if( $a < 11 ) {
 EOP
 L1:
   constant_integer 0
+  pop
   jump to=L6
 L6:
   global name=a, slot=1
@@ -44,6 +46,7 @@ L6:
   jump_if_f_lt false=L4, true=L7
 L7:
   constant_integer 1
+  pop
   jump to=L2
 L4:
   global name=a, slot=1
@@ -51,12 +54,15 @@ L4:
   jump_if_f_lt false=L3, true=L5
 L5:
   constant_integer 2
+  pop
   jump to=L2
 L3:
   constant_integer 3
+  pop
   jump to=L2
 L2:
   constant_integer 4
+  pop
 EOI
 
 generate_and_diff( <<'EOP', <<'EOI' );
@@ -68,6 +74,7 @@ if( $a - 1 ) {
 EOP
 L1:
   constant_integer 0
+  pop
   jump to=L3
 L3:
   global name=a, slot=1
@@ -76,9 +83,11 @@ L3:
   jump_if_true false=L2, true=L4
 L4:
   constant_integer 1
+  pop
   jump to=L2
 L2:
   constant_integer 2
+  pop
 EOI
 
 generate_and_diff( <<'EOP', <<'EOI' );
@@ -90,6 +99,7 @@ if( $a && $b ) {
 EOP
 L1:
   constant_integer 0
+  pop
   jump to=L3
 L5:
   global name=b, slot=1
@@ -99,7 +109,9 @@ L3:
   jump_if_true false=L2, true=L5
 L4:
   constant_integer 1
+  pop
   jump to=L2
 L2:
   constant_integer 2
+  pop
 EOI

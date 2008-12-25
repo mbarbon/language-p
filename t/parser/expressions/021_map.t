@@ -13,12 +13,15 @@ EOP
 --- !parsetree:BuiltinIndirect
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 3
 context: CXT_VOID
@@ -40,12 +43,15 @@ EOP
 --- !parsetree:BuiltinIndirect
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 3
 context: CXT_VOID
@@ -74,12 +80,15 @@ arguments:
       name: foo
       sigil: VALUE_SUB
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 3
 context: CXT_VOID

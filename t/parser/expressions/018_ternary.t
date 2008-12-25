@@ -12,13 +12,16 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:Ternary
 condition: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 context: CXT_VOID
 iffalse: !parsetree:Constant
+  context: CXT_VOID
   flags: CONST_NUMBER|NUM_INTEGER
   value: 3
 iftrue: !parsetree:Constant
+  context: CXT_VOID
   flags: CONST_NUMBER|NUM_INTEGER
   value: 2
 EOE
@@ -35,13 +38,16 @@ left: !parsetree:Symbol
 op: OP_ASSIGN
 right: !parsetree:Ternary
   condition: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   context: CXT_SCALAR
   iffalse: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 3
   iftrue: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 EOE
@@ -60,29 +66,35 @@ right: !parsetree:Ternary
   condition: !parsetree:BinOp
     context: CXT_SCALAR
     left: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
     op: OP_NUM_LT
     right: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
   context: CXT_SCALAR
   iffalse: !parsetree:BinOp
     context: CXT_SCALAR
     left: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 3
     op: OP_ADD
     right: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 4
   iftrue: !parsetree:BinOp
     context: CXT_SCALAR
     left: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
     op: OP_ADD
     right: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 3
 EOE
@@ -110,10 +122,12 @@ left: !parsetree:Ternary
       sigil: VALUE_SCALAR
     op: OP_ASSIGN
     right: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 op: OP_ASSIGN
 right: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 2
 EOE

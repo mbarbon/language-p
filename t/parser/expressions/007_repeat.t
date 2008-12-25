@@ -13,10 +13,12 @@ EOP
 --- !parsetree:BinOp
 context: CXT_VOID
 left: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 op: OP_REPEAT
 right: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 2
 EOE
@@ -30,10 +32,12 @@ name: x
 --- !parsetree:BinOp
 context: CXT_VOID
 left: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 op: OP_REPEAT
 right: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 2
 EOE

@@ -102,6 +102,7 @@ left: !parsetree:Dereference
   op: OP_DEREFERENCE_SCALAR
 op: OP_ASSIGN
 right: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 EOE
@@ -122,6 +123,7 @@ left: !parsetree:Dereference
   op: OP_DEREFERENCE_SCALAR
 op: OP_ASSIGN
 right: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 EOE
@@ -157,6 +159,7 @@ EOP
 context: CXT_VOID
 reference: 0
 subscript: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 2
 subscripted: !parsetree:Symbol
@@ -173,12 +176,14 @@ EOP
 context: CXT_VOID
 reference: 1
 subscript: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 subscripted: !parsetree:Subscript
   context: CXT_SCALAR|CXT_VIVIFY
   reference: 0
   subscript: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
   subscripted: !parsetree:Symbol
@@ -196,12 +201,14 @@ EOP
 context: CXT_VOID
 reference: 1
 subscript: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 subscripted: !parsetree:Subscript
   context: CXT_SCALAR|CXT_VIVIFY
   reference: 0
   subscript: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
   subscripted: !parsetree:Symbol

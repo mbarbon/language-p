@@ -17,6 +17,7 @@ lines:
   - !parsetree:Builtin
     arguments:
       - !parsetree:Constant
+        context: CXT_CALLER
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
     context: CXT_CALLER
@@ -34,6 +35,7 @@ lines:
   - !parsetree:Builtin
     arguments:
       - !parsetree:Constant
+        context: CXT_CALLER
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
     context: CXT_CALLER
@@ -51,6 +53,7 @@ lines:
   - !parsetree:Builtin
     arguments:
       - !parsetree:Constant
+        context: CXT_CALLER
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
     context: CXT_CALLER

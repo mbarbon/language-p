@@ -19,6 +19,7 @@ iftrues:
     block: !parsetree:Block
       lines:
         - !parsetree:Constant
+          context: CXT_VOID
           flags: CONST_NUMBER|NUM_INTEGER
           value: 1
     block_type: if
@@ -30,6 +31,7 @@ iftrues:
         sigil: VALUE_SCALAR
       op: OP_NUM_GT
       right: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 2
 EOE
@@ -46,6 +48,7 @@ iftrues:
     block: !parsetree:Block
       lines:
         - !parsetree:Constant
+          context: CXT_VOID
           flags: CONST_NUMBER|NUM_INTEGER
           value: 1
     block_type: unless
@@ -57,6 +60,7 @@ iftrues:
         sigil: VALUE_SCALAR
       op: OP_NUM_GT
       right: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 2
 EOE
@@ -73,6 +77,7 @@ iffalse: !parsetree:ConditionalBlock
   block: !parsetree:Block
     lines:
       - !parsetree:Constant
+        context: CXT_VOID
         flags: CONST_NUMBER|NUM_INTEGER
         value: 3
   block_type: else
@@ -82,6 +87,7 @@ iftrues:
     block: !parsetree:Block
       lines:
         - !parsetree:Constant
+          context: CXT_VOID
           flags: CONST_NUMBER|NUM_INTEGER
           value: 1
     block_type: if
@@ -93,6 +99,7 @@ iftrues:
         sigil: VALUE_SCALAR
       op: OP_NUM_LT
       right: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 2
 EOE
@@ -111,6 +118,7 @@ iffalse: !parsetree:ConditionalBlock
   block: !parsetree:Block
     lines:
       - !parsetree:Constant
+        context: CXT_VOID
         flags: CONST_NUMBER|NUM_INTEGER
         value: 3
   block_type: else
@@ -120,6 +128,7 @@ iftrues:
     block: !parsetree:Block
       lines:
         - !parsetree:Constant
+          context: CXT_VOID
           flags: CONST_NUMBER|NUM_INTEGER
           value: 1
     block_type: if
@@ -131,12 +140,14 @@ iftrues:
         sigil: VALUE_SCALAR
       op: OP_NUM_LT
       right: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 2
   - !parsetree:ConditionalBlock
     block: !parsetree:Block
       lines:
         - !parsetree:Constant
+          context: CXT_VOID
           flags: CONST_NUMBER|NUM_INTEGER
           value: 2
     block_type: if
@@ -148,6 +159,7 @@ iftrues:
         sigil: VALUE_SCALAR
       op: OP_NUM_LT
       right: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 3
 EOE

@@ -20,6 +20,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:ReferenceConstructor
 expression: !parsetree:List
+  context: CXT_LIST
   expressions:
     - !parsetree:Symbol
       context: CXT_SCALAR
@@ -28,10 +29,12 @@ expression: !parsetree:List
     - !parsetree:BinOp
       context: CXT_LIST
       left: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
       op: OP_ADD
       right: !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 2
 type: VALUE_ARRAY
@@ -50,11 +53,14 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:ReferenceConstructor
 expression: !parsetree:List
+  context: CXT_LIST
   expressions:
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_STRING
       value: q
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 type: VALUE_HASH
@@ -67,6 +73,7 @@ EOP
 continue: ~
 lines:
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 EOE

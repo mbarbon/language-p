@@ -16,6 +16,7 @@ EOP
 block: !parsetree:Block
   lines:
     - !parsetree:Constant
+      context: CXT_VOID
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 block_type: while
@@ -27,6 +28,7 @@ condition: !parsetree:BinOp
     sigil: VALUE_SCALAR
   op: OP_NUM_GT
   right: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 continue: ~
@@ -41,6 +43,7 @@ EOP
 block: !parsetree:Block
   lines:
     - !parsetree:Constant
+      context: CXT_VOID
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 block_type: until
@@ -52,6 +55,7 @@ condition: !parsetree:BinOp
     sigil: VALUE_SCALAR
   op: OP_NUM_LT
   right: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 continue: ~
@@ -68,6 +72,7 @@ EOP
 block: !parsetree:Block
   lines:
     - !parsetree:Constant
+      context: CXT_VOID
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 block_type: while
@@ -79,11 +84,13 @@ condition: !parsetree:BinOp
     sigil: VALUE_SCALAR
   op: OP_NUM_GT
   right: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 continue: !parsetree:Block
   lines:
     - !parsetree:Constant
+      context: CXT_VOID
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
 EOE

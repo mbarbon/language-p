@@ -157,6 +157,7 @@ sub _generate_bytecode {
     foreach my $tree ( @$statements ) {
         $context->visit( $tree, CXT_VOID );
         $self->dispatch( $tree );
+        _discard_if_void( $self, $tree );
     }
 
     $self->pop_block;
@@ -654,6 +655,7 @@ sub _for {
     $self->push_block;
 
     $self->dispatch( $tree->initializer );
+    _discard_if_void( $self, $tree->initializer );
 
     _add_bytecode $self,
          opcode_nm( OP_JUMP, to => $start_cond );
@@ -666,6 +668,7 @@ sub _for {
 
     _add_blocks $self, $start_step;
     $self->dispatch( $tree->step );
+    _discard_if_void( $self, $tree->step );
     _add_bytecode $self, opcode_nm( OP_JUMP, to => $start_cond );
 
     _add_blocks $self, $end_loop;
@@ -736,6 +739,7 @@ sub _block {
 
     foreach my $line ( @{$tree->lines} ) {
         $self->dispatch( $line );
+        _discard_if_void( $self, $line );
     }
 
     _exit_scope( $self, $self->_current_block );
@@ -757,6 +761,7 @@ sub _bare_block {
 
     foreach my $line ( @{$tree->lines} ) {
         $self->dispatch( $line );
+        _discard_if_void( $self, $line );
     }
 
     _exit_scope( $self, $self->_current_block );
@@ -943,6 +948,14 @@ sub _emit_label {
 
     _add_bytecode $self, opcode_nm( OP_JUMP, to => $tree->get_attribute( 'lbl_label' ) );
     _add_blocks $self, $tree->get_attribute( 'lbl_label' );
+}
+
+sub _discard_if_void {
+    my( $self, $tree ) = @_;
+    my $context = ( $tree->get_attribute( 'context' ) || 0 ) & CXT_CALL_MASK;
+    return if $context != CXT_VOID;
+
+    _add_bytecode $self, opcode_n( OP_POP );
 }
 
 sub _pattern {

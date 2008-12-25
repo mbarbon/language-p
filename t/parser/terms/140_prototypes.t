@@ -15,11 +15,13 @@ arguments:
   - !parsetree:Builtin
     arguments:
       - !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
     context: CXT_LIST
     function: OP_DEFINED
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID
@@ -35,9 +37,11 @@ arguments:
   - !parsetree:Overridable
     arguments:
       - !parsetree:Constant
+        context: CXT_LIST
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
       - !parsetree:Constant
+        context: CXT_LIST
         flags: CONST_NUMBER|NUM_INTEGER
         value: 2
     context: CXT_LIST
@@ -59,6 +63,7 @@ left: !parsetree:Overridable
       name: FILE
       sigil: VALUE_GLOB
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_STRING
       value: '>foo'
   context: CXT_SCALAR
@@ -67,6 +72,7 @@ op: OP_LOG_OR
 right: !parsetree:Overridable
   arguments:
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_STRING
       value: error
   context: CXT_VOID
@@ -111,6 +117,7 @@ arguments:
   - !parsetree:UnOp
     context: CXT_LIST
     left: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_STRING|STRING_BARE
       value: FOO
     op: OP_PLUS
@@ -151,10 +158,12 @@ arguments:
   - !parsetree:BinOp
     context: CXT_LIST
     left: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_STRING|STRING_BARE
       value: FILE
     op: OP_CONCATENATE
     right: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_STRING|STRING_BARE
       value: FOO
 context: CXT_VOID
@@ -220,6 +229,7 @@ EOP
 --- !parsetree:BuiltinIndirect
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID

@@ -11,6 +11,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 foo(),boo();
 EOP
 --- !parsetree:List
+context: CXT_VOID
 expressions:
   - !parsetree:FunctionCall
     arguments: ~
@@ -35,6 +36,7 @@ EOP
 context: CXT_VOID
 reference: 1
 subscript: !parsetree:List
+  context: CXT_SCALAR
   expressions:
     - !parsetree:FunctionCall
       arguments: ~
