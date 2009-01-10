@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 4;
+use Test::More tests => 5;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -116,4 +116,35 @@ op: OP_ASSIGN
 right: !parsetree:Constant
   flags: CONST_NUMBER|NUM_INTEGER
   value: 2
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+$x ? $a :
+$y ? $b :
+     $c;
+EOP
+--- !parsetree:Ternary
+condition: !parsetree:Symbol
+  context: 4
+  name: x
+  sigil: 1
+context: 2
+iffalse: !parsetree:Ternary
+  condition: !parsetree:Symbol
+    context: 4
+    name: y
+    sigil: 1
+  context: 2
+  iffalse: !parsetree:Symbol
+    context: 2
+    name: c
+    sigil: 1
+  iftrue: !parsetree:Symbol
+    context: 2
+    name: b
+    sigil: 1
+iftrue: !parsetree:Symbol
+  context: 2
+  name: a
+  sigil: 1
 EOE
