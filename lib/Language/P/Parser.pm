@@ -1311,7 +1311,7 @@ sub _parse_ternary {
 
     my $iftrue = _parse_term_n( $self, PREC_TERNARY_COLON - 1 );
     _lex_token( $self, T_COLON );
-    my $iffalse = _parse_term_n( $self, $prec - 1 );
+    my $iffalse = _parse_term( $self, $prec );
 
     return Language::P::ParseTree::Ternary->new
                ( { condition => $terminal,
