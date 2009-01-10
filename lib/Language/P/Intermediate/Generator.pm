@@ -46,6 +46,12 @@ sub _add_bytecode {
     push @{$self->_current_basic_block->bytecode}, @bytecode;
 }
 
+sub _add_jump {
+    my( $self, $op, @to ) = @_;
+
+    $self->_current_basic_block->add_jump( $op, @to );
+}
+
 sub _add_blocks {
     my( $self, @blocks ) = @_;
 
@@ -161,6 +167,8 @@ sub _generate_bytecode {
     }
 
     $self->pop_block;
+
+    _add_bytecode $self, opcode_n( OP_END );
 
     if( $self->_options->{'dump-ir'} ) {
         ( my $outfile = $self->file_name ) =~ s/(\.\w+)?$/.ir/;
@@ -386,19 +394,28 @@ sub _binary_op {
 
         # jump to $end if evalutating right is not necessary
         _add_bytecode $self,
-             opcode_n( OP_DUP ),
+             opcode_n( OP_DUP );
+        _add_jump $self,
              opcode_nm( OP_JUMP_IF_TRUE,
                         $tree->op == OP_LOG_AND ?
                             ( true => $right, false => $end ) :
-                            ( true => $end,   false => $right ) );
+                            ( true => $end,   false => $right ) ),
+             $right, $end;
 
         _add_blocks $self, $right;
 
         # evalutates right only if this is the correct return value
         _add_bytecode $self, opcode_n( OP_POP );
         $self->dispatch( $tree->right );
-        _add_bytecode $self, opcode_nm( OP_JUMP, to => $end );
+        _add_jump $self, opcode_nm( OP_JUMP, to => $end ), $end;
         _add_blocks $self, $end;
+    } elsif( $tree->op == OP_ASSIGN ) {
+        $self->dispatch( $tree->right );
+        $self->dispatch( $tree->left );
+
+        _add_bytecode $self,
+                      opcode_n( OP_SWAP ),
+                      opcode_n( $tree->op );
     } else {
         $self->dispatch( $tree->left );
         $self->dispatch( $tree->right );
@@ -434,8 +451,8 @@ sub _binary_op_cond {
     $self->dispatch( $tree->left );
     $self->dispatch( $tree->right );
 
-    _add_bytecode $self, opcode_nm( $conditionals{$tree->op},
-                                    true => $true, false => $false );
+    _add_jump $self, opcode_nm( $conditionals{$tree->op},
+                                true => $true, false => $false ), $true, $false;
 }
 
 sub _anything_cond {
@@ -443,7 +460,7 @@ sub _anything_cond {
 
     $self->dispatch( $tree );
 
-    _add_bytecode $self, opcode_nm( OP_JUMP_IF_TRUE, true => $true, false => $false );
+    _add_jump $self, opcode_nm( OP_JUMP_IF_TRUE, true => $true, false => $false ), $true, $false;
 }
 
 sub _constant {
@@ -530,8 +547,8 @@ sub _cond_loop {
     $tree->set_attribute( 'lbl_last', $end_loop );
     $tree->set_attribute( 'lbl_redo', $start_loop );
 
-    _add_bytecode $self,
-         opcode_nm( OP_JUMP, to => $start_cond );
+    _add_jump $self,
+         opcode_nm( OP_JUMP, to => $start_cond ), $start_cond;
 
     $self->push_block;
 
@@ -544,13 +561,13 @@ sub _cond_loop {
     $self->dispatch( $tree->block );
 
     if( $tree->continue ) {
-        _add_bytecode $self, opcode_nm( OP_JUMP, to => $start_continue );
+        _add_jump $self, opcode_nm( OP_JUMP, to => $start_continue ), $start_continue;
 
         _add_blocks $self, $start_continue;
         $self->dispatch( $tree->continue );
     }
 
-    _add_bytecode $self, opcode_nm( OP_JUMP, to => $start_cond );
+    _add_jump $self, opcode_nm( OP_JUMP, to => $start_cond ), $start_cond;
 
     _add_blocks $self, $end_loop;
     _exit_scope( $self, $self->_current_block );
@@ -598,15 +615,16 @@ sub _foreach {
                ];
     }
 
-    _add_bytecode $self, opcode_nm( OP_JUMP, to => $start_step );
+    _add_jump $self, opcode_nm( OP_JUMP, to => $start_step ), $start_step;
     _add_blocks $self, $start_step;
 
     if( !$is_lexical ) {
         _add_bytecode $self,
             opcode_nm( OP_TEMPORARY,     index => $iterator ),
             opcode_nm( OP_ITERATOR_NEXT ),
-            opcode_n( OP_DUP ),
-            opcode_nm( OP_JUMP_IF_UNDEF, true => $end_loop, false => $start_loop );
+            opcode_n( OP_DUP );
+        _add_jump $self,
+            opcode_nm( OP_JUMP_IF_UNDEF, true => $end_loop, false => $start_loop ), $end_loop, $start_loop;
 
         _add_blocks $self, $start_loop;
         _add_bytecode $self,
@@ -617,8 +635,9 @@ sub _foreach {
         _add_bytecode $self,
             opcode_nm( OP_TEMPORARY,      index => $iterator ),
             opcode_n( OP_ITERATOR_NEXT ),
-            opcode_n( OP_DUP ),
-            opcode_nm( OP_JUMP_IF_UNDEF, true => $end_loop, false => $start_loop );
+            opcode_n( OP_DUP );
+        _add_jump $self,
+            opcode_nm( OP_JUMP_IF_UNDEF, true => $end_loop, false => $start_loop ), $end_loop, $start_loop;
 
         _add_blocks $self, $start_loop;
         _add_bytecode $self,
@@ -628,13 +647,13 @@ sub _foreach {
     $self->dispatch( $tree->block );
 
     if( $tree->continue ) {
-        _add_bytecode $self, opcode_nm( OP_JUMP, to => $start_continue );
+        _add_jump $self, opcode_nm( OP_JUMP, to => $start_continue ), $start_continue;
 
         _add_blocks $self, $start_continue;
         $self->dispatch( $tree->continue );
     }
 
-    _add_bytecode $self, opcode_nm( OP_JUMP, to => $start_step );
+    _add_jump $self, opcode_nm( OP_JUMP, to => $start_step ), $start_step;
 
     _add_blocks $self, $end_loop;
     _add_bytecode $self, opcode_n( OP_POP );
@@ -657,8 +676,8 @@ sub _for {
     $self->dispatch( $tree->initializer );
     _discard_if_void( $self, $tree->initializer );
 
-    _add_bytecode $self,
-         opcode_nm( OP_JUMP, to => $start_cond );
+    _add_jump $self,
+         opcode_nm( OP_JUMP, to => $start_cond ), $start_cond;
     _add_blocks $self, $start_cond;
 
     $self->dispatch_cond( $tree->condition, $start_loop, $end_loop );
@@ -669,7 +688,7 @@ sub _for {
     _add_blocks $self, $start_step;
     $self->dispatch( $tree->step );
     _discard_if_void( $self, $tree->step );
-    _add_bytecode $self, opcode_nm( OP_JUMP, to => $start_cond );
+    _add_jump $self, opcode_nm( OP_JUMP, to => $start_cond ), $start_cond;
 
     _add_blocks $self, $end_loop;
     _exit_scope( $self, $self->_current_block );
@@ -689,7 +708,7 @@ sub _cond {
         push @blocks, _new_block( $self );
         _current_basic_block( $self, $blocks[-1] );
         $self->dispatch( $tree->iffalse->block );
-        _add_bytecode $self, opcode_nm( OP_JUMP, to => $blocks[0] );
+        _add_jump $self, opcode_nm( OP_JUMP, to => $blocks[0] ), $blocks[0];
     }
     foreach my $elsif ( reverse @{$tree->iftrues} ) {
         my $next = $blocks[-1];
@@ -702,11 +721,10 @@ sub _cond {
         push @blocks, $then_block, $cond_block;
         _current_basic_block( $self, $then_block );
         $self->dispatch( $elsif->block );
-        _add_bytecode $self, opcode_nm( OP_JUMP, to => $blocks[0] );
+        _add_jump $self, opcode_nm( OP_JUMP, to => $blocks[0] ), $blocks[0];
     }
 
-    push @{$current->bytecode},
-         opcode_nm( OP_JUMP, to => $blocks[-1] );
+    $current->add_jump( opcode_nm( OP_JUMP, to => $blocks[-1] ), $blocks[-1] );
     _add_blocks $self, reverse @blocks;
 
     _exit_scope( $self, $self->_current_block );
@@ -722,11 +740,11 @@ sub _ternary {
 
     _add_blocks $self, $true;
     $self->dispatch( $tree->iftrue );
-    _add_bytecode $self, opcode_nm( OP_JUMP, to => $end );
+    _add_jump $self, opcode_nm( OP_JUMP, to => $end ), $end;
 
     _add_blocks $self, $false;
     $self->dispatch( $tree->iffalse );
-    _add_bytecode $self, opcode_nm( OP_JUMP, to => $end );
+    _add_jump $self, opcode_nm( OP_JUMP, to => $end ), $end;
 
     _add_blocks $self, $end;
 }
@@ -768,7 +786,7 @@ sub _bare_block {
     $self->pop_block;
 
     if( $tree->continue ) {
-        _add_bytecode $self, opcode_nm( OP_JUMP, to => $start_continue );
+        _add_jump $self, opcode_nm( OP_JUMP, to => $start_continue ), $start_continue;
 
         _add_blocks $self, $start_continue;
         $self->dispatch( $tree->continue );
@@ -934,7 +952,7 @@ sub _jump {
             or die "Missing loop control label";
     }
 
-    _add_bytecode $self, opcode_nm( OP_JUMP, to => $label_to );
+    _add_jump $self, opcode_nm( OP_JUMP, to => $label_to ), $label_to;
     _add_blocks( $self, _new_block( $self ) );
 }
 
@@ -946,7 +964,8 @@ sub _emit_label {
         $tree->set_attribute( 'lbl_label', _new_block( $self ) );
     }
 
-    _add_bytecode $self, opcode_nm( OP_JUMP, to => $tree->get_attribute( 'lbl_label' ) );
+    my $to = $tree->get_attribute( 'lbl_label' );
+    _add_jump $self, opcode_nm( OP_JUMP, to => $to ), $to;
     _add_blocks $self, $tree->get_attribute( 'lbl_label' );
 }
 

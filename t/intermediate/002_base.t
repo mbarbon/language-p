@@ -11,12 +11,14 @@ generate_and_diff( <<'EOP', <<'EOI' );
 $x = $a + 2
 EOP
 L1:
-  global name=x, slot=1
   global name=a, slot=1
   constant_integer 2
   add
+  global name=x, slot=1
+  swap
   assign
   pop
+  end
 EOI
 
 generate_and_diff( <<'EOP', <<'EOI' );
@@ -29,4 +31,5 @@ L1:
   make_list count=2
   print
   pop
+  end
 EOI

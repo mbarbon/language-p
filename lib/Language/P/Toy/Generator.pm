@@ -103,6 +103,7 @@ my %opcode_map =
     OP_TEMPORARY_SET()               => \&_temporary_set,
     OP_LOCALIZE_GLOB_SLOT()          => \&_map_slot_index,
     OP_RESTORE_GLOB_SLOT()           => \&_map_slot_index,
+    OP_END()                         => \&_end,
 
     OP_RX_QUANTIFIER()               => \&_rx_quantifier,
     OP_RX_START_GROUP()              => \&_direct_jump,
@@ -160,7 +161,7 @@ sub _generate_segment {
             if( my $sub = $opcode_map{$ins->{opcode_n}} ) {
                 $sub->( $self, \@bytecode, $ins );
             } else {
-                my %p = $ins->{parameters} ? %{$ins->{parameters}} : ();
+                my %p = $ins->{attributes} ? %{$ins->{attributes}} : ();
                 $p{slot} = $sigil_to_slot{$p{slot}} if $p{slot};
                 push @bytecode, o( $name, %p );
             }
@@ -177,16 +178,6 @@ sub _generate_segment {
     }
 
     $self->_allocate_lexicals( $is_sub );
-
-    if( $is_sub ) {
-        # could be avoided in most cases, but simplifies code generation
-        _add $self,
-            o( 'make_list', count => 0 ),
-            o( 'return' );
-    } else {
-        _add $self, o( 'end' );
-    }
-
     $self->runtime->symbol_table->set_symbol( $segment->name, '&', $code )
       if defined $segment->name;
 
@@ -251,20 +242,33 @@ sub end_code_generation {
     return $res;
 }
 
+sub _end {
+    my( $self, $bytecode, $op ) = @_;
+
+    if( $self->_code->isa( 'Language::P::Toy::Value::Subroutine' ) ) {
+        # could be avoided in most cases, but simplifies code generation
+        push @$bytecode,
+            o( 'make_list', count => 0 ),
+            o( 'return' );
+    } else {
+        push @$bytecode, o( 'end' );
+    }
+}
+
 sub _global {
     my( $self, $bytecode, $op ) = @_;
 
-    if( $op->{parameters}{slot} == VALUE_GLOB ) {
+    if( $op->{attributes}{slot} == VALUE_GLOB ) {
         push @$bytecode,
-             o( 'glob', name => $op->{parameters}{name}, create => 1 );
+             o( 'glob', name => $op->{attributes}{name}, create => 1 );
         return;
     }
 
-    my $slot = $sigil_to_slot{$op->{parameters}{slot}};
-    die $op->{parameters}{slot} unless $slot;
+    my $slot = $sigil_to_slot{$op->{attributes}{slot}};
+    die $op->{attributes}{slot} unless $slot;
 
     push @$bytecode,
-         o( 'glob',             name => $op->{parameters}{name}, create => 1 ),
+         o( 'glob',             name => $op->{attributes}{name}, create => 1 ),
          o( 'glob_slot_create', slot => $slot );
 }
 
@@ -272,9 +276,9 @@ sub _lexical {
     my( $self, $bytecode, $op ) = @_;
 
     push @$bytecode,
-         o( $op->{parameters}{lexical}->closed_over ? 'lexical_pad' : 'lexical',
-            lexical => $op->{parameters}{lexical},
-            level   => $op->{parameters}{level},
+         o( $op->{attributes}{lexical}->closed_over ? 'lexical_pad' : 'lexical',
+            lexical => $op->{attributes}{lexical},
+            level   => $op->{attributes}{level},
             );
 }
 
@@ -282,9 +286,9 @@ sub _lexical_clear {
     my( $self, $bytecode, $op ) = @_;
 
     push @$bytecode,
-         o( $op->{parameters}{lexical}->closed_over ? 'lexical_pad_clear' : 'lexical_clear',
-            lexical => $op->{parameters}{lexical},
-            level   => $op->{parameters}{level},
+         o( $op->{attributes}{lexical}->closed_over ? 'lexical_pad_clear' : 'lexical_clear',
+            lexical => $op->{attributes}{lexical},
+            level   => $op->{attributes}{level},
             );
 }
 
@@ -351,14 +355,14 @@ sub _temporary {
     my( $self, $bytecode, $op ) = @_;
 
     push @$bytecode,
-         o( 'lexical', index => _temporary_index( $self, $op->{parameters}{index} ) );
+         o( 'lexical', index => _temporary_index( $self, $op->{attributes}{index} ) );
 }
 
 sub _temporary_set {
     my( $self, $bytecode, $op ) = @_;
 
     push @$bytecode,
-         o( 'lexical_set', index => _temporary_index( $self, $op->{parameters}{index} ) );
+         o( 'lexical_set', index => _temporary_index( $self, $op->{attributes}{index} ) );
 }
 
 sub _map_slot_index {
@@ -366,9 +370,9 @@ sub _map_slot_index {
 
     push @$bytecode,
          o( $NUMBER_TO_NAME{$op->{opcode_n}},
-            name  => $op->{parameters}{name},
-            slot  => $sigil_to_slot{$op->{parameters}{slot}},
-            index => _temporary_index( $self, $op->{parameters}{index} ),
+            name  => $op->{attributes}{name},
+            slot  => $sigil_to_slot{$op->{attributes}{slot}},
+            index => _temporary_index( $self, $op->{attributes}{index} ),
             );
 }
 
@@ -377,7 +381,7 @@ sub _direct_jump {
 
     push @$bytecode,
          o( $NUMBER_TO_NAME{$op->{opcode_n}} );
-    push @{$self->_block_map->{$op->{parameters}{to}}}, $bytecode->[-1];
+    push @{$self->_block_map->{$op->{attributes}{to}}}, $bytecode->[-1];
 }
 
 sub _cond_jump_simple {
@@ -386,20 +390,20 @@ sub _cond_jump_simple {
     push @$bytecode,
          o( $NUMBER_TO_NAME{$op->{opcode_n}} ),
          o( 'jump' );
-    push @{$self->_block_map->{$op->{parameters}{true}}}, $bytecode->[-2];
-    push @{$self->_block_map->{$op->{parameters}{false}}}, $bytecode->[-1];
+    push @{$self->_block_map->{$op->{attributes}{true}}}, $bytecode->[-2];
+    push @{$self->_block_map->{$op->{attributes}{false}}}, $bytecode->[-1];
 }
 
 sub _rx_quantifier {
     my( $self, $bytecode, $op ) = @_;
-    my %params = %{$op->{parameters}};
+    my %params = %{$op->{attributes}};
     delete $params{true}; delete $params{false};
 
     push @$bytecode,
          o( 'rx_quantifier', %params ),
          o( 'jump' );
-    push @{$self->_block_map->{$op->{parameters}{true}}}, $bytecode->[-2];
-    push @{$self->_block_map->{$op->{parameters}{false}}}, $bytecode->[-1];
+    push @{$self->_block_map->{$op->{attributes}{true}}}, $bytecode->[-2];
+    push @{$self->_block_map->{$op->{attributes}{false}}}, $bytecode->[-1];
 }
 
 my %lex_map;

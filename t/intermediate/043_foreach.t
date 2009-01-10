@@ -42,5 +42,6 @@ L5:
   temporary index=1
   temporary index=2
   glob_slot_set slot=1
+  end
 EOI
 

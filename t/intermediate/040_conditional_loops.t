@@ -12,8 +12,6 @@ while( $a ) {
     1;
 }
 EOP
-L1:
-  jump to=L2
 L2:
   global name=a, slot=1
   jump_if_true false=L5, true=L3
@@ -22,6 +20,7 @@ L3:
   pop
   jump to=L2
 L5:
+  end
 EOI
 
 generate_and_diff( <<'EOP', <<'EOI' );
@@ -29,8 +28,6 @@ until( $a ) {
     1;
 }
 EOP
-L1:
-  jump to=L2
 L2:
   global name=a, slot=1
   jump_if_true false=L3, true=L5
@@ -39,4 +36,5 @@ L3:
   pop
   jump to=L2
 L5:
+  end
 EOI

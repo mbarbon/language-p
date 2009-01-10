@@ -8,11 +8,14 @@ use lib qw(t/lib);
 use TestIntermediate qw(:all);
 
 generate_and_diff( <<'EOP', <<'EOI' );
+0;
 unless( $a < 2 ) {
     1;
 }
 EOP
 L1:
+  constant_integer 0
+  pop
   jump to=L3
 L3:
   global name=a, slot=1
@@ -23,6 +26,7 @@ L4:
   pop
   jump to=L2
 L2:
+  end
 EOI
 
 generate_and_diff( <<'EOP', <<'EOI' );
@@ -63,6 +67,7 @@ L3:
 L2:
   constant_integer 4
   pop
+  end
 EOI
 
 generate_and_diff( <<'EOP', <<'EOI' );
@@ -88,6 +93,7 @@ L4:
 L2:
   constant_integer 2
   pop
+  end
 EOI
 
 generate_and_diff( <<'EOP', <<'EOI' );
@@ -114,4 +120,5 @@ L4:
 L2:
   constant_integer 2
   pop
+  end
 EOI

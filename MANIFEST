@@ -14,6 +14,7 @@ lib/Language/P/Assembly.pm
 lib/Language/P/Intermediate/BasicBlock.pm
 lib/Language/P/Intermediate/Code.pm
 lib/Language/P/Intermediate/Generator.pm
+lib/Language/P/Intermediate/Transform.pm
 lib/Language/P/Lexer.pm
 lib/Language/P/Parrot/BootstrapRuntime.pm
 lib/Language/P/Parrot/Generator.pm
@@ -55,9 +56,17 @@ support/parrot/runtime/p5scalar.pir
 support/parrot/runtime/p5string.pir
 support/parrot/runtime/p5undef.pir
 t/intermediate/002_base.t
+t/intermediate/002_base_tree.t
 t/intermediate/030_if.t
 t/intermediate/040_conditional_loops.t
+t/intermediate/040_conditional_loops_tree.t
 t/intermediate/043_foreach.t
+t/intermediate/050_ternary.t
+t/intermediate/050_ternary_ssa.t
+t/intermediate/050_ternary_tree.t
+t/intermediate/055_and_or.t
+t/intermediate/055_and_or_ssa.t
+t/intermediate/055_and_or_tree.t
 t/lib/TestIntermediate.pm
 t/lib/TestParser.pm
 t/lib/TestRegex.pm

@@ -79,18 +79,18 @@ sub opcode_n {
 }
 
 sub opcode_m {
-    my( $name, %parameters ) = @_;
+    my( $name, %attributes ) = @_;
 
     return i { opcode     => $name,
-               parameters => %parameters ? \%parameters : undef,
+               attributes => %attributes ? \%attributes : undef,
                };
 }
 
 sub opcode_nm {
-    my( $number, %parameters ) = @_;
+    my( $number, %attributes ) = @_;
 
     return i { opcode_n   => $number,
-               parameters => %parameters ? \%parameters : undef,
+               attributes => %attributes ? \%attributes : undef,
                };
 }
 
@@ -100,14 +100,20 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
-__PACKAGE__->mk_ro_accessors( qw(label literal opcode parameters) );
+__PACKAGE__->mk_ro_accessors( qw(label literal opcode opcode_n
+                                 parameters attributes) );
 
 use Scalar::Util qw(blessed);
 
 sub _p {
-    return    blessed( $_[0] )
-           && $_[0]->isa( 'Language::P::Intermediate::BasicBlock' ) ?
-             $_[0]->start_label : $_[0];
+    if( blessed( $_[0] ) ) {
+        return $_[0]->start_label
+            if $_[0]->isa( 'Language::P::Intermediate::BasicBlock' );
+        return '(' . substr( $_[0]->as_string( $_[1] ), 2, -1 ) . ')'
+            if $_[0]->isa( 'Language::P::Assembly::Instruction' );
+    }
+
+    return $_[0];
 }
 
 sub as_string {
@@ -127,14 +133,17 @@ sub as_string {
         $str .= $number_to_name->{$self->{opcode_n}};
     }
 
-    if(    $self->{parameters}
-        && ref( $self->{parameters} ) eq 'ARRAY' ) {
-        $str .= ' ' . join ', ', @{$self->{parameters}};
-    } elsif(    $self->{parameters}
-             && ref( $self->{parameters} ) eq 'HASH' ) {
+    if( $self->{attributes} ) {
+        die "Can't happen" unless %{$self->{attributes}};
         $str .= ' ' . join ', ',
-                      map  { "$_=" . _p( $self->{parameters}{$_} ) }
-                           keys %{$self->{parameters}};
+                      map  { "$_=" . _p( $self->{attributes}{$_}, $number_to_name ) }
+                           keys %{$self->{attributes}};
+    }
+
+    if( $self->{parameters} ) {
+        die "Can't happen" unless @{$self->{parameters}};
+        $str .= ' ' . join ', ', map _p( $_, $number_to_name ),
+                                     @{$self->{parameters}};
     }
 
     return $str . "\n";
