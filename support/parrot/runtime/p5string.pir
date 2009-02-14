@@ -16,3 +16,9 @@
 
   .return ($P1)
 .end
+
+.sub localize :method
+  .make_undef($P0)
+
+  .return ($P0)
+.end

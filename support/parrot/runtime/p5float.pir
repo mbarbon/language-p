@@ -17,6 +17,12 @@
   .return ($P1)
 .end
 
+.sub localize :method
+  .make_undef($P0)
+
+  .return ($P0)
+.end
+
 .sub add :multi(P5Float, P5Float)
   .param pmc v1
   .param pmc v2

@@ -29,3 +29,12 @@
   new .res, 'Ref'
   assign .res, t4
 .endm
+
+.macro make_bool(res, value)
+  eq .value, 0, .$make_false
+  .make_integer(.res, 1)
+  goto .$bool_end
+.label $make_false:
+  .make_undef(.res)
+.label $bool_end:
+.endm

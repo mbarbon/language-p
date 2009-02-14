@@ -12,9 +12,10 @@ my $parrot_path = '%PARROT%';
 my $runtime = Language::P::Parrot::BootstrapRuntime->new
                   ( { parrot => $parrot_path,
                       } );
-my $generator = Language::P::Parrot::Generator->new( { runtime => $runtime,
-                                                       parrot  => $parrot_path,
-                                                       } );
+my $generator = Language::P::Parrot::Generator->new
+                    ( { runtime => $runtime,
+                        parrot  => $parrot_path,
+                        } );
 my $p = Language::P->new_from_argv( \@ARGV,
                                     { runtime   => $runtime,
                                       generator => $generator,

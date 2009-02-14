@@ -8,3 +8,18 @@
 .end
 
 .namespace ['P5Undef']
+
+.sub defined :vtable
+  .return (0)
+.end
+
+.sub get_bool :vtable
+  .return (0)
+.end
+
+.sub logical_not :vtable
+  .param pmc dest
+
+  .make_integer(dest, 1)
+  .return (dest)
+.end

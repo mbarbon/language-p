@@ -8,5 +8,6 @@
 .include 'support/parrot/runtime/p5string.pir'
 .include 'support/parrot/runtime/p5array.pir'
 .include 'support/parrot/runtime/p5list.pir'
+.include 'support/parrot/runtime/p5hash.pir'
 .include 'support/parrot/runtime/p5glob.pir'
 .include 'support/parrot/runtime/p5print.pir'
