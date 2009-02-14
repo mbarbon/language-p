@@ -209,7 +209,7 @@ sub _jump_to {
     }
 
     if( $converted->{$to}{converted} ) {
-        $op->{parameters} = [ $converted->{$to}->{block} ];
+        push @{$op->{parameters}}, $converted->{$to}->{block};
     } else {
         push @{$converted->{$to}{patch}}, $op;
     }
