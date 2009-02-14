@@ -23,36 +23,45 @@ sub new {
     return $self;
 }
 
+sub _change_successor {
+    my( $self, $from, $to ) = @_;
+
+    # remove $from from successors and insert $to
+    foreach my $succ ( @{$self->successors} ) {
+        if( $succ == $from ) {
+            $succ = $to;
+            Scalar::Util::weaken( $succ );
+            last;
+        }
+    }
+
+    # patch jump target to $to
+    my $jump = $self->bytecode->[-1];
+    if( $jump->{opcode_n} == OP_JUMP ) {
+        $jump->{attributes}->{to} = $to;
+    } elsif( $jump->{attributes}->{true} == $from ) {
+        $jump->{attributes}->{true} = $to;
+    } elsif( $jump->{attributes}->{false} == $from ) {
+        $jump->{attributes}->{false} = $to;
+    } else {
+        die "Could not backpatch jump target";
+    }
+
+    # fix up predecessors
+    $to->add_predecessor( $self );
+}
+
 sub add_jump {
     my( $self, $op, @to ) = @_;
 
     if( $op->{opcode_n} == OP_JUMP && @{$self->bytecode} == 1 ) {
+        $to[0] = $to[0]->successors->[0] until @{$to[0]->bytecode};
         foreach my $pred ( @{$self->predecessors} ) {
-            # remove $self from successors and insert $to[0]
-            foreach my $succ ( @{$pred->successors} ) {
-                if( $succ == $self ) {
-                    $succ = $to[0];
-                    Scalar::Util::weaken( $succ );
-                    last;
-                }
-            }
-
-            # patch jump target to $to[0]
-            my $jump = $pred->bytecode->[-1];
-            if( $jump->{opcode_n} == OP_JUMP ) {
-                $jump->{attributes}->{to} = $to[0];
-            } elsif( $jump->{attributes}->{true} == $self ) {
-                $jump->{attributes}->{true} = $to[0];
-            } elsif( $jump->{attributes}->{false} == $self ) {
-                $jump->{attributes}->{false} = $to[0];
-            } else {
-                die "Could not backpatch jump target";
-            }
-
-            # fix up predecessors
-            $to[0]->add_predecessor( $pred );
+            _change_successor( $pred, $self, $to[0] );
         }
 
+        # keep track where this block goes
+        $self->add_successor( $to[0] );
         undef @{$self->bytecode};
 
         return;
@@ -62,6 +71,10 @@ sub add_jump {
     foreach my $to ( @to ) {
         $self->add_successor( $to );
         $to->add_predecessor( $self );
+        # FIXME either move empty-block optimization later
+        #       or backpatch goto/redo/last/... labels in parse tree!
+        _change_successor( $self, $to, $to->successors->[0] )
+            unless @{$to->bytecode};
     }
 }
 
