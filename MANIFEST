@@ -47,6 +47,7 @@ lib/Language/P/Toy/Value/Typeglob.pm
 support/parrot/runtime/p5array.pir
 support/parrot/runtime/p5float.pir
 support/parrot/runtime/p5glob.pir
+support/parrot/runtime/p5hash.pir
 support/parrot/runtime/p5integer.pir
 support/parrot/runtime/p5list.pir
 support/parrot/runtime/p5macros.pir
@@ -57,9 +58,13 @@ support/parrot/runtime/p5string.pir
 support/parrot/runtime/p5undef.pir
 t/intermediate/002_base.t
 t/intermediate/002_base_tree.t
+t/intermediate/011_call.t
+t/intermediate/011_call_tree.t
 t/intermediate/030_if.t
 t/intermediate/040_conditional_loops.t
 t/intermediate/040_conditional_loops_tree.t
+t/intermediate/041_loops.t
+t/intermediate/041_loops_tree.t
 t/intermediate/043_foreach.t
 t/intermediate/050_ternary.t
 t/intermediate/050_ternary_ssa.t
@@ -127,6 +132,7 @@ t/run/006_brackets.t
 t/run/007_if.t
 t/run/008_loops.t
 t/run/010_arithmetic.t
+t/run/011_call.t
 t/run/015_defined.t
 t/run/020_lexicals.t
 t/run/035_local.t

@@ -19,5 +19,7 @@ cover_db
 # Generated parrot files, parrot symlink
 bin/p_parrot
 t/*/*.pbc
+t/*/*.pir
+t/*/*.ir
 support/parrot/runtime/*.pbc
 parrot
