@@ -179,8 +179,9 @@ sub _jump_to {
     my $stack = $self->_stack;
     my $converted = $self->_converted;
     if( defined $converted->{$to}->{depth} ) {
-        die sprintf "Inconsistent depth %d != %d",
-            $converted->{$to}->{depth}, scalar @$stack
+        die sprintf "Inconsistent depth %d != %d in %s => %s",
+            $converted->{$to}->{depth}, scalar @$stack,
+            $self->_current_basic_block->start_label, $to->start_label
             if $converted->{$to}->{depth} != scalar @$stack;
     }
 
