@@ -362,7 +362,7 @@ sub o_jump_if_true {
     return $v1->as_boolean_int ? $op->{to} : $pc + 1;
 }
 
-sub o_jump_if_undef {
+sub o_jump_if_null {
     my( $op, $runtime, $pc ) = @_;
     my $v1 = pop @{$runtime->{_stack}};
 

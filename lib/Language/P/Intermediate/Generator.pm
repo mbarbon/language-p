@@ -632,7 +632,7 @@ sub _foreach {
             opcode_nm( OP_ITERATOR_NEXT ),
             opcode_n( OP_DUP );
         _add_jump $self,
-            opcode_nm( OP_JUMP_IF_UNDEF, true => $end_loop, false => $start_loop ), $end_loop, $start_loop;
+            opcode_nm( OP_JUMP_IF_NULL, true => $exit_loop, false => $start_loop ), $exit_loop, $start_loop;
 
         _add_blocks $self, $start_loop;
         _add_bytecode $self,
@@ -645,7 +645,7 @@ sub _foreach {
             opcode_n( OP_ITERATOR_NEXT ),
             opcode_n( OP_DUP );
         _add_jump $self,
-            opcode_nm( OP_JUMP_IF_UNDEF, true => $end_loop, false => $start_loop ), $end_loop, $start_loop;
+            opcode_nm( OP_JUMP_IF_NULL, true => $exit_loop, false => $start_loop ), $exit_loop, $start_loop;
 
         _add_blocks $self, $start_loop;
         _add_bytecode $self,

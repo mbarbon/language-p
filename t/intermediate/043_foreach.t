@@ -29,7 +29,7 @@ L2:
   temporary index=0
   iterator_next
   dup
-  jump_if_undef false=L3, true=L5
+  jump_if_null false=L3, true=L5
 L3:
   temporary index=1
   swap
