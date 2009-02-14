@@ -129,13 +129,21 @@ sub _generate_regex {
 }
 
 sub generate_subroutine {
-    my( $self, $name, $outer, $statements ) = @_;
+    my( $self, $tree, $outer ) = @_;
 
-    _generate_bytecode( $self, 1, $name, $outer, $statements );
+    my $context = Language::P::ParseTree::PropagateContext->new;
+    $context->visit( $tree, CXT_VOID );
+
+    _generate_bytecode( $self, 1, $tree->name, $outer, $tree->lines );
 }
 
 sub generate_bytecode {
     my( $self, $statements ) = @_;
+
+    my $context = Language::P::ParseTree::PropagateContext->new;
+    foreach my $tree ( @$statements ) {
+        $context->visit( $tree, CXT_VOID );
+    }
 
     _generate_bytecode( $self, 0, undef, undef, $statements );
 }
@@ -160,10 +168,8 @@ sub _generate_bytecode {
 
     _add_blocks $self, _new_block( $self );
     $self->push_block( $is_sub );
-    my $context = Language::P::ParseTree::PropagateContext->new;
 
     foreach my $tree ( @$statements ) {
-        $context->visit( $tree, CXT_VOID );
         $self->dispatch( $tree );
         _discard_if_void( $self, $tree );
     }
@@ -828,11 +834,14 @@ sub _subroutine {
     _emit_label( $self, $tree );
 
     my $generator = Language::P::Intermediate::Generator->new
-                        ( { _options => $self->{_options},
+                        ( { _options => { %{$self->{_options}},
+                                          # performed by caller
+                                          'dump-ir' => 0,
+                                          },
                             } );
-    my $code_segments = $generator->generate_subroutine
-                            ( $tree->name, $self->_code_segments->[0],
-                              $tree->lines );
+    my $code_segments =
+      _generate_bytecode( $generator, 1, $tree->name,
+                          $self->_code_segments->[0], $tree->lines );
     push @{$self->_code_segments}, @$code_segments;
 
     return $code_segments->[0];
