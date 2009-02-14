@@ -54,7 +54,8 @@ sub _change_successor {
 sub add_jump {
     my( $self, $op, @to ) = @_;
 
-    if( $op->{opcode_n} == OP_JUMP && @{$self->bytecode} == 1 ) {
+    if(    $op->{opcode_n} == OP_JUMP && @{$self->bytecode} == 1
+        && @{$self->predecessors} ) {
         $to[0] = $to[0]->successors->[0] until @{$to[0]->bytecode};
         foreach my $pred ( @{$self->predecessors} ) {
             _change_successor( $pred, $self, $to[0] );

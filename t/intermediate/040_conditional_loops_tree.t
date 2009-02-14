@@ -12,6 +12,8 @@ while( $a ) {
   $x = 1 + 1;
 }
 EOP
+L1:
+  jump L2
 L2:
   jump_if_true (global name=a, slot=1), L3
   jump L5
@@ -29,6 +31,8 @@ while( $a ) {
   $y = 2;
 }
 EOP
+L1:
+  jump L2
 L2:
   jump_if_true (global name=a, slot=1), L3
   jump L5
