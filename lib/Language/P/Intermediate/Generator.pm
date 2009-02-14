@@ -594,7 +594,8 @@ sub _foreach {
 
     my $is_lexical = $tree->variable->isa( 'Language::P::ParseTree::LexicalDeclaration' );
 
-    my( $start_step, $start_loop, $start_continue, $end_loop ) = _new_blocks( $self, 4 );
+    my( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop ) =
+        _new_blocks( $self, 5 );
     $tree->set_attribute( 'lbl_next', $tree->continue ? $start_continue :
                                                         $start_step );
     $tree->set_attribute( 'lbl_last', $end_loop );
@@ -674,8 +675,10 @@ sub _foreach {
 
     _add_jump $self, opcode_nm( OP_JUMP, to => $start_step ), $start_step;
 
-    _add_blocks $self, $end_loop;
+    _add_blocks $self, $exit_loop;
     _add_bytecode $self, opcode_n( OP_POP );
+    _add_jump $self, opcode_nm( OP_JUMP, to => $end_loop ), $end_loop;
+    _add_blocks $self, $end_loop;
 
     _exit_scope( $self, $self->_current_block );
     $self->pop_block;
@@ -703,6 +706,8 @@ sub _for {
 
     _add_blocks $self, $start_loop;
     $self->dispatch( $tree->block );
+    _add_jump $self,
+         opcode_nm( OP_JUMP, to => $start_step ), $start_step;
 
     _add_blocks $self, $start_step;
     $self->dispatch( $tree->step );
@@ -792,6 +797,8 @@ sub _bare_block {
     $tree->set_attribute( 'lbl_last', $end_loop );
     $tree->set_attribute( 'lbl_redo', $start_loop );
 
+    _add_jump $self,
+         opcode_nm( OP_JUMP, to => $start_loop ), $start_loop;
     _add_blocks $self, $start_loop;
 
     $self->push_block;
@@ -811,6 +818,8 @@ sub _bare_block {
         $self->dispatch( $tree->continue );
     }
 
+    _add_jump $self,
+         opcode_nm( OP_JUMP, to => $end_loop ), $end_loop;
     _add_blocks $self, $end_loop;
 }
 
