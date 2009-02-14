@@ -610,7 +610,7 @@ sub o_glob_slot_create {
     my $glob = pop @{$runtime->{_stack}};
     my $slot = $op->{slot};
 
-    push @{$runtime->{_stack}}, $glob->get_or_create_slot( $slot, $op->{create} );
+    push @{$runtime->{_stack}}, $glob->get_or_create_slot( $slot );
 
     return $pc + 1;
 }
@@ -620,7 +620,7 @@ sub o_glob_slot {
     my $glob = pop @{$runtime->{_stack}};
     my $slot = $op->{slot};
 
-    push @{$runtime->{_stack}}, $glob->get_slot( $slot, $op->{create} );
+    push @{$runtime->{_stack}}, $glob->get_slot( $slot );
 
     return $pc + 1;
 }
