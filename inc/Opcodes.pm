@@ -7,6 +7,7 @@ use Exporter 'import';
 our @EXPORT = qw(write_opcodes);
 
 use Language::P::Keywords qw(:all);
+use Data::Dumper;
 
 sub write_opcodes {
     my( $file ) = @ARGV;
@@ -23,12 +24,28 @@ sub write_opcodes {
         undef $attrs if $attrs && $attrs eq 'noattr';
         undef $name  if $name && $name eq 'same';
 
+        if( $attrs ) {
+            my( @positional, %named );
+
+            foreach ( split /,/, $attrs ) {
+                if( /(\w+)=(\w+)/ ) {
+                    $named{$1} = $2;
+                } else {
+                    push @positional, $_;
+                }
+            }
+
+            $attrs = [ \@positional, \%named ];
+        } else {
+            $attrs = [ [], {} ];
+        }
+
         $name ||= $opcode;
         $in ||= 0;
         $out ||= 0;
         $opcode = 'OP_' . uc $opcode;
 
-        $op{$opcode} = [ $name, $in, $out ];
+        $op{$opcode} = [ $name, $in, $out, $attrs ];
 
         ++$num;
     }
@@ -93,11 +110,17 @@ our %%OP_ATTRIBUTES =
   (
 EOT
 
+    local $Data::Dumper::Terse = 1;
+    local $Data::Dumper::Indent = 0;
     while( my( $k, $v ) = each %op ) {
-        printf $out <<'EOT', $k, $v->[1], $v->[2];
+        my $named = Dumper( $v->[3][1] );
+        my $positional = Dumper( $v->[3][0] );
+        printf $out <<'EOT', $k, $v->[1], $v->[2], $named, $positional;
     %s() =>
-      { in_args   => %d,
-        out_args  => %d,
+      { in_args    => %d,
+        out_args   => %d,
+        named      => %s,
+        positional => %s,
         },
 EOT
     }
