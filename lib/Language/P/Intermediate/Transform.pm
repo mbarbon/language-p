@@ -163,6 +163,7 @@ sub to_tree {
 
 sub _get_stack {
     my( $self, $count ) = @_;
+    return unless $count;
     my @values = splice @{$self->_stack}, -$count;
 
     foreach my $value ( @values ) {
