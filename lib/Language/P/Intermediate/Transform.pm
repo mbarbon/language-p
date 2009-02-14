@@ -64,7 +64,7 @@ sub to_ssa {
                            lexicals     => $code_segment->lexicals,
                            } );
 
-    # find all non-empty block without predecessors and enqueue them
+    # find all non-empty blocks without predecessors and enqueue them
     # (there can be more than one only if there is dead code)
     $self->_queue( [] );
     foreach my $block ( @{$code_segment->basic_blocks} ) {
