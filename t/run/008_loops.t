@@ -33,4 +33,4 @@ for $k ( 11, 12 ) {
     print "ok $k\n";
 }
 
-print $k == 7 ? "ok 13\n" : "not ok 13\n";
+print $k == 7 ? "ok 13\n" : "not ok 13 - $k\n";
