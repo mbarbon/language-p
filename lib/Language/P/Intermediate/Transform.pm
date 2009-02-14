@@ -64,11 +64,13 @@ sub to_ssa {
                            lexicals     => $code_segment->lexicals,
                            } );
 
-    # find first non-empty block
+    # find all non-empty block without predecessors and enqueue them
+    # (there can be more than one only if there is dead code)
+    $self->_queue( [] );
     foreach my $block ( @{$code_segment->basic_blocks} ) {
         next unless @{$block->bytecode};
-        $self->_queue( [ { block => $block } ] );
-        last;
+        next if @{$block->predecessors};
+        push @{$self->_queue}, { block => $block };
     }
 
     my $stack = $self->_stack;
