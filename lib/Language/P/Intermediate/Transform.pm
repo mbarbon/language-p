@@ -260,8 +260,8 @@ sub _generic {
     }
 
     if( !$attrs->{out_args} ) {
-        _add_bytecode $self, $new_op;
         _emit_out_stack( $self );
+        _add_bytecode $self, $new_op;
     } elsif( $attrs->{out_args} == 1 ) {
         push @{$self->_stack}, $new_op;
     } else {
