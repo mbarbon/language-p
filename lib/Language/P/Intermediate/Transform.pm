@@ -61,6 +61,7 @@ sub to_ssa {
                        ( { type         => $code_segment->type,
                            name         => $code_segment->name,
                            basic_blocks => [],
+                           lexicals     => $code_segment->lexicals,
                            } );
 
     # find first non-empty block

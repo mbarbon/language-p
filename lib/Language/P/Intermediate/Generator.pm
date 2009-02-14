@@ -106,6 +106,7 @@ sub _generate_regex {
          Language::P::Intermediate::Code->new
              ( { type         => 3,
                  basic_blocks => [],
+                 lexicals     => {},
                  } );
     if( $outer ) {
         push @{$outer->inner}, $self->_code_segments->[-1];
@@ -150,6 +151,7 @@ sub _generate_bytecode {
                  name         => $name,
                  basic_blocks => [],
                  outer        => $outer,
+                 lexicals     => {},
                  } );
     if( $outer ) {
         push @{$outer->inner}, $self->_code_segments->[-1];
@@ -520,6 +522,10 @@ sub _lexical_declaration {
 sub _do_lexical_access {
     my( $self, $tree, $level, $is_decl ) = @_;
 
+    # maybe to it while parsing, in _find_symbol/_process_lexical_declaration
+    my $lex_info = $self->_code_segments->[0]->lexicals->{$tree}
+                       ||= { level => $level, lexical => $tree };
+
     _add_bytecode $self,
          opcode_nm( OP_LEXICAL,
                     lexical  => $tree,
@@ -527,6 +533,8 @@ sub _do_lexical_access {
                     );
 
     if( $is_decl ) {
+        $lex_info->{declaration} = 1;
+
         push @{$self->_current_block->{bytecode}},
              [ opcode_nm( OP_LEXICAL_CLEAR,
                           lexical => $tree,
@@ -642,6 +650,11 @@ sub _foreach {
         _add_blocks $self, $start_loop;
         _add_bytecode $self,
             opcode_nm( OP_LEXICAL_SET,  lexical => $tree->variable );
+
+        $self->_code_segments->[0]->lexicals->{$tree->variable}
+            = { level       => 0,
+                lexical     => $tree->variable,
+                };
     }
 
     $self->dispatch( $tree->block );

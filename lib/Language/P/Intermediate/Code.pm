@@ -4,7 +4,8 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
-__PACKAGE__->mk_ro_accessors( qw(type name basic_blocks outer inner) );
+__PACKAGE__->mk_ro_accessors( qw(type name basic_blocks outer inner
+                                 lexicals) );
 
 sub new {
     my( $class, $args ) = @_;
