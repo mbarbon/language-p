@@ -39,6 +39,8 @@ L3:
   jump to=L2
 L5:
   pop
+  jump to=L6
+L6:
   temporary index=1
   temporary index=2
   glob_slot_set slot=1

@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 2;
+use Test::More tests => 3;
 
 use lib qw(t/lib);
 use TestIntermediate qw(:all);
@@ -22,5 +22,14 @@ $x = abs $t;
 EOP
 L1:
   assign (global name=x, slot=1), (abs (global name=t, slot=1))
+  end
+EOI
+
+generate_tree_and_diff( <<'EOP', <<'EOI' );
+$x = "$a\n";
+EOP
+L1:
+  assign (global name=x, slot=1), (concat_assign (concat_assign (fresh_string ), (global name=a, slot=1)), (constant_string 
+))
   end
 EOI
