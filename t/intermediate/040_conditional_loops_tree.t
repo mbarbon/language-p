@@ -41,9 +41,9 @@ L2:
 L3:
   assign (global name=x, slot=1), (constant_integer 1)
   jump L4
-L5:
-  end
 L4:
   assign (global name=y, slot=1), (constant_integer 2)
   jump L2
+L5:
+  end
 EOI

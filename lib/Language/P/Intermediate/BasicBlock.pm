@@ -52,6 +52,13 @@ sub _change_successor {
 
     # fix up predecessors
     $to->add_predecessor( $self );
+    # remove $sel from $from predecessors
+    foreach my $i ( 0 .. $#{$from->{predecessors}} ) {
+        if( $from->{predecessors}[$i] == $self ) {
+            splice @{$from->{predecessors}}, $i, 0;
+            last;
+        }
+    }
 }
 
 sub add_jump {

@@ -18,16 +18,18 @@ L1:
   constant_integer 0
   pop
   jump to=L3
+L2:
+  end
 L3:
   global name=a, slot=1
   constant_integer 2
-  jump_if_f_lt false=L4, true=L2
+  jump_if_f_lt false=L4, true=L5
 L4:
   constant_integer 1
   pop
   jump to=L2
-L2:
-  end
+L5:
+  jump to=L2
 EOI
 
 generate_and_diff( <<'EOP', <<'EOI' );
@@ -46,12 +48,12 @@ L1:
   constant_integer 0
   pop
   jump to=L6
-L6:
-  global name=a, slot=1
-  constant_integer 11
-  jump_if_f_lt false=L4, true=L7
-L7:
-  constant_integer 1
+L2:
+  constant_integer 4
+  pop
+  end
+L3:
+  constant_integer 3
   pop
   jump to=L2
 L4:
@@ -62,14 +64,14 @@ L5:
   constant_integer 2
   pop
   jump to=L2
-L3:
-  constant_integer 3
+L6:
+  global name=a, slot=1
+  constant_integer 11
+  jump_if_f_lt false=L4, true=L7
+L7:
+  constant_integer 1
   pop
   jump to=L2
-L2:
-  constant_integer 4
-  pop
-  end
 EOI
 
 generate_and_diff( <<'EOP', <<'EOI' );
@@ -84,19 +86,21 @@ L1:
   constant_integer 0
   pop
   jump to=L3
-L3:
-  global name=a, slot=1
-  constant_integer 1
-  subtract
-  jump_if_true false=L2, true=L4
-L4:
-  constant_integer 1
-  pop
-  jump to=L2
 L2:
   constant_integer 2
   pop
   end
+L3:
+  global name=a, slot=1
+  constant_integer 1
+  subtract
+  jump_if_true false=L5, true=L4
+L4:
+  constant_integer 1
+  pop
+  jump to=L2
+L5:
+  jump to=L2
 EOI
 
 generate_and_diff( <<'EOP', <<'EOI' );
@@ -111,18 +115,22 @@ L1:
   constant_integer 0
   pop
   jump to=L3
-L5:
-  global name=b, slot=1
-  jump_if_true false=L2, true=L4
-L3:
-  global name=a, slot=1
-  jump_if_true false=L2, true=L5
-L4:
-  constant_integer 1
-  pop
-  jump to=L2
 L2:
   constant_integer 2
   pop
   end
+L3:
+  global name=a, slot=1
+  jump_if_true false=L7, true=L5
+L4:
+  constant_integer 1
+  pop
+  jump to=L2
+L5:
+  global name=b, slot=1
+  jump_if_true false=L6, true=L4
+L6:
+  jump to=L2
+L7:
+  jump to=L2
 EOI

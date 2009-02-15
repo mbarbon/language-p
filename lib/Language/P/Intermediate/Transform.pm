@@ -78,6 +78,14 @@ sub to_ssa {
         my $block = shift @{$self->_queue};
 
         next if $self->_converted->{$block}{converted};
+        # process a node with input values after all its predecessors
+        # might not be possible if more values become temporaries,
+        # works for now
+        if(    ( $self->_converted->{$block}{depth} || 0 ) > 0
+            && grep !$self->_converted->{$_}{converted}, @{$block->predecessors} ) {
+            push @{$self->_queue}, $block;
+            redo;
+        }
         $self->_converted->{$block} =
           { %{$self->_converted->{$block}},
             converted => 1,
@@ -91,7 +99,17 @@ sub to_ssa {
         push @{$new_code->basic_blocks}, $cblock;
         $self->_current_basic_block( $cblock );
         @$stack = @{$self->_converting->{in_stack} || []};
-        $self->_converting->{depth} = scalar @$stack;
+
+        # remove dummy phi values that all get the same value
+        foreach my $value ( @$stack ) {
+            next unless $value->{opcode_n} == OP_PHI;
+            my $t = $value->{parameters}[1];
+            if( !grep $value->{parameters}[$_] ne $t,
+                grep  $_ & 1,
+                      1 .. $#{$value->{parameters}} ) {
+                $value = opcode_n( OP_GET, $t );
+            }
+        }
 
         foreach my $bc ( @{$block->bytecode} ) {
             next if $bc->{label};
@@ -197,18 +215,17 @@ sub _jump_to {
 
         # copy inherited elements, generated GET or PHI for created elements
         if( !$converted->{in_stack} ) {
-            my $in = $converted->{in_stack} =
-                [ @{$stack}[0 .. $inherited_elements - 1] ];
             if( @{$to->predecessors} > 1 ) {
-                push @$in, map opcode_n( OP_PHI ), 1 .. $created_elements;
+                $converted->{in_stack} = [ map opcode_n( OP_PHI ), @$stack ];
             } else {
-                push @$in, map opcode_n( OP_GET, $_ ), @$out_names;
+                $converted->{in_stack} = [ map opcode_n( OP_GET, $_ ),
+                                               @$out_names ];
             }
         }
 
         # update PHI nodes with the (block, value) pair
         if( @{$to->predecessors} > 1 ) {
-            my $i = $inherited_elements;
+            my $i = 0;
             foreach my $out ( @$out_names ) {
                 die "Node with multiple predecessors has no phi ($i)"
                     unless $converted->{in_stack}[$i]->{opcode_n} == OP_PHI;
@@ -219,6 +236,7 @@ sub _jump_to {
         }
     }
 
+    $converted->{depth} = @$stack;
     $converted->{block} ||= Language::P::Intermediate::BasicBlock
                                 ->new_from_label( $to->start_label );
     push @{$op->{parameters}}, $converted->{block};
@@ -241,7 +259,8 @@ sub _emit_out_stack {
     # SET in the block and a GET in the out stack for all other
     # created ops
     @out_stack = @{$stack}[0 .. $i - 1];
-    for( my $j = 0; $i < @$stack; ++$i, ++$j ) {
+    @out_names = map $_->{parameters}[0], @out_stack;
+    for( my $j = $i; $i < @$stack; ++$i, ++$j ) {
         my $op = $stack->[$i];
         if( $op->{opcode_n} == OP_GET ) {
             $out_names[$j] = $op->{parameters}[0];
@@ -287,7 +306,7 @@ sub _generic {
 sub _pop {
     my( $self, $op ) = @_;
 
-    die 'Oops' unless @{$self->_stack} >= 1;
+    die 'Empty stack in pop' unless @{$self->_stack} >= 1;
     my $top = pop @{$self->_stack};
     _add_bytecode $self, $top if    $top->{opcode_n} != OP_PHI
                                  && $top->{opcode_n} != OP_GET;
@@ -298,7 +317,7 @@ sub _pop {
 sub _dup {
     my( $self, $op ) = @_;
 
-    die 'Oops' unless @{$self->_stack} >= 1;
+    die 'Empty stack in dup' unless @{$self->_stack} >= 1;
     my( $v ) = _get_stack( $self, 1, 1 );
     push @{$self->_stack}, $v, $v;
     _created( $self, 2 );
@@ -309,7 +328,7 @@ sub _swap {
     my $stack = $self->_stack;
     my $t = $stack->[-1];
 
-    die 'Oops' unless @{$self->_stack} >= 2;
+    die 'Empty stack in swap' unless @{$self->_stack} >= 2;
     $stack->[-1] = $stack->[-2];
     $stack->[-2] = $t;
 }

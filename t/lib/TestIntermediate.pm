@@ -56,7 +56,8 @@ sub blocks_as_string {
 
     foreach my $segment ( @$segments ) {
         $str .= "# " . ( $segment->name ? $segment->name : 'main' ) . "\n";
-        foreach my $block ( @{$segment->basic_blocks} ) {
+        foreach my $block ( sort { $a->start_label cmp $b->start_label}
+                                 @{$segment->basic_blocks} ) {
             foreach my $instr ( @{$block->bytecode} ) {
                 $str .= $instr->as_string( $op_map, $op_attr )
             }

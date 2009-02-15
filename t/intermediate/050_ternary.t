@@ -15,6 +15,12 @@ L1:
   global name=a, slot=1
   constant_integer 2
   jump_if_f_gt false=L4, true=L3
+L2:
+  global name=x, slot=1
+  swap
+  assign
+  pop
+  end
 L3:
   global name=b, slot=1
   jump to=L2
@@ -23,12 +29,6 @@ L4:
   constant_integer 3
   add
   jump to=L2
-L2:
-  global name=x, slot=1
-  swap
-  assign
-  pop
-  end
 EOI
 
 generate_and_diff( <<'EOP', <<'EOI' );
@@ -40,6 +40,12 @@ L1:
   global name=a, slot=1
   constant_integer 2
   jump_if_f_gt false=L4, true=L3
+L2:
+  global name=x, slot=1
+  swap
+  assign
+  pop
+  end
 L3:
   global name=b, slot=1
   jump to=L2
@@ -53,10 +59,4 @@ L6:
 L7:
   global name=e, slot=1
   jump to=L2
-L2:
-  global name=x, slot=1
-  swap
-  assign
-  pop
-  end
 EOI

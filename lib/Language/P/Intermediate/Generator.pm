@@ -176,6 +176,23 @@ sub _generate_bytecode {
 
     _add_bytecode $self, opcode_n( OP_END );
 
+    # eliminate edges from a node with multiple successors to a node
+    # with multiple predecessors by inserting an empty node and
+    # splitting the edge
+    foreach my $block ( @{$self->_code_segments->[0]->basic_blocks} ) {
+        next if @{$block->successors} != 2;
+        my @to_change;
+        foreach my $succ ( @{$block->successors} ) {
+            push @to_change, $succ if @{$succ->predecessors} >= 2;
+        }
+        # in two steps to avoid changing successors while iterating
+        foreach my $succ ( @to_change ) {
+            _add_blocks $self, _new_block( $self );
+            _add_jump $self, opcode_nm( OP_JUMP, to => $succ ), $succ;
+            $block->_change_successor( $succ, $self->_current_basic_block );
+        }
+    }
+
     if( $self->_options->{'dump-ir'} ) {
         ( my $outfile = $self->file_name ) =~ s/(\.\w+)?$/.ir/;
         open my $ir_dump, '>', $outfile || die "Can't open '$outfile': $!";
