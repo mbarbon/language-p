@@ -72,6 +72,7 @@ t/intermediate/050_ternary_tree.t
 t/intermediate/055_and_or.t
 t/intermediate/055_and_or_ssa.t
 t/intermediate/055_and_or_tree.t
+t/intermediate/060_complex_trees_ssa.t
 t/lib/TestIntermediate.pm
 t/lib/TestParser.pm
 t/lib/TestRegex.pm
