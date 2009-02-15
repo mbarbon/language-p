@@ -241,7 +241,6 @@ sub end_code_generation {
                 next unless $lex->{declaration};
                 my $name = _lex_name( $self, $lex->{lexical} );
                 _add $self,
-                     local_pmc( $name ),
                      literal( sprintf '  .make_undef(%s)', $name );
             }
         }
@@ -302,9 +301,8 @@ sub _noop {
 sub _create_list {
     my( $self, $list ) = @_;
 
-    my $thelist = _local_name;
+    my $thelist = _local_pmc_name;
     _add $self,
-         local_pmc( $thelist ),
          opcode( 'new', $thelist, '"P5List"' );
 
     foreach my $e ( @$list ) {
@@ -336,10 +334,8 @@ sub _print {
     # FIXME must handle output filehandle
     shift @orig_arg;
     my $args = _create_list( $self, \@orig_arg );
-    my( $pr, $d ) = ( _local_name, _local_name );
+    my( $pr, $d ) = ( _local_pmc_name, _local_pmc_name );
     _add $self,
-         local_pmc( $pr ),
-         local_pmc( $d ),
          opcode( 'get_root_global', $pr, '["p5";"builtins"]', '"print"' ),
          literal( sprintf '  %s = %s(%s)', $d, $pr, $args );
 
@@ -387,9 +383,8 @@ sub _constant {
 sub _defined {
     my( $self, $op ) = @_;
 
-    my( $d, $t ) = ( _local_name, _local_name );
+    my( $d, $t ) = ( _local_pmc_name, _local_name );
     _add $self,
-         local_pmc( $d ),
          literal( sprintf "  .local int %s", $t ),
          opcode( 'defined', $t, _dispatch( $self, $op->{parameters}[0] ) ),
          literal( sprintf '  .make_bool(%s, %s)', $d, $t );
@@ -400,9 +395,8 @@ sub _defined {
 sub _not {
     my( $self, $op ) = @_;
 
-    my $d = _local_name;
+    my $d = _local_pmc_name;
     _add $self,
-         local_pmc( $d ),
          opcode( 'not', $d, _dispatch( $self, $op->{parameters}[0] ) );
 
     return $d;
@@ -411,9 +405,8 @@ sub _not {
 sub _array_size {
     my( $self, $op ) = @_;
 
-    my( $res, $int ) = ( _local_name, _local_name );
+    my( $res, $int ) = ( _local_pmc_name, _local_name );
     _add $self,
-         local_pmc( $res ),
          literal( sprintf '  .local int %s', $int ),
          opcode( 'set', $int, _dispatch( $self, $op->{parameters}[0] ) ),
          opcode( 'sub', $int, $int, 1 ),
@@ -437,9 +430,8 @@ sub _addition {
     my $l = _dispatch( $self, $op->{parameters}[0] );
     my $r = _dispatch( $self, $op->{parameters}[1] );
 
-    my $d = _local_name;
+    my $d = _local_pmc_name;
     _add $self,
-         local_pmc( $d ),
          opcode( 'add', $d, $l, $r );
 
     return $d;
@@ -450,9 +442,8 @@ sub _subtract {
     my $l = _dispatch( $self, $op->{parameters}[0] );
     my $r = _dispatch( $self, $op->{parameters}[1] );
 
-    my $d = _local_name;
+    my $d = _local_pmc_name;
     _add $self,
-         local_pmc( $d ),
          opcode( 'sub', $d, $l, $r );
 
     return $d;
@@ -463,9 +454,8 @@ sub _multiply {
     my $l = _dispatch( $self, $op->{parameters}[0] );
     my $r = _dispatch( $self, $op->{parameters}[1] );
 
-    my $d = _local_name;
+    my $d = _local_pmc_name;
     _add $self,
-         local_pmc( $d ),
          opcode( 'mul', $d, $l, $r );
 
     return $d;
@@ -476,9 +466,8 @@ sub _concat {
     my $l = _dispatch( $self, $op->{parameters}[0] );
     my $r = _dispatch( $self, $op->{parameters}[1] );
 
-    my $d = _local_name;
+    my $d = _local_pmc_name;
     _add $self,
-         local_pmc( $d ),
          opcode( 'concat', $d, $l, $r );
 
     return $d;
@@ -574,14 +563,13 @@ sub _add_global {
 sub _symbol {
     my( $self, $op ) = @_;
 
-    my $symbol = _local_name;
+    my $symbol = _local_pmc_name;
     my $name = $op->{attributes}{name};
     my $slot = $op->{attributes}{slot};
     my $qname = sprintf "'%s'", $name;
 
     if( $slot == VALUE_GLOB ) {
         _add $self,
-            local_pmc( $symbol ),
             opcode( 'get_root_global', $symbol, '["main"]', $qname );
 
         if( !$self->_global_allocated->{$name}{VALUE_GLOB()} ) {
@@ -590,7 +578,6 @@ sub _symbol {
         }
     } else {
         _add $self,
-             local_pmc( $symbol ),
              opcode( 'get_root_global', $symbol, '["main"]', $qname ),
              opcode( 'getattribute', $symbol, $symbol, "'body'" ),
              opcode( 'getattribute', $symbol, $symbol,
@@ -609,9 +596,8 @@ sub _symbol {
 sub _glob_slot {
     my( $self, $op ) = @_;
 
-    my $d = _local_name;
+    my $d = _local_pmc_name;
     _add $self,
-         local_pmc( $d ),
          opcode( 'getattribute', $d,
                  _dispatch( $self, $op->{parameters}[0] ), "'body'" ),
          opcode( 'getattribute', $d, $d,
@@ -623,9 +609,8 @@ sub _glob_slot {
 sub _glob_slot_set {
     my( $self, $op ) = @_;
 
-    my $d = _local_name;
+    my $d = _local_pmc_name;
     _add $self,
-         local_pmc( $d ),
          opcode( 'getattribute', $d,
                  _dispatch( $self, $op->{parameters}[0] ), "'body'" ),
          opcode( 'setattribute', $d,
@@ -637,14 +622,13 @@ sub _localize_glob_slot {
     my( $self, $op ) = @_;
 
     # FIXME de-duplicate!
-    my $symbol = _local_name;
+    my $symbol = _local_pmc_name;
     my $name = $op->{attributes}{name};
     my $slot = $op->{attributes}{slot};
     my $qname = sprintf "'%s'", $name;
 
     # get typeglob
     _add $self,
-         local_pmc( $symbol ),
          opcode( 'get_root_global', $symbol, '["main"]', $qname );
 
     if( !$self->_global_allocated->{$name}{VALUE_GLOB()} ) {
@@ -653,25 +637,21 @@ sub _localize_glob_slot {
     }
 
     # get slot
-    my $body = _local_name;
-    my $slot_v = _local_name;
+    my $body = _local_pmc_name;
+    my $slot_v = _local_pmc_name;
     _add $self,
-         local_pmc( $body ),
-         local_pmc( $slot_v ),
          opcode( 'getattribute', $body, $symbol, "'body'" ),
          opcode( 'getattribute', $slot_v, $body,
                  "'$sigil_to_slot{$op->{attributes}{slot}}'" );
 
     # localize
-    my $value = _local_name;
+    my $value = _local_pmc_name;
     _add $self,
-         local_pmc( $value ),
          literal( sprintf '  %s = %s."localize"()', $value, $slot_v );
 
     # save original value
-    my $tmp = $self->_temp_map->{$op->{attributes}{index}} ||= _local_name;
+    my $tmp = $self->_temp_map->{$op->{attributes}{index}} ||= _local_pmc_name;
     _add $self,
-         local_pmc( $tmp ),
          opcode( 'set', $tmp, $slot_v );
 
     # set slot
@@ -686,14 +666,13 @@ sub _restore_glob_slot {
     my( $self, $op ) = @_;
 
     # FIXME de-duplicate!
-    my $symbol = _local_name;
+    my $symbol = _local_pmc_name;
     my $name = $op->{attributes}{name};
     my $slot = $op->{attributes}{slot};
     my $qname = sprintf "'%s'", $name;
 
     # get typeglob
     _add $self,
-         local_pmc( $symbol ),
          opcode( 'get_root_global', $symbol, '["main"]', $qname );
 
     if( !$self->_global_allocated->{$name}{VALUE_GLOB()} ) {
@@ -702,16 +681,14 @@ sub _restore_glob_slot {
     }
 
     # get body
-    my $body = _local_name;
+    my $body = _local_pmc_name;
     _add $self,
-         local_pmc( $body ),
          opcode( 'getattribute', $body, $symbol, "'body'" );
 
     # restore value if saved
-    my $tmp = $self->_temp_map->{$op->{attributes}{index}} ||= _local_name;
+    my $tmp = $self->_temp_map->{$op->{attributes}{index}} ||= _local_pmc_name;
     my $if_null = _label_name;
     _add $self,
-         local_pmc( $tmp ),
          opcode( 'if_null', $tmp, $if_null ),
          opcode( 'setattribute', $body,
                  "'$sigil_to_slot{$op->{attributes}{slot}}'", $tmp ),
@@ -724,9 +701,8 @@ sub _array_element {
     my $l = _dispatch( $self, $op->{parameters}[0] );
     my $r = _dispatch( $self, $op->{parameters}[1] );
 
-    my $d = _local_name;
+    my $d = _local_pmc_name;
     _add $self,
-         local_pmc( $d ),
          opcode( 'set', $d, "$r\[$l\]" );
 
     return $d;
@@ -736,9 +712,8 @@ sub _iterator {
     my( $self, $op ) = @_;
     my $l = _dispatch( $self, $op->{parameters}[0] );
 
-    my $d = _local_name;
+    my $d = _local_pmc_name;
     _add $self,
-         local_pmc( $d ),
          opcode( 'new', $d, "'Iterator'", $l );
 
     return $d;
@@ -748,10 +723,9 @@ sub _iterator_next {
     my( $self, $op ) = @_;
     my $l = _dispatch( $self, $op->{parameters}[0] );
 
-    my $d = _local_name;
+    my $d = _local_pmc_name;
     my $goto_end = _label_name;
     _add $self,
-         local_pmc( $d ),
          opcode( 'null', $d ),
          opcode( 'unless', $l, $goto_end ),
          opcode( 'shift', $d, $l ),
@@ -761,11 +735,11 @@ sub _iterator_next {
 }
 
 sub _lex_name {
-    my( $self, $lex, $add_local ) = @_;
+    my( $self, $lex ) = @_;
 
     return 'args' if $lex->name eq '_' && $lex->sigil == VALUE_ARRAY;
 
-    return $self->_lexical_map->{$lex} ||= _local_name;
+    return $self->_lexical_map->{$lex} ||= _local_pmc_name;
 }
 
 sub _lexical_set {
@@ -774,7 +748,6 @@ sub _lexical_set {
 
     my $d = _lex_name( $self, $op->{attributes}{lexical} );
     _add $self,
-         local_pmc( $d ),
          opcode( 'set', $d, $l );
 
     return $d;
@@ -797,41 +770,38 @@ sub _lexical {
 sub _get {
     my( $self, $op ) = @_;
 
-    return $self->_temp_map->{$op->{parameters}[0]};
+    return $self->_temp_map->{$op->{parameters}[0]} ||= _local_pmc_name;
 }
 
 sub _set {
     my( $self, $op ) = @_;
 
-    my $res = $self->_temp_map->{$op->{parameters}[0]} ||= _local_name;
+    my $res = $self->_temp_map->{$op->{parameters}[0]} ||= _local_pmc_name;
     my $arg = _dispatch( $self, $op->{parameters}[1] );
     _add $self,
-         local_pmc( $res ),
          literal( sprintf '  set %s, %s', $res, $arg );
 }
 
 sub _temporary_get {
     my( $self, $op ) = @_;
 
-    return $self->_temp_map->{$op->{attributes}{index}};
+    return $self->_temp_map->{$op->{attributes}{index}} ||= _local_pmc_name;
 }
 
 sub _temporary_set {
     my( $self, $op ) = @_;
 
-    my $res = $self->_temp_map->{$op->{attributes}{index}} ||= _local_name;
+    my $res = $self->_temp_map->{$op->{attributes}{index}} ||= _local_pmc_name;
     my $arg = _dispatch( $self, $op->{parameters}[0] );
     _add $self,
-         local_pmc( $res ),
          literal( sprintf '  set %s, %s', $res, $arg );
 }
 
 sub _fresh_string {
     my( $self, $op ) = @_;
 
-    my $res = _local_name;
+    my $res = _local_pmc_name;
     _add $self,
-         local_pmc( $res ),
          literal( sprintf '  .make_string(%s, "")', $res );
 
     return $res;
@@ -845,9 +815,8 @@ sub _call {
 
     my $args = _create_list( $self, $op->{parameters}[0]->{parameters} );
     my $sub = _dispatch( $self, $op->{parameters}[1] );
-    my $d = _local_name;
+    my $d = _local_pmc_name;
     _add $self,
-         local_pmc( $d ),
          literal( sprintf '  %s = %s(%s, %s)', $d, $sub,
                           _context( $op ), $args );
 
@@ -868,7 +837,7 @@ sub _return {
 
     my( $scalar, $void, $list ) = ( _label_name, _label_name, _label_name );
     my( $not_empty ) = ( _label_name );
-    my( $undef, $num ) = ( _local_name, _local_int_name );
+    my( $undef, $num ) = ( _local_pmc_name, _local_int_name );
     _add $self,
          opcode( 'eq_num', 'context', CXT_LIST, $list ),
          opcode( 'eq_num', 'context', CXT_VOID, $void ),
@@ -877,7 +846,6 @@ sub _return {
          label( $scalar ),
          opcode( 'set', $num, $args ),
          opcode( 'ne_num', $num, 0, $not_empty ),
-         local_pmc( $undef ),
          literal( sprintf '  .make_undef(%s)', $undef ),
          opcode( 'set', "$args\[0]", $undef ),
          label( $not_empty ),
@@ -899,9 +867,8 @@ sub _want {
 
     my( $scalar, $void, $list, $end ) = ( _label_name, _label_name, _label_name,
                                           _label_name );
-    my $d = _local_name;
+    my $d = _local_pmc_name;
     _add $self,
-         local_pmc( $d ),
          opcode( 'eq_num', 'context', CXT_LIST, $list ),
          opcode( 'eq_num', 'context', CXT_VOID, $void ),
          # else fall through scalar
