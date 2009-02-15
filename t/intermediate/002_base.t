@@ -38,11 +38,10 @@ generate_and_diff( <<'EOP', <<'EOI' );
 $x = "$a\n";
 EOP
 L1:
-  fresh_string 
+  fresh_string ""
   global name=a, slot=1
   concat_assign
-  constant_string 
-
+  constant_string "\x0a"
   concat_assign
   global name=x, slot=1
   swap

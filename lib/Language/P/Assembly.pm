@@ -106,18 +106,30 @@ __PACKAGE__->mk_ro_accessors( qw(label literal opcode opcode_n
 use Scalar::Util qw(blessed);
 
 sub _p {
-    if( blessed( $_[0] ) ) {
-        return $_[0]->start_label
-            if $_[0]->isa( 'Language::P::Intermediate::BasicBlock' );
-        return '(' . substr( $_[0]->as_string( $_[1] ), 2, -1 ) . ')'
-            if $_[0]->isa( 'Language::P::Assembly::Instruction' );
+    my( $self, $arg, $index, $number_to_name, $attributes ) = @_;
+
+    if( blessed( $arg ) ) {
+        return $arg->start_label
+            if $arg->isa( 'Language::P::Intermediate::BasicBlock' );
+        return '(' . substr( $arg->as_string( $number_to_name, $attributes ), 2, -1 ) . ')'
+            if $arg->isa( 'Language::P::Assembly::Instruction' );
+    }
+    if(    $self->{opcode_n} && defined $index && $attributes
+        && (my $positional = $attributes->{$self->{opcode_n}}{positional}) ) {
+        my $type = $positional->[$index];
+
+        if( $type && $type eq 's' ) {
+            ( my $v = $arg ) =~ s/([^\x20-\x7f])/sprintf "\\x%02x", ord $1/eg;
+
+            return qq{"$v"};
+        }
     }
 
-    return $_[0];
+    return $arg;
 }
 
 sub as_string {
-    my( $self, $number_to_name ) = @_;
+    my( $self, $number_to_name, $attributes ) = @_;
 
     return $self->{literal} . "\n" if defined $self->{literal};
 
@@ -136,13 +148,14 @@ sub as_string {
     if( $self->{attributes} ) {
         die "Can't happen" unless %{$self->{attributes}};
         $str .= ' ' . join ', ',
-                      map  { "$_=" . _p( $self->{attributes}{$_}, $number_to_name ) }
+                      map  { "$_=" . _p( $self, $self->{attributes}{$_}, undef, $number_to_name, $attributes ) }
                            keys %{$self->{attributes}};
     }
 
     if( $self->{parameters} ) {
         die "Can't happen" unless @{$self->{parameters}};
-        $str .= ' ' . join ', ', map _p( $_, $number_to_name ),
+        my $i = 0;
+        $str .= ' ' . join ', ', map _p( $self, $_, $i++, $number_to_name, $attributes ),
                                      @{$self->{parameters}};
     }
 

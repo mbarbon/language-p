@@ -48,6 +48,7 @@ sub generate_main_ssa {
 }
 
 my $op_map = \%Language::P::Opcodes::NUMBER_TO_NAME;
+my $op_attr = \%Language::P::Opcodes::OP_ATTRIBUTES;
 
 sub blocks_as_string {
     my( $blocks ) = @_;
@@ -55,7 +56,7 @@ sub blocks_as_string {
 
     foreach my $block ( @$blocks ) {
         foreach my $instr ( @{$block->bytecode} ) {
-            $str .= $instr->as_string( $op_map )
+            $str .= $instr->as_string( $op_map, $op_attr )
         }
     }
 

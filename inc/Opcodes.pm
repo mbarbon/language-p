@@ -172,7 +172,7 @@ dot_dot_dot
 dup
 end
 eval                
-fresh_string        0       noattr      same                 0   1
+fresh_string        0       s           same                 0   1
 ft_atime
 ft_ctime
 ft_eexecutable

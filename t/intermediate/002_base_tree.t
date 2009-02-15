@@ -29,7 +29,6 @@ generate_tree_and_diff( <<'EOP', <<'EOI' );
 $x = "$a\n";
 EOP
 L1:
-  assign (global name=x, slot=1), (concat_assign (concat_assign (fresh_string ), (global name=a, slot=1)), (constant_string 
-))
+  assign (global name=x, slot=1), (concat_assign (concat_assign (fresh_string ""), (global name=a, slot=1)), (constant_string "\x0a"))
   end
 EOI
