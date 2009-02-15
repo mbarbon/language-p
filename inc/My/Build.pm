@@ -111,6 +111,7 @@ sub ACTION_test_intermediate;
 sub ACTION_test_runtime;
 sub ACTION_test_run;
 sub ACTION_test_perl5;
+sub ACTION_test_parrot;
 sub ACTION_test_parrot_run;
 sub ACTION_test_parrot_perl5;
 
