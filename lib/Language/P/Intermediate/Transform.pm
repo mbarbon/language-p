@@ -5,7 +5,8 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_accessors( qw(_temporary_count _current_basic_block
-                              _converting _queue _stack _converted) );
+                              _converting _queue _stack _converted
+                              _converted_segments) );
 
 use Language::P::Opcodes qw(:all);
 use Language::P::Assembly qw(:all);
@@ -15,6 +16,7 @@ my %op_map =
     OP_POP()              => '_pop',
     OP_SWAP()             => '_swap',
     OP_DUP()              => '_dup',
+    OP_CONSTANT_SUB()     => '_const_sub',
     OP_JUMP_IF_TRUE()     => '_cond_jump',
     OP_JUMP_IF_FALSE()    => '_cond_jump',
     OP_JUMP_IF_NULL()     => '_cond_jump',
@@ -50,6 +52,26 @@ sub _add_bytecode {
     push @{$self->_current_basic_block->bytecode}, @bytecode;
 }
 
+sub all_to_tree {
+    my( $self, $code_segments ) = @_;
+    my $all_ssa = $self->all_to_ssa( $code_segments );
+
+    _ssa_to_tree( $self, $_ ) foreach @$all_ssa;
+
+    return $all_ssa;
+}
+
+sub all_to_ssa {
+    my( $self, $code_segments ) = @_;
+
+    $self->_converted_segments( {} );
+    my @converted = map    $self->_converted_segments->{$_}
+                        || $self->to_ssa( $_ ), @$code_segments;
+    $self->_converted_segments( {} );
+
+    return \@converted;
+}
+
 sub to_ssa {
     my( $self, $code_segment ) = @_;
 
@@ -63,6 +85,12 @@ sub to_ssa {
                            basic_blocks => [],
                            lexicals     => $code_segment->lexicals,
                            } );
+    $self->_converted_segments->{$code_segment} = $new_code;
+
+    foreach my $inner ( @{$code_segment->inner} ) {
+        my $new_inner = $self->to_ssa( $inner );
+        $new_inner->{outer} = $new_code;
+    }
 
     # find all non-empty blocks without predecessors and enqueue them
     # (there can be more than one only if there is dead code)
@@ -128,6 +156,12 @@ sub to_ssa {
 sub to_tree {
     my( $self, $code_segment ) = @_;
     my $ssa = $self->to_ssa( $code_segment );
+
+    return _ssa_to_tree( $self, $ssa );
+}
+
+sub _ssa_to_tree {
+    my( $self, $ssa ) = @_;
 
     $self->_temporary_count( 0 );
 
@@ -301,6 +335,15 @@ sub _generic {
     } else {
         die "Unhandled out_args value: ", $attrs->{out_args};
     }
+}
+
+sub _const_sub {
+    my( $self, $op ) = @_;
+    my $new_seg = $self->_converted_segments->{$op->{parameters}[0]};
+    my $new_op = opcode_n( OP_CONSTANT_SUB(), $new_seg );
+
+    push @{$self->_stack}, $new_op;
+    _created( $self, 1 );
 }
 
 sub _pop {

@@ -31,7 +31,7 @@ sub generate_main_tree {
     my $gen = Language::P::Intermediate::Generator->new;
     my $segments = $gen->generate_bytecode( $parsetree );
     my $trans = Language::P::Intermediate::Transform->new;
-    my $trees = [ map $trans->to_tree( $_ ), @$segments ];
+    my $trees = $trans->all_to_tree( $segments );
 
     return $trees;
 }
@@ -42,7 +42,7 @@ sub generate_main_ssa {
     my $gen = Language::P::Intermediate::Generator->new;
     my $segments = $gen->generate_bytecode( $parsetree );
     my $trans = Language::P::Intermediate::Transform->new;
-    my $trees = [ map $trans->to_ssa( $_ ), @$segments ];
+    my $trees = $trans->all_to_ssa( $segments );
 
     return $trees;
 }
@@ -55,7 +55,9 @@ sub blocks_as_string {
     my $str = '';
 
     foreach my $segment ( @$segments ) {
-        $str .= "# " . ( $segment->name ? $segment->name : 'main' ) . "\n";
+        my $name = $segment->is_main ? 'main' :
+                                       $segment->name || 'anoncode';
+        $str .= "# " . $name . "\n";
         foreach my $block ( sort { $a->start_label cmp $b->start_label}
                                  @{$segment->basic_blocks} ) {
             foreach my $instr ( @{$block->bytecode} ) {
