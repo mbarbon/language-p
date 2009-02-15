@@ -30,10 +30,10 @@ L1:
   end
 # anoncode
 L1:
-  return (make_list (constant_integer 4))
+  return (make_list (constant_integer 3))
   end
 # anoncode
 L1:
-  return (make_list (constant_integer 3))
+  return (make_list (constant_integer 4))
   end
 EOI
