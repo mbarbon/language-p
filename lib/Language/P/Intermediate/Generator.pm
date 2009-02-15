@@ -571,6 +571,8 @@ sub _cond_loop {
 
     _add_blocks $self, $start_loop;
     $self->dispatch( $tree->block );
+    _discard_if_void( $self, $tree->block )
+        unless $tree->block->isa( 'Language::P::ParseTree::Block' );
 
     if( $tree->continue ) {
         _add_jump $self, opcode_nm( OP_JUMP, to => $start_continue ), $start_continue;
@@ -663,6 +665,8 @@ sub _foreach {
     }
 
     $self->dispatch( $tree->block );
+    _discard_if_void( $self, $tree->block )
+        unless $tree->block->isa( 'Language::P::ParseTree::Block' );
 
     if( $tree->continue ) {
         _add_jump $self, opcode_nm( OP_JUMP, to => $start_continue ), $start_continue;
@@ -704,6 +708,9 @@ sub _for {
 
     _add_blocks $self, $start_loop;
     $self->dispatch( $tree->block );
+    _discard_if_void( $self, $tree->block )
+        unless $tree->block->isa( 'Language::P::ParseTree::Block' );
+
     _add_jump $self,
          opcode_nm( OP_JUMP, to => $start_step ), $start_step;
 
@@ -743,6 +750,9 @@ sub _cond {
         push @blocks, $then_block, $cond_block;
         _current_basic_block( $self, $then_block );
         $self->dispatch( $elsif->block );
+        _discard_if_void( $self, $elsif->block )
+            unless $elsif->block->isa( 'Language::P::ParseTree::Block' );
+
         _add_jump $self, opcode_nm( OP_JUMP, to => $blocks[0] ), $blocks[0];
     }
 
