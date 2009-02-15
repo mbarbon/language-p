@@ -112,8 +112,8 @@ my %opcode_map =
 
 sub _generate_segment {
     my( $self, $segment, $outer ) = @_;
-    my $is_sub = $segment->type == 2;
-    my $is_regex = $segment->type == 3;
+    my $is_sub = $segment->is_sub;
+    my $is_regex = $segment->is_regex;
     my $pad = Language::P::Toy::Value::ScratchPad->new;
 
     my $code;

@@ -16,4 +16,8 @@ sub new {
     return $self;
 }
 
+sub is_main  { $_[0]->{type} == 1 }
+sub is_sub   { $_[0]->{type} == 2 }
+sub is_regex { $_[0]->{type} == 3 }
+
 1;
