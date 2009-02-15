@@ -88,6 +88,7 @@ my %op_map =
     OP_CONSTANT_INTEGER()      => '_constant',
     OP_CONSTANT_FLOAT()        => '_constant',
     OP_CONSTANT_UNDEF()        => '_constant',
+    OP_CONSTANT_SUB()          => '_constant_sub',
     OP_PRINT()                 => '_print',
     OP_END()                   => '_end',
     OP_GLOBAL()                => '_symbol',
@@ -134,6 +135,8 @@ my %op_map =
     OP_CALL()                  => '_call',
     OP_RETURN()                => '_return',
     OP_WANTARRAY()             => '_want',
+    OP_DEREFERENCE_SUB()       => '_dereference_subroutine',
+    OP_MAKE_CLOSURE()          => '_make_closure',
     );
 
 sub _dispatch {
@@ -161,7 +164,7 @@ sub end_code_generation {
 
     my $transform = Language::P::Intermediate::Transform->new;
     my $stack_segs = $self->_intermediate->generate_bytecode( $self->_pending );
-    my $register_segs = [ map $transform->to_tree( $_ ), @$stack_segs ];
+    my $register_segs = $transform->all_to_tree( $stack_segs );
 
     open my $out, '| ' . $self->parrot . ' -L support/parrot --output-pbc -o ' .
                          $self->file_name . ' -' or die $!;
@@ -196,49 +199,95 @@ sub end_code_generation {
     $self->{_global_allocated} = {};
 
     foreach my $sub ( @$register_segs ) {
-        next unless $sub->type == 2;
+        next unless $sub->is_sub;
         next unless $sub->name;
 
         my $csub = _const_name;
         _add_global( $self, $sub->name, 'subroutine',
                      [ literal( sprintf '  .const "Sub" %s = "%s"',
                                         $csub, $sub->name ),
-                       opcode( 'set', 'slot', $csub ) ] )
+                       opcode( 'set', 'slot', $csub ) ] );
     }
 
     foreach my $sub ( @$register_segs ) {
         $self->{_body} = [];
         push @{$self->{_body_segments}}, $self->{_body};
 
-        if( $sub->type == 1 ) {
+        if( $sub->is_main ) {
             _add $self,
                  literal( ".sub main :main :lex" ),
+                 local_pmc( 'closure' ),
+                 local_pmc( 'closure_slot' ),
                  literal( '  .local int context' ),
                  literal( '  context = ' . CXT_VOID );
 
             foreach my $lex ( values %{$sub->lexicals} ) {
-                # only declared values need on-stack allocation,
-                # closed-over values are in pads
+                # handle all locally-declared values
                 next unless $lex->{declaration};
-                my $lname = _local_pmc_name;
-                my $lvalue = $self->_lexical_map->{$lex->{lexical}} = _local_name;
+                my $lname = $self->_lexical_map->{$lex->{lexical}} = _local_pmc_name;
+                my $lvalue = _local_pmc_name;
+
                 _add $self,
                      literal( sprintf '  .lex "%s", %s',
-                                      $lex->{lexical}->{name}, $lname ),
-                     local_pmc( $lvalue ),
-                     literal( sprintf '  %s = %s', $lvalue, $lname ),
-                     literal( sprintf '  .make_undef(%s)', $lvalue );
+                                      _lex_global_name( $lex->{lexical} ),
+                                      $lvalue ),
+                     literal( sprintf '  .make_undef(%s)', $lvalue ),
+                     literal( sprintf '  %s = %s', $lname, $lvalue );
+            }
+
+            foreach my $sub ( @$register_segs ) {
+                next unless $sub->is_sub;
+                next unless $sub->name;
+                next unless grep $_->{level}, values %{$sub->lexicals};
+
+                my $qname = sprintf '"%s"', $sub->name;
+                _add $self,
+                     opcode( 'get_root_global', 'closure', '["main"]', $qname ),
+                     opcode( 'getattribute', 'closure', 'closure', "'body'" ),
+                     opcode( 'getattribute', 'closure_slot', 'closure',
+                             '"subroutine"' ),
+                     opcode( 'newclosure', 'closure_slot', 'closure_slot' ),
+                     opcode( 'setattribute', 'closure', '"subroutine"',
+                             'closure_slot' );
+
             }
         } else {
+            my $name = $sub->name || 'anoncode_' . ( $sub + 0 );
+            my $outer = $sub->outer;
+            my $outer_n = $outer->is_main ? 'main' :
+                              $outer->name || 'anoncode_' . ( $outer + 0 );
             _add $self,
-                 literal( sprintf '.sub %s :outer(main)', $sub->name ),
+                 literal( sprintf '.sub %s :outer(%s)', $name, $outer_n ),
                  literal( '  .param int context' ),
                  literal( '  .param pmc args' );
 
             foreach my $lex ( values %{$sub->lexicals} ) {
-                # only declared values need on-stack allocation,
-                # closed-over values are in pads
+                # handle closed-over lexicals (does not handle
+                # duplicate names yet)
+                if( $lex->{level} ) {
+                    my $name = $self->_lexical_map->{$lex->{lexical}};
+                    _add $self,
+                         opcode( 'find_lex', $name,
+                                 '"' . _lex_global_name( $lex->{lexical} )
+                                 . '"' );
+                    next;
+                }
+
+                # handle all locally-declared values
                 next unless $lex->{declaration};
+                if( $lex->{lexical}->closed_over ) {
+                    my $lname = $self->_lexical_map->{$lex->{lexical}} = _local_pmc_name;
+                    my $lvalue = _local_pmc_name;
+
+                    _add $self,
+                        literal( sprintf '  .lex "%s", %s',
+                                 _lex_global_name( $lex->{lexical} ),
+                                 $lvalue ),
+                        literal( sprintf '  .make_undef(%s)', $lvalue ),
+                        literal( sprintf '  %s = %s', $lname, $lvalue );
+                    next;
+                }
+
                 my $name = _lex_name( $self, $lex->{lexical} );
                 _add $self,
                      literal( sprintf '  .make_undef(%s)', $name );
@@ -342,6 +391,16 @@ sub _print {
     return $d;
 }
 
+sub _constant_sub {
+    my( $self, $op ) = @_;
+    my $uname = 'anoncode_' . ( $op->{parameters}[0] + 0 );
+
+    _add $self,
+         literal( sprintf '  .const "Sub" %s = "%s"', $uname, $uname );
+
+    return $uname;
+}
+
 sub _constant {
     my( $self, $op ) = @_;
 
@@ -398,6 +457,28 @@ sub _not {
     my $d = _local_pmc_name;
     _add $self,
          opcode( 'not', $d, _dispatch( $self, $op->{parameters}[0] ) );
+
+    return $d;
+}
+
+sub _make_closure {
+    my( $self, $op ) = @_;
+
+    my $d = _local_pmc_name;
+    _add $self,
+         opcode( 'newclosure', $d, _dispatch( $self, $op->{parameters}[0] ) );
+
+    return $d;
+}
+
+sub _dereference_subroutine {
+    my( $self, $op ) = @_;
+
+    my $d = _local_pmc_name;
+    _add $self,
+         opcode( 'set', $d,
+#         literal( '  %s = %s."dereference_subroutine"()', $d,
+                  _dispatch( $self, $op->{parameters}[0] ) );
 
     return $d;
 }
@@ -732,6 +813,12 @@ sub _iterator_next {
          label( $goto_end );
 
     return $d;
+}
+
+sub _lex_global_name {
+    my( $lex ) = @_;
+
+    return $lex->name . '_' . ( $lex + 0 );
 }
 
 sub _lex_name {
