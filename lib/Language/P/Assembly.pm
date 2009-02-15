@@ -122,6 +122,8 @@ sub _p {
             if $arg->isa( 'Language::P::Assembly::Instruction' );
         return $sigil_to_name{$arg->sigil} . '(' . $arg->name . ')'
             if $arg->isa( 'Language::P::ParseTree::LexicalDeclaration' );
+        return 'anoncode'
+            if $arg->isa( 'Language::P::Intermediate::Code' );
     }
     if(    $self->{opcode_n} && defined $index && $attributes
         && (my $positional = $attributes->{$self->{opcode_n}}{positional}) ) {
