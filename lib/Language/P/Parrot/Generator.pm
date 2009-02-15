@@ -197,6 +197,7 @@ sub end_code_generation {
 
     foreach my $sub ( @$register_segs ) {
         next unless $sub->type == 2;
+        next unless $sub->name;
 
         my $csub = _const_name;
         _add_global( $self, $sub->name, 'subroutine',
