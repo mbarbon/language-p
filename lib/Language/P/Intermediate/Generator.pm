@@ -63,10 +63,8 @@ sub _new_blocks { map _new_block( $_[0] ), 1 .. $_[1] }
 sub _new_block {
     my( $self ) = @_;
 
-    return Language::P::Intermediate::BasicBlock->new
-               ( { bytecode    => [],
-                   start_label => 'L' . ++$self->{_label_count},
-                   } );
+    return Language::P::Intermediate::BasicBlock
+               ->new_from_label( 'L' . ++$self->{_label_count} );
 }
 
 sub push_block {

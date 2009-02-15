@@ -5,7 +5,7 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_accessors( qw(_temporary_count _current_basic_block
-                              _out_names _queue _stack _converted) );
+                              _converting _queue _stack _converted) );
 
 use Language::P::Opcodes qw(:all);
 use Language::P::Assembly qw(:all);
@@ -70,35 +70,28 @@ sub to_ssa {
     foreach my $block ( @{$code_segment->basic_blocks} ) {
         next unless @{$block->bytecode};
         next if @{$block->predecessors};
-        push @{$self->_queue}, { block => $block };
+        push @{$self->_queue}, $block;
     }
 
     my $stack = $self->_stack;
     while( @{$self->_queue} ) {
-        my $e = shift @{$self->_queue};
-        my $block = $e->{block};
+        my $block = shift @{$self->_queue};
 
         next if $self->_converted->{$block}{converted};
-        @$stack = @{$e->{in_stack} || []};
-        $self->_out_names( undef );
-        my $cblock = Language::P::Intermediate::BasicBlock->new
-                         ( { start_label => $block->start_label,
-                             bytecode    => [],
-                             } );
+        $self->_converted->{$block} =
+          { %{$self->_converted->{$block}},
+            converted => 1,
+            created   => 0,
+            };
+        $self->_converting( $self->_converted->{$block} );
+        my $cblock = $self->_converting->{block} ||=
+            Language::P::Intermediate::BasicBlock
+                ->new_from_label( $block->start_label );
+
         push @{$new_code->basic_blocks}, $cblock;
         $self->_current_basic_block( $cblock );
-
-        my $patch = $self->_converted->{$block}{patch};
-        $self->_converted->{$block} =
-          { depth     => scalar @$stack,
-            in_stack  => $e->{in_stack} || [],
-            in_names  => $e->{in_names} || [],
-            converted => 1,
-            block     => $cblock,
-            };
-        if( $patch ) {
-            push @{$_->{parameters}}, $cblock foreach @$patch;
-        }
+        @$stack = @{$self->_converting->{in_stack} || []};
+        $self->_converting->{depth} = scalar @$stack;
 
         foreach my $bc ( @{$block->bytecode} ) {
             next if $bc->{label};
@@ -107,10 +100,8 @@ sub to_ssa {
             $self->$meth( $bc );
         }
 
-        foreach my $op ( @$stack ) {
-            next if $op->{opcode_n} == OP_PHI || $op->{opcode_n} == OP_GET;
-            _add_bytecode $self, $op;
-        }
+        _add_bytecode $self,
+            grep $_->{opcode_n} != OP_PHI && $_->{opcode_n} != OP_GET, @$stack;
     }
 
     return $new_code;
@@ -138,6 +129,7 @@ sub to_tree {
                                          @{$ssa->basic_blocks};
                 my $op_from_off = $#{$block_from->bytecode};
 
+                # find the jump coming to this block
                 while( $op_from_off >= 0 ) {
                     my $op_from = $block_from->bytecode->[$op_from_off];
                     last if    $op_from->{parameters}
@@ -146,8 +138,11 @@ sub to_tree {
                     --$op_from_off;
                 }
 
-                die "Can't find jump" if $op_from_off < 0;
+                die "Can't find jump: ", $block_from->start_label,
+                    " => ", $block->start_label
+                    if $op_from_off < 0;
 
+                # add SET nodes to rename the variables
                 splice @{$block_from->bytecode}, $op_from_off, 0,
                        opcode_n( OP_SET, $op->{parameters}[0],
                                          opcode_n( OP_GET, $variable ) );
@@ -162,12 +157,13 @@ sub to_tree {
 }
 
 sub _get_stack {
-    my( $self, $count ) = @_;
+    my( $self, $count, $force_get ) = @_;
     return unless $count;
     my @values = splice @{$self->_stack}, -$count;
+    _created( $self, -$count );
 
     foreach my $value ( @values ) {
-        next unless $value->{opcode_n} == OP_PHI;
+        next if $value->{opcode_n} != OP_PHI && !$force_get;
         my $name = _local_name( $self );
         _add_bytecode $self, opcode_n( OP_SET, $name, $value );
         $value = opcode_n( OP_GET, $name );
@@ -177,70 +173,88 @@ sub _get_stack {
 }
 
 sub _jump_to {
-    my( $self, $op, $to ) = @_;
+    my( $self, $op, $to, $out_names ) = @_;
 
     my $stack = $self->_stack;
-    my $converted = $self->_converted;
-    if( defined $converted->{$to}->{depth} ) {
+    my $converted_blocks = $self->_converted;
+    my $converted = $converted_blocks->{$to} ||= {};
+
+    # check that input stack height is the same on all in branches
+    if( defined $converted->{depth} ) {
         die sprintf "Inconsistent depth %d != %d in %s => %s",
-            $converted->{$to}->{depth}, scalar @$stack,
+            $converted->{depth}, scalar @$stack,
             $self->_current_basic_block->start_label, $to->start_label
-            if $converted->{$to}->{depth} != scalar @$stack;
+            if $converted->{depth} != scalar @$stack;
     }
 
+    # emit as OP_SET all stack elements created in the basic block
+    # and construct the input stack of the next basic block
     if( @$stack ) {
-        $self->_out_names( [ map _local_name( $self ), @$stack ] )
-          unless $self->_out_names;
-        _emit_out_stack( $self, $self->_out_names );
+        @$out_names = _emit_out_stack( $self ) unless @$out_names;
 
-        $converted->{$to}->{in_names} ||= [ map _local_name( $self ), @$stack ];
-        $converted->{$to}->{in_stack} ||= [ map opcode_n( OP_PHI ), @$stack ];
+        my $created_elements = $self->_converting->{created};
+        my $inherited_elements = @$stack - $created_elements;
 
-        my $i = 0;
-        foreach my $out ( @{$self->_out_names} ) {
-            push @{$converted->{$to}->{in_stack}[$i]{parameters}},
-                 $self->_current_basic_block, $out;
-            ++$i;
+        # copy inherited elements, generated GET or PHI for created elements
+        if( !$converted->{in_stack} ) {
+            my $in = $converted->{in_stack} =
+                [ @{$stack}[0 .. $inherited_elements - 1] ];
+            if( @{$to->predecessors} > 1 ) {
+                push @$in, map opcode_n( OP_PHI ), 1 .. $created_elements;
+            } else {
+                push @$in, map opcode_n( OP_GET, $_ ), @$out_names;
+            }
         }
 
-        push @{$self->_queue},
-             { in_stack => $converted->{$to}->{in_stack},
-               in_names => $converted->{$to}->{in_names},
-               block    => $to,
-               };
-    } else {
-        push @{$self->_queue}, { block => $to };
+        # update PHI nodes with the (block, value) pair
+        if( @{$to->predecessors} > 1 ) {
+            my $i = $inherited_elements;
+            foreach my $out ( @$out_names ) {
+                die "Node with multiple predecessors has no phi ($i)"
+                    unless $converted->{in_stack}[$i]->{opcode_n} == OP_PHI;
+                push @{$converted->{in_stack}[$i]{parameters}},
+                     $self->_current_basic_block, $out;
+                ++$i;
+            }
+        }
     }
 
-    if( $converted->{$to}{converted} ) {
-        push @{$op->{parameters}}, $converted->{$to}->{block};
-    } else {
-        push @{$converted->{$to}{patch}}, $op;
-    }
+    $converted->{block} ||= Language::P::Intermediate::BasicBlock
+                                ->new_from_label( $to->start_label );
+    push @{$op->{parameters}}, $converted->{block};
+    push @{$self->_queue}, $to;
+
+    return $out_names;
 }
 
 sub _emit_out_stack {
-    my( $self, $out_names ) = @_;
+    my( $self ) = @_;
     my $stack = $self->_stack;
     return unless @$stack;
 
     # add named targets for all trees in stack, emit
     # them and replace stack with the targets
-    $out_names ||= [];
-    my $out_stack = [];
-    for( my $i = 0; $i < @$stack; ++$i ) {
+    my( @out_names, @out_stack );
+    my $i = @$stack - $self->_converting->{created};
+
+    # copy inherited stack elements and all created GET opcodes add a
+    # SET in the block and a GET in the out stack for all other
+    # created ops
+    @out_stack = @{$stack}[0 .. $i - 1];
+    for( my $j = 0; $i < @$stack; ++$i, ++$j ) {
         my $op = $stack->[$i];
         if( $op->{opcode_n} == OP_GET ) {
-            $out_names->[$i] = $op->{parameters}[0];
-            $out_stack->[$i] = $op;
+            $out_names[$j] = $op->{parameters}[0];
+            $out_stack[$i] = $op;
         } else {
-            $out_names->[$i] ||= _local_name( $self );
-            $out_stack->[$i] = opcode_n( OP_GET, $out_names->[$i] );
-            _add_bytecode $self, opcode_n( OP_SET, $out_names->[$i], $op );
+            $out_names[$j] = _local_name( $self );
+            $out_stack[$i] = opcode_n( OP_GET, $out_names[$j] );
+            _add_bytecode $self, opcode_n( OP_SET, $out_names[$j], $op );
         }
     }
+    @$stack = @out_stack;
 
-    @$stack = @$out_stack;
+    return @out_names;
 }
 
 sub _generic {
@@ -264,6 +278,7 @@ sub _generic {
         _add_bytecode $self, $new_op;
     } elsif( $attrs->{out_args} == 1 ) {
         push @{$self->_stack}, $new_op;
+        _created( $self, 1 );
     } else {
         die "Unhandled out_args value: ", $attrs->{out_args};
     }
@@ -272,17 +287,21 @@ sub _generic {
 sub _pop {
     my( $self, $op ) = @_;
 
+    die 'Oops' unless @{$self->_stack} >= 1;
     my $top = pop @{$self->_stack};
     _add_bytecode $self, $top if    $top->{opcode_n} != OP_PHI
                                  && $top->{opcode_n} != OP_GET;
     _emit_out_stack( $self );
+    _created( $self, -1 );
 }
 
 sub _dup {
     my( $self, $op ) = @_;
 
-    _emit_out_stack( $self );
-    push @{$self->_stack}, $self->_stack->[-1];
+    die 'Oops' unless @{$self->_stack} >= 1;
+    my( $v ) = _get_stack( $self, 1, 1 );
+    push @{$self->_stack}, $v, $v;
+    _created( $self, 2 );
 }
 
 sub _swap {
@@ -290,6 +309,7 @@ sub _swap {
     my $stack = $self->_stack;
     my $t = $stack->[-1];
 
+    die 'Oops' unless @{$self->_stack} >= 2;
     $stack->[-1] = $stack->[-2];
     $stack->[-2] = $t;
 }
@@ -297,7 +317,9 @@ sub _swap {
 sub _make_list {
     my( $self, $op ) = @_;
 
-    push @{$self->_stack}, opcode_n( OP_MAKE_LIST, _get_stack( $self, $op->{attributes}{count} ) );
+    push @{$self->_stack},
+         opcode_n( OP_MAKE_LIST, _get_stack( $self, $op->{attributes}{count} ) );
+    _created( $self, 1 );
 }
 
 sub _cond_jump {
@@ -307,9 +329,10 @@ sub _cond_jump {
     my $new_cond = opcode_n( $op->{opcode_n}, @in );
     my $new_jump = opcode_n( OP_JUMP );
 
-    _jump_to( $self, $new_cond, $op->{attributes}{true} );
+    my @out_names;
+    _jump_to( $self, $new_cond, $op->{attributes}{true}, \@out_names );
     _add_bytecode $self, $new_cond;
-    _jump_to( $self,$new_jump,  $op->{attributes}{false} );
+    _jump_to( $self,$new_jump,  $op->{attributes}{false}, \@out_names );
     _add_bytecode $self, $new_jump;
 }
 
@@ -317,8 +340,17 @@ sub _jump {
     my( $self, $op ) = @_;
     my $new_jump = opcode_nm( $op->{opcode_n} );
 
-    _jump_to( $self, $new_jump, $op->{attributes}{to} );
+    _jump_to( $self, $new_jump, $op->{attributes}{to}, [] );
     _add_bytecode $self, $new_jump;
+}
+
+sub _created {
+    my( $self, $count ) = @_;
+
+    $self->_converting->{created} += $count;
+    if( $count < 0 && $self->_converting->{created} < 0 ) {
+        $self->_converting->{created} = 0;
+    }
 }
 
 1;

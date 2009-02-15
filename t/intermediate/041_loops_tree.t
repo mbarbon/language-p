@@ -42,12 +42,11 @@ L1:
 L2:
   set t2, (iterator_next (temporary index=0))
   jump_if_null (get t2), L5
-  set t6, (get t2)
   jump L3
 L5:
   jump L6
 L3:
-  glob_slot_set slot=1 (temporary index=1), (get t6)
+  glob_slot_set slot=1 (temporary index=1), (get t2)
   print (make_list (global name=STDOUT, slot=7), (global name=i, slot=1))
   jump L2
 L6:

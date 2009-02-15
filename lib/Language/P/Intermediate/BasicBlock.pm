@@ -15,13 +15,16 @@ sub new {
     my( $class, $args ) = @_;
     my $self = $class->SUPER::new( $args );
 
-    push @{$self->bytecode}, label( $self->start_label )
-      unless @{$self->bytecode};
     $self->{predecessors} ||= [];
     $self->{successors} ||= [];
+    $self->{bytecode} ||= [];
+    push @{$self->bytecode}, label( $self->start_label )
+      unless @{$self->bytecode};
 
     return $self;
 }
+
+sub new_from_label { $_[0]->new( { start_label => $_[1] } ) }
 
 sub _change_successor {
     my( $self, $from, $to ) = @_;
