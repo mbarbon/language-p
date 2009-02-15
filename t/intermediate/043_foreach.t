@@ -12,6 +12,7 @@ foreach $y ( 1, 2 ) {
   3
 }
 EOP
+# main
 L1:
   constant_integer 1
   constant_integer 2

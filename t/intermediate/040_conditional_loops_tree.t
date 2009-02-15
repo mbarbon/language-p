@@ -12,6 +12,7 @@ while( $a ) {
   $x = 1 + 1;
 }
 EOP
+# main
 L1:
   jump L2
 L2:
@@ -31,6 +32,7 @@ while( $a ) {
   $y = 2;
 }
 EOP
+# main
 L1:
   jump L2
 L2:

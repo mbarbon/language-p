@@ -10,6 +10,7 @@ use TestIntermediate qw(:all);
 generate_and_diff( <<'EOP', <<'EOI' );
 $x = $a && $b;
 EOP
+# main
 L1:
   global name=a, slot=1
   dup
@@ -29,6 +30,7 @@ EOI
 generate_and_diff( <<'EOP', <<'EOI' );
 $x = $a || $b;
 EOP
+# main
 L1:
   global name=a, slot=1
   dup
@@ -48,6 +50,7 @@ EOI
 generate_and_diff( <<'EOP', <<'EOI' );
 $x = $a && $b && $c;
 EOP
+# main
 L1:
   global name=a, slot=1
   dup
@@ -74,6 +77,7 @@ EOI
 generate_and_diff( <<'EOP', <<'EOI' );
 $x = $a || $b || $c;
 EOP
+# main
 L1:
   global name=a, slot=1
   dup

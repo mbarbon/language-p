@@ -10,6 +10,7 @@ use TestIntermediate qw(:all);
 generate_and_diff( <<'EOP', <<'EOI' );
 $x = $a + 2
 EOP
+# main
 L1:
   global name=a, slot=1
   constant_integer 2
@@ -24,6 +25,7 @@ EOI
 generate_and_diff( <<'EOP', <<'EOI' );
 print !$a
 EOP
+# main
 L1:
   global name=STDOUT, slot=7
   global name=a, slot=1
@@ -37,6 +39,7 @@ EOI
 generate_and_diff( <<'EOP', <<'EOI' );
 $x = "$a\n";
 EOP
+# main
 L1:
   fresh_string ""
   global name=a, slot=1

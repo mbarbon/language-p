@@ -10,6 +10,7 @@ use TestIntermediate qw(:all);
 generate_and_diff( <<'EOP', <<'EOI' );
 $x = $a > 2 ? $b : $c + 3;
 EOP
+# main
 L1:
   global name=a, slot=1
   constant_integer 2
@@ -34,6 +35,7 @@ generate_and_diff( <<'EOP', <<'EOI' );
 $x = $a > 2 ? $b :
      $c < 3 ? $d : $e;
 EOP
+# main
 L1:
   global name=a, slot=1
   constant_integer 2

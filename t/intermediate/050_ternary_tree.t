@@ -10,6 +10,7 @@ use TestIntermediate qw(:all);
 generate_tree_and_diff( <<'EOP', <<'EOI' );
 $x = $a > 2 ? $b : $c + 3;
 EOP
+# main
 L1:
   jump_if_f_gt (global name=a, slot=1), (constant_integer 2), L3
   jump L4
@@ -30,6 +31,7 @@ generate_tree_and_diff( <<'EOP', <<'EOI' );
 $x = $a > 2 ? $b :
      $c < 3 ? $d : $e;
 EOP
+# main
 L1:
   jump_if_f_gt (global name=a, slot=1), (constant_integer 2), L3
   jump L4

@@ -13,6 +13,7 @@ unless( $a < 2 ) {
     1;
 }
 EOP
+# main
 L1:
   constant_integer 0
   pop
@@ -40,6 +41,7 @@ if( $a < 11 ) {
 }
 4;
 EOP
+# main
 L1:
   constant_integer 0
   pop
@@ -77,6 +79,7 @@ if( $a - 1 ) {
 }
 2;
 EOP
+# main
 L1:
   constant_integer 0
   pop
@@ -103,6 +106,7 @@ if( $a && $b ) {
 }
 2;
 EOP
+# main
 L1:
   constant_integer 0
   pop

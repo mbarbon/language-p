@@ -20,43 +20,46 @@ sub generate_main {
     my( $code ) = @_;
     my $parsetree = parse_string( $code );
     my $gen = Language::P::Intermediate::Generator->new;
-    my $segment = $gen->generate_bytecode( $parsetree )->[0];
+    my $segments = $gen->generate_bytecode( $parsetree );
 
-    return $segment->basic_blocks;
+    return $segments;
 }
 
 sub generate_main_tree {
     my( $code ) = @_;
     my $parsetree = parse_string( $code );
     my $gen = Language::P::Intermediate::Generator->new;
-    my $segment = $gen->generate_bytecode( $parsetree )->[0];
+    my $segments = $gen->generate_bytecode( $parsetree );
     my $trans = Language::P::Intermediate::Transform->new;
-    my $tree = $trans->to_tree( $segment );
+    my $trees = [ map $trans->to_tree( $_ ), @$segments ];
 
-    return $tree->basic_blocks;
+    return $trees;
 }
 
 sub generate_main_ssa {
     my( $code ) = @_;
     my $parsetree = parse_string( $code );
     my $gen = Language::P::Intermediate::Generator->new;
-    my $segment = $gen->generate_bytecode( $parsetree )->[0];
+    my $segments = $gen->generate_bytecode( $parsetree );
     my $trans = Language::P::Intermediate::Transform->new;
-    my $tree = $trans->to_ssa( $segment );
+    my $trees = [ map $trans->to_ssa( $_ ), @$segments ];
 
-    return $tree->basic_blocks;
+    return $trees;
 }
 
 my $op_map = \%Language::P::Opcodes::NUMBER_TO_NAME;
 my $op_attr = \%Language::P::Opcodes::OP_ATTRIBUTES;
 
 sub blocks_as_string {
-    my( $blocks ) = @_;
+    my( $segments ) = @_;
     my $str = '';
 
-    foreach my $block ( @$blocks ) {
-        foreach my $instr ( @{$block->bytecode} ) {
-            $str .= $instr->as_string( $op_map, $op_attr )
+    foreach my $segment ( @$segments ) {
+        $str .= "# " . ( $segment->name ? $segment->name : 'main' ) . "\n";
+        foreach my $block ( @{$segment->basic_blocks} ) {
+            foreach my $instr ( @{$block->bytecode} ) {
+                $str .= $instr->as_string( $op_map, $op_attr )
+            }
         }
     }
 

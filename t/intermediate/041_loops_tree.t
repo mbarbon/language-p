@@ -12,6 +12,7 @@ for( $i = 0; $i < 10; $i = $i + 1 ) {
   print $i;
 }
 EOP
+# main
 L1:
   assign (global name=i, slot=1), (constant_integer 0)
   jump L2
@@ -33,6 +34,7 @@ foreach $i ( 1, 2 ) {
   print $i;
 }
 EOP
+# main
 L1:
   temporary_set index=0 (iterator (make_list (make_list (constant_integer 1), (constant_integer 2))))
   set t1, (global name=i, slot=5)

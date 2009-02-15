@@ -104,6 +104,13 @@ __PACKAGE__->mk_ro_accessors( qw(label literal opcode opcode_n
                                  parameters attributes) );
 
 use Scalar::Util qw(blessed);
+use Language::P::ParseTree qw(VALUE_SCALAR VALUE_ARRAY VALUE_HASH);
+
+my %sigil_to_name =
+  ( VALUE_SCALAR() => 'scalar',
+    VALUE_ARRAY()  => 'array',
+    VALUE_HASH()   => 'hash',
+    );
 
 sub _p {
     my( $self, $arg, $index, $number_to_name, $attributes ) = @_;
@@ -113,6 +120,8 @@ sub _p {
             if $arg->isa( 'Language::P::Intermediate::BasicBlock' );
         return '(' . substr( $arg->as_string( $number_to_name, $attributes ), 2, -1 ) . ')'
             if $arg->isa( 'Language::P::Assembly::Instruction' );
+        return $sigil_to_name{$arg->sigil} . '(' . $arg->name . ')'
+            if $arg->isa( 'Language::P::ParseTree::LexicalDeclaration' );
     }
     if(    $self->{opcode_n} && defined $index && $attributes
         && (my $positional = $attributes->{$self->{opcode_n}}{positional}) ) {

@@ -10,6 +10,7 @@ use TestIntermediate qw(:all);
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
 $x = $a > 2 ? $b : $c + 3;
 EOP
+# main
 L1:
   jump_if_f_gt (global name=a, slot=1), (constant_integer 2), L3
   jump L4
@@ -29,6 +30,7 @@ generate_ssa_and_diff( <<'EOP', <<'EOI' );
 $x = $a > 2 ? $b :
      $c < 3 ? $d : $e;
 EOP
+# main
 L1:
   jump_if_f_gt (global name=a, slot=1), (constant_integer 2), L3
   jump L4
@@ -53,6 +55,7 @@ EOI
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
 print $a > 2 ? $b : $c;
 EOP
+# main
 L1:
   set t1, (global name=STDOUT, slot=7)
   jump_if_f_gt (global name=a, slot=1), (constant_integer 2), L3

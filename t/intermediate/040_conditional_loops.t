@@ -12,6 +12,7 @@ while( $a ) {
     1;
 }
 EOP
+# main
 L1:
   jump to=L2
 L2:
@@ -30,6 +31,7 @@ until( $a ) {
     1;
 }
 EOP
+# main
 L1:
   jump to=L2
 L2:
