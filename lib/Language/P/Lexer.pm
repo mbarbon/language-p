@@ -5,7 +5,7 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_ro_accessors( qw(stream buffer tokens symbol_table
-                                 file line _start_of_line
+                                 file line _start_of_line _heredoc_lexer
                                  ) );
 __PACKAGE__->mk_accessors( qw(quote) );
 
@@ -794,14 +794,25 @@ sub _prepare_sublex_heredoc {
     }
     $end .= "\n";
 
-    my $stream = $self->stream;
+    my $lex = $self->_heredoc_lexer || $self;
     my $finished = 0;
-    while( defined( my $line = readline $stream ) ) {
-        if( $line eq $end ) {
+    if( !$lex->stream ) {
+        $_ = $lex->buffer;
+        if( $$_ =~ s/(.*)^$end//m ) {
+            $str .= $1;
             $finished = 1;
-            last;
         }
-        $str .= $line;
+    } else {
+        # if the lexer reads from a stream, it buffers at most one line,
+        # so by not using the buffer we skip the rest of the line
+        my $stream = $lex->stream;
+        while( defined( my $line = readline $stream ) ) {
+            if( $line eq $end ) {
+                $finished = 1;
+                last;
+            }
+            $str .= $line;
+        }
     }
 
     Carp::confess "EOF while looking for terminator '$end'" unless $finished;

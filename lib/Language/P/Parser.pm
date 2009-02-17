@@ -861,6 +861,7 @@ sub _parse_substitution {
         local $self->{lexer} = Language::P::Lexer->new
                                    ( { string       => $token->[O_RX_SECOND_HALF]->[O_QS_BUFFER],
                                        symbol_table => $self->runtime->symbol_table,
+                                       _heredoc_lexer => $self->lexer,
                                        } );
         $replace = _parse_block_rest( $self, BLOCK_OPEN_SCOPE, T_EOF );
     } else {
