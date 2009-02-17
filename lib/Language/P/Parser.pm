@@ -98,7 +98,9 @@ my %prec_assoc_bin =
     );
 
 my %prec_assoc_un =
-  ( T_PLUS()        => [ 5,  ASSOC_RIGHT, OP_PLUS ],
+  ( T_PLUSPLUS()    => [ 3,  ASSOC_NON,   OP_PREINC ],
+    T_MINUSMINUS()  => [ 3,  ASSOC_NON,   OP_PREDEC ],
+    T_PLUS()        => [ 5,  ASSOC_RIGHT, OP_PLUS ],
     T_MINUS()       => [ 5,  ASSOC_RIGHT, OP_MINUS ],
     T_NOT()         => [ 5,  ASSOC_RIGHT, OP_LOG_NOT ],
     T_TILDE()       => [ 5,  ASSOC_RIGHT, OP_BIT_NOT ],
@@ -1294,6 +1296,17 @@ sub _parse_term_n {
 
     for(;;) {
         my $token = $self->lexer->lex( X_OPERATOR );
+
+        if(    $token->[O_TYPE] == T_PLUSPLUS
+            || $token->[O_TYPE] == T_MINUSMINUS ) {
+            my $op = $token->[O_TYPE] == T_PLUSPLUS ? OP_POSTINC : OP_POSTDEC;
+            $terminal = Language::P::ParseTree::UnOp->new
+                            ( { op    => $op,
+                                left  => $terminal,
+                                } );
+            $token = $self->lexer->lex( X_OPERATOR );
+        }
+
         my $bin = $prec_assoc_bin{$token->[O_TYPE]};
         if( !$bin || $bin->[0] > $prec ) {
             $self->lexer->unlex( $token );
