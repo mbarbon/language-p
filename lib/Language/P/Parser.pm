@@ -101,6 +101,7 @@ my %prec_assoc_un =
   ( T_PLUS()        => [ 5,  ASSOC_RIGHT, OP_PLUS ],
     T_MINUS()       => [ 5,  ASSOC_RIGHT, OP_MINUS ],
     T_NOT()         => [ 5,  ASSOC_RIGHT, OP_LOG_NOT ],
+    T_TILDE()       => [ 5,  ASSOC_RIGHT, OP_BIT_NOT ],
     T_BACKSLASH()   => [ 5,  ASSOC_RIGHT, OP_REFERENCE ],
     T_NOTLOW()      => [ 22, ASSOC_RIGHT, OP_LOG_NOT ],
     );

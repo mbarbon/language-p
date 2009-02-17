@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 6;
+use Test::More tests => 7;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -76,4 +76,15 @@ left: !parsetree:Symbol
   name: a
   sigil: VALUE_SCALAR
 op: OP_REFERENCE
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+~12
+EOP
+--- !parsetree:UnOp
+context: CXT_VOID
+left: !parsetree:Constant
+  flags: CONST_NUMBER|NUM_INTEGER
+  value: 12
+op: OP_BIT_NOT
 EOE

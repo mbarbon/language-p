@@ -25,7 +25,7 @@ BEGIN {
        T_MINUS T_STAR T_DOLLAR T_PERCENT T_AT T_AMPERSAND T_PLUSPLUS
        T_MINUSMINUS T_ANDAND T_OROR T_ARYLEN T_ARROW T_MATCH T_NOTMATCH
        T_ANDANDLOW T_ORORLOW T_NOTLOW T_XORLOW T_CMP T_SCMP T_SSTAR T_POWER
-       T_PLUSEQUAL T_MINUSEQUAL T_STAREQUAL T_SLASHEQUAL T_LABEL
+       T_PLUSEQUAL T_MINUSEQUAL T_STAREQUAL T_SLASHEQUAL T_LABEL T_TILDE
 
        T_CLASS_START T_CLASS_END T_CLASS T_QUANTIFIER T_ASSERTION T_ALTERNATE
        T_CLGROUP
@@ -134,6 +134,7 @@ my %ops =
     '.'   => T_DOT,
     '..'  => T_DOTDOT,
     '...' => T_DOTDOTDOT,
+    '~'   => T_TILDE,
     '+'   => T_PLUS,
     '-'   => T_MINUS,
     '*'   => T_STAR,
@@ -1021,7 +1022,7 @@ sub lex {
         return [ $self->{pos}, T_FILETEST, $op, $filetest{$op} ];
     };
     # single char operators
-    $$_ =~ s/^([:;,()\?<>!=\/\\\+\-\.\|^\*%@&])//x and return [ $self->{pos}, $ops{$1}, $1 ];
+    $$_ =~ s/^([:;,()\?<>!~=\/\\\+\-\.\|^\*%@&])//x and return [ $self->{pos}, $ops{$1}, $1 ];
 
     die "Lexer error: '$$_'";
 }
