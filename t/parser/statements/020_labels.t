@@ -28,6 +28,7 @@ EOP
 --- !parsetree:Empty
 label: _FOO_
 --- !parsetree:Constant
+context: CXT_VOID
 flags: CONST_NUMBER|NUM_INTEGER
 value: 1
 EOE
@@ -36,6 +37,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 _FOO_: 1
 EOP
 --- !parsetree:Constant
+context: CXT_VOID
 flags: CONST_NUMBER|NUM_INTEGER
 label: _FOO_
 value: 1
@@ -52,19 +54,22 @@ block: !parsetree:Block
     - !parsetree:BuiltinIndirect
       arguments:
         - !parsetree:Constant
+          context: CXT_LIST
           flags: CONST_NUMBER|NUM_INTEGER
           value: 42
       context: CXT_VOID
-      function: print
+      function: OP_PRINT
       indirect: ~
 continue: ~
 expression: !parsetree:BinOp
   context: CXT_LIST
   left: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   op: OP_DOT_DOT
   right: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 7
 label: LOOP

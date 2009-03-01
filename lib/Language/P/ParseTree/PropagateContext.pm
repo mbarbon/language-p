@@ -19,7 +19,7 @@ my %dispatch =
     'Language::P::ParseTree::Jump'                   => '_jump',
     'Language::P::ParseTree::BinOp'                  => '_binary_op',
     'Language::P::ParseTree::Symbol'                 => '_symbol',
-    'Language::P::ParseTree::Constant'               => '_noop',
+    'Language::P::ParseTree::Constant'               => '_set_context',
     'Language::P::ParseTree::LexicalDeclaration'     => '_symbol',
     'Language::P::ParseTree::LexicalSymbol'          => '_symbol',
     'Language::P::ParseTree::List'                   => '_list',
@@ -27,6 +27,7 @@ my %dispatch =
     'Language::P::ParseTree::ConditionalLoop'        => '_cond_loop',
     'Language::P::ParseTree::Ternary'                => '_ternary',
     'Language::P::ParseTree::Block'                  => '_block',
+    'Language::P::ParseTree::BareBlock'              => '_bare_block',
     'Language::P::ParseTree::Subroutine'             => '_subroutine',
     'Language::P::ParseTree::AnonymousSubroutine'    => '_subroutine',
     'Language::P::ParseTree::SubroutineDeclaration'  => '_noop',
@@ -58,6 +59,12 @@ sub _noisy_noop {
     my( $self, $tree, $cxt ) = @_;
 
     Carp::confess( "Unhandled context for ", ref( $tree ) || $tree, "\n" );
+}
+
+sub _set_context {
+    my( $self, $tree, $cxt ) = @_;
+
+    $tree->set_attribute( 'context', $cxt );
 }
 
 sub _symbol {
@@ -101,6 +108,7 @@ sub _slice {
 sub _list {
     my( $self, $tree, $cxt ) = @_;
 
+    $tree->set_attribute( 'context', $cxt );
     my $inner = _lv( $cxt & CXT_LIST   ? CXT_LIST :
                      $cxt & CXT_CALLER ? CXT_CALLER :
                                          CXT_VOID, $cxt );
@@ -121,6 +129,13 @@ sub _block {
             $self->visit( $tree->lines->[$i], CXT_VOID );
         }
     }
+}
+
+sub _bare_block {
+    my( $self, $tree, $cxt ) = @_;
+
+    _block( $self, $tree, $cxt );
+    $self->visit( $tree->continue, CXT_VOID ) if $tree->continue;
 }
 
 sub _function_call {
@@ -160,7 +175,7 @@ sub _builtin_indirect {
 
     $self->_function_call( $tree, $cxt );
     if( $tree->indirect ) {
-        my $arg_cxt = $tree->function eq 'map' || $tree->function eq 'grep' ?
+        my $arg_cxt = $tree->function == OP_MAP || $tree->function == OP_GREP ?
                           CXT_LIST : CXT_SCALAR;
         $self->visit( $tree->indirect, $arg_cxt );
     }
@@ -243,6 +258,7 @@ sub _foreach {
     $self->visit( $tree->variable, CXT_SCALAR );
     $self->visit( $tree->expression, CXT_LIST );
     $self->visit( $tree->block, CXT_VOID );
+    $self->visit( $tree->continue, CXT_VOID ) if $tree->continue;
 }
 
 sub _for {
@@ -259,6 +275,7 @@ sub _cond_loop {
 
     $self->visit( $tree->condition, CXT_SCALAR );
     $self->visit( $tree->block, CXT_VOID );
+    $self->visit( $tree->continue, CXT_VOID ) if $tree->continue;
 }
 
 sub _cond {

@@ -15,15 +15,17 @@ arguments:
   - !parsetree:Builtin
     arguments:
       - !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
     context: CXT_LIST
-    function: defined
+    function: OP_DEFINED
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: ~
 EOE
 
@@ -35,15 +37,17 @@ arguments:
   - !parsetree:Overridable
     arguments:
       - !parsetree:Constant
+        context: CXT_LIST
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
       - !parsetree:Constant
+        context: CXT_LIST
         flags: CONST_NUMBER|NUM_INTEGER
         value: 2
     context: CXT_LIST
-    function: unlink
+    function: OP_UNLINK
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: ~
 EOE
 
@@ -59,18 +63,20 @@ left: !parsetree:Overridable
       name: FILE
       sigil: VALUE_GLOB
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_STRING
       value: '>foo'
   context: CXT_SCALAR
-  function: open
+  function: OP_OPEN
 op: OP_LOG_OR
 right: !parsetree:Overridable
   arguments:
     - !parsetree:Constant
+      context: CXT_LIST
       flags: CONST_STRING
       value: error
   context: CXT_VOID
-  function: die
+  function: OP_DIE
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -83,7 +89,7 @@ arguments:
     name: stuff
     sigil: VALUE_SCALAR
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: !parsetree:Symbol
   context: CXT_SCALAR
   name: FILE
@@ -96,7 +102,7 @@ EOP
 --- !parsetree:BuiltinIndirect
 arguments: ~
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: !parsetree:Symbol
   context: CXT_SCALAR
   name: FILE
@@ -111,11 +117,12 @@ arguments:
   - !parsetree:UnOp
     context: CXT_LIST
     left: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_STRING|STRING_BARE
       value: FOO
     op: OP_PLUS
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: !parsetree:Symbol
   context: CXT_SCALAR
   name: FILE
@@ -136,7 +143,7 @@ arguments:
       name: FOO
       sigil: VALUE_SUB
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: !parsetree:Symbol
   context: CXT_SCALAR
   name: FILE
@@ -151,14 +158,16 @@ arguments:
   - !parsetree:BinOp
     context: CXT_LIST
     left: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_STRING|STRING_BARE
       value: FILE
     op: OP_CONCATENATE
     right: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_STRING|STRING_BARE
       value: FOO
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: ~
 EOE
 
@@ -179,7 +188,7 @@ arguments:
       name: b
       sigil: VALUE_SCALAR
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: ~
 EOE
 
@@ -193,7 +202,7 @@ arguments:
     name: stuff
     sigil: VALUE_SCALAR
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: ~
 EOE
 
@@ -210,7 +219,7 @@ arguments:
       name: FILE
       sigil: VALUE_SUB
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: ~
 EOE
 
@@ -220,10 +229,11 @@ EOP
 --- !parsetree:BuiltinIndirect
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: !parsetree:Symbol
   context: CXT_SCALAR
   name: FILE
@@ -244,5 +254,5 @@ arguments:
     name: FILE
     sigil: VALUE_GLOB
 context: CXT_VOID
-function: pipe
+function: OP_PIPE
 EOE

@@ -16,6 +16,7 @@ EOP
 block: !parsetree:Block
   lines:
     - !parsetree:Constant
+      context: CXT_VOID
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 block_type: for
@@ -28,6 +29,7 @@ condition: !parsetree:BinOp
     sigil: VALUE_SCALAR
   op: OP_NUM_LT
   right: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 10
 continue: ~
@@ -40,6 +42,7 @@ initializer: !parsetree:BinOp
     sigil: VALUE_SCALAR
   op: OP_ASSIGN
   right: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 0
 step: !parsetree:BinOp
@@ -59,6 +62,7 @@ step: !parsetree:BinOp
       sigil: VALUE_SCALAR
     op: OP_ADD
     right: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 EOE
@@ -72,6 +76,7 @@ EOP
 block: !parsetree:Block
   lines:
     - !parsetree:Constant
+      context: CXT_VOID
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 continue: ~
@@ -94,6 +99,7 @@ EOP
 block: !parsetree:Block
   lines:
     - !parsetree:Constant
+      context: CXT_VOID
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 continue: ~
@@ -116,6 +122,7 @@ EOP
 block: !parsetree:Block
   lines:
     - !parsetree:Constant
+      context: CXT_VOID
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 continue: ~
@@ -141,11 +148,13 @@ EOP
 block: !parsetree:Block
   lines:
     - !parsetree:Constant
+      context: CXT_VOID
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 continue: !parsetree:Block
   lines:
     - !parsetree:Constant
+      context: CXT_VOID
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
 expression: !parsetree:Symbol
@@ -173,6 +182,7 @@ block: !parsetree:Block
       sigil: VALUE_SCALAR
 continue: ~
 expression: !parsetree:Constant
+  context: CXT_LIST
   flags: CONST_NUMBER|NUM_INTEGER
   value: 8
 variable: !parsetree:LexicalDeclaration

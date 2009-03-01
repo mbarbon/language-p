@@ -1,0 +1,13 @@
+.HLL 'p5'
+
+.include 'support/parrot/runtime/p5macros.pir'
+.include 'support/parrot/runtime/p5scalar.pir'
+.include 'support/parrot/runtime/p5undef.pir'
+.include 'support/parrot/runtime/p5float.pir'
+.include 'support/parrot/runtime/p5integer.pir'
+.include 'support/parrot/runtime/p5string.pir'
+.include 'support/parrot/runtime/p5array.pir'
+.include 'support/parrot/runtime/p5list.pir'
+.include 'support/parrot/runtime/p5hash.pir'
+.include 'support/parrot/runtime/p5glob.pir'
+.include 'support/parrot/runtime/p5print.pir'

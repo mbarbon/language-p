@@ -21,7 +21,7 @@ lines:
         name: y
         sigil: VALUE_ARRAY
     context: CXT_CALLER
-    function: return
+    function: OP_RETURN
 name: x
 EOE
 
@@ -44,7 +44,7 @@ lines:
         name: y
         sigil: VALUE_ARRAY
     context: CXT_CALLER
-    function: return
+    function: OP_RETURN
 name: x
 EOE
 
@@ -70,7 +70,7 @@ lines:
                   name: y
                   sigil: VALUE_ARRAY
               context: CXT_CALLER
-              function: return
+              function: OP_RETURN
         block_type: if
         condition: !parsetree:Symbol
           context: CXT_SCALAR

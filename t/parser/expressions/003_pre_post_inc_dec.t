@@ -87,7 +87,7 @@ arguments:
       sigil: VALUE_SCALAR
     op: OP_PREINC
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: ~
 EOE
 
@@ -104,7 +104,7 @@ arguments:
       sigil: VALUE_SCALAR
     op: OP_POSTINC
 context: CXT_VOID
-function: print
+function: OP_PRINT
 indirect: ~
 EOE
 

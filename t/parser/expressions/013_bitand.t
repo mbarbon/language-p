@@ -13,6 +13,7 @@ EOP
 --- !parsetree:BinOp
 context: CXT_VOID
 left: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 op: OP_BIT_AND
@@ -31,10 +32,12 @@ EOP
 --- !parsetree:BinOp
 context: CXT_VOID
 left: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING|STRING_BARE
   value: x
 op: OP_BIT_AND
 right: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING|STRING_BARE
   value: foo
 EOE

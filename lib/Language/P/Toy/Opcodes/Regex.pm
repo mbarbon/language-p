@@ -125,8 +125,8 @@ sub _backtrack {
 
 sub o_rx_match {
     my( $op, $runtime, $pc ) = @_;
-    my $scalar = pop @{$runtime->{_stack}};
     my $pattern = pop @{$runtime->{_stack}};
+    my $scalar = pop @{$runtime->{_stack}};
 
     my $match = $pattern->match( $runtime, $scalar->as_string );
 

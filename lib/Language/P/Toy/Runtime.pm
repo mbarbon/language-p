@@ -25,6 +25,12 @@ sub new {
     return $current = $self;
 }
 
+sub set_option {
+    my( $class, $option, $value ) = @_;
+
+    return 0;
+}
+
 sub reset {
     my( $self ) = @_;
 

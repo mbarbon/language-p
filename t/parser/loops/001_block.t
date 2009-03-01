@@ -24,6 +24,7 @@ lines:
       sigil: VALUE_SCALAR
     op: OP_ASSIGN
     right: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
   - !parsetree:BinOp
@@ -34,6 +35,7 @@ lines:
       sigil: VALUE_SCALAR
     op: OP_ASSIGN
     right: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
 EOE
@@ -49,10 +51,12 @@ EOP
 continue: !parsetree:Block
   lines:
     - !parsetree:Constant
+      context: CXT_VOID
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
 lines:
   - !parsetree:Constant
+    context: CXT_VOID
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 EOE

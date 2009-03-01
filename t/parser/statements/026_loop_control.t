@@ -20,6 +20,7 @@ block: !parsetree:Block
       op: OP_LAST
 block_type: while
 condition: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 continue: ~
@@ -39,6 +40,7 @@ block: !parsetree:Block
       op: OP_REDO
 block_type: while
 condition: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 continue: ~
@@ -57,6 +59,7 @@ iftrues:
       op: OP_LAST
     block_type: if
     condition: !parsetree:Constant
+      context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
 EOE

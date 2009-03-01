@@ -15,6 +15,7 @@ arguments: ~
 context: CXT_VOID
 indirect: 0
 invocant: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING
   value: foo
 method: moo
@@ -28,6 +29,7 @@ arguments: ~
 context: CXT_VOID
 indirect: 1
 invocant: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING
   value: foo
 method: !parsetree:Symbol
@@ -42,14 +44,17 @@ EOP
 --- !parsetree:MethodCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID
 indirect: 0
 invocant: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING
   value: foo
 method: moo
@@ -61,14 +66,17 @@ EOP
 --- !parsetree:MethodCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID
 indirect: 1
 invocant: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING
   value: foo
 method: !parsetree:Symbol
@@ -92,6 +100,7 @@ invocant: !parsetree:Subscript
   context: CXT_SCALAR
   reference: 1
   subscript: !parsetree:Constant
+    context: CXT_SCALAR
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
   subscripted: !parsetree:MethodCall
@@ -106,6 +115,7 @@ invocant: !parsetree:Subscript
         context: CXT_SCALAR
         reference: 1
         subscript: !parsetree:Constant
+          context: CXT_SCALAR
           flags: CONST_NUMBER|NUM_INTEGER
           value: 1
         subscripted: !parsetree:Symbol
@@ -128,14 +138,17 @@ EOP
 --- !parsetree:MethodCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID
 indirect: 0
 invocant: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING
   value: foo
 method: moo::boo
@@ -147,9 +160,11 @@ EOP
 --- !parsetree:MethodCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 2
 context: CXT_VOID

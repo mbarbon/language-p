@@ -12,7 +12,8 @@ use Language::P::Keywords;
 
 __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime) );
 __PACKAGE__->mk_accessors( qw(_package _lexicals _pending_lexicals
-                              _in_declaration _lexical_state) );
+                              _in_declaration _lexical_state
+                              _options) );
 
 sub _lexical_sub_state { $_[0]->{_lexical_state}->[-1]->{sub} }
 
@@ -108,6 +109,34 @@ my %prec_assoc_un =
     T_NOTLOW()      => [ 22, ASSOC_RIGHT, OP_LOG_NOT ],
     );
 
+my %dereference_type =
+  ( VALUE_SCALAR()       => OP_DEREFERENCE_SCALAR,
+    VALUE_ARRAY()        => OP_DEREFERENCE_ARRAY,
+    VALUE_HASH()         => OP_DEREFERENCE_HASH,
+    VALUE_SUB()          => OP_DEREFERENCE_SUB,
+    VALUE_GLOB()         => OP_DEREFERENCE_GLOB,
+    VALUE_ARRAY_LENGTH() => OP_ARRAY_LENGTH,
+    );
+
+sub new {
+    my( $class, $args ) = @_;
+    my $self = $class->SUPER::new( $args );
+
+    $self->_options( {} ) unless $self->_options;
+
+    return $self;
+}
+
+sub set_option {
+    my( $self, $option, $value ) = @_;
+
+    if( $option eq 'dump-parse-tree' ) {
+        $self->_options->{$option} = 1;
+    }
+
+    return 0;
+}
+
 sub parse_string {
     my( $self, $string, $package ) = @_;
 
@@ -151,12 +180,26 @@ sub _qualify {
 sub _parse {
     my( $self ) = @_;
 
+    my $dumper;
+    if(    $self->_options->{'dump-parse-tree'}
+        && -f $self->lexer->file ) {
+        require Language::P::ParseTree::DumpYAML;
+        ( my $outfile = $self->lexer->file ) =~ s/(\.\w+)?$/.pt/;
+        open my $out, '>', $outfile || die "Can't open '$outfile': $!";
+        my $dumpyml = Language::P::ParseTree::DumpYAML->new;
+        $dumper = sub {
+            print $out $dumpyml->dump( $_[0] );
+        };
+    }
+
     $self->_pending_lexicals( [] );
     $self->_lexicals( undef );
     $self->_enter_scope( 0, 1 ); # FIXME eval
 
-    $self->generator->start_code_generation;
+    $self->generator->start_code_generation( { file_name => $self->lexer->file,
+                                               } );
     while( my $line = _parse_line( $self ) ) {
+        $dumper->( $line ) if $dumper;
         $self->generator->process( $line );
     }
     $self->_leave_scope;
@@ -689,7 +732,7 @@ sub _parse_indirect_function_call {
     if( !$subscripted->is_symbol || $subscripted->sigil != VALUE_SUB ) {
         $subscripted = Language::P::ParseTree::Dereference->new
                            ( { left => $subscripted,
-                               op   => VALUE_SUB,
+                               op   => OP_DEREFERENCE_SUB,
                                } );
     }
 
@@ -957,7 +1000,7 @@ sub _parse_term_terminal {
                 && $#{$qstring->components} == 0
                 && $qstring->components->[0]->is_symbol ) {
                 return Language::P::ParseTree::Overridable
-                           ->new( { function  => 'readline',
+                           ->new( { function  => OP_READLINE,
                                     arguments => [ $qstring->components->[0] ] } );
             } elsif( $qstring->is_constant ) {
                 if( $qstring->value =~ /^[a-zA-Z_]/ ) {
@@ -972,7 +1015,7 @@ sub _parse_term_terminal {
                                            sigil => VALUE_GLOB,
                                            } );
                         return Language::P::ParseTree::Overridable
-                                   ->new( { function  => 'readline',
+                                   ->new( { function  => OP_READLINE,
                                             arguments => [ $glob ],
                                             } );
                     }
@@ -1107,7 +1150,7 @@ sub _parse_indirobj_maybe_subscripts {
         return $is_id ? _find_symbol( $self, $sigil, $indir->[O_VALUE], $indir->[O_ID_TYPE] ) :
                          Language::P::ParseTree::Dereference->new
                              ( { left  => $indir,
-                                 op    => $sigil,
+                                 op    => OP_DEREFERENCE_HASH,
                                  } );
     }
 
@@ -1133,7 +1176,7 @@ sub _parse_indirobj_maybe_subscripts {
         my $deref = $is_id ? _find_symbol( $self, $sigil, $indir->[O_VALUE], $indir->[O_ID_TYPE] ) :
                              Language::P::ParseTree::Dereference->new
                                  ( { left  => $indir,
-                                     op    => $sigil,
+                                     op    => $dereference_type{$sigil},
                                      } );
 
         return _parse_maybe_subscript_rest( $self, $deref );
@@ -1150,7 +1193,7 @@ sub _parse_indirobj_maybe_subscripts {
         return $is_id ? _find_symbol( $self, $sigil, $indir->[O_VALUE], $indir->[O_ID_TYPE] ) :
                          Language::P::ParseTree::Dereference->new
                              ( { left  => $indir,
-                                 op    => $sigil,
+                                 op    => $dereference_type{$sigil},
                                  } );
     }
 
@@ -1383,7 +1426,7 @@ sub _add_implicit_return {
     if( !$line->is_compound ) {
         return Language::P::ParseTree::Builtin->new
                    ( { arguments => [ $line ],
-                       function  => 'return',
+                       function  => OP_RETURN,
                        } );
     }
 
@@ -1463,7 +1506,7 @@ sub _parse_indirobj {
         } else {
             return Language::P::ParseTree::Dereference->new
                        ( { left  => $indir,
-                           op    => VALUE_SCALAR,
+                           op    => OP_DEREFERENCE_SCALAR,
                            } );
         }
     } elsif( $allow_fail ) {
@@ -1487,13 +1530,13 @@ sub _declared_id {
             die "Overriding '" . $op->[O_VALUE] . "' not implemented";
         }
         $call = Language::P::ParseTree::Overridable->new
-                    ( { function  => $op->[O_VALUE],
+                    ( { function  => $KEYWORD_TO_OP{$opidt},
                         } );
 
         return ( $call, 1 );
     } elsif( is_builtin( $opidt ) ) {
         $call = Language::P::ParseTree::Builtin->new
-                    ( { function  => $op->[O_VALUE],
+                    ( { function  => $KEYWORD_TO_OP{$opidt},
                         } );
 
         return ( $call, 1 );
@@ -1584,7 +1627,7 @@ sub _parse_listop_like {
     # FIXME avoid reconstructing the call?
     if( $proto->[2] & (PROTO_INDIROBJ|PROTO_FILEHANDLE) ) {
         $call = Language::P::ParseTree::BuiltinIndirect->new
-                    ( { function  => $call->function,
+                    ( { function  => $KEYWORD_TO_OP{$op->[O_ID_TYPE]},
                         arguments => $args,
                         indirect  => $fh,
                         } );

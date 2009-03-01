@@ -1,5 +1,12 @@
 # Avoid build files
 ^lib/Language/P/Keywords.pm$
+^lib/Language/P/Opcodes.pm$
+^bin/p_parrot$
+^t/.*/.*\.pbc$
+^t/.*/.*\.ir$
+^t/.*/.*\.pir$
+^t/.*/.*\.pt$
+^support/parrot/runtime/.*\.pbc$
 
 # Avoid version control files.
 \bRCS\b

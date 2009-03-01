@@ -18,6 +18,7 @@ left: !parsetree:Symbol
   sigil: VALUE_SCALAR
 op: OP_ASSIGN
 right: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 EOE
@@ -33,6 +34,7 @@ left: !parsetree:Symbol
   sigil: VALUE_SCALAR
 op: OP_ASSIGN
 right: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_STRING
   value: test
 EOE
@@ -84,6 +86,7 @@ EOP
 --- !parsetree:BinOp
 context: CXT_VOID
 left: !parsetree:List
+  context: CXT_LIST|CXT_LVALUE
   expressions:
     - !parsetree:Symbol
       context: CXT_SCALAR|CXT_LVALUE

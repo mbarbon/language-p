@@ -97,6 +97,7 @@ right: !parsetree:InterpolatedPattern
   string: !parsetree:QuotedString
     components:
       - !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_STRING
         value: '^'
       - !parsetree:Symbol
@@ -104,6 +105,7 @@ right: !parsetree:InterpolatedPattern
         name: foo
         sigil: VALUE_SCALAR
       - !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_STRING
         value: aaa
 EOE
@@ -151,6 +153,7 @@ right: !parsetree:InterpolatedPattern
         name: foo
         sigil: VALUE_SCALAR
       - !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_STRING
         value: $
 EOE
@@ -175,6 +178,7 @@ right: !parsetree:InterpolatedPattern
         name: foo
         sigil: VALUE_SCALAR
       - !parsetree:Constant
+        context: CXT_SCALAR
         flags: CONST_STRING
         value: \w
 EOE

@@ -1,9 +1,25 @@
+# work files
 *~
+*.diff
 Build
 _build
 blib
 t/perl5/[a-z]*
-cover_db
-TAGS
 lib/Language/P/Keywords.pm
+lib/Language/P/Opcodes.pm
 META.yml
+
+# Misc
+TAGS
+cover_db
+
+# Compilation byproducts
+*.pt
+
+# Generated parrot files, parrot symlink
+bin/p_parrot
+t/*/*.pbc
+t/*/*.pir
+t/*/*.ir
+support/parrot/runtime/*.pbc
+parrot

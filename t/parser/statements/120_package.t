@@ -95,6 +95,7 @@ name: y
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
@@ -105,6 +106,7 @@ function: !parsetree:Symbol
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
@@ -144,6 +146,7 @@ name: w::xw
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
@@ -154,6 +157,7 @@ function: !parsetree:Symbol
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
@@ -164,6 +168,7 @@ function: !parsetree:Symbol
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
@@ -174,6 +179,7 @@ function: !parsetree:Symbol
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
@@ -186,6 +192,7 @@ name: main
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
@@ -196,6 +203,7 @@ function: !parsetree:Symbol
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
@@ -206,6 +214,7 @@ function: !parsetree:Symbol
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
@@ -216,6 +225,7 @@ function: !parsetree:Symbol
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
@@ -240,6 +250,7 @@ name: y
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID
@@ -254,6 +265,7 @@ name: main
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
 context: CXT_VOID

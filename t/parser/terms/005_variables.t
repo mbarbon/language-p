@@ -55,7 +55,7 @@ left: !parsetree:Symbol
   context: CXT_SCALAR
   name: foo
   sigil: VALUE_ARRAY
-op: VALUE_ARRAY_LENGTH
+op: OP_ARRAY_LENGTH
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

@@ -20,7 +20,9 @@ An experiment: a Perl 5 parser written in Perl 5, which might in time
 have multiple backends.  For now it only has a partial parser
 implementation and a toy runtime written in Perl 5.
 
-Time permitting it will acquire a Parrot (or Java or .Net runtime).
+Time permitting it will acquire a Parrot (and Java and .Net and ... runtime).
+
+=head1 METHODS
 
 =cut
 
@@ -34,6 +36,20 @@ __PACKAGE__->mk_accessors( qw(program program_arguments) );
 our $VERSION = '0.01_02';
 
 use Language::P::Parser;
+
+=head2 new_from_argv
+
+  $p = Language::P->new_from_argv( \@ARGV,
+                                   { generator => $code_generator,
+                                     runtime   => $runtime,
+                                     } );
+
+Constructs a C<Language::P> object, initializes it calling
+C<initialize> passing the second argument, processes command-line
+arguments ten uses anything remaining in the command line as a program
+name and its arguments.
+
+=cut
 
 sub new_from_argv {
     my( $class, $argv, $args ) = @_;
@@ -67,25 +83,27 @@ sub initialize {
 
 sub process_command_line {
     my( $self, $argv ) = @_;
+    my @remaining;
 
-    local @ARGV = @$argv;
+    for( my $i = 0; $i <= $#$argv; ++$i ) {
+        my $arg = $argv->[$i];
 
-    require Getopt::Long;
+        $arg eq '--' and do {
+            push @remaining, @{$argv}[$i + 1 .. $#$argv];
+            last;
+        };
+        $arg =~ /^-f(\S+)/ and do {
+            $self->parser->set_option( $1 );
+            $self->generator->set_option( $1 );
+            $self->runtime->set_option( $1 );
+            next;
+        };
 
-    Getopt::Long::GetOptions
-      ( \my %args,
-        'D=s' => \my $debugging,
-        );
-
-    if( $debugging ) {
-        foreach my $deb_opt ( split /,/, $debugging ) {
-            if( $deb_opt eq 'parse_tree' ) {
-                $self->generator->set_debug( $deb_opt );
-            }
-        }
+        # pass through
+        push @remaining, $arg;
     }
 
-    return [ @ARGV ];
+    return \@remaining;
 }
 
 sub run {

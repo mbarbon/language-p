@@ -17,7 +17,7 @@ arguments:
     name: a
     sigil: VALUE_SCALAR
 context: CXT_VOID
-function: defined
+function: OP_DEFINED
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -30,7 +30,7 @@ arguments:
     name: foo
     sigil: VALUE_SUB
 context: CXT_VOID
-function: defined
+function: OP_DEFINED
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -46,9 +46,9 @@ arguments:
           context: CXT_SCALAR
           name: foo
           sigil: VALUE_SCALAR
-    op: VALUE_SUB
+    op: OP_DEREFERENCE_SUB
 context: CXT_VOID
-function: defined
+function: OP_DEFINED
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -62,7 +62,7 @@ condition: !parsetree:Builtin
       name: a
       sigil: VALUE_SCALAR
   context: CXT_SCALAR
-  function: defined
+  function: OP_DEFINED
 context: CXT_VOID
 iffalse: !parsetree:Symbol
   context: CXT_VOID

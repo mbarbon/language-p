@@ -24,10 +24,11 @@ right: !parsetree:AnonymousSubroutine
     - !parsetree:Builtin
       arguments:
         - !parsetree:Constant
+          context: CXT_CALLER
           flags: CONST_NUMBER|NUM_INTEGER
           value: 1
       context: CXT_CALLER
-      function: return
+      function: OP_RETURN
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -45,6 +46,7 @@ left: !parsetree:LexicalDeclaration
   sigil: VALUE_SCALAR
 op: OP_ASSIGN
 right: !parsetree:Constant
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
 --- !parsetree:BinOp
@@ -64,7 +66,7 @@ right: !parsetree:AnonymousSubroutine
           name: d
           sigil: VALUE_SCALAR
       context: CXT_CALLER
-      function: return
+      function: OP_RETURN
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -87,6 +89,7 @@ lines:
   - !parsetree:BinOp
     context: CXT_VOID
     left: !parsetree:List
+      context: CXT_LIST|CXT_LVALUE
       expressions:
         - !parsetree:LexicalDeclaration
           context: CXT_SCALAR|CXT_LVALUE
@@ -106,6 +109,7 @@ lines:
           - !parsetree:BinOp
             context: CXT_VOID
             left: !parsetree:List
+              context: CXT_LIST|CXT_LVALUE
               expressions:
                 - !parsetree:LexicalDeclaration
                   context: CXT_SCALAR|CXT_LVALUE
@@ -125,6 +129,7 @@ lines:
                   - !parsetree:BinOp
                     context: CXT_VOID
                     left: !parsetree:List
+                      context: CXT_LIST|CXT_LVALUE
                       expressions:
                         - !parsetree:LexicalDeclaration
                           context: CXT_SCALAR|CXT_LVALUE
@@ -161,10 +166,10 @@ lines:
                           name: z
                           sigil: VALUE_SCALAR
                     context: CXT_CALLER
-                    function: return
+                    function: OP_RETURN
             context: CXT_CALLER
-            function: return
+            function: OP_RETURN
     context: CXT_CALLER
-    function: return
+    function: OP_RETURN
 name: add3
 EOE

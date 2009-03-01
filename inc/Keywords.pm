@@ -47,10 +47,12 @@ BEGIN {
 };
 
 our @EXPORT = ( @KEYWORDS, @BUILTINS, @OVERRIDABLES,
+                qw(@KEYWORDS @BUILTINS @OVERRIDABLES),
                 qw(is_keyword is_builtin is_overridable is_id)
                 );
 our %%EXPORT_TAGS =
-  ( all  => \@EXPORT,
+  ( all       => \@EXPORT,
+    constants => [ @KEYWORDS, @BUILTINS, @OVERRIDABLES ],
     );
 
 use constant +
@@ -112,11 +114,12 @@ local               k
 sub                 k       
 eval                b       
 package             k       
-print               b       OP_PRINT
+print               b       
 defined             b       
 return              b       
 undef               b       
 map                 b       
+grep                b       
 unlink              o       
 glob                o       
 readline            o       
@@ -125,7 +128,6 @@ open                o
 pipe                o       
 chdir               o       
 rmdir               o       
-glob                o       
 readline            o       
 close               o       
 binmode             o       

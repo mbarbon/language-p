@@ -17,7 +17,7 @@ arguments:
     name: foo
     sigil: VALUE_SCALAR
 context: CXT_VOID
-function: eval
+function: OP_EVAL
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -28,15 +28,18 @@ arguments:
   - !parsetree:Block
     lines:
       - !parsetree:List
+        context: CXT_LIST
         expressions:
           - !parsetree:Constant
+            context: CXT_LIST
             flags: CONST_NUMBER|NUM_INTEGER
             value: 1
           - !parsetree:Constant
+            context: CXT_LIST
             flags: CONST_NUMBER|NUM_INTEGER
             value: 1
 context: CXT_VOID
-function: eval
+function: OP_EVAL
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -48,17 +51,20 @@ arguments:
     context: CXT_LIST
     left: !parsetree:ReferenceConstructor
       expression: !parsetree:List
+        context: CXT_LIST
         expressions:
           - !parsetree:Constant
+            context: CXT_LIST
             flags: CONST_NUMBER|NUM_INTEGER
             value: 1
           - !parsetree:Constant
+            context: CXT_LIST
             flags: CONST_NUMBER|NUM_INTEGER
             value: 1
       type: VALUE_HASH
     op: OP_PLUS
 context: CXT_VOID
-function: eval
+function: OP_EVAL
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -68,14 +74,17 @@ EOP
 arguments:
   - !parsetree:ReferenceConstructor
     expression: !parsetree:List
+      context: CXT_LIST
       expressions:
         - !parsetree:Constant
+          context: CXT_LIST
           flags: CONST_NUMBER|NUM_INTEGER
           value: 1
         - !parsetree:Constant
+          context: CXT_LIST
           flags: CONST_NUMBER|NUM_INTEGER
           value: 1
     type: VALUE_HASH
 context: CXT_VOID
-function: eval
+function: OP_EVAL
 EOE

@@ -12,13 +12,12 @@ use Language::P::ParseTree qw(:all);
 my $runtime = Language::P::Toy::Runtime->new;
 
 my @add_mul =
-  ( o( 'start_list' ),
-    o( 'parameter_index', index => 0 ),
+  ( o( 'parameter_index', index => 0 ),
     o( 'parameter_index', index => 1 ),
     o( 'add' ),
     o( 'parameter_index', index => 2 ),
     o( 'multiply' ),
-    o( 'end_list' ),
+    o( 'make_list', count => 1 ),
     o( 'return' ),
     );
 
@@ -27,8 +26,7 @@ my $add_mul = Language::P::Toy::Value::Subroutine->new( { bytecode   => \@add_mu
                                                       } );
 
 my @main =
-  ( o( 'start_list' ),
-    o( 'constant',
+  ( o( 'constant',
        value => Language::P::Toy::Value::StringNumber->new( { integer => 1 } ),
        ),
     o( 'constant',
@@ -37,7 +35,7 @@ my @main =
     o( 'constant',
        value => Language::P::Toy::Value::StringNumber->new( { integer => 7 } ),
        ),
-    o( 'end_list' ),
+    o( 'make_list', count => 3 ),
     o( 'constant', value => $add_mul ),
     o( 'call', context => CXT_SCALAR ),
     o( 'end' ),
