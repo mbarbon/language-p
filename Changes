@@ -1,5 +1,22 @@
 Revision history for Perl extension Language::P.
 
+0.01_03  Sun Mar  1 17:52:48 CET 2009
+	- Parsing:
+	    - Pre/post increment/decrement (++ and --) operators.
+	    - Bitwise negation.
+	    - Parsing of heredocs in substitutions.
+	- Intermediate representation:
+	    - Add an intermediate representation and use it as a base
+	      for the Toy and Parrot code generators.
+	    - Use the same instruction set for both stack-based IR and
+	      SSA/register-based IR.
+	    - Use basic blocks for the IR and add some opcode metadata
+	      in inc/Opcodes.pm.
+	- Toy runtime:
+	    - Rewrite code generation to use the new IR representation.
+	- Parrot runtime:
+	    - Add a basic Parrot code generator/runtime.
+
 0.01_02  Sat Nov 22 22:23:35 CET 2008
 	- Parsing:
 	    - Anonymous subroutines and closed-over lexical variables.
