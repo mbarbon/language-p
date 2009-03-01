@@ -33,7 +33,7 @@ use base qw(Class::Accessor::Fast);
 __PACKAGE__->mk_ro_accessors( qw(runtime parser generator) );
 __PACKAGE__->mk_accessors( qw(program program_arguments) );
 
-our $VERSION = '0.01_02';
+our $VERSION = '0.01_03';
 
 use Language::P::Parser;
 
