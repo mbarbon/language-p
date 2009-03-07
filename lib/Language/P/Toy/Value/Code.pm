@@ -33,7 +33,7 @@ sub call {
     if( $self->stack_size ) {
         # FIXME lexical values initialization
         foreach my $slot ( 0 .. $self->stack_size ) {
-            $stack->[$frame - 2 - $slot] = Language::P::Toy::Value::StringNumber->new;
+            $stack->[$frame - 2 - $slot] = Language::P::Toy::Value::Undef->new;
         }
     }
     $stack->[$frame - 2] = [ $pc, $runtime->{_bytecode}, $context ];

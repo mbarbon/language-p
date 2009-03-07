@@ -21,7 +21,8 @@ sub clone {
 sub assign {
     my( $self, $other ) = @_;
 
-    die unless ref( $self ) eq ref( $other ); # FIXME morph
+    Language::P::Toy::Value::Scalar::assign( $self, $other )
+        unless ref( $self ) eq ref( $other );
 
     $self->{reference} = $other->{reference};
 }

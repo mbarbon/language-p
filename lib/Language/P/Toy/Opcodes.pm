@@ -223,7 +223,7 @@ sub o_want {
     my $v;
 
     if( $cxt == CXT_VOID ) {
-        $v = Language::P::Toy::Value::StringNumber->new;
+        $v = Language::P::Toy::Value::Undef->new;
     } elsif( $cxt == CXT_SCALAR ) {
         $v = Language::P::Toy::Value::StringNumber->new( { string => '' } );
     } elsif( $cxt == CXT_LIST ) {
@@ -258,7 +258,7 @@ sub o_return {
             push @{$runtime->{_stack}}, $rv->get_item( $rv->get_count - 1 )
                                            ->as_scalar;
         } else {
-            push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new;
+            push @{$runtime->{_stack}}, Language::P::Toy::Value::Undef->new;
         }
     } elsif( $cxt == CXT_LIST ) {
         push @{$runtime->{_stack}}, $rv;
@@ -284,7 +284,7 @@ sub o_glob {
 sub o_lexical {
     my( $op, $runtime, $pc ) = @_;
     my $value = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}]
-                  ||= Language::P::Toy::Value::StringNumber->new;
+                  ||= Language::P::Toy::Value::Undef->new;
 
     push @{$runtime->{_stack}}, $value;
 

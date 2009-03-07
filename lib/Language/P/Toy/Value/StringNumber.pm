@@ -23,7 +23,7 @@ sub as_string {
     return $self->{string} if defined $self->{string};
     return sprintf "%d", $self->{integer} if defined $self->{integer};
     return sprintf "%.15g", $self->{float} if defined $self->{float};
-    Carp::confess();
+    Carp::confess( "StringNumber must have one slot set" );
 }
 
 sub as_integer {
@@ -32,7 +32,7 @@ sub as_integer {
     return $self->{integer} if defined $self->{integer};
     return int( $self->{float} ) if defined $self->{float};
     return $self->{string} + 0 if defined $self->{string};
-    return 0;
+    Carp::confess( "StringNumber must have one slot set" );
 }
 
 sub as_float {
@@ -41,13 +41,14 @@ sub as_float {
     return $self->{float} if defined $self->{float};
     return $self->{integer} if defined $self->{integer};
     return $self->{string} + 0.0 if defined $self->{string};
-    return 0.0;
+    Carp::confess( "StringNumber must have one slot set" );
 }
 
 sub assign {
     my( $self, $other ) = @_;
 
-    die unless ref( $self ) eq ref( $other ); # FIXME morph
+    Language::P::Toy::Value::Scalar::assign( $self, $other )
+        unless ref( $self ) eq ref( $other );
 
     $self->{string} = $other->{string};
     $self->{integer} = $other->{integer};
@@ -65,15 +66,13 @@ sub as_boolean_int {
         return length( $self->{string} ) && $self->{string} ne "0" ? 1 : 0;
     }
 
-    die;
+    Carp::confess( "StringNumber must have one slot set" );
 }
 
 sub is_defined {
     my( $self ) = @_;
 
-    return    defined $self->{float}
-           || defined $self->{integer}
-           || defined $self->{string} ? 1 : 0;
+    return 1;
 }
 
 1;

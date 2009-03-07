@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use base qw(Language::P::Toy::Value::Any);
 
+use Language::P::Toy::Value::Undef;
+
 sub type { 5 }
 
 sub as_scalar { return $_[0] }
@@ -30,7 +32,7 @@ sub assign_iterator {
 sub localize {
     my( $self ) = @_;
 
-    return Language::P::Toy::Value::StringNumber->new;
+    return Language::P::Toy::Value::Undef->new;
 }
 
 1;

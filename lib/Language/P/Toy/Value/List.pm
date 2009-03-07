@@ -38,8 +38,7 @@ sub as_scalar {
     my( $self ) = @_;
 
     return @{$self->{array}} ? $self->{array}[-1]->as_scalar :
-                               # FIXME real undef
-                               Language::P::Toy::Value::StringNumber->new;
+                               Language::P::Toy::Value::Undef->new;
 }
 
 1;

@@ -335,7 +335,7 @@ sub _const_float {
 sub _const_undef {
     my( $self, $bytecode, $op ) = @_;
 
-    my $v = Language::P::Toy::Value::StringNumber->new;
+    my $v = Language::P::Toy::Value::Undef->new;
     push @$bytecode,
          o( 'constant', value => $v );
 }

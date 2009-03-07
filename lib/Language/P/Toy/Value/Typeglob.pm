@@ -57,7 +57,7 @@ use Language::P::Toy::Value::Handle;
 # use Language::P::Toy::Value::Format;
 
 my %types =
-  ( scalar     => 'Language::P::Toy::Value::Scalar',
+  ( scalar     => 'Language::P::Toy::Value::Undef',
     array      => 'Language::P::Toy::Value::Array',
     hash       => 'Language::P::Toy::Value::Hash',
     subroutine => 'Language::P::Toy::Value::Subroutine',
