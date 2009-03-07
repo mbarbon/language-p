@@ -672,7 +672,7 @@ sub o_array_element {
     my $array = pop @{$runtime->{_stack}};
     my $index = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $array->get_item( $index->as_integer );
+    push @{$runtime->{_stack}}, $array->get_item_or_undef( $index->as_integer );
 
     return $pc + 1;
 }

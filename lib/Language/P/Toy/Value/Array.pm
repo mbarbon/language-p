@@ -89,6 +89,17 @@ sub get_item {
     return $self->{array}->[$index];
 }
 
+sub get_item_or_undef {
+    my( $self, $index ) = @_;
+
+    if( $index > $#{$self->{array}} ) {
+        CORE::push @{$self->{array}}, Language::P::Toy::Value::Undef->new
+          foreach 1 .. $index - $#{$self->{array}};
+    }
+
+    return $self->{array}->[$index];
+}
+
 sub get_count {
     my( $self ) = @_;
 
