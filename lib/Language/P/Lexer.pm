@@ -456,6 +456,9 @@ sub lex_quote {
                 if( $qc =~ /^[a-zA-Z]$/ ) {
                     if( $quoted_chars{$qc} ) {
                         $v .= $quoted_chars{$qc};
+                    } elsif( $qc eq 'c' ) {
+                        my $next = uc substr $$buffer, 0, 1, '';
+                        $v .= chr( ord( $next ) ^ 0x40 );
                     } else {
                         die "Invalid escape '$qc'";
                     }
