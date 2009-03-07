@@ -1,6 +1,8 @@
 Revision history for Perl extension Language::P.
 
 0.01_04
+	- Intermediate representation:
+	    - Fix code generation for nested if-then-else constructs.
 	- Toy runtime
 	    - Execute BEGIN blocks as soon as they are parsed.
 

@@ -748,7 +748,7 @@ sub _cond {
     $self->push_block;
 
     my @blocks;
-    my $current = $self->_code_segments->[0]->basic_blocks->[-1];
+    my $current = $self->_current_basic_block;
     push @blocks, _new_block( $self );
     if( $tree->iffalse ) {
         push @blocks, _new_block( $self );

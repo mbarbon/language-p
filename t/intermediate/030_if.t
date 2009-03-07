@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 4;
+use Test::More tests => 5;
 
 use lib qw(t/lib);
 use TestIntermediate qw(:all);
@@ -132,5 +132,32 @@ L5:
 L6:
   jump to=L2
 L7:
+  jump to=L2
+EOI
+
+generate_and_diff( <<'EOP', <<'EOI' );
+if( $y eq '' ) {
+    3 unless $z;
+}
+EOP
+# main
+L1:
+  jump to=L3
+L2:
+  end
+L3:
+  global name=y, slot=1
+  constant_string ""
+  jump_if_s_eq false=L9, true=L6
+L6:
+  global name=z, slot=1
+  jump_if_true false=L7, true=L8
+L7:
+  constant_integer 3
+  pop
+  jump to=L2
+L8:
+  jump to=L2
+L9:
   jump to=L2
 EOI
