@@ -6,7 +6,7 @@ use base qw(Language::P::ParseTree::Visitor);
 
 __PACKAGE__->mk_ro_accessors( qw(runtime) );
 __PACKAGE__->mk_accessors( qw(_code _pending _block_map _temporary_map
-                              _options _generated _intermediate) );
+                              _options _generated _intermediate _head) );
 
 use Language::P::Intermediate::Generator;
 use Language::P::Opcodes qw(:all);
@@ -58,9 +58,20 @@ sub _add {
 sub process {
     my( $self, $tree ) = @_;
 
-    push @{$self->{_pending}}, $tree;
+    if( $tree->isa( 'Language::P::ParseTree::NamedSubroutine' ) ) {
+        my $sub_int = $self->_intermediate->generate_subroutine( $tree );
+        my $sub = _generate_segment( $self, $sub_int->[0], $self->_head );
 
-    return;
+        # run right away if it is a begin block
+        if( $tree->name eq 'BEGIN' ) {
+            my $args = Language::P::Toy::Value::List->new;
+            $self->runtime->call_subroutine( $sub, CXT_VOID, $args );
+        }
+
+        return;
+    }
+
+    push @{$self->{_pending}}, $tree;
 }
 
 sub add_declaration {
@@ -111,25 +122,25 @@ my %opcode_map =
     );
 
 sub _generate_segment {
-    my( $self, $segment, $outer ) = @_;
+    my( $self, $segment, $outer, $target ) = @_;
     my $is_sub = $segment->is_sub;
     my $is_regex = $segment->is_regex;
     my $pad = Language::P::Toy::Value::ScratchPad->new;
 
-    my $code;
-    if( $is_sub ) {
+    my $code = $target;
+    if( $is_sub && !$code ) {
         $code = Language::P::Toy::Value::Subroutine->new
                     ( { bytecode => [],
                         name     => $segment->name,
                         lexicals => $pad,
                         outer    => $outer,
                         } );
-    } elsif( $is_regex ) {
+    } elsif( $is_regex && !$code ) {
         $code = Language::P::Toy::Value::Regex->new
                     ( { bytecode   => [],
                         stack_size => 0,
                         } );
-    } else {
+    } elsif( !$code ) {
         $code = Language::P::Toy::Value::Code->new
                     ( { bytecode => [],
                         lexicals => $pad,
@@ -188,30 +199,17 @@ sub process_regex {
     my( $self, $regex ) = @_;
 
     $self->start_code_generation;
+    my $regex_int = $self->_intermediate->generate_regex( $regex );
+    my $res = _generate_segment( $self, $regex_int->[0], undef );
+    $self->_cleanup;
 
-    return $self->_process_code_segments
-               ( $self->_intermediate->generate_regex( $regex ) );
+    return $res;
 }
 
 sub finished {
     my( $self ) = @_;
-    my $pending = $self->_pending;
-
-    return $self->_process_code_segments
-               ( $self->_intermediate->generate_bytecode( $pending ) );
-}
-
-sub _process_code_segments {
-    my( $self, $code_segments ) = @_;
-
-    $self->_generated( {} );
-    foreach my $segment ( @$code_segments ) {
-        next if $self->_generated->{$segment};
-        _generate_segment( $self, $segment, undef );
-    }
-
-    my $res = $self->_generated->{$code_segments->[0]};
-
+    my $main_int = $self->_intermediate->generate_bytecode( $self->_pending );
+    my $res = _generate_segment( $self, $main_int->[0], undef, $self->_head );
     $self->_cleanup;
 
     return $res;
@@ -225,11 +223,19 @@ sub _cleanup {
     $self->_block_map( undef );
     $self->_temporary_map( undef );
     $self->_generated( undef );
+    $self->_head( undef );
 }
 
 sub start_code_generation {
     my( $self, $args ) = @_;
+    my $outer = Language::P::Toy::Value::Code->new
+                    ( { bytecode => [],
+                        lexicals => Language::P::Toy::Value::ScratchPad->new,
+                        outer    => undef,
+                        } );
+    $self->_head( $outer );
 
+    $self->_generated( {} );
     $self->_intermediate->file_name( $args->{file_name} )
       if $args && $args->{file_name};
     $self->_pending( [] );

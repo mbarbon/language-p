@@ -48,6 +48,14 @@ sub run_last_file {
     return $self->run;
 }
 
+sub call_subroutine {
+    my( $self, $code, $context, $args ) = @_;
+
+    push @{$self->{_stack}}, $args;
+    $code->call( $self, -2, $context );
+    $self->run;
+}
+
 sub set_bytecode {
     my( $self, $bytecode ) = @_;
 

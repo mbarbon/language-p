@@ -1,5 +1,9 @@
 Revision history for Perl extension Language::P.
 
+0.01_04
+	- Toy runtime
+	    - Execute BEGIN blocks as soon as they are parsed.
+
 0.01_03  Sun Mar  1 17:52:48 CET 2009
 	- Parsing:
 	    - Pre/post increment/decrement (++ and --) operators.

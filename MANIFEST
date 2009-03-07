@@ -75,6 +75,7 @@ t/intermediate/055_and_or_ssa.t
 t/intermediate/055_and_or_tree.t
 t/intermediate/060_complex_trees_ssa.t
 t/intermediate/085_closure_ssa.t
+t/intermediate/100_begin.t
 t/lib/TestIntermediate.pm
 t/lib/TestParser.pm
 t/lib/TestRegex.pm
@@ -139,6 +140,7 @@ t/run/010_arithmetic.t
 t/run/011_call.t
 t/run/015_defined.t
 t/run/020_lexicals.t
+t/run/025_begin.t
 t/run/035_local.t
 t/run/038_goto.t
 t/run/039_loop_control.t
