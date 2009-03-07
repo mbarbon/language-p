@@ -8,6 +8,22 @@ use Language::P::Toy::Value::Undef;
 
 sub type { 5 }
 
+sub new_boolean {
+    my( $class, $value ) = @_;
+
+    return $value ?
+               Language::P::Toy::Value::StringNumber->new( { integer => 1 } ) :
+               Language::P::Toy::Value::StringNumber->new( { string => '' } );
+}
+
+sub new_string {
+    my( $class, $value ) = @_;
+
+    return defined $value ?
+               Language::P::Toy::Value::StringNumber->new( { string => $value } ) :
+               Language::P::Toy::Value::Undef->new;
+}
+
 sub as_scalar { return $_[0] }
 
 sub assign {
