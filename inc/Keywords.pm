@@ -133,3 +133,4 @@ close               o
 binmode             o       
 abs                 o       
 wantarray           o       
+chr                 o       

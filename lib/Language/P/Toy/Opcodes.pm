@@ -85,6 +85,19 @@ sub o_print {
     return $pc + 1;
 }
 
+sub o_readline {
+    my( $op, $runtime, $pc ) = @_;
+    my $glob = pop @{$runtime->{_stack}};
+    my $fh = $glob->get_slot( 'io' );
+
+    # FIXME context
+    my $val = $fh->readline;
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::Scalar
+                                    ->new_string( $val );
+
+    return $pc + 1;
+}
+
 sub o_constant {
     my( $op, $runtime, $pc ) = @_;
     push @{$runtime->{_stack}}, $op->{value};
@@ -170,6 +183,11 @@ _make_binary_op( $_ ) foreach
       convert  => 'as_float',
       operator => '/',
       new_type => 'float',
+      },
+    { name     => 'o_bit_or',
+      convert  => 'as_integer',
+      operator => '|',
+      new_type => 'integer',
       },
     { name     => 'o_modulus',
       convert  => 'as_integer',
@@ -568,32 +586,68 @@ _make_compare( $_ ) foreach
       },
     );
 
-sub o_negate {
+sub _make_unary {
+    my( $op ) = @_;
+
+    eval sprintf <<'EOT',
+sub %s {
     my( $op, $runtime, $pc ) = @_;
     my $v = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( { float => -$v->as_float } );
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber
+                                    ->new( { %s => %s } );
 
     return $pc + 1;
 }
+EOT
+        $op->{name}, $op->{type}, $op->{expression};
+    die $@ if $@;
+}
 
-sub o_abs {
+_make_unary( $_ ) foreach
+  ( { name       => 'o_negate',
+      type       => 'float',
+      expression => '-$v->as_float',
+      },
+    { name       => 'o_abs',
+      type       => 'float',
+      expression => 'abs $v->as_float',
+      },
+    { name       => 'o_chr',
+      type       => 'string',
+      expression => 'chr $v->as_integer',
+      },
+    );
+
+sub _make_boolean_unary {
+    my( $op ) = @_;
+
+    eval sprintf <<'EOT',
+sub %s {
     my( $op, $runtime, $pc ) = @_;
     my $v = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( { float => abs $v->as_float } );
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::Scalar
+                                    ->new_boolean( %s );
 
     return $pc + 1;
 }
-
-sub o_not {
-    my( $op, $runtime, $pc ) = @_;
-    my $v = pop @{$runtime->{_stack}};
-
-    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( { integer => !$v->as_boolean_int } );
-
-    return $pc + 1;
+EOT
+        $op->{name}, $op->{expression};
+    die $@ if $@;
 }
+
+_make_boolean_unary( $_ ) foreach
+  ( { name       => 'o_not',
+      expression => '!$v->as_boolean_int',
+      },
+    { name       => 'o_chdir',
+      expression => 'chdir $v->as_string',
+      },
+    { name       => 'o_defined',
+      expression => '$v->is_defined',
+      },
+    );
 
 sub o_assign {
     my( $op, $runtime, $pc ) = @_;
@@ -650,8 +704,37 @@ sub o_unlink {
 
     my $ret = unlink @args;
 
-    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber( { integer => $ret } );
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber
+                                    ->new( { integer => $ret } );
     return $pc + 1;
+}
+
+sub o_open {
+    my( $op, $runtime, $pc ) = @_;
+    my $args = pop @{$runtime->{_stack}};
+
+    my( $ret, $fh );
+    if( $args->get_count == 2 ) {
+        $ret = open $fh, $args->get_item( 1 )->as_string;
+    } elsif( $args->get_count == 3 ) {
+        $ret = open $fh, $args->get_item( 1 )->as_string,
+                         $args->get_item( 2 )->as_string;
+    } else {
+        die "Only 2/3-arg open supported";
+    }
+    my $dest = $args->get_item( 0 );
+    my $pfh = Language::P::Toy::Value::Handle->new( { handle => $fh } );
+    $dest->set_slot( 'io', $pfh );
+
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::Scalar
+                                    ->new_boolean( $ret );
+    return $pc + 1;
+}
+
+sub o_die {
+    my( $op, $runtime, $pc ) = @_;
+
+    die "Real die() not implemented yet";
 }
 
 sub o_backtick {
@@ -659,13 +742,40 @@ sub o_backtick {
     my $arg = pop @{$runtime->{_stack}};
     my $command = $arg->as_string;
 
-    # context
+    # FIXME context
     my $ret = `$command`;
 
     push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( { string => $ret } );
 
     return $pc + 1;
 }
+
+sub _make_bool_ft {
+    my( $op ) = @_;
+
+    eval sprintf <<'EOT',
+sub %s {
+    my( $op, $runtime, $pc ) = @_;
+    my $file = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::Scalar
+                                    ->new_boolean( -%s( $file->as_string ) );
+
+    return $pc + 1;
+}
+EOT
+        $op->{name}, $op->{operator};
+    die $@ if $@;
+}
+
+_make_bool_ft( $_ ) foreach
+  ( { name     => 'o_ft_isdir',
+      operator => 'd',
+      },
+    { name     => 'o_ft_ischarspecial',
+      operator => 'c',
+      },
+    );
 
 sub o_array_element {
     my( $op, $runtime, $pc ) = @_;
@@ -719,18 +829,6 @@ sub o_dereference_subroutine {
     my $ref = pop @{$runtime->{_stack}};
 
     push @{$runtime->{_stack}}, $ref->dereference_subroutine;
-
-    return $pc + 1;
-}
-
-sub o_defined {
-    my( $op, $runtime, $pc ) = @_;
-    my $value = pop @{$runtime->{_stack}};
-    my $defined = $value->is_defined;
-
-    push @{$runtime->{_stack}}, $defined ?
-             Language::P::Toy::Value::StringNumber->new( { integer => 1 } ) :
-             Language::P::Toy::Value::StringNumber->new( { string => '' } );
 
     return $pc + 1;
 }

@@ -24,4 +24,10 @@ sub write {
     }
 }
 
+sub readline {
+    my( $self ) = @_;
+
+    return scalar readline $self->handle;
+}
+
 1;
