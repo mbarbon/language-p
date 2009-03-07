@@ -102,66 +102,60 @@ use constant
     DECLARATION_TYPE_MASK    => 7,
     };
 
-my %prototype_bi =
+our %PROTOTYPE =
   ( OP_PRINT()       => [ -1, -1, PROTO_FILEHANDLE, PROTO_ARRAY ],
     OP_DEFINED()     => [  0,  1, PROTO_AMPER, PROTO_AMPER|PROTO_ANY ],
     OP_RETURN()      => [ -1, -1, 0, PROTO_ARRAY ],
     OP_UNDEF()       => [  0,  1, 0, PROTO_ANY ],
     OP_EVAL()        => [  0,  1, PROTO_BLOCK, PROTO_ANY ],
     OP_MAP()         => [  2, -1, PROTO_INDIROBJ, PROTO_ARRAY ],
-    map { $_ => [ 0, 1, 0, PROTO_MAKE_GLOB ] }
-        ( OP_FT_EREADABLE,
-          OP_FT_EWRITABLE,
-          OP_FT_EEXECUTABLE,
-          OP_FT_EOWNED,
-          OP_FT_RREADABLE,
-          OP_FT_RWRITABLE,
-          OP_FT_REXECUTABLE,
-          OP_FT_ROWNED,
-          OP_FT_EXISTS,
-          OP_FT_EMPTY,
-          OP_FT_NONEMPTY,
-          OP_FT_ISFILE,
-          OP_FT_ISDIR,
-          OP_FT_ISSYMLINK,
-          OP_FT_ISPIPE,
-          OP_FT_ISSOCKET,
-          OP_FT_ISBLOCKSPECIAL,
-          OP_FT_ISCHARSPECIAL,
-          OP_FT_ISTTY,
-          OP_FT_SETUID,
-          OP_FT_SETGID,
-          OP_FT_STICKY,
-          OP_FT_ISASCII,
-          OP_FT_ISBINARY,
-          OP_FT_MTIME,
-          OP_FT_ATIME,
-          OP_FT_CTIME,
-          )
-    );
-
-my %context_bi =
-  ( OP_DEFINED()     => [ CXT_SCALAR ],
-    OP_RETURN()      => [ CXT_CALLER ],
-    );
-
-my %prototype_ov =
-  ( OP_UNLINK()      => [ -1, -1, 0, PROTO_ARRAY ],
+    ( map { $_ => [ 0, 1, 0, PROTO_MAKE_GLOB ] }
+          ( OP_FT_EREADABLE,
+            OP_FT_EWRITABLE,
+            OP_FT_EEXECUTABLE,
+            OP_FT_EOWNED,
+            OP_FT_RREADABLE,
+            OP_FT_RWRITABLE,
+            OP_FT_REXECUTABLE,
+            OP_FT_ROWNED,
+            OP_FT_EXISTS,
+            OP_FT_EMPTY,
+            OP_FT_NONEMPTY,
+            OP_FT_ISFILE,
+            OP_FT_ISDIR,
+            OP_FT_ISSYMLINK,
+            OP_FT_ISPIPE,
+            OP_FT_ISSOCKET,
+            OP_FT_ISBLOCKSPECIAL,
+            OP_FT_ISCHARSPECIAL,
+            OP_FT_ISTTY,
+            OP_FT_SETUID,
+            OP_FT_SETGID,
+            OP_FT_STICKY,
+            OP_FT_ISASCII,
+            OP_FT_ISBINARY,
+            OP_FT_MTIME,
+            OP_FT_ATIME,
+            OP_FT_CTIME,
+            ) ),
+    OP_UNLINK()      => [ -1, -1, 0, PROTO_ARRAY ],
     OP_DIE()         => [ -1, -1, 0, PROTO_ARRAY ],
     OP_OPEN()        => [  1, -1, 0, PROTO_MAKE_GLOB, PROTO_SCALAR, PROTO_ARRAY ],
     OP_PIPE()        => [  2,  2, 0, PROTO_MAKE_GLOB, PROTO_MAKE_GLOB ],
     OP_CHDIR()       => [  0,  1, 0, PROTO_SCALAR ],
     OP_RMDIR()       => [  0,  1, 0, PROTO_SCALAR ],
-    OP_READLINE()    => [  0,  1, 0, PROTO_SCALAR ],
+    OP_READLINE()    => [  0,  1, 0, PROTO_MAKE_GLOB ],
     OP_GLOB()        => [ -1, -1, 0, PROTO_ARRAY ],
     OP_CLOSE()       => [  0,  1, 0, PROTO_MAKE_GLOB ],
     OP_BINMODE()     => [  0,  2, 0, PROTO_MAKE_GLOB, PROTO_SCALAR ],
     OP_ABS()         => [  0,  1, 0, PROTO_SCALAR ],
+    OP_CHR()         => [  0,  1, 0, PROTO_SCALAR ],
     OP_WANTARRAY()   => [  0,  0, 0 ],
     );
 
-my %context_ov =
-  (
+our %CONTEXT =
+  ( OP_DEFINED()     => [ CXT_SCALAR ],
+    OP_RETURN()      => [ CXT_CALLER ],
     );
 
 package Language::P::ParseTree::Node;
@@ -621,8 +615,8 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::FunctionCall);
 
-sub parsing_prototype { return $prototype_bi{$_[0]->function} }
-sub runtime_context { return $context_bi{$_[0]->function} }
+sub parsing_prototype { return $PROTOTYPE{$_[0]->function} }
+sub runtime_context { return $CONTEXT{$_[0]->function} }
 sub can_implicit_return { return $_[0]->function == Language::P::ParseTree::OP_RETURN ? 0 : 1 }
 
 package Language::P::ParseTree::BuiltinIndirect;
@@ -641,8 +635,8 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::FunctionCall);
 
-sub parsing_prototype { return $prototype_ov{$_[0]->function} }
-sub runtime_context { return $context_ov{$_[0]->function} }
+sub parsing_prototype { return $PROTOTYPE{$_[0]->function} }
+sub runtime_context { return $CONTEXT{$_[0]->function} }
 
 package Language::P::ParseTree::Glob;
 
