@@ -285,9 +285,6 @@ my %conditionals =
     OP_STR_NE() => OP_JUMP_IF_S_NE,
     );
 
-my %builtins_no_list = map { $_ => 1 }
-    ( OP_ABS, OP_DEFINED, OP_UNDEF, OP_WANTARRAY );
-
 sub _indirect {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
@@ -314,7 +311,8 @@ sub _builtin {
     if( $tree->function == OP_UNDEF && !$tree->arguments ) {
         _emit_label( $self, $tree );
         _add_bytecode $self, opcode_n( OP_CONSTANT_UNDEF );
-    } elsif( $builtins_no_list{$tree->function} ) {
+    } elsif(   $OP_ATTRIBUTES{$tree->function}->{flags}
+             & Language::P::Opcodes::FLAG_UNARY ) {
         _emit_label( $self, $tree );
         foreach my $arg ( @{$tree->arguments || []} ) {
             $self->dispatch( $arg );
