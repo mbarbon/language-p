@@ -5,6 +5,7 @@ use warnings;
 use base qw(Language::P::Toy::Value::SymbolTable);
 
 use Language::P::Toy::Value::ActiveScalar;
+use Language::P::Toy::Value::StringNumber;
 
 sub is_main { 1 }
 
@@ -19,6 +20,9 @@ sub new {
 
     my $out = Language::P::Toy::Value::Handle->new( { handle => \*STDOUT } );
     $self->set_symbol( 'STDOUT', 'I', $out );
+
+    my $interpreter = Language::P::Toy::Value::StringNumber->new( { string => $^X } );
+    $self->set_symbol( "\030", '$', $interpreter );
 
     return $self;
 }
