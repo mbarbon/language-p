@@ -113,15 +113,6 @@ sub o_fresh_string {
     return $pc + 1;
 }
 
-sub o_stringify {
-    my( $op, $runtime, $pc ) = @_;
-    my $v = pop @{$runtime->{_stack}};
-
-    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( { string => $v->as_string } );
-
-    return $pc + 1;
-}
-
 sub _make_binary_op {
     my( $op ) = @_;
 
@@ -608,6 +599,10 @@ _make_unary( $_ ) foreach
   ( { name       => 'o_negate',
       type       => 'float',
       expression => '-$v->as_float',
+      },
+    { name       => 'o_stringify',
+      type       => 'string',
+      expression => '$v->as_string',
       },
     { name       => 'o_abs',
       type       => 'float',
