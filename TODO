@@ -61,22 +61,19 @@ Parsing:
   - context-dependent bexaviour
   - always a pattern after =~/!~
   - tr/// lexing/parsing
-- correct parsing of heredoc in substitutions (s//<<HEREDOC/e)
-- construct flow graph (or similar structure)
+
+IR:
+- generate glob dereferences for open/binmode/pipe
+- split 2-arg and 3-arg open to separate opcodes
 
 Runtime:
 - integer -> float on overflow (also in parsing!)
 - proper scalar polimorphing
   - mixed-mode arithmetic
-- proper handling of function return values
-  - implicit return
-  - context
 - encapsulate lexical lookup/closure, for eval ""
 - better handling of sub calls
   - encapsulate enter/leave
-- proper morphing on scalar assignment
 - autovivification
-- create common superclass for reference/scalar
 - multiple dispatch operators
 - array/list/hash assignment
   - optimize lists with common assignments
