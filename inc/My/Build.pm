@@ -6,6 +6,10 @@ use base qw(Module::Build);
 
 use File::Basename;
 
+=head1 ACTIONS
+
+=cut
+
 sub _compile_pir_pbc {
     my( $self, $parrot, $pir_file, $deps ) = @_;
     ( my $pbc_file = $pir_file ) =~ s/\.pir$/.pbc/;
@@ -15,6 +19,13 @@ sub _compile_pir_pbc {
     $self->do_system( $parrot, '--output-pbc', '-o', $pbc_file, $pir_file );
     $self->add_to_cleanup( $pbc_file );
 }
+
+=head2 code_parrot
+
+Build Parrot runtime support code under F<support/parrot> and create
+the F<p_parrot> script under F<bin>.
+
+=cut
 
 sub ACTION_code_parrot {
     my( $self ) = @_;
@@ -35,6 +46,14 @@ sub ACTION_code_parrot {
                           [ glob 'support/parrot/runtime/*.pir' ] );
     }
 }
+
+=head2 code
+
+Calls the defult C<code> action, C<code_parrot> if appropriate, and
+builds F<lib/Language/P/Opcodes.pm> and F<lib/Language/P/Keywords.pm>
+from the files under F<inc>.
+
+=cut
 
 sub ACTION_code {
     my( $self ) = @_;
@@ -106,6 +125,42 @@ my %test_tags =
     'parrot_run' => [ [ 'bin/p_parrot', 't/run' ] ],
     'parrot_perl5'=>[ [ 'bin/p_parrot', 't/perl5' ] ],
     );
+
+=head2 test_parser
+
+Runs the tests under F<t/parser>.
+
+=head2 test_intermediate
+
+Runs the tests under F<t/intermediate>.
+
+=head2 test_runtime
+
+Runs the Toy runtime tests under F<t/runtime>.
+
+=head2 test_run
+
+Runs the tests under F<t/run> using F<bin/p>.
+
+=head2 test_perl5
+
+Runs the tests under F<t/perl5> using F<bin/p>.
+
+=head2 test_parrot
+
+Runs F<t/parser> and F<t/intermediate> tests, then the F<t/run> and
+F<t/perl5> tests using F<bin/p_parrot>.
+
+=head2 test_parrot_run
+
+Runs the tests under F<t/run> using F<bin/p_parrot>.
+
+=head2 test_parrot_perl5
+
+Runs the tests under F<t/perl5> using F<bin/p_parrot>.
+
+=cut
+
 sub ACTION_test_parser;
 sub ACTION_test_intermediate;
 sub ACTION_test_runtime;
@@ -132,6 +187,13 @@ sub _expand_tags {
 
     return @res;
 }
+
+=head2 test
+
+Runs all the tests (uses th Toy runtime for the tests that require
+running code).
+
+=cut
 
 sub ACTION_test {
     my( $self ) = @_;
