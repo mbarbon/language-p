@@ -8,6 +8,7 @@ use Language::P::Toy::Value::MainSymbolTable;
 use Language::P::ParseTree qw(:all);
 
 __PACKAGE__->mk_ro_accessors( qw(symbol_table _variables) );
+__PACKAGE__->mk_accessors( qw(parser) );
 
 our $current;
 
@@ -26,9 +27,9 @@ sub new {
 }
 
 sub set_option {
-    my( $class, $option, $value ) = @_;
+    my( $self, $option, $value ) = @_;
 
-    return 0;
+    $self->parser->set_option( $option, $value );
 }
 
 sub reset {
@@ -46,6 +47,13 @@ sub run_last_file {
                         [ -1, undef, CXT_VOID ], $code->lexicals ];
     $self->{_frame} = @{$self->{_stack}};
     return $self->run;
+}
+
+sub run_file {
+    my( $self, $program ) = @_;
+
+    my $code = $self->parser->parse_file( $program );
+    $self->run_last_file( $code );
 }
 
 sub call_subroutine {

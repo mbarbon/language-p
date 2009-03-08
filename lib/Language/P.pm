@@ -30,7 +30,7 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
-__PACKAGE__->mk_ro_accessors( qw(runtime parser generator) );
+__PACKAGE__->mk_ro_accessors( qw(runtime generator) );
 __PACKAGE__->mk_accessors( qw(program program_arguments) );
 
 our $VERSION = '0.01_04';
@@ -78,7 +78,7 @@ sub initialize {
 
     $self->{runtime} = $args->{runtime};
     $self->{generator} = $args->{generator};
-    $self->{parser} = $parser;
+    $self->runtime->parser( $parser );
 }
 
 sub process_command_line {
@@ -93,7 +93,6 @@ sub process_command_line {
             last;
         };
         $arg =~ /^-f(\S+)/ and do {
-            $self->parser->set_option( $1 );
             $self->generator->set_option( $1 );
             $self->runtime->set_option( $1 );
             next;
@@ -109,8 +108,7 @@ sub process_command_line {
 sub run {
     my( $self ) = @_;
 
-    my $code = $self->parser->parse_file( $self->program );
-    $self->runtime->run_last_file( $code );
+    $self->runtime->run_file( $self->program );
 }
 
 =head1 AUTHOR
