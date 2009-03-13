@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 13;
+use Test::More tests => 14;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -109,6 +109,27 @@ EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 ${$a;} = 1;
+EOP
+--- !parsetree:BinOp
+context: CXT_VOID
+left: !parsetree:Dereference
+  context: CXT_SCALAR|CXT_LVALUE|CXT_VIVIFY
+  left: !parsetree:Block
+    lines:
+      - !parsetree:Symbol
+        context: CXT_SCALAR
+        name: a
+        sigil: VALUE_SCALAR
+  op: OP_DEREFERENCE_SCALAR
+op: OP_ASSIGN
+right: !parsetree:Constant
+  context: CXT_SCALAR
+  flags: CONST_NUMBER|NUM_INTEGER
+  value: 1
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+${$a} = 1;
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
