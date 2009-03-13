@@ -184,6 +184,7 @@ dereference_sub     0       noattr      dereference_subroutine 1 1
 die                 
 divide
 divide_assign
+do_file             0       noattr      same                 1   1
 dot_dot
 dot_dot_dot
 dup

@@ -108,6 +108,7 @@ our %PROTOTYPE =
     OP_RETURN()      => [ -1, -1, 0, PROTO_ARRAY ],
     OP_UNDEF()       => [  0,  1, 0, PROTO_ANY ],
     OP_EVAL()        => [  0,  1, PROTO_BLOCK, PROTO_ANY ],
+    OP_DO_FILE()     => [  1,  1, 0, PROTO_ANY ],
     OP_MAP()         => [  2, -1, PROTO_INDIROBJ, PROTO_ARRAY ],
     ( map { $_ => [ 0, 1, 0, PROTO_MAKE_GLOB ] }
           ( OP_FT_EREADABLE,
@@ -156,6 +157,7 @@ our %PROTOTYPE =
 our %CONTEXT =
   ( OP_DEFINED()     => [ CXT_SCALAR ],
     OP_RETURN()      => [ CXT_CALLER ],
+    OP_DO_FILE()     => [ CXT_SCALAR ],
     );
 
 package Language::P::ParseTree::Node;
@@ -180,6 +182,7 @@ sub is_constant { 0 }
 sub is_symbol { 0 }
 sub is_compound { 0 }
 sub is_loop { 0 }
+sub is_plain_function { 0 }
 sub can_implicit_return { 1 }
 sub is_declaration { 0 }
 sub lvalue_context { Language::P::ParseTree::CXT_SCALAR }
@@ -298,6 +301,7 @@ __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub parsing_prototype { return Language::P::ParseTree::PROTO_DEFAULT }
 sub runtime_context   { return undef }
+sub is_plain_function { 1 }
 
 package Language::P::ParseTree::SpecialFunctionCall;
 
@@ -308,6 +312,8 @@ use base qw(Language::P::ParseTree::FunctionCall);
 our @FIELDS = qw(flags);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
+
+sub is_plain_function { 0 }
 
 package Language::P::ParseTree::MethodCall;
 
@@ -385,6 +391,14 @@ our @FIELDS = qw(lines);
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub is_compound { 1 }
+
+package Language::P::ParseTree::DoBlock;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Block);
+
+sub is_compound { 0 }
 
 package Language::P::ParseTree::BareBlock;
 
@@ -618,6 +632,7 @@ use base qw(Language::P::ParseTree::FunctionCall);
 sub parsing_prototype { return $PROTOTYPE{$_[0]->function} }
 sub runtime_context { return $CONTEXT{$_[0]->function} }
 sub can_implicit_return { return $_[0]->function == Language::P::ParseTree::OP_RETURN ? 0 : 1 }
+sub is_plain_function { 0 }
 
 package Language::P::ParseTree::BuiltinIndirect;
 
@@ -637,6 +652,7 @@ use base qw(Language::P::ParseTree::FunctionCall);
 
 sub parsing_prototype { return $PROTOTYPE{$_[0]->function} }
 sub runtime_context { return $CONTEXT{$_[0]->function} }
+sub is_plain_function { 0 }
 
 package Language::P::ParseTree::Glob;
 

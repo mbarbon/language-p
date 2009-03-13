@@ -30,6 +30,7 @@ use constant
     BLOCK_OPEN_SCOPE      => 1,
     BLOCK_IMPLICIT_RETURN => 2,
     BLOCK_BARE            => 4,
+    BLOCK_DO              => 8,
 
     ASSOC_LEFT         => 1,
     ASSOC_RIGHT        => 2,
@@ -348,6 +349,9 @@ sub _parse_line_rest {
                  || $tokidt == OP_REDO
                  || $tokidt == KEY_LOCAL ) {
             return _parse_sideff( $self );
+        } elsif( $tokidt == KEY_DO ) {
+            _lex_token( $self );
+            return _parse_do( $self, $token );
         }
     } elsif( $special_sub{$token->[O_VALUE]} ) {
         return _parse_sub( $self, 1, 1 );
@@ -1111,6 +1115,8 @@ sub _parse_term_terminal {
             return Language::P::ParseTree::Local->new
                        ( { left => _parse_term_list_if_parens( $self, PREC_NAMED_UNOP ),
                            } );
+        } elsif( $tokidt == KEY_DO ) {
+            return _parse_do( $self, $token );
         }
     } elsif( $token->[O_TYPE] == T_OPHASH ) {
         my $expr = _parse_bracketed_expr( $self, T_OPBRK, 1, 1 );
@@ -1470,6 +1476,10 @@ sub _parse_block_rest {
                            ( { lines    => \@lines,
                                continue => $continue,
                                } );
+            } elsif( $flags & BLOCK_DO ) {
+                return Language::P::ParseTree::DoBlock->new
+                           ( { lines    => \@lines,
+                               } );
             } else {
                 return Language::P::ParseTree::Block->new
                            ( { lines => \@lines,
@@ -1666,7 +1676,8 @@ sub _apply_prototype {
                 $args->[$i - 3] = $term->function;
             }
         }
-        if( $proto_char & PROTO_MAKE_GLOB && $term->is_bareword ) {
+        if(    ( $proto_char & PROTO_MAKE_GLOB ) == PROTO_MAKE_GLOB
+            && $term->is_bareword ) {
             $args->[$i - 3] = Language::P::ParseTree::Symbol->new
                                   ( { name  => $term->value,
                                       sigil => VALUE_GLOB,
@@ -1757,6 +1768,34 @@ sub _parse_arglist {
 
     return $term && $term->isa( 'Language::P::ParseTree::List' ) ?
                $term->expressions : [ $term ];
+}
+
+sub _parse_do {
+    my( $self, $token ) = @_;
+
+    my $next = $self->lexer->peek( X_BLOCK );
+    if( $next->[O_TYPE] == T_OPBRK ) {
+        _lex_token( $self );
+        return _parse_block_rest( $self, BLOCK_OPEN_SCOPE|BLOCK_DO );
+    }
+
+    my $call = Language::P::ParseTree::Builtin->new
+                   ( { function => OP_DO_FILE,
+                       } );
+    my $do = _parse_listop_like( $self, $token, 1, $call );
+    my $first = $do->arguments->[0];
+    if( $first->is_plain_function && $first->function->is_symbol ) {
+        return $do->arguments->[0];
+    } elsif(    ( $first->is_symbol && $first->sigil == VALUE_SCALAR )
+             || (    $first->isa( 'Language::P::ParseTree::Dereference' )
+                  && $first->op == OP_DEREFERENCE_SCALAR ) ) {
+        my $oppar = $self->lexer->peek;
+        if( $oppar->[O_TYPE] == T_OPPAR ) {
+            return _parse_indirect_function_call( $self, $first, 1, 0 );
+        }
+    }
+
+    return $do;
 }
 
 1;

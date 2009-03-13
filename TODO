@@ -8,7 +8,6 @@ Parsing:
 - glob access through hash syntax
 - global variables/symbols (STDOUT!)
 - scoping (check if/while conditions, for loop headers, etc.)
-- do ...
 - attributes
 - formats
 - add operator descriptor and do parse tree modifications based on that
@@ -65,6 +64,8 @@ Parsing:
 IR:
 - generate glob dereferences for open/binmode/pipe
 - split 2-arg and 3-arg open to separate opcodes
+- check that do BLOCK does not count as loop for loop-control
+- add code generation for do {} while, do {} until 
 
 Runtime:
 - integer -> float on overflow (also in parsing!)
