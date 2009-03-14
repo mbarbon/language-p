@@ -149,6 +149,8 @@ t/run/039_loop_control.t
 t/run/080_recursion.t
 t/run/081_context.t
 t/run/085_closure.t
+t/run/100_do_file.t
+t/run/files/foo.pl
 t/runtime/001_load.t
 t/runtime/002_base.t
 t/runtime/010_call.t

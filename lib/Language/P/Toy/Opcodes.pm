@@ -897,4 +897,13 @@ sub o_iterator_next {
     return $pc + 1;
 }
 
+sub o_do_file {
+    my( $op, $runtime, $pc ) = @_;
+    my $file = pop @{$runtime->{_stack}};
+
+    $runtime->run_file( $file->as_string, _context( $op, $runtime ) );
+
+    return $pc + 1;
+}
+
 1;
