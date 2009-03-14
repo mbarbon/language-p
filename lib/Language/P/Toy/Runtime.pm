@@ -83,9 +83,6 @@ sub run {
 
     return if $self->{_pc} < 0;
 
-#     use Data::Dumper;
-#     print Dumper( $self->{_bytecode} );
-
     for(;;) {
         my $op = $self->{_bytecode}->[$self->{_pc}];
         my $pc = $op->{function}->( $op, $self, $self->{_pc} );
@@ -109,16 +106,12 @@ sub push_frame {
     $#{$self->{_stack}} = $self->{_frame} = $stack_size + $size + 1;
     $self->{_stack}->[$self->{_frame}] = [ $stack_size, $last_frame ];
 
-#    print "Stack size: $stack_size -> $self->{_frame}\n";
-
     return $self->{_frame};
 }
 
 sub pop_frame {
     my( $self, $size ) = @_;
     my $last_frame = $self->{_stack}->[$self->{_frame}];
-
-#    print "New stack size: $last_frame->[0]\n";
 
     # TODO unwind
 
