@@ -251,7 +251,7 @@ sub end_code_generation {
 sub _end {
     my( $self, $bytecode, $op ) = @_;
 
-    if( $self->_code->isa( 'Language::P::Toy::Value::Subroutine' ) ) {
+    if( !$self->_code->isa( 'Language::P::Toy::Value::Regex' ) ) {
         # could be avoided in most cases, but simplifies code generation
         push @$bytecode,
             o( 'make_list', count => 0 ),

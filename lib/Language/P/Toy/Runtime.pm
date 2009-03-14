@@ -35,25 +35,29 @@ sub set_option {
 sub reset {
     my( $self ) = @_;
 
-    $self->{_stack} = [ [ -1, undef, CXT_VOID ], undef ];
+    $self->{_stack} = [ [ -2, undef, CXT_VOID ], undef ];
     $self->{_frame} = @{$self->{_stack}};
 }
 
 sub run_last_file {
-    my( $self, $code ) = @_;
-
+    my( $self, $code, $context ) = @_;
+    # FIXME duplicates Language::P::Toy::Value::Code::call
+    my $frame = $self->push_frame( $code->stack_size + 2 );
+    my $stack = $self->{_stack};
+    $stack->[$frame - 2] = [ -2, $self->{_bytecode}, $context ];
+    $stack->[$frame - 1] = $code->lexicals || 'no_pad';
     $self->set_bytecode( $code->bytecode );
-    $self->{_stack} = [ (undef) x $code->stack_size,
-                        [ -1, undef, CXT_VOID ], $code->lexicals ];
-    $self->{_frame} = @{$self->{_stack}};
-    return $self->run;
+    $self->{_pc} = 0;
+
+    $self->run;
 }
 
 sub run_file {
-    my( $self, $program ) = @_;
+    my( $self, $program, $context ) = @_;
 
-    my $code = $self->parser->parse_file( $program );
-    $self->run_last_file( $code );
+    $context ||= CXT_VOID;
+    my $code = $self->parser->parse_file( $program, $context != CXT_VOID );
+    $self->run_last_file( $code, $context );
 }
 
 sub call_subroutine {
