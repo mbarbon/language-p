@@ -67,6 +67,8 @@ sub _new_block {
                ->new_from_label( 'L' . ++$self->{_label_count} );
 }
 
+sub _context { $_[0]->get_attribute( 'context' ) & CXT_CALL_MASK }
+
 sub push_block {
     my( $self, $is_sub ) = @_;
 
@@ -318,7 +320,8 @@ sub _builtin {
             $self->dispatch( $arg );
         }
 
-        _add_bytecode $self, opcode_n( $tree->function );
+        _add_bytecode $self,
+            opcode_nm( $tree->function, context => _context( $tree ) );
     } else {
         return _function_call( $self, $tree );
     }
@@ -338,7 +341,7 @@ sub _function_call {
     if( ref( $tree->function ) ) {
         $self->dispatch( $tree->function );
         _add_bytecode $self,
-             opcode_nm( OP_CALL, context => $tree->get_attribute( 'context' ) & CXT_CALL_MASK );
+             opcode_nm( OP_CALL, context => _context( $tree ) );
     } else {
         if( $tree->function == OP_RETURN ) {
             my $block = $self->_current_block;

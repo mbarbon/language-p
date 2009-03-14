@@ -19,7 +19,7 @@ L1:
 # is_scalar
 L1:
   set t1, (global name=STDOUT, slot=7)
-  jump_if_true (defined (want)), L5
+  jump_if_true (defined context=4 (want context=4)), L5
   jump L6
 L2:
   set t4, (phi L3, t2, L4, t3)
@@ -33,7 +33,7 @@ L4:
   set t3, (constant_string "not ok\x0a")
   jump L2
 L5:
-  jump_if_true (not (want)), L3
+  jump_if_true (not (want context=4)), L3
   jump L7
 L6:
   jump L4

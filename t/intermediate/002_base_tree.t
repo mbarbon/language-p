@@ -23,7 +23,7 @@ $x = abs $t;
 EOP
 # main
 L1:
-  assign (global name=x, slot=1), (abs (global name=t, slot=1))
+  assign (global name=x, slot=1), (abs context=4 (global name=t, slot=1))
   end
 EOI
 
