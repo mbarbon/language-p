@@ -139,25 +139,25 @@ sub set_option {
 }
 
 sub parse_string {
-    my( $self, $string, $package ) = @_;
+    my( $self, $string, $package, $add_return ) = @_;
 
     open my $fh, '<', \$string;
 
     $self->_package( $package );
-    $self->parse_stream( $fh, '<string>' );
+    $self->parse_stream( $fh, '<string>', $add_return );
 }
 
 sub parse_file {
-    my( $self, $file ) = @_;
+    my( $self, $file, $add_return ) = @_;
 
     open my $fh, '<', $file or die "open '$file': $!";
 
     $self->_package( 'main' );
-    $self->parse_stream( $fh, $file );
+    $self->parse_stream( $fh, $file, $add_return );
 }
 
 sub parse_stream {
-    my( $self, $stream, $filename ) = @_;
+    my( $self, $stream, $filename, $add_return ) = @_;
 
     $self->{lexer} = Language::P::Lexer->new
                          ( { stream       => $stream,
@@ -165,7 +165,7 @@ sub parse_stream {
                              symbol_table => $self->runtime->symbol_table,
                              } );
     $self->{_lexical_state} = [];
-    $self->_parse;
+    $self->_parse( $add_return );
 }
 
 sub _qualify {
@@ -179,7 +179,7 @@ sub _qualify {
 }
 
 sub _parse {
-    my( $self ) = @_;
+    my( $self, $add_return ) = @_;
 
     my $dumper;
     if(    $self->_options->{'dump-parse-tree'}
@@ -199,11 +199,19 @@ sub _parse {
 
     $self->generator->start_code_generation( { file_name => $self->lexer->file,
                                                } );
+    my @lines;
     while( my $line = _parse_line( $self ) ) {
         $dumper->( $line ) if $dumper;
-        $self->generator->process( $line );
+        if( $line->isa( 'Language::P::ParseTree::NamedSubroutine' ) ) {
+            $self->generator->process( $line );
+        } else {
+            push @lines, $line;
+        }
     }
     $self->_leave_scope;
+    _lines_implicit_return( $self, \@lines ) if $add_return;
+    $self->generator->process( $_ ) foreach @lines;
+
     my $code = $self->generator->end_code_generation;
 
     return $code;
@@ -1425,6 +1433,16 @@ sub _parse_term_list_if_parens {
     return $term;
 }
 
+sub _lines_implicit_return {
+    my( $self, $lines ) = @_;
+
+    for( my $i = $#$lines; $i >= 0; --$i ) {
+        next if $lines->[$i]->is_declaration;
+        $lines->[$i] = _add_implicit_return( $lines->[$i] );
+        last;
+    }
+}
+
 sub _add_implicit_return {
     my( $line ) = @_;
 
@@ -1461,14 +1479,8 @@ sub _parse_block_rest {
     for(;;) {
         my $token = $self->lexer->lex( X_STATE );
         if( $token->[O_TYPE] == $end_token ) {
-            if( $flags & BLOCK_IMPLICIT_RETURN && @lines ) {
-                for( my $i = $#lines; $i >= 0; --$i ) {
-                    next if $lines[$i]->is_declaration;
-                    $lines[$i] = _add_implicit_return( $lines[$i] );
-                    last;
-                }
-            }
-
+            _lines_implicit_return( $self, \@lines )
+                if $flags & BLOCK_IMPLICIT_RETURN;
             $self->_leave_scope if $flags & BLOCK_OPEN_SCOPE;
             if( $flags & BLOCK_BARE ) {
                 my $continue = _parse_continue( $self );

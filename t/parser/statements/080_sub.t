@@ -40,11 +40,6 @@ sub name {
   $x
 }
 EOP
---- !parsetree:LexicalDeclaration
-context: CXT_VOID
-flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
-name: x
-sigil: VALUE_SCALAR
 --- !parsetree:NamedSubroutine
 lines:
   - !parsetree:Builtin
@@ -57,6 +52,11 @@ lines:
     context: CXT_CALLER
     function: OP_RETURN
 name: name
+--- !parsetree:LexicalDeclaration
+context: CXT_VOID
+flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
+name: x
+sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -92,11 +92,6 @@ sub name {
   }
 }
 EOP
---- !parsetree:LexicalDeclaration
-context: CXT_VOID
-flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
-name: x
-sigil: VALUE_SCALAR
 --- !parsetree:NamedSubroutine
 lines:
   - !parsetree:NamedSubroutine
@@ -112,6 +107,11 @@ lines:
         function: OP_RETURN
     name: name2
 name: name
+--- !parsetree:LexicalDeclaration
+context: CXT_VOID
+flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
+name: x
+sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

@@ -86,9 +86,9 @@ EOP
 
 is( @$tree, 4 );
 # in main
-is( $tree->[3]->get_attribute( 'target' ), $tree->[1] );
+is( $tree->[3]->get_attribute( 'target' ), $tree->[2] );
 # in sub
-my $lines = $tree->[2]->lines;
+my $lines = $tree->[0]->lines;
 is( @$lines, 3 );
 is( $lines->[0]->get_attribute( 'target' ), undef );
 is( $lines->[1]->get_attribute( 'target' ), $lines->[2] );
