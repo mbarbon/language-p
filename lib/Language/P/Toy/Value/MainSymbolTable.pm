@@ -46,7 +46,11 @@ sub get_symbol {
     my( $self, $name, $sigil, $create ) = @_;
     my( $symbol, $created ) = $self->SUPER::_get_symbol( $name, '*', $create );
 
-    return $symbol if !$symbol || !$created;
+    return $symbol unless $symbol;
+    if( !$created ) {
+        return $symbol if $sigil eq '*';
+        return $symbol->get_slot( $sigils{$sigil}[0] );
+    }
     if( $special_names{$name} ) {
         if( $name eq "\017" ) {
             $symbol->set_slot( 'scalar', _tied_to_rt_variable( 'osname' ) );
