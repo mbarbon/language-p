@@ -5,7 +5,7 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_ro_accessors( qw(type name basic_blocks outer inner
-                                 lexicals) );
+                                 lexicals prototype) );
 
 sub new {
     my( $class, $args ) = @_;

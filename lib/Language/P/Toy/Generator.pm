@@ -78,7 +78,8 @@ sub add_declaration {
     my( $self, $name, $prototype ) = @_;
 
     my $sub = Language::P::Toy::Value::Subroutine::Stub->new
-                  ( { name     => $name,
+                  ( { name      => $name,
+                      prototype => $prototype,
                       } );
     $self->runtime->symbol_table->set_symbol( $name, '&', $sub );
 }
@@ -134,6 +135,7 @@ sub _generate_segment {
                         name     => $segment->name,
                         lexicals => $pad,
                         outer    => $outer,
+                        prototype=> $segment->prototype,
                         } );
     } elsif( $is_regex && !$code ) {
         $code = Language::P::Toy::Value::Regex->new

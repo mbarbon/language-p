@@ -24,8 +24,7 @@ sub get_package {
     my( $self, $package ) = @_;
 
     return $self if $self->is_main && $package eq 'main';
-
-    die 'Implement me';
+    return $self->get_symbol( $package, '::' );
 }
 
 our %sigils =

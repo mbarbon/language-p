@@ -50,7 +50,7 @@ name: x
 prototype:
   - 1
   - -1
-  - PROTO_BLOCK
+  - PROTO_SUB
   - PROTO_SUB
   - PROTO_ARRAY
 EOE

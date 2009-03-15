@@ -134,7 +134,8 @@ sub generate_subroutine {
     my $context = Language::P::ParseTree::PropagateContext->new;
     $context->visit( $tree, CXT_VOID );
 
-    _generate_bytecode( $self, 1, $tree->name, $outer, $tree->lines );
+    _generate_bytecode( $self, 1, $tree->name, $tree->prototype,
+                        $outer, $tree->lines );
 }
 
 sub generate_bytecode {
@@ -145,11 +146,11 @@ sub generate_bytecode {
         $context->visit( $tree, CXT_VOID );
     }
 
-    _generate_bytecode( $self, 0, undef, undef, $statements );
+    _generate_bytecode( $self, 0, undef, undef, undef, $statements );
 }
 
 sub _generate_bytecode {
-    my( $self, $is_sub, $name, $outer, $statements ) = @_;
+    my( $self, $is_sub, $name, $prototype, $outer, $statements ) = @_;
 
     $self->_code_segments( [] );
 
@@ -160,6 +161,7 @@ sub _generate_bytecode {
                  basic_blocks => [],
                  outer        => $outer,
                  lexicals     => {},
+                 prototype    => $prototype,
                  } );
     if( $outer ) {
         push @{$outer->inner}, $self->_code_segments->[-1];
@@ -875,7 +877,7 @@ sub _subroutine {
                                           },
                             } );
     my $code_segments =
-      _generate_bytecode( $generator, 1, $tree->name,
+      _generate_bytecode( $generator, 1, $tree->name, $tree->prototype,
                           $self->_code_segments->[0], $tree->lines );
     push @{$self->_code_segments}, @$code_segments;
 

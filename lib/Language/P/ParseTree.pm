@@ -299,7 +299,7 @@ our @FIELDS = qw(function arguments);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
-sub parsing_prototype { return Language::P::ParseTree::PROTO_DEFAULT }
+sub parsing_prototype { return $_[0]->{prototype} || Language::P::ParseTree::PROTO_DEFAULT }
 sub runtime_context   { return undef }
 sub is_plain_function { 1 }
 
@@ -459,6 +459,7 @@ use warnings;
 use base qw(Language::P::ParseTree::Subroutine);
 
 sub name { undef }
+sub prototype { undef }
 
 package Language::P::ParseTree::BinOp;
 

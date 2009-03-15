@@ -16,13 +16,6 @@ Parsing:
   - find more corner cases
 - list slices ( ... )[ ... ]
 - test all unary/binary operator
-- subroutine prototypes
-  - declaration
-  - parsing
-    - & as first parameter permits either:
-      mymap { ... } 1, 2, 3
-      mymap sub { ... }, 1, 2, 3
-      myeval { ... }, 1 == myeval( sub { ... } ), 1
 - local()/my()
   - check invalid declarations
   - check non-lvaluable expressions
@@ -68,6 +61,7 @@ IR:
 - add code generation for do {} while, do {} until 
 
 Runtime:
+- coerce values according to prototype (esp. \[...])
 - integer -> float on overflow (also in parsing!)
 - proper scalar polimorphing
   - mixed-mode arithmetic

@@ -472,7 +472,7 @@ sub _parse_sub_proto {
             } elsif( $1 eq '&' ) {
                 $value |= PROTO_SUB;
                 if( $#proto == 2 ) {
-                    $proto[2] |= PROTO_BLOCK;
+                    $proto[2] |= PROTO_SUB;
                 }
             }
         };
@@ -1628,13 +1628,25 @@ sub _declared_id {
         return ( $call, 1 );
     } else {
         my $st = $self->runtime->symbol_table;
+        my $fqname = _qualify( $self, $op->[O_VALUE], $opidt );
 
-        if( $st->get_symbol( _qualify( $self, $op->[O_VALUE], $opidt ), '&' ) ) {
-            return ( undef, 1 );
+        my $symbol = Language::P::ParseTree::Symbol->new
+                         ( { name  => $fqname,
+                             sigil => VALUE_SUB,
+                             } );
+        $call = Language::P::ParseTree::FunctionCall->new
+                    ( { function  => $symbol,
+                        arguments => undef,
+                        } );
+
+        if( my $decl = $st->get_symbol( $fqname, '&' ) ) {
+            # FIXME accessor
+            $call->{prototype} = $decl->prototype;
+            return ( $call, 1 );
         }
     }
 
-    return ( undef, 0 );
+    return ( $call, 0 );
 }
 
 sub _parse_listop {
@@ -1654,7 +1666,7 @@ sub _parse_listop_like {
     my $next = $self->lexer->peek( $expect );
     my( $args, $fh );
 
-    if( !$call || !$declared ) {
+    if( !$call || !$declared || $call->is_plain_function ) {
         my $st = $self->runtime->symbol_table;
 
         if( $next->[O_TYPE] == T_ARROW ) {
@@ -1670,8 +1682,12 @@ sub _parse_listop_like {
 
                 return _parse_maybe_direct_method_call( $self, $invocant );
             } elsif( $la->[O_TYPE] == T_OPPAR ) {
-                # parsed as a normal sub call; go figure
-                $next = $la;
+                if( $declared ) {
+                    $self->lexer->unlex( $next );
+                } else {
+                    # parsed as a normal sub call; go figure
+                    $next = $la;
+                }
             } else {
                 _syntax_error( $self, $la );
             }
@@ -1679,23 +1695,11 @@ sub _parse_listop_like {
             # not a declared subroutine, nor followed by parenthesis
             # try to see if it is some sort of (indirect) method call
             return _parse_maybe_indirect_method_call( $self, $op, $next );
-        }
-
-        # foo Bar:: is always a method call
-        if(    $next->[O_TYPE] == T_ID
-            && $st->get_package( $next->[O_VALUE] ) ) {
+        } elsif(    $next->[O_TYPE] == T_ID
+                 && $st->get_package( $next->[O_VALUE] ) ) {
+            # foo Bar:: is always a method call
             return _parse_maybe_indirect_method_call( $self, $op, $next );
         }
-
-        my $symbol = Language::P::ParseTree::Symbol->new
-                         ( { name  => _qualify( $self, $op->[O_VALUE], $op->[O_ID_TYPE] ),
-                             sigil => VALUE_SUB,
-                             } );
-        $call = Language::P::ParseTree::FunctionCall->new
-                    ( { function  => $symbol,
-                        arguments => undef,
-                        } );
-        $proto = $call->parsing_prototype;
     }
 
     if( $next->[O_TYPE] == T_OPPAR ) {
@@ -1817,8 +1821,16 @@ sub _parse_arglist {
         }
     } elsif(    $proto_char & (PROTO_BLOCK|PROTO_SUB)
              && $la->[O_TYPE] == T_OPBRK ) {
-        _lex_token( $self );
-        $term = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
+        if( $proto_char & PROTO_BLOCK ) {
+            _lex_token( $self );
+            $term = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
+        } else {
+            $term = _parse_sub( $self, 2, 1 );
+            # a very evil hack to make map-like sub parse as Perl does
+            my $next = $self->lexer->peek( X_TERM );
+            return [$term] if $next->[O_TYPE] == T_COMMA;
+            $self->lexer->unlex( [ -1, T_COMMA, ',' ] );
+        }
     }
 
     $term ||= _parse_term( $self, $term_prec );

@@ -39,10 +39,11 @@ my @lines;
     sub end_code_generation {}
 
     sub add_declaration {
-        my( $self, $name ) = @_;
+        my( $self, $name, $prototype ) = @_;
 
         my $sub = Language::P::Toy::Value::Subroutine::Stub->new
                       ( { name     => $name,
+                          prototype=> $prototype,
                           } );
         $self->runtime->symbol_table->set_symbol( $name, '&', $sub );
     }
