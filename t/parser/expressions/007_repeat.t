@@ -29,6 +29,7 @@ sub x;
 EOP
 --- !parsetree:SubroutineDeclaration
 name: x
+prototype: ~
 --- !parsetree:BinOp
 context: CXT_VOID
 left: !parsetree:Constant

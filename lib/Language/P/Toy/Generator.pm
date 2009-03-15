@@ -75,7 +75,7 @@ sub process {
 }
 
 sub add_declaration {
-    my( $self, $name ) = @_;
+    my( $self, $name, $prototype ) = @_;
 
     my $sub = Language::P::Toy::Value::Subroutine::Stub->new
                   ( { name     => $name,

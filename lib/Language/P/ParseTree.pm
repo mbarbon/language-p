@@ -14,7 +14,7 @@ our @EXPORT_OK =
        CXT_VIVIFY CXT_CALL_MASK
 
        PROTO_DEFAULT PROTO_SCALAR PROTO_ARRAY PROTO_HASH PROTO_SUB
-       PROTO_GLOB PROTO_BACKSLASH PROTO_BLOCK PROTO_AMPER PROTO_ANY
+       PROTO_GLOB PROTO_REFERENCE PROTO_BLOCK PROTO_AMPER PROTO_ANY
        PROTO_INDIROBJ PROTO_FILEHANDLE PROTO_MAKE_GLOB
 
        FLAG_IMPLICITARGUMENTS FLAG_ERASEFRAME
@@ -60,7 +60,7 @@ use constant
     PROTO_SUB          => 8,
     PROTO_GLOB         => 16,
     PROTO_ANY          => 1|2|4|8|16,
-    PROTO_BACKSLASH    => 32,
+    PROTO_REFERENCE    => 32,
     PROTO_BLOCK        => 64,
     PROTO_AMPER        => 128,
     PROTO_INDIROBJ     => 256,
@@ -103,9 +103,9 @@ use constant
     };
 
 our %PROTOTYPE =
-  ( OP_PRINT()       => [ -1, -1, PROTO_FILEHANDLE, PROTO_ARRAY ],
+  ( OP_PRINT()       => [  0, -1, PROTO_FILEHANDLE, PROTO_ARRAY ],
     OP_DEFINED()     => [  0,  1, PROTO_AMPER, PROTO_AMPER|PROTO_ANY ],
-    OP_RETURN()      => [ -1, -1, 0, PROTO_ARRAY ],
+    OP_RETURN()      => [  0, -1, 0, PROTO_ARRAY ],
     OP_UNDEF()       => [  0,  1, 0, PROTO_ANY ],
     OP_EVAL()        => [  0,  1, PROTO_BLOCK, PROTO_ANY ],
     OP_DO_FILE()     => [  1,  1, 0, PROTO_ANY ],
@@ -139,14 +139,14 @@ our %PROTOTYPE =
             OP_FT_ATIME,
             OP_FT_CTIME,
             ) ),
-    OP_UNLINK()      => [ -1, -1, 0, PROTO_ARRAY ],
-    OP_DIE()         => [ -1, -1, 0, PROTO_ARRAY ],
+    OP_UNLINK()      => [  0, -1, 0, PROTO_ARRAY ],
+    OP_DIE()         => [  0, -1, 0, PROTO_ARRAY ],
     OP_OPEN()        => [  1, -1, 0, PROTO_MAKE_GLOB, PROTO_SCALAR, PROTO_ARRAY ],
     OP_PIPE()        => [  2,  2, 0, PROTO_MAKE_GLOB, PROTO_MAKE_GLOB ],
     OP_CHDIR()       => [  0,  1, 0, PROTO_SCALAR ],
     OP_RMDIR()       => [  0,  1, 0, PROTO_SCALAR ],
     OP_READLINE()    => [  0,  1, 0, PROTO_MAKE_GLOB ],
-    OP_GLOB()        => [ -1, -1, 0, PROTO_ARRAY ],
+    OP_GLOB()        => [  0, -1, 0, PROTO_ARRAY ],
     OP_CLOSE()       => [  0,  1, 0, PROTO_MAKE_GLOB ],
     OP_BINMODE()     => [  0,  2, 0, PROTO_MAKE_GLOB, PROTO_SCALAR ],
     OP_ABS()         => [  0,  1, 0, PROTO_SCALAR ],
@@ -422,13 +422,18 @@ our @FIELDS = qw(lines);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub set_parent_for_all_childs {
+    return unless $_[0]->lines;
+    $_->set_parent( $_[0] ) foreach @{$_[0]->lines};
+}
+
 package Language::P::ParseTree::NamedSubroutine;
 
 use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Subroutine);
 
-our @FIELDS = qw(name);
+our @FIELDS = qw(name prototype);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -440,11 +445,12 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(name);
+our @FIELDS = qw(name prototype);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub is_declaration { 1 }
+sub set_parent_for_all_childs { }
 
 package Language::P::ParseTree::AnonymousSubroutine;
 

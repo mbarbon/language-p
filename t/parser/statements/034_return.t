@@ -23,6 +23,7 @@ lines:
     context: CXT_CALLER
     function: OP_RETURN
 name: x
+prototype: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -46,6 +47,7 @@ lines:
     context: CXT_CALLER
     function: OP_RETURN
 name: x
+prototype: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -77,4 +79,5 @@ lines:
           name: a
           sigil: VALUE_SCALAR
 name: x
+prototype: ~
 EOE

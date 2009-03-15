@@ -48,6 +48,7 @@ x &foo
 EOP
 --- !parsetree:SubroutineDeclaration
 name: x
+prototype: ~
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:SpecialFunctionCall

@@ -172,4 +172,5 @@ lines:
     context: CXT_CALLER
     function: OP_RETURN
 name: add3
+prototype: ~
 EOE

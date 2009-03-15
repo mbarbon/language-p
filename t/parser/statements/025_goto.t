@@ -66,6 +66,7 @@ goto foo;
 EOP
 --- !parsetree:SubroutineDeclaration
 name: foo
+prototype: ~
 --- !parsetree:Jump
 left: foo
 op: OP_GOTO

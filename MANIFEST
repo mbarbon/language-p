@@ -114,6 +114,7 @@ t/parser/statements/040_if.t
 t/parser/statements/050_while.t
 t/parser/statements/055_for.t
 t/parser/statements/080_sub.t
+t/parser/statements/081_sub_prototype.t
 t/parser/statements/090_special_blocks.t
 t/parser/statements/120_package.t
 t/parser/terms/004_bareword.t

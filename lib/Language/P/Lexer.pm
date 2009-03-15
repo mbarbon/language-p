@@ -729,6 +729,13 @@ sub _find_end {
                0, $interpolate, \$str, undef, undef, $interpolated ] );
 }
 
+sub lex_proto_or_attr {
+    my( $self ) = @_;
+    my( $quote, $token ) = _find_end( $self, 'q', '(' );
+
+    return $token->[4];
+}
+
 sub _prepare_sublex {
     my( $self, $op, $quote_start ) = @_;
     my( $quote, $token ) = _find_end( $self, $op, $quote_start );

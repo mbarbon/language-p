@@ -165,6 +165,7 @@ print foo + boo;
 EOP
 --- !parsetree:SubroutineDeclaration
 name: foo
+prototype: ~
 --- !parsetree:BuiltinIndirect
 arguments:
   - !parsetree:FunctionCall

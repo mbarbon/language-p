@@ -386,18 +386,23 @@ sub _parse_sub {
     _lex_token( $self, T_ID ) unless $no_sub_token;
     my $name = $self->lexer->lex_alphabetic_identifier( 0 );
     my $fqname = $name ? _qualify( $self, $name->[O_VALUE], $name->[O_ID_TYPE] ) : undef;
+    my $proto;
 
-    # TODO prototypes
     if( $fqname ) {
-        die "Syntax error: named sub '$fqname'" unless $flags & 1;
+        die "Syntaxa error: named sub '$fqname'" unless $flags & 1;
 
         my $next = $self->lexer->lex( X_OPERATOR );
+        if( $next->[O_TYPE] == T_OPPAR ) {
+            $proto = _parse_sub_proto( $self );
+            $next = $self->lexer->lex( X_OPERATOR );
+        }
 
         if( $next->[O_TYPE] == T_SEMICOLON ) {
-            $self->generator->add_declaration( $fqname );
+            $self->generator->add_declaration( $fqname, $proto );
 
             return Language::P::ParseTree::SubroutineDeclaration->new
-                       ( { name => $fqname,
+                       ( { name      => $fqname,
+                           prototype => $proto,
                            } );
         } elsif( $next->[O_TYPE] != T_OPBRK ) {
             _syntax_error( $self, $next );
@@ -409,7 +414,8 @@ sub _parse_sub {
 
     $self->_enter_scope( 1 );
     my $sub = $fqname ? Language::P::ParseTree::NamedSubroutine->new
-                            ( { name     => $fqname,
+                            ( { name      => $fqname,
+                                prototype => $proto,
                                 } ) :
                         Language::P::ParseTree::AnonymousSubroutine->new;
     # add @_ to lexical scope
@@ -423,10 +429,68 @@ sub _parse_sub {
     # add a subroutine declaration, the generator might
     # not create it until later
     if( $fqname ) {
-        $self->generator->add_declaration( $fqname );
+        $self->generator->add_declaration( $fqname, $proto );
     }
 
     return $sub;
+}
+
+sub _parse_sub_proto {
+    my( $self ) = @_;
+    my $proto = $self->lexer->lex_proto_or_attr;
+    my @proto = ( 0, 0, 0 );
+    my $in_bracket = 0;
+    my $saw_semicolon = 0;
+
+    my $value = 0;
+    while( length $$proto ) {
+        $$proto =~ s/^;// and do {
+            $saw_semicolon = 1;
+            $proto[0] = $#proto - 2;
+        };
+        $$proto =~ s/^\\\[// and do {
+            $in_bracket = 1;
+            $value = PROTO_REFERENCE;
+        };
+        $$proto =~ s/^\]// and do {
+            $in_bracket = 0;
+            push @proto, $value;
+            next;
+        };
+        $$proto =~ s/^\\// and do {
+            $value = PROTO_REFERENCE;
+        };
+        $$proto =~ s/^([\$\@\%\&\*])// and do {
+            if( $1 eq '$' ) {
+                $value |= PROTO_SCALAR;
+            } elsif( $1 eq '@' ) {
+                $value |= PROTO_ARRAY;
+            } elsif( $1 eq '%' ) {
+                $value |= PROTO_HASH;
+            } elsif( $1 eq '*' ) {
+                $value |= PROTO_GLOB;
+            } elsif( $1 eq '&' ) {
+                $value |= PROTO_SUB;
+                if( $#proto == 2 ) {
+                    $proto[2] |= PROTO_BLOCK;
+                }
+            }
+        };
+        if( !$value ) {
+            substr $$proto, 0, 1, '';
+        }
+        next if $in_bracket;
+        push @proto, $value;
+        if( $value == PROTO_ARRAY || $value == PROTO_HASH ) {
+            $proto[1] = -1;
+            last;
+        }
+        ++$proto[0] unless $saw_semicolon;
+        ++$proto[1];
+        $value = 0;
+    }
+
+    return \@proto;
 }
 
 sub _parse_cond {

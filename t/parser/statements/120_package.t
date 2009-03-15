@@ -76,10 +76,12 @@ sub z;
 EOP
 --- !parsetree:SubroutineDeclaration
 name: y
+prototype: ~
 --- !parsetree:Package
 name: x
 --- !parsetree:SubroutineDeclaration
 name: x::z
+prototype: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -90,6 +92,7 @@ main::x 1
 EOP
 --- !parsetree:SubroutineDeclaration
 name: x
+prototype: ~
 --- !parsetree:Package
 name: y
 --- !parsetree:FunctionCall
@@ -139,10 +142,12 @@ EOP
 name: main
 --- !parsetree:SubroutineDeclaration
 name: xm
+prototype: ~
 --- !parsetree:Package
 name: w
 --- !parsetree:SubroutineDeclaration
 name: w::xw
+prototype: ~
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
@@ -245,6 +250,7 @@ w 1;
 EOP
 --- !parsetree:SubroutineDeclaration
 name: y::x
+prototype: ~
 --- !parsetree:Package
 name: y
 --- !parsetree:FunctionCall
@@ -260,6 +266,7 @@ function: !parsetree:Symbol
   sigil: VALUE_SUB
 --- !parsetree:SubroutineDeclaration
 name: w
+prototype: ~
 --- !parsetree:Package
 name: main
 --- !parsetree:FunctionCall

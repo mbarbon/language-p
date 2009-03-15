@@ -64,6 +64,7 @@ x 1, 2;
 EOP
 --- !parsetree:SubroutineDeclaration
 name: x
+prototype: ~
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
@@ -89,6 +90,7 @@ EOP
 --- !parsetree:NamedSubroutine
 lines: []
 name: x
+prototype: ~
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant

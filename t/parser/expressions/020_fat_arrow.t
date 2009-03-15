@@ -45,6 +45,7 @@ foo::q => 1
 EOP
 --- !parsetree:SubroutineDeclaration
 name: foo::q
+prototype: ~
 --- !parsetree:List
 context: CXT_VOID
 expressions:

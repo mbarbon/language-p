@@ -14,6 +14,7 @@ EOP
 --- !parsetree:NamedSubroutine
 lines: []
 name: name
+prototype: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -32,6 +33,7 @@ lines:
     context: CXT_CALLER
     function: OP_RETURN
 name: name
+prototype: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -52,6 +54,7 @@ lines:
     context: CXT_CALLER
     function: OP_RETURN
 name: name
+prototype: ~
 --- !parsetree:LexicalDeclaration
 context: CXT_VOID
 flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
@@ -82,6 +85,7 @@ lines:
     context: CXT_CALLER
     function: OP_RETURN
 name: name
+prototype: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -106,7 +110,9 @@ lines:
         context: CXT_CALLER
         function: OP_RETURN
     name: name2
+    prototype: ~
 name: name
+prototype: ~
 --- !parsetree:LexicalDeclaration
 context: CXT_VOID
 flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
@@ -142,6 +148,7 @@ lines:
         context: CXT_CALLER
         function: OP_RETURN
     name: name
+    prototype: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -172,4 +179,5 @@ lines:
         context: CXT_CALLER
         function: OP_RETURN
     name: name
+    prototype: ~
 EOE

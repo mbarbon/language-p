@@ -176,4 +176,5 @@ lines:
     context: CXT_CALLER
     function: OP_RETURN
 name: foo
+prototype: ~
 EOE
