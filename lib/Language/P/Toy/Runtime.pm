@@ -90,6 +90,12 @@ sub eval_string {
     $self->run_last_file( $code, $context );
 }
 
+sub search_file {
+    my( $self, $file ) = @_;
+
+    return $file->as_string;
+}
+
 sub call_subroutine {
     my( $self, $code, $context, $args ) = @_;
 

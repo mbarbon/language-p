@@ -9,6 +9,7 @@ Revision history for Perl extension Language::P.
 	- Toy runtime
 	    - Execute BEGIN blocks as soon as they are parsed.
 	    - Implemented eval 'string'.
+	    - Basic hash implementation.
 
 0.01_03  Sun Mar  1 17:52:48 CET 2009
 	- Parsing:

@@ -24,6 +24,7 @@ my %sigil_to_slot =
   ( VALUE_SCALAR() => 'scalar',
     VALUE_SUB()    => 'subroutine',
     VALUE_ARRAY()  => 'array',
+    VALUE_HASH()   => 'hash',
     VALUE_HANDLE() => 'io',
     );
 

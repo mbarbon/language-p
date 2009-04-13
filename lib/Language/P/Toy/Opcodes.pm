@@ -7,6 +7,7 @@ use Exporter 'import';
 use Language::P::Toy::Value::StringNumber;
 use Language::P::Toy::Value::Reference;
 use Language::P::Toy::Value::Array;
+use Language::P::Toy::Value::Hash;
 use Language::P::Toy::Value::List;
 use Language::P::ParseTree qw(:all);
 
@@ -787,7 +788,7 @@ sub o_hash_element {
     my $hash = pop @{$runtime->{_stack}};
     my $key = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $hash->get_item( $key->as_string );
+    push @{$runtime->{_stack}}, $hash->get_item_or_undef( $key->as_string );
 
     return $pc + 1;
 }
@@ -900,8 +901,9 @@ sub o_iterator_next {
 sub o_do_file {
     my( $op, $runtime, $pc ) = @_;
     my $file = pop @{$runtime->{_stack}};
+    my $real_path = $runtime->search_file( $file );
 
-    $runtime->run_file( $file->as_string, _context( $op, $runtime ) );
+    $runtime->run_file( $real_path, _context( $op, $runtime ) );
 
     return $pc + 1;
 }
