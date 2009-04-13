@@ -6,7 +6,8 @@ use base qw(Language::P::ParseTree::Visitor);
 
 __PACKAGE__->mk_ro_accessors( qw(runtime) );
 __PACKAGE__->mk_accessors( qw(_code _pending _block_map _temporary_map
-                              _options _generated _intermediate _head) );
+                              _options _generated _intermediate _head
+                              _eval_context) );
 
 use Language::P::Intermediate::Generator;
 use Language::P::Opcodes qw(:all);
@@ -230,12 +231,21 @@ sub _cleanup {
 
 sub start_code_generation {
     my( $self, $args ) = @_;
-    my $outer = Language::P::Toy::Value::Code->new
-                    ( { bytecode => [],
-                        lexicals => Language::P::Toy::Value::ScratchPad->new,
-                        outer    => undef,
-                        } );
-    $self->_head( $outer );
+    my $outer;
+    if( my $cxt = $self->_eval_context ) {
+        $self->_eval_context( undef );
+        $outer = $cxt->[1];
+
+        while( my( $name, $index ) = each %{$cxt->[0]} ) {
+            _add_value( $outer->lexicals, $cxt->[2]->names->{$name}, $index );
+        }
+    }
+    my $code = Language::P::Toy::Value::Code->new
+                   ( { bytecode => [],
+                       lexicals => Language::P::Toy::Value::ScratchPad->new,
+                       outer    => $outer,
+                       } );
+    $self->_head( $code );
 
     $self->_generated( {} );
     $self->_intermediate->file_name( $args->{file_name} )
@@ -416,6 +426,12 @@ sub _rx_quantifier {
 
 my %lex_map;
 
+sub _add_value {
+    my( $pad, $lexical, $index ) = @_;
+
+    return $lex_map{$pad}{$lexical} = $index;
+}
+
 sub _find_add_value {
     my( $pad, $lexical ) = @_;
 
@@ -431,6 +447,48 @@ sub _uplevel {
     return $code;
 }
 
+sub _allocate_single {
+    my( $self, $lexical, $level, $map ) = @_;
+    my $pad = $self->_code->lexicals;
+
+    if( !exists $map->{$lexical} ) {
+        if(    $lexical->name eq '_'
+            && $lexical->sigil == VALUE_ARRAY ) {
+            $map->{$lexical} = 0; # arguments are always first
+        } elsif( $lexical->closed_over ) {
+            if( $level ) {
+                my $code_from = _uplevel( $self->_code, $level );
+                my $pad_from = $code_from->lexicals;
+                my $val = _find_add_value( $pad_from, $lexical );
+                if( $code_from->is_subroutine ) {
+                    foreach my $index ( -$level .. -1 ) {
+                        my $inner_code = _uplevel( $self->_code, -$index - 1 );
+                        my $outer_code = _uplevel( $inner_code, 1 );
+                        my $outer_pad = $outer_code->lexicals;
+                        my $inner_pad = $inner_code->lexicals;
+
+                        my $outer_idx = _find_add_value( $outer_pad, $lexical );
+                        my $inner_idx = _find_add_value( $inner_pad, $lexical );
+                        push @{$inner_code->closed},
+                             [$outer_idx, $inner_idx];
+                        $map->{$lexical} = $inner_idx
+                          if $index == -1;
+                    }
+                } else {
+                    $map->{$lexical} =
+                        $pad->add_value( $lexical,
+                                         $pad_from->values->[ $val ] );
+                }
+            } else {
+                $map->{$lexical} = _find_add_value( $pad, $lexical );
+            }
+        } else {
+            $map->{$lexical} = $self->_code->stack_size;
+            ++$self->_code->{stack_size};
+        }
+    }
+}
+
 sub _allocate_lexicals {
     my( $self, $is_sub ) = @_;
 
@@ -440,54 +498,24 @@ sub _allocate_lexicals {
     my %clear;
     my $needs_pad;
     foreach my $op ( @{$self->_code->bytecode} ) {
-        next if !$op->{lexical};
-
-        if( !exists $map{$op->{lexical}} ) {
-            if(    $op->{lexical}->name eq '_'
-                && $op->{lexical}->sigil == VALUE_ARRAY ) {
-                $map{$op->{lexical}} = 0; # arguments are always first
-            } elsif( $op->{lexical}->closed_over ) {
-                my $level = $op->{level};
-
-                if( $level ) {
-                    my $code_from = _uplevel( $self->_code, $level );
-                    my $pad_from = $code_from->lexicals;
-                    my $val = _find_add_value( $pad_from, $op->{lexical} );
-                    if( $code_from->is_subroutine ) {
-                        foreach my $index ( -$level .. -1 ) {
-                            my $inner_code = _uplevel( $self->_code, -$index - 1 );
-                            my $outer_code = _uplevel( $inner_code, 1 );
-                            my $outer_pad = $outer_code->lexicals;
-                            my $inner_pad = $inner_code->lexicals;
-
-                            my $outer_idx = _find_add_value( $outer_pad, $op->{lexical} );
-                            my $inner_idx = _find_add_value( $inner_pad, $op->{lexical} );
-                            push @{$inner_code->closed},
-                                 [$outer_idx, $inner_idx];
-                            $map{$op->{lexical}} = $inner_idx
-                              if $index == -1;
-                        }
-                    } else {
-                        $map{$op->{lexical}} =
-                            $pad->add_value( $op->{lexical},
-                                             $pad_from->values->[ $val ] );
-                    }
-                } else {
-                    $map{$op->{lexical}} = _find_add_value( $pad, $op->{lexical} );
-                }
-            } else {
-                $map{$op->{lexical}} = $self->_code->stack_size;
-                ++$self->_code->{stack_size};
+        if( $op->{op_name} eq 'eval' ) {
+            while( my( $k, $v ) = each %{$op->{lexicals}} ) {
+                _allocate_single( $self, $v, 1, \%map );
+                $op->{lexicals}{$k} = $map{$v};
             }
-        }
-
-        if( $op->{lexical}->closed_over ) {
             $needs_pad = 1;
+        } else {
+            next if !$op->{lexical};
+            _allocate_single( $self, $op->{lexical}, $op->{level}, \%map );
+
+            if( $op->{lexical}->closed_over ) {
+                $needs_pad = 1;
+            }
+            $op->{index} = $map{$op->{lexical}};
+            $clear{$op->{index}} ||= 1 if $op->{lexical}->closed_over && !$op->{level};
+            delete $op->{lexical};
+            delete $op->{level};
         }
-        $op->{index} = $map{$op->{lexical}};
-        $clear{$op->{index}} ||= 1 if $op->{lexical}->closed_over && !$op->{level};
-        delete $op->{lexical};
-        delete $op->{level};
     }
 
     $self->_code->{closed} = undef unless @{$self->_code->closed};

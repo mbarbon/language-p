@@ -65,7 +65,6 @@ Runtime:
 - integer -> float on overflow (also in parsing!)
 - proper scalar polimorphing
   - mixed-mode arithmetic
-- encapsulate lexical lookup/closure, for eval ""
 - better handling of sub calls
   - encapsulate enter/leave
 - autovivification

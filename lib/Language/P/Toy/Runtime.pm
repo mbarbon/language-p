@@ -44,10 +44,11 @@ sub run_last_file {
     # FIXME duplicates Language::P::Toy::Value::Code::call
     my $frame = $self->push_frame( $code->stack_size + 2 );
     my $stack = $self->{_stack};
-    $stack->[$frame - 2] = [ -2, $self->{_bytecode}, $context ];
+    $stack->[$frame - 2] = [ -2, $self->{_bytecode}, $context, $self->{_code} ];
     $stack->[$frame - 1] = $code->lexicals || 'no_pad';
     $self->set_bytecode( $code->bytecode );
     $self->{_pc} = 0;
+    $self->{_code} = $code;
 
     $self->run;
 }
@@ -57,6 +58,35 @@ sub run_file {
 
     $context ||= CXT_VOID;
     my $code = $self->parser->parse_file( $program, $context != CXT_VOID );
+    $self->run_last_file( $code, $context );
+}
+
+sub eval_string {
+    my( $self, $string, $context, $lexicals ) = @_;
+    $context ||= CXT_VOID;
+    my $outer_pad = $self->{_stack}->[$self->{_frame} - 1];
+    my $parse_lex = Language::P::Parser::Lexicals->new;
+    foreach my $k ( keys %$lexicals ) {
+        my( $sigil, $name ) = split /\0/, $k;
+        $parse_lex->add_lexical( Language::P::ParseTree::LexicalDeclaration->new
+                                     ( { name  => $name,
+                                         sigil => $sigil,
+                                         flags => 0,
+                                         } ) );
+    }
+
+    $self->parser->generator->_eval_context( [ $lexicals, $self->{_code}, $parse_lex ] );
+    # FIXME propagate runtime package
+    my $code = $self->parser->parse_string( $string, 'main',
+                                            $context != CXT_VOID, $parse_lex );
+
+    my $pad = $code->lexicals;
+
+    if( $code->closed ) {
+        foreach my $from_to ( @{$code->closed} ) {
+            $pad->values->[$from_to->[1]] = $outer_pad->values->[$from_to->[0]];
+        }
+    }
     $self->run_last_file( $code, $context );
 }
 
@@ -129,6 +159,7 @@ sub call_return {
     my $bytecode = $self->{_stack}->[$self->{_frame} - 2][1];
 
     $self->set_bytecode( $bytecode );
+    $self->{_code} = $self->{_stack}->[$self->{_frame} - 2][3];
     $self->pop_frame;
 
     return $rpc;

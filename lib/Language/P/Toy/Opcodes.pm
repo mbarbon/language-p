@@ -906,4 +906,14 @@ sub o_do_file {
     return $pc + 1;
 }
 
+sub o_eval {
+    my( $op, $runtime, $pc ) = @_;
+    my $string = pop @{$runtime->{_stack}};
+
+    $runtime->eval_string( $string->as_string, _context( $op, $runtime ),
+                           $op->{lexicals} );
+
+    return $pc + 1;
+}
+
 1;

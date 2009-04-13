@@ -36,9 +36,12 @@ sub call {
             $stack->[$frame - 2 - $slot] = Language::P::Toy::Value::Undef->new;
         }
     }
-    $stack->[$frame - 2] = [ $pc, $runtime->{_bytecode}, $context ];
+    $stack->[$frame - 2] = [ $pc, $runtime->{_bytecode}, $context,
+                             $runtime->{_code} ];
 
     $runtime->set_bytecode( $self->bytecode );
+    # FIXME encapsulation
+    $runtime->{_code} = $self;
 }
 
 1;

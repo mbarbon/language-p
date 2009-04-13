@@ -139,12 +139,12 @@ sub set_option {
 }
 
 sub parse_string {
-    my( $self, $string, $package, $add_return ) = @_;
+    my( $self, $string, $package, $add_return, $lexicals ) = @_;
 
     open my $fh, '<', \$string;
 
     $self->_package( $package );
-    $self->parse_stream( $fh, '<string>', $add_return );
+    $self->parse_stream( $fh, '<string>', $add_return, $lexicals );
 }
 
 sub parse_file {
@@ -157,7 +157,7 @@ sub parse_file {
 }
 
 sub parse_stream {
-    my( $self, $stream, $filename, $add_return ) = @_;
+    my( $self, $stream, $filename, $add_return, $lexicals ) = @_;
 
     $self->{lexer} = Language::P::Lexer->new
                          ( { stream       => $stream,
@@ -165,7 +165,7 @@ sub parse_stream {
                              symbol_table => $self->runtime->symbol_table,
                              } );
     $self->{_lexical_state} = [];
-    $self->_parse( $add_return );
+    $self->_parse( $add_return, $lexicals );
 }
 
 sub _qualify {
@@ -179,7 +179,7 @@ sub _qualify {
 }
 
 sub _parse {
-    my( $self, $add_return ) = @_;
+    my( $self, $add_return, $lexicals ) = @_;
 
     my $dumper;
     if(    $self->_options->{'dump-parse-tree'}
@@ -194,8 +194,8 @@ sub _parse {
     }
 
     $self->_pending_lexicals( [] );
-    $self->_lexicals( undef );
-    $self->_enter_scope( 0, 1 ); # FIXME eval
+    $self->_lexicals( $lexicals );
+    $self->_enter_scope( $lexicals ? 1 : 0, 1 );
 
     $self->generator->start_code_generation( { file_name => $self->lexer->file,
                                                } );
@@ -1149,7 +1149,14 @@ sub _parse_term_terminal {
     } elsif(    $token->[O_TYPE] == T_ID ) {
         my $tokidt = $token->[O_ID_TYPE];
 
-        if( !is_keyword( $token->[O_ID_TYPE] ) ) {
+        if( $token->[O_ID_TYPE] == KEY_EVAL ) {
+            my $lex = $self->_lexicals->all_visible_lexicals;
+            my $tree = _parse_listop( $self, $token );
+            $_->set_closed_over foreach values %$lex;
+            $tree->set_attribute( 'lexicals', $lex );
+
+            return $tree;
+        } elsif( !is_keyword( $token->[O_ID_TYPE] ) ) {
             return _parse_listop( $self, $token );
         } elsif(    $tokidt == OP_MY
                  || $tokidt == OP_OUR

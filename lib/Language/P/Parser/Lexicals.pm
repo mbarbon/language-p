@@ -48,4 +48,17 @@ sub add_lexical {
     my $s = $self->names->{$lexical->symbol_name} = $lexical;
 }
 
+sub all_visible_lexicals {
+    my( $self ) = @_;
+    my %lex;
+
+    for( my $lexicals = $self; $lexicals; $lexicals = $lexicals->outer ) {
+        while( my( $k, $v ) = each %{$lexicals->{names}} ) {
+            $lex{$k} ||= $v;
+        }
+    }
+
+    return \%lex;
+}
+
 1;

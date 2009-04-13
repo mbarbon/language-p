@@ -322,8 +322,15 @@ sub _builtin {
             $self->dispatch( $arg );
         }
 
-        _add_bytecode $self,
-            opcode_nm( $tree->function, context => _context( $tree ) );
+        if( $tree->function == OP_EVAL ) {
+            _add_bytecode $self,
+                opcode_nm( $tree->function,
+                           context  => _context( $tree ),
+                           lexicals => $tree->get_attribute( 'lexicals' ) );
+        } else {
+            _add_bytecode $self,
+                opcode_nm( $tree->function, context => _context( $tree ) );
+        }
     } else {
         return _function_call( $self, $tree );
     }
