@@ -3,12 +3,13 @@ Revision history for Perl extension Language::P.
 0.01_04
 	- Parsing:
 	    - 'do' in its various forms.
+	    - 'require expr' and 'require package'.
 	    - Make eval 'string' capture all lexicals in scope.
 	- Intermediate representation:
 	    - Fix code generation for nested if-then-else constructs.
 	- Toy runtime
 	    - Execute BEGIN blocks as soon as they are parsed.
-	    - Implemented eval 'string'.
+	    - Implemented do 'file, require and eval 'string'.
 	    - Basic hash implementation.
 
 0.01_03  Sun Mar  1 17:52:48 CET 2009

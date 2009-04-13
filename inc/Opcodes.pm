@@ -292,6 +292,7 @@ ql_tr
 readline            u       noattr      same                 1   1
 reference
 repeat
+require_file        u       noattr      same                 1   1
 restore_glob_slot   0       noattr      same                 0   0
 return              0       noattr      same                 1   0
 rmdir               

@@ -361,6 +361,7 @@ sub _parse_line_rest {
             _lex_token( $self );
             return _parse_do( $self, $token );
         }
+        die "Unhandled case";
     } elsif( $special_sub{$token->[O_VALUE]} ) {
         return _parse_sub( $self, 1, 1 );
     } else {
@@ -1154,6 +1155,26 @@ sub _parse_term_terminal {
             my $tree = _parse_listop( $self, $token );
             $_->set_closed_over foreach values %$lex;
             $tree->set_attribute( 'lexicals', $lex );
+
+            return $tree;
+        } elsif( $token->[O_ID_TYPE] == KEY_REQUIRE_FILE ) {
+            my $tree = _parse_listop( $self, $token );
+
+            if(    $tree->arguments->[0]->is_constant
+                && $tree->arguments->[0]->is_bareword ) {
+                my $file = $tree->arguments->[0]->value;
+                # FIXME add 'split_package' or similar
+                $file =~ s{::}{/}g;
+
+                return Language::P::ParseTree::Builtin->new
+                           ( { function  => OP_REQUIRE_FILE,
+                               arguments =>
+                                   [ Language::P::ParseTree::Constant->new
+                                         ( { value => $file . ".pm",
+                                             flags => CONST_STRING,
+                                             } ) ],
+                               } );
+            }
 
             return $tree;
         } elsif( !is_keyword( $token->[O_ID_TYPE] ) ) {

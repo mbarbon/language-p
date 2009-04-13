@@ -91,9 +91,17 @@ sub eval_string {
 }
 
 sub search_file {
-    my( $self, $file ) = @_;
+    my( $self, $file_str ) = @_;
+    my $inc = $self->symbol_table->get_symbol( 'INC', '@', 1 );
 
-    return $file->as_string;
+    for( my $it = $inc->iterator; $it->next; ) {
+        my $path = $it->item->as_string . '/' . $file_str;
+        if( -f $path ) {
+            return Language::P::Toy::Value::StringNumber->new( { string => $path } );
+        }
+    }
+
+    die "Can't find '$file_str'";
 }
 
 sub call_subroutine {

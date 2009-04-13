@@ -113,6 +113,7 @@ state               k       OP_STATE
 local               k       
 sub                 k       
 eval                b       
+require             b       KEY_REQUIRE_FILE
 package             k       
 print               b       
 defined             b       

@@ -900,9 +900,39 @@ sub o_iterator_next {
 sub o_do_file {
     my( $op, $runtime, $pc ) = @_;
     my $file = pop @{$runtime->{_stack}};
-    my $real_path = $runtime->search_file( $file );
+    my $file_str = $file->as_string;
+    my $real_path = $runtime->search_file( $file_str );
+    my $real_path_str = $real_path->as_string;
 
-    $runtime->run_file( $real_path, _context( $op, $runtime ) );
+    $runtime->run_file( $real_path_str, _context( $op, $runtime ) );
+
+    my $inc = $runtime->symbol_table->get_symbol( 'INC', '%', 1 );
+    $inc->set_item( $file_str, $real_path );
+
+    return $pc + 1;
+}
+
+sub o_require_file {
+    my( $op, $runtime, $pc ) = @_;
+    my $file = pop @{$runtime->{_stack}};
+    my $file_str = $file->as_string;
+    my $inc = $runtime->symbol_table->get_symbol( 'INC', '%', 1 );
+
+    if( $inc->has_item( $file_str ) ) {
+        push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new
+                                        ( { integer => 1 } );
+
+        return $pc + 1;
+    }
+
+    my $real_path = $runtime->search_file( $file_str );
+    my $real_path_str = $real_path->as_string;
+
+    $runtime->run_file( $real_path_str, _context( $op, $runtime ) );
+
+    # FIXME check return value
+
+    $inc->set_item( $file_str, $real_path );
 
     return $pc + 1;
 }

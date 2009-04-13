@@ -74,6 +74,8 @@ Runtime:
   - check mixed assignments
 - garbage collection and/or reference counting
 - do file/require/use/eval string
+  - check module return value in require
+  - handle %INC correctly on parse error
 - stack unwinding
   - eval/die
   - nonlocal redo/last/next/goto
@@ -98,6 +100,8 @@ Runtime:
   - test global my() vs. local my(), lexical arrays, hashes
   - integrate in stack unwinding
 - objects, tie, overload
+- for all runtime functions, define which take/return perl types and which
+  are only overloads on top of the others
 
 Refactoring:
 - check offsets for call sequence, refactor stack handling

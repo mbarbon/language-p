@@ -109,6 +109,7 @@ our %PROTOTYPE =
     OP_UNDEF()       => [  0,  1, 0, PROTO_ANY ],
     OP_EVAL()        => [  0,  1, PROTO_BLOCK, PROTO_ANY ],
     OP_DO_FILE()     => [  1,  1, 0, PROTO_ANY ],
+    OP_REQUIRE_FILE()=> [  1,  1, 0, PROTO_ANY ],
     OP_MAP()         => [  2, -1, PROTO_INDIROBJ, PROTO_ARRAY ],
     ( map { $_ => [ 0, 1, 0, PROTO_MAKE_GLOB ] }
           ( OP_FT_EREADABLE,
@@ -158,6 +159,7 @@ our %CONTEXT =
   ( OP_DEFINED()     => [ CXT_SCALAR ],
     OP_RETURN()      => [ CXT_CALLER ],
     OP_DO_FILE()     => [ CXT_SCALAR ],
+    OP_REQUIRE_FILE()=> [ CXT_SCALAR ],
     );
 
 package Language::P::ParseTree::Node;
