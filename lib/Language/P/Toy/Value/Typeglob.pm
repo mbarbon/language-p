@@ -51,7 +51,7 @@ __PACKAGE__->mk_ro_accessors( qw(scalar array hash io format subroutine) );
 
 use Language::P::Toy::Value::Scalar;
 use Language::P::Toy::Value::Array;
-# use Language::P::Toy::Value::Hash;
+use Language::P::Toy::Value::Hash;
 use Language::P::Toy::Value::Subroutine;
 use Language::P::Toy::Value::Handle;
 # use Language::P::Toy::Value::Format;

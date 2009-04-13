@@ -7,7 +7,6 @@ use Exporter 'import';
 use Language::P::Toy::Value::StringNumber;
 use Language::P::Toy::Value::Reference;
 use Language::P::Toy::Value::Array;
-use Language::P::Toy::Value::Hash;
 use Language::P::Toy::Value::List;
 use Language::P::ParseTree qw(:all);
 

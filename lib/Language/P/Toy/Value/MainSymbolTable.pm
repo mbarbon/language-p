@@ -49,7 +49,8 @@ sub get_symbol {
     return $symbol unless $symbol;
     if( !$created ) {
         return $symbol if $sigil eq '*';
-        return $symbol->get_slot( $sigils{$sigil}[0] );
+        return $create ? $symbol->get_or_create_slot( $sigils{$sigil}[0] ) :
+                         $symbol->get_slot( $sigils{$sigil}[0] );
     }
     if( $special_names{$name} ) {
         if( $name eq "\017" ) {
@@ -58,7 +59,8 @@ sub get_symbol {
     }
 
     return $symbol if $sigil eq '*';
-    return $symbol->get_slot( $sigils{$sigil}[0] );
+    return $create ? $symbol->get_or_create_slot( $sigils{$sigil}[0] ) :
+                     $symbol->get_slot( $sigils{$sigil}[0] );
 }
 
 1;

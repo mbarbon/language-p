@@ -66,7 +66,9 @@ sub _get_symbol {
                     Language::P::Toy::Value::Typeglob->new;
             }
             return ( $glob, $created ) if $sigil eq '*';
-            return ( $glob->get_slot( $sigils{$sigil}[0] ), $created );
+            return ( $create ? $glob->get_or_create_slot( $sigils{$sigil}[0] ) :
+                               $glob->get_slot( $sigils{$sigil}[0] ),
+                     $created );
         } else {
             my $subpackage = $package . '::';
             if( !exists $current->{symbols}{$subpackage} ) {
