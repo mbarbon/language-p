@@ -47,6 +47,9 @@ sub set_option {
         $self->_options->{$option} = 1;
         $self->_intermediate->set_option( 'dump-ir' );
     }
+    if( $option eq 'dump-bytecode' ) {
+        $self->_options->{$option} = 1;
+    }
 
     return 0;
 }
@@ -213,6 +216,19 @@ sub process_regex {
 sub finished {
     my( $self ) = @_;
     my $main_int = $self->_intermediate->generate_bytecode( $self->_pending );
+
+    if( $self->_options->{'dump-bytecode'} ) {
+        require Language::P::Intermediate::Transform;
+        require Language::P::Intermediate::Serialize;
+
+        my $transform = Language::P::Intermediate::Transform->new;
+        my $serialize = Language::P::Intermediate::Serialize->new;
+        my $tree = $transform->all_to_tree( $main_int );
+        ( my $outfile = $self->_intermediate->file_name ) =~ s/(\.\w+)?$/.pb/;
+
+        $serialize->serialize( $tree, $outfile );
+    }
+
     my $res = _generate_segment( $self, $main_int->[0], undef, $self->_head );
     $self->_cleanup;
 

@@ -14,6 +14,7 @@ lib/Language/P/Assembly.pm
 lib/Language/P/Intermediate/BasicBlock.pm
 lib/Language/P/Intermediate/Code.pm
 lib/Language/P/Intermediate/Generator.pm
+lib/Language/P/Intermediate/Serialize.pm
 lib/Language/P/Intermediate/Transform.pm
 lib/Language/P/Lexer.pm
 lib/Language/P/Parrot/BootstrapRuntime.pm
@@ -47,6 +48,7 @@ lib/Language/P/Toy/Value/SymbolTable.pm
 lib/Language/P/Toy/Value/Typeglob.pm
 lib/Language/P/Toy/Value/Undef.pm
 support/dotnet/AssemblyInfo.cs
+support/dotnet/Bytecode/Bytecode.cs
 support/dotnet/Main.cs
 support/dotnet/Runtime/Builtins.cs
 support/dotnet/Runtime/Runtime.cs

@@ -53,11 +53,13 @@
     <Compile Include="Values\Typeglob.cs" />
     <Compile Include="Values\SymbolTable.cs" />
     <Compile Include="Runtime\Runtime.cs" />
+    <Compile Include="Bytecode\Bytecode.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Folder Include="Values\" />
     <Folder Include="Runtime\" />
+    <Folder Include="Bytecode\" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>
