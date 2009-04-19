@@ -7,6 +7,8 @@
 ^t/.*/.*\.pir$
 ^t/.*/.*\.pt$
 ^support/parrot/runtime/.*\.pbc$
+^support/dotnet/bin/
+^support/dotnet/(?:configure|dotnet\.in|.*\.make|Makefile\.include)$
 
 # Avoid version control files.
 \bRCS\b
