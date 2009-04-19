@@ -21,5 +21,6 @@ bin/p_parrot
 t/*/*.pbc
 t/*/*.pir
 t/*/*.ir
+t/*/*.pb
 support/parrot/runtime/*.pbc
 parrot

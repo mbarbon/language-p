@@ -15,6 +15,7 @@ lib/Language/P/Exception.pm
 lib/Language/P/Intermediate/BasicBlock.pm
 lib/Language/P/Intermediate/Code.pm
 lib/Language/P/Intermediate/Generator.pm
+lib/Language/P/Intermediate/Serialize.pm
 lib/Language/P/Intermediate/Transform.pm
 lib/Language/P/Lexer.pm
 lib/Language/P/Parrot/BootstrapRuntime.pm
