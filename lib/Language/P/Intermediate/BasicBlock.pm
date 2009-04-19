@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
-__PACKAGE__->mk_ro_accessors( qw(bytecode start_label start_stack_size
+__PACKAGE__->mk_ro_accessors( qw(bytecode start_label
                                  predecessors successors) );
 
 use Scalar::Util qw();
