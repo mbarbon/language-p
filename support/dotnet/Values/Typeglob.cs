@@ -21,6 +21,12 @@ namespace org.mbarbon.p.values
             set { body.Array = value; }
         }
 
+        public Handle Handle
+        {
+            get { return body.Handle; }
+            set { body.Handle = value; }
+        }
+
         private TypeglobBody body;
     }
 
@@ -42,7 +48,14 @@ namespace org.mbarbon.p.values
             set { array = value; }
         }
 
+        public Handle Handle
+        {
+            get { return handle; }
+            set { handle = value; }
+        }
+        
         private Scalar scalar;
         private Array array;
+        private Handle handle;
     }
 }

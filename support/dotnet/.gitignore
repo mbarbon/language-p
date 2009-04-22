@@ -3,3 +3,6 @@ bin
 configure
 dotnet.in
 *.make
+*.userprefs
+*.usertasks
+*.pidb

@@ -8,7 +8,11 @@ namespace org.mbarbon.p.values
         {
         }
 
-        public override Scalar AsScalar(Runtime runtime)
+        public List(Runtime runtime, IAny[] data) : base(runtime, data)
+        {
+        }
+
+        public override IAny AsScalar(Runtime runtime)
         {
             return array.Count == 0 ? null : array[array.Count - 1].AsScalar(runtime);
         }

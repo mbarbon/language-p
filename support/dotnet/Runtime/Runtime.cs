@@ -6,9 +6,9 @@ namespace org.mbarbon.p.runtime
     {       
         public Runtime()
         {
-            SymbolTable = new SymbolTable(this);
+            SymbolTable = new MainSymbolTable(this);
         }
 
-        public SymbolTable SymbolTable;
+        public MainSymbolTable SymbolTable;
     }
 }

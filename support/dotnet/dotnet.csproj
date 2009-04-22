@@ -54,6 +54,8 @@
     <Compile Include="Values\SymbolTable.cs" />
     <Compile Include="Runtime\Runtime.cs" />
     <Compile Include="Bytecode\Bytecode.cs" />
+    <Compile Include="Runtime\Generator.cs" />
+    <Compile Include="Values\Handle.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

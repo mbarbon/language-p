@@ -22,7 +22,7 @@ namespace org.mbarbon.p.values
             body = other.body.CloneBody(runtime);
         }
 
-        public virtual Scalar AsScalar(Runtime runtime) { return this; }
+        public virtual IAny AsScalar(Runtime runtime) { return this; }
         public virtual string AsString(Runtime runtime) { return body.AsString(runtime); }
         public virtual int AsInteger(Runtime runtime) { return body.AsInteger(runtime); }
         public virtual double AsFloat(Runtime runtime) { return body.AsFloat(runtime); }

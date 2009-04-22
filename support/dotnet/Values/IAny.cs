@@ -4,7 +4,7 @@ namespace org.mbarbon.p.values
 {   
     public interface IAny
     {
-        Scalar AsScalar(Runtime runtime);
+        IAny AsScalar(Runtime runtime);
         string AsString(Runtime runtime);
         int AsInteger(Runtime runtime);
         double AsFloat(Runtime runtime);

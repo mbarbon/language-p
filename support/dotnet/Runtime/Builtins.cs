@@ -6,10 +6,12 @@ namespace org.mbarbon.p.runtime
     {
         public static Scalar Print(Runtime runtime, List args)
         {
+            Handle handle = (Handle)args.GetItem(runtime, 0);
+            
             // wrong but works well enough for now
-            foreach (var i in args)
+            for (int i = 1, m = args.GetCount(runtime); i < m; ++i)
             {
-                System.Console.Write(i.AsString(runtime));
+                handle.Write(runtime, args.GetItem(runtime, i), 0, -1);
             }
 
             return new Scalar(runtime, 1);

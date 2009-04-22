@@ -20,6 +20,16 @@ namespace org.mbarbon.p.values
             return scalar;
         }
 
+        public Handle GetOrCreateHandle(Runtime runtime, string name)
+        {
+            var glob = GetOrCreateGlob(runtime, name);
+            Handle handle;
+            if ((handle = glob.Handle) == null)
+                handle = glob.Handle = new Handle(runtime);
+
+            return handle;
+        }
+
         public Typeglob GetOrCreateGlob(Runtime runtime, string name)
         {
             Typeglob glob;
@@ -33,5 +43,14 @@ namespace org.mbarbon.p.values
         }
         
         protected Dictionary<string, Typeglob> symbols;
+    }
+
+    public class MainSymbolTable : SymbolTable
+    {
+        public MainSymbolTable(Runtime runtime) : base(runtime)
+        {
+            var stdout = GetOrCreateGlob(runtime, "STDOUT");
+            stdout.Handle = new Handle(runtime);
+        }
     }
 }
