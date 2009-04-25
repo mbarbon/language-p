@@ -7,7 +7,7 @@ use base qw(Language::P::ParseTree::Visitor);
 __PACKAGE__->mk_ro_accessors( qw(runtime) );
 __PACKAGE__->mk_accessors( qw(_code _pending _block_map _temporary_map
                               _options _generated _intermediate _processing
-                              _eval_context _segment) );
+                              _eval_context _segment _saved_subs) );
 
 use Language::P::Intermediate::Code qw(:all);
 use Language::P::Intermediate::Generator;
@@ -85,6 +85,15 @@ sub process {
     if( $tree->isa( 'Language::P::ParseTree::NamedSubroutine' ) ) {
         my $sub_int = $self->_intermediate->generate_subroutine( $tree );
         my $sub = _generate_segment( $self, $sub_int->[0] );
+
+        if( $self->_options->{'dump-bytecode'} ) {
+            require Language::P::Intermediate::Transform;
+
+            my $transform = Language::P::Intermediate::Transform->new;
+            my $tree = $transform->all_to_tree( $sub_int );
+
+            push @{$self->{_saved_subs} ||= []}, @$tree;
+        }
 
         # run right away if it is a begin block
         if( $tree->name eq 'BEGIN' ) {
@@ -289,7 +298,7 @@ sub finished {
         my $tree = $transform->all_to_tree( $main_int );
         ( my $outfile = $self->_intermediate->file_name ) =~ s/(\.\w+)?$/.pb/;
 
-        $serialize->serialize( $tree, $outfile );
+        $serialize->serialize( [ @{$self->_saved_subs}, @$tree ], $outfile );
     }
 
     $self->_cleanup;

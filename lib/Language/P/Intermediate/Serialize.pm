@@ -10,17 +10,22 @@ sub serialize {
     my( $self, $tree, $file ) = @_;
     open my $out, '>', $file || die "open '$file': $!";
 
-    # compilation unit
-    print $out pack 'V', 1;
+    $self->{sub_map} = {};
+    for( my $i = 0; $i <= $#$tree; ++$i ) {
+        $self->{sub_map}{$tree->[$i]} = $i;
+    }
 
-    # first is main
-    _write_sub( $self, $out, $tree->[0], '' );
+    # compilation unit
+    print $out pack 'V', scalar @$tree;
+    for( my $i = 0; $i <= $#$tree; ++$i ) {
+        _write_sub( $self, $out, $tree->[$i], $tree->[$i]->name );
+    }
 }
 
 sub _write_sub {
     my( $self, $out, $code, $name ) = @_;
 
-    _write_string( $out, '' );
+    _write_string( $out, defined $name ? $name : '' );
     my $bb = $code->basic_blocks;
 
     $self->{bb_map} = {};
@@ -61,6 +66,8 @@ sub _write_op {
     } elsif( $opn == OP_GLOBAL ) {
         _write_string( $out, $op->{attributes}{name} );
         print $out pack 'C', $op->{attributes}{slot};
+    } elsif( $opn == OP_CALL ) {
+        print $out pack 'C', $op->{attributes}{context};
     } elsif( exists $op->{attributes}{to} ) {
         print $out pack 'V', $self->{bb_map}{$op->{attributes}{to}};
     }
