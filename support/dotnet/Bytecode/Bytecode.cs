@@ -54,15 +54,47 @@ namespace org.mbarbon.p.runtime
             switch (num)
             {
             case Opcode.OpNumber.OP_CONSTANT_STRING:
+            case Opcode.OpNumber.OP_FRESH_STRING:
                 ConstantString cs = new ConstantString();
                 op = cs;
                 cs.Value = ReadString(reader);
+                break;
+            case Opcode.OpNumber.OP_CONSTANT_INTEGER:
+                ConstantInt ci = new ConstantInt();
+                op = ci;
+                ci.Value = reader.ReadInt32();
                 break;
             case Opcode.OpNumber.OP_GLOBAL:
                 Global gl = new Global();
                 op = gl;
                 gl.Name = ReadString(reader);
                 gl.Slot = reader.ReadByte();
+                break;
+            case Opcode.OpNumber.OP_GET:
+            case Opcode.OpNumber.OP_SET:
+                GetSet gs = new GetSet();
+                op = gs;
+                gs.Variable = reader.ReadInt32();
+                break;
+            case Opcode.OpNumber.OP_JUMP:
+            case Opcode.OpNumber.OP_JUMP_IF_FALSE:
+            case Opcode.OpNumber.OP_JUMP_IF_F_EQ:
+            case Opcode.OpNumber.OP_JUMP_IF_F_GE:
+            case Opcode.OpNumber.OP_JUMP_IF_F_GT:
+            case Opcode.OpNumber.OP_JUMP_IF_F_LE:
+            case Opcode.OpNumber.OP_JUMP_IF_F_LT:
+            case Opcode.OpNumber.OP_JUMP_IF_F_NE:
+            case Opcode.OpNumber.OP_JUMP_IF_NULL:
+            case Opcode.OpNumber.OP_JUMP_IF_S_EQ:
+            case Opcode.OpNumber.OP_JUMP_IF_S_GE:
+            case Opcode.OpNumber.OP_JUMP_IF_S_GT:
+            case Opcode.OpNumber.OP_JUMP_IF_S_LE:
+            case Opcode.OpNumber.OP_JUMP_IF_S_LT:
+            case Opcode.OpNumber.OP_JUMP_IF_S_NE:
+            case Opcode.OpNumber.OP_JUMP_IF_TRUE:
+                Jump jt = new Jump();
+                op = jt;
+                jt.To = reader.ReadInt32();
                 break;
             default:
                 op = new Opcode();
@@ -103,6 +135,31 @@ namespace org.mbarbon.p.runtime
             OP_PRINT          = 131,
             OP_POP            = 125,
             OP_END            = 38,
+            OP_GET            = 68,
+            OP_SET            = 156,
+            OP_JUMP           = 77,
+            OP_JUMP_IF_FALSE   = 78,
+            OP_JUMP_IF_F_EQ    = 79,
+            OP_JUMP_IF_F_GE    = 80,
+            OP_JUMP_IF_F_GT    = 81,
+            OP_JUMP_IF_F_LE    = 82,
+            OP_JUMP_IF_F_LT    = 83,
+            OP_JUMP_IF_F_NE    = 84,
+            OP_JUMP_IF_NULL    = 85,
+            OP_JUMP_IF_S_EQ    = 86,
+            OP_JUMP_IF_S_GE    = 87,
+            OP_JUMP_IF_S_GT    = 88,
+            OP_JUMP_IF_S_LE    = 89,
+            OP_JUMP_IF_S_LT    = 90,
+            OP_JUMP_IF_S_NE    = 91,
+            OP_JUMP_IF_TRUE    = 92,
+            OP_JUMP_START      = OP_JUMP,
+            OP_JUMP_END        = OP_JUMP_IF_TRUE,
+            OP_CONSTANT_INTEGER = 20,
+            OP_FRESH_STRING     = 40,
+            OP_ASSIGN           = 6,
+            OP_CONCAT_ASSIGN    = 18,
+            OP_ARRAY_LENGTH     = 5,
         }
         
         public OpNumber Number;
@@ -123,6 +180,16 @@ namespace org.mbarbon.p.runtime
     public class ConstantString : Opcode
     {
         public string Value;
+    }
+
+    public class GetSet : Opcode
+    {
+        public int Variable;
+    }
+
+    public class Jump : Opcode
+    {
+        public int To;
     }
 
     public class BasicBlock
@@ -153,7 +220,7 @@ namespace org.mbarbon.p.runtime
         {
             Subroutines = new Subroutine[subCount];
         }
-        
+
         public Subroutine[] Subroutines;
     }
 }
