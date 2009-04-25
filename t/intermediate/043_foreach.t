@@ -14,13 +14,13 @@ foreach $y ( 1, 2 ) {
 EOP
 # main
 L1:
-  constant_integer 1
-  constant_integer 2
+  constant_integer value=1
+  constant_integer value=2
   make_list count=2
   make_list count=1
   iterator
   temporary_set index=0
-  global name=y, slot=5
+  global name="y", slot=5
   dup
   glob_slot slot=1
   temporary_set index=2
@@ -35,7 +35,7 @@ L3:
   temporary index=1
   swap
   glob_slot_set slot=1
-  constant_integer 3
+  constant_integer value=3
   pop
   jump to=L2
 L5:

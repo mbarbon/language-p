@@ -14,13 +14,13 @@ while( $a ) {
 EOP
 # main
 L1:
-  jump L2
+  jump to=L2
 L2:
-  jump_if_true (global name=a, slot=1), L3
-  jump L5
+  jump_if_true to=L3 (global name="a", slot=1)
+  jump to=L5
 L3:
-  assign (global name=x, slot=1), (add (constant_integer 1), (constant_integer 1))
-  jump L2
+  assign (global name="x", slot=1), (add (constant_integer value=1), (constant_integer value=1))
+  jump to=L2
 L5:
   end
 EOI
@@ -34,16 +34,16 @@ while( $a ) {
 EOP
 # main
 L1:
-  jump L2
+  jump to=L2
 L2:
-  jump_if_true (global name=a, slot=1), L3
-  jump L5
+  jump_if_true to=L3 (global name="a", slot=1)
+  jump to=L5
 L3:
-  assign (global name=x, slot=1), (constant_integer 1)
-  jump L4
+  assign (global name="x", slot=1), (constant_integer value=1)
+  jump to=L4
 L4:
-  assign (global name=y, slot=1), (constant_integer 2)
-  jump L2
+  assign (global name="y", slot=1), (constant_integer value=2)
+  jump to=L2
 L5:
   end
 EOI

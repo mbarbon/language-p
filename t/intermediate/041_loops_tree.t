@@ -14,17 +14,17 @@ for( $i = 0; $i < 10; $i = $i + 1 ) {
 EOP
 # main
 L1:
-  assign (global name=i, slot=1), (constant_integer 0)
-  jump L2
+  assign (global name="i", slot=1), (constant_integer value=0)
+  jump to=L2
 L2:
-  jump_if_f_lt (global name=i, slot=1), (constant_integer 10), L3
-  jump L5
+  jump_if_f_lt to=L3 (global name="i", slot=1), (constant_integer value=10)
+  jump to=L5
 L3:
-  print (make_list (global name=STDOUT, slot=7), (global name=i, slot=1))
-  jump L4
+  print (make_list (global name="STDOUT", slot=7), (global name="i", slot=1))
+  jump to=L4
 L4:
-  assign (global name=i, slot=1), (add (global name=i, slot=1), (constant_integer 1))
-  jump L2
+  assign (global name="i", slot=1), (add (global name="i", slot=1), (constant_integer value=1))
+  jump to=L2
 L5:
   end
 EOI
@@ -36,21 +36,21 @@ foreach $i ( 1, 2 ) {
 EOP
 # main
 L1:
-  temporary_set index=0 (iterator (make_list (make_list (constant_integer 1), (constant_integer 2))))
-  set t1, (global name=i, slot=5)
+  temporary_set index=0 (iterator (make_list (make_list (constant_integer value=1), (constant_integer value=2))))
+  set t1, (global name="i", slot=5)
   temporary_set index=2 (glob_slot slot=1 (get t1))
   temporary_set index=1 (get t1)
-  jump L2
+  jump to=L2
 L2:
   set t2, (iterator_next (temporary index=0))
-  jump_if_null (get t2), L5
-  jump L3
+  jump_if_null to=L5 (get t2)
+  jump to=L3
 L3:
   glob_slot_set slot=1 (temporary index=1), (get t2)
-  print (make_list (global name=STDOUT, slot=7), (global name=i, slot=1))
-  jump L2
+  print (make_list (global name="STDOUT", slot=7), (global name="i", slot=1))
+  jump to=L2
 L5:
-  jump L6
+  jump to=L6
 L6:
   glob_slot_set slot=1 (temporary index=1), (temporary index=2)
   end

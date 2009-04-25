@@ -113,7 +113,7 @@ my %sigil_to_name =
     );
 
 sub _p {
-    my( $self, $arg, $index, $number_to_name, $attributes ) = @_;
+    my( $self, $arg, $name, $number_to_name, $attributes ) = @_;
 
     if( blessed( $arg ) ) {
         return $arg->start_label
@@ -125,9 +125,9 @@ sub _p {
         return 'anoncode'
             if $arg->isa( 'Language::P::Intermediate::Code' );
     }
-    if(    $self->{opcode_n} && defined $index && $attributes
-        && (my $positional = $attributes->{$self->{opcode_n}}{positional}) ) {
-        my $type = $positional->[$index];
+    if(    $self->{opcode_n} && defined $name && $attributes
+        && (my $named = $attributes->{$self->{opcode_n}}{named}) ) {
+        my $type = $named->{$name};
 
         if( $type && $type eq 's' ) {
             ( my $v = $arg ) =~ s/([^\x20-\x7f])/sprintf "\\x%02x", ord $1/eg;
@@ -159,14 +159,13 @@ sub as_string {
     if( $self->{attributes} ) {
         die "Can't happen" unless %{$self->{attributes}};
         $str .= ' ' . join ', ',
-                      map  { "$_=" . _p( $self, $self->{attributes}{$_}, undef, $number_to_name, $attributes ) }
+                      map  { "$_=" . _p( $self, $self->{attributes}{$_}, $_, $number_to_name, $attributes ) }
                            keys %{$self->{attributes}};
     }
 
     if( $self->{parameters} ) {
         die "Can't happen" unless @{$self->{parameters}};
-        my $i = 0;
-        $str .= ' ' . join ', ', map _p( $self, $_, $i++, $number_to_name, $attributes ),
+        $str .= ' ' . join ', ', map _p( $self, $_, undef, $number_to_name, $attributes ),
                                      @{$self->{parameters}};
     }
 

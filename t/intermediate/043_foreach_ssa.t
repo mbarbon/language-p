@@ -14,21 +14,21 @@ foreach $y ( 1, 2 ) {
 EOP
 # main
 L1:
-  temporary_set index=0 (iterator (make_list (make_list (constant_integer 1), (constant_integer 2))))
-  set t1, (global name=y, slot=5)
+  temporary_set index=0 (iterator (make_list (make_list (constant_integer value=1), (constant_integer value=2))))
+  set t1, (global name="y", slot=5)
   temporary_set index=2 (glob_slot slot=1 (get t1))
   temporary_set index=1 (get t1)
-  jump L2
+  jump to=L2
 L2:
   set t2, (iterator_next (temporary index=0))
-  jump_if_null (get t2), L5
-  jump L3
+  jump_if_null to=L5 (get t2)
+  jump to=L3
 L3:
   glob_slot_set slot=1 (temporary index=1), (get t2)
-  constant_integer 3
-  jump L2
+  constant_integer value=3
+  jump to=L2
 L5:
-  jump L6
+  jump to=L6
 L6:
   glob_slot_set slot=1 (temporary index=1), (temporary index=2)
   end
@@ -41,18 +41,18 @@ foreach my $y ( 1, 2 ) {
 EOP
 # main
 L1:
-  temporary_set index=0 (iterator (make_list (make_list (constant_integer 1), (constant_integer 2))))
-  jump L2
+  temporary_set index=0 (iterator (make_list (make_list (constant_integer value=1), (constant_integer value=2))))
+  jump to=L2
 L2:
   set t1, (iterator_next (temporary index=0))
-  jump_if_null (get t1), L5
-  jump L3
+  jump_if_null to=L5 (get t1)
+  jump to=L3
 L3:
   lexical_set lexical=scalar(y) (get t1)
-  constant_integer 3
-  jump L2
+  constant_integer value=3
+  jump to=L2
 L5:
-  jump L6
+  jump to=L6
 L6:
   end
 EOI

@@ -331,7 +331,7 @@ sub _const_string {
     my( $self, $bytecode, $op ) = @_;
 
     my $v = Language::P::Toy::Value::StringNumber->new
-                ( { string => $op->{parameters}[0] } );
+                ( { string => $op->{attributes}{value} } );
     push @$bytecode,
          o( 'constant', value => $v );
 }
@@ -340,14 +340,14 @@ sub _fresh_string {
     my( $self, $bytecode, $op ) = @_;
 
     push @$bytecode,
-         o( 'fresh_string', value => $op->{parameters}[0] );
+         o( 'fresh_string', value => $op->{attributes}{value} );
 }
 
 sub _const_integer {
     my( $self, $bytecode, $op ) = @_;
 
     my $v = Language::P::Toy::Value::StringNumber->new
-                ( { integer => $op->{parameters}[0] } );
+                ( { integer => $op->{attributes}{value} } );
     push @$bytecode,
          o( 'constant', value => $v );
 }
@@ -356,7 +356,7 @@ sub _const_float {
     my( $self, $bytecode, $op ) = @_;
 
     my $v = Language::P::Toy::Value::StringNumber->new
-                ( { float => $op->{parameters}[0] } );
+                ( { float => $op->{attributes}{value} } );
     push @$bytecode,
          o( 'constant', value => $v );
 }
@@ -372,7 +372,7 @@ sub _const_undef {
 sub _const_codelike {
     my( $self, $bytecode, $op ) = @_;
 
-    my $sub = $self->_generated->{$op->{parameters}[0]};
+    my $sub = $self->_generated->{$op->{attributes}{value}};
     push @$bytecode,
          o( 'constant', value => $sub );
 }
