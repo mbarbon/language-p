@@ -55,16 +55,9 @@ sub _write_op {
     } elsif( $opn == OP_CONSTANT_INTEGER ) {
         print $out pack 'V', $op->{attributes}{value};
     } elsif( $opn == OP_GET ) {
-        # FIXME produce integers in code generator
-        print $out pack 'V', substr $op->{parameters}[0], 1;
-        print $out pack 'V', 0;
-        return;
+        print $out pack 'V', $op->{attributes}{index};
     } elsif( $opn == OP_SET ) {
-        # FIXME produce integers in code generator
-        print $out pack 'V', substr $op->{parameters}[0], 1;
-        print $out pack 'V', 1;
-        _write_op( $self, $out, $op->{parameters}[1] );
-        return;
+        print $out pack 'V', $op->{attributes}{index};
     } elsif( $opn == OP_GLOBAL ) {
         _write_string( $out, $op->{attributes}{name} );
         print $out pack 'C', $op->{attributes}{slot};

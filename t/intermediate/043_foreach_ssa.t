@@ -15,16 +15,16 @@ EOP
 # main
 L1:
   temporary_set index=0 (iterator (make_list (make_list (constant_integer value=1), (constant_integer value=2))))
-  set t1, (global name="y", slot=5)
-  temporary_set index=2 (glob_slot slot=1 (get t1))
-  temporary_set index=1 (get t1)
+  set index=1 (global name="y", slot=5)
+  temporary_set index=2 (glob_slot slot=1 (get index=1))
+  temporary_set index=1 (get index=1)
   jump to=L2
 L2:
-  set t2, (iterator_next (temporary index=0))
-  jump_if_null to=L5 (get t2)
+  set index=2 (iterator_next (temporary index=0))
+  jump_if_null to=L5 (get index=2)
   jump to=L3
 L3:
-  glob_slot_set slot=1 (temporary index=1), (get t2)
+  glob_slot_set slot=1 (temporary index=1), (get index=2)
   constant_integer value=3
   jump to=L2
 L5:
@@ -44,11 +44,11 @@ L1:
   temporary_set index=0 (iterator (make_list (make_list (constant_integer value=1), (constant_integer value=2))))
   jump to=L2
 L2:
-  set t1, (iterator_next (temporary index=0))
-  jump_if_null to=L5 (get t1)
+  set index=1 (iterator_next (temporary index=0))
+  jump_if_null to=L5 (get index=1)
   jump to=L3
 L3:
-  lexical_set lexical=scalar(y) (get t1)
+  lexical_set lexical=scalar(y) (get index=1)
   constant_integer value=3
   jump to=L2
 L5:

@@ -18,19 +18,19 @@ L1:
   end
 # is_scalar
 L1:
-  set t1, (global name="STDOUT", slot=7)
+  set index=1 (global name="STDOUT", slot=7)
   jump_if_true to=L5 (defined context=4 (want context=4))
   jump to=L6
 L2:
-  set t4, (phi L3, t2, L4, t3)
-  print (make_list (get t1), (get t4))
+  set index=4 (phi L3, 2, L4, 3)
+  print (make_list (get index=1), (get index=4))
   return (make_list)
   end
 L3:
-  set t2, (constant_string value="ok\x0a")
+  set index=2 (constant_string value="ok\x0a")
   jump to=L2
 L4:
-  set t3, (constant_string value="not ok\x0a")
+  set index=3 (constant_string value="not ok\x0a")
   jump to=L2
 L5:
   jump_if_true to=L3 (not (want context=4))
