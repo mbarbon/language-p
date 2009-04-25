@@ -20,6 +20,16 @@ namespace org.mbarbon.p.values
             return scalar;
         }
 
+        public Array GetOrCreateArray(Runtime runtime, string name)
+        {
+            var glob = GetOrCreateGlob(runtime, name);
+            Array array;
+            if ((array = glob.Array) == null)
+                array = glob.Array = new Array(runtime);
+
+            return array;
+        }
+
         public Handle GetOrCreateHandle(Runtime runtime, string name)
         {
             var glob = GetOrCreateGlob(runtime, name);
