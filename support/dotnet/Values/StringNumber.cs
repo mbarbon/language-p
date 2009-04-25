@@ -4,9 +4,9 @@ namespace org.mbarbon.p.values
 {
     public class StringNumber : IScalarBody
     {
-        const int HasString  = 1;
-        const int HasFloat   = 2;
-        const int HasInteger = 4;
+        internal const int HasString  = 1;
+        internal const int HasFloat   = 2;
+        internal const int HasInteger = 4;
         
         public StringNumber(Runtime runtime, int val)
         {
@@ -66,9 +66,9 @@ namespace org.mbarbon.p.values
             return new StringNumber(runtime, flags, integerValue, stringValue, floatValue);
         }
 
-        private int flags;
-        private string stringValue;
-        private int integerValue;
-        private double floatValue;
+        internal int flags;
+        internal string stringValue;
+        internal int integerValue;
+        internal double floatValue;
     }
 }

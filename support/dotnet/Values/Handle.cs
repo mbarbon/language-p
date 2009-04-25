@@ -1,4 +1,5 @@
 using org.mbarbon.p.runtime;
+using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
 {
@@ -16,9 +17,30 @@ namespace org.mbarbon.p.values
             return 1;
         }
 
-        public IAny AsScalar(Runtime runtime) { return this; }
-        public string AsString(Runtime runtime) { return null; }
-        public int AsInteger(Runtime runtime) { return 0; }
-        public double AsFloat(Runtime runtime) { return 0; }
+        // FIXME proper implementation
+        public virtual Scalar AsScalar(Runtime runtime) { throw new System.NotImplementedException(); }
+        public virtual string AsString(Runtime runtime) { throw new System.NotImplementedException(); }
+        public virtual int AsInteger(Runtime runtime) { throw new System.NotImplementedException(); }
+        public virtual double AsFloat(Runtime runtime) { throw new System.NotImplementedException(); }
+
+        public virtual IAny Clone(Runtime runtime, int depth)
+        {
+            return new Handle(runtime);
+        }
+
+        public virtual IAny Assign(Runtime runtime, IAny other)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public virtual IAny ConcatAssign(Runtime runtime, IAny other)
+        {
+            throw new System.InvalidOperationException();
+        }
+
+        public virtual IAny AssignIterator(Runtime runtime, IEnumerator<IAny> iter)
+        {
+            return Assign(runtime, iter.MoveNext() ? iter.Current : new Scalar(runtime));
+        }
     }
 }
