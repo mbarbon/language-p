@@ -27,6 +27,12 @@ namespace org.mbarbon.p.values
             set { body.Handle = value; }
         }
 
+        public Code Code
+        {
+            get { return body.Code; }
+            set { body.Code = value; }
+        }
+
         private TypeglobBody body;
     }
 
@@ -54,8 +60,15 @@ namespace org.mbarbon.p.values
             set { handle = value; }
         }
         
+        public Code Code
+        {
+            get { return code; }
+            set { code = value; }
+        }
+
         private Scalar scalar;
         private Array array;
         private Handle handle;
+        private Code code;
     }
 }

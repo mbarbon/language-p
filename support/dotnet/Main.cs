@@ -17,8 +17,8 @@ namespace org.mbarbon.p
             BinaryReader reader = new BinaryReader(File.Open(args[0], FileMode.Open));
             var cu = Serializer.ReadCompilationUnit(reader);
 
-            LambdaExpression lam = new Generator().Generate(cu);
-            lam.Compile().DynamicInvoke(runtime);
+            var lam = new Generator(runtime).Generate(cu);
+            lam.DynamicInvoke(runtime, null);
         }
     }
 }

@@ -51,7 +51,22 @@ namespace org.mbarbon.p.values
 
             return glob;
         }
-        
+
+        public Code GetCode(Runtime runtime, string name)
+        {
+            Typeglob glob;
+            if (symbols.TryGetValue(name, out glob))
+                return glob.Code;
+
+            return null;
+        }
+
+        public void SetCode(Runtime runtime, string name, Code code)
+        {
+            Typeglob glob = GetOrCreateGlob(runtime, name);
+            glob.Code = code;
+        }
+
         protected Dictionary<string, Typeglob> symbols;
     }
 

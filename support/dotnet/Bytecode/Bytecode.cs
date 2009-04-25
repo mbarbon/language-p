@@ -70,6 +70,11 @@ namespace org.mbarbon.p.runtime
                 gl.Name = ReadString(reader);
                 gl.Slot = reader.ReadByte();
                 break;
+            case Opcode.OpNumber.OP_CALL:
+                Call ca = new Call();
+                op = ca;
+                ca.Context = reader.ReadByte();
+                break;
             case Opcode.OpNumber.OP_GET:
             case Opcode.OpNumber.OP_SET:
                 GetSet gs = new GetSet();
@@ -153,13 +158,15 @@ namespace org.mbarbon.p.runtime
             OP_JUMP_IF_S_LT    = 90,
             OP_JUMP_IF_S_NE    = 91,
             OP_JUMP_IF_TRUE    = 92,
-            OP_JUMP_START      = OP_JUMP,
-            OP_JUMP_END        = OP_JUMP_IF_TRUE,
             OP_CONSTANT_INTEGER = 20,
             OP_FRESH_STRING     = 40,
             OP_ASSIGN           = 6,
             OP_CONCAT_ASSIGN    = 18,
             OP_ARRAY_LENGTH     = 5,
+            OP_CALL            = 13,
+            OP_RETURN          = 144,
+            OP_ARRAY_ELEMENT    = 4,
+            OP_LEXICAL         = 93,
         }
         
         public OpNumber Number;
@@ -190,6 +197,11 @@ namespace org.mbarbon.p.runtime
     public class Jump : Opcode
     {
         public int To;
+    }
+
+    public class Call : Opcode
+    {
+        public int Context;
     }
 
     public class BasicBlock

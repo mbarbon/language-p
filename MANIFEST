@@ -51,8 +51,11 @@ support/dotnet/AssemblyInfo.cs
 support/dotnet/Bytecode/Bytecode.cs
 support/dotnet/Main.cs
 support/dotnet/Runtime/Builtins.cs
+support/dotnet/Runtime/Generator.cs
 support/dotnet/Runtime/Runtime.cs
 support/dotnet/Values/Array.cs
+support/dotnet/Values/Code.cs
+support/dotnet/Values/Handle.cs
 support/dotnet/Values/IAny.cs
 support/dotnet/Values/List.cs
 support/dotnet/Values/Scalar.cs

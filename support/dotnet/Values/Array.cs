@@ -17,6 +17,13 @@ namespace org.mbarbon.p.values
 
         public int GetCount(Runtime runtime) { return array.Count; }
         public IAny GetItem(Runtime runtime, int i) { return array[i]; }
+        public IAny GetItemOrUndef(Runtime runtime, IAny index)
+        {
+            int i = index.AsInteger(runtime);
+            if (array.Count > i)
+                return array[i];
+            return new Scalar(runtime);
+        }
 
         public IEnumerator<IAny> GetEnumerator()
         {

@@ -11,6 +11,7 @@ namespace org.mbarbon.p.runtime
         {
             SubLabel = Expression.Label(typeof(void));
             Runtime = Expression.Parameter(typeof(Runtime), "runtime");
+            Arguments = Expression.Parameter(typeof(org.mbarbon.p.values.Array), "args");
             Variables = new List<ParameterExpression>();
             BlockLabels = new List<LabelTarget>();
             Blocks = new List<Expression>();
@@ -37,7 +38,7 @@ namespace org.mbarbon.p.runtime
             }
             var block = Expression.Block(typeof(void), Variables, Blocks);
             var l = Expression.Lambda(Expression.Label(SubLabel, block),
-                                    new ParameterExpression[] { Runtime });
+                                    new ParameterExpression[] { Runtime, Arguments });
 
             return l;
         }
@@ -78,6 +79,9 @@ namespace org.mbarbon.p.runtime
                 case 2:
                     name = "GetOrCreateArray";
                     break;
+                case 4:
+                    name = "GetCode";
+                    break;
                 case 5:
                     name = "GetOrCreateGlob";
                     break;
@@ -106,6 +110,18 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_END:
             {
                 return Expression.Return(SubLabel);
+            }
+            case Opcode.OpNumber.OP_RETURN:
+            {
+                if (op.Childs.Length == 0)
+                {
+                    return Expression.Return(SubLabel);
+                }
+                else
+                {
+                    // FIXME context
+                    return Expression.Return(SubLabel, Generate(op.Childs[0]));
+                }
             }
             case Opcode.OpNumber.OP_ASSIGN:
             {
@@ -155,13 +171,27 @@ namespace org.mbarbon.p.runtime
                 return Expression.New(typeof(Scalar).GetConstructor(new System.Type[] {typeof(Runtime), typeof(int)}),
                                     new Expression[] { Runtime, len_1 });
             }
+            case Opcode.OpNumber.OP_ARRAY_ELEMENT:
+            {
+                return Expression.Call(Generate(op.Childs[1]), typeof(Array).GetMethod("GetItemOrUndef"),
+                                     Runtime, Generate(op.Childs[0]));
+            }
+            case Opcode.OpNumber.OP_LEXICAL:
+            {
+                return Arguments;
+            }
+            case Opcode.OpNumber.OP_CALL:
+            {
+                return Expression.Call(Generate(op.Childs[1]), typeof(Code).GetMethod("Call"),
+                                     Runtime, Generate(op.Childs[0]));
+            }
             default:
                 throw new System.Exception(string.Format("Unhandled opcode {0:S}", op.Number.ToString()));
             }
         }
 
         private LabelTarget SubLabel;
-        private ParameterExpression Runtime;
+        private ParameterExpression Runtime, Arguments;
         private List<ParameterExpression> Variables;
         private List<LabelTarget> BlockLabels;
         private List<Expression> Blocks;
@@ -169,15 +199,29 @@ namespace org.mbarbon.p.runtime
 
     public class Generator
     {       
-        public Generator()
+        public Generator(Runtime r)
         {
+            Runtime = r;
         }
 
-        public LambdaExpression Generate(CompilationUnit cu)
+        public System.Delegate Generate(CompilationUnit cu)
         {
-            SubGenerator sg = new SubGenerator();
+            System.Delegate main = null;
 
-            return sg.Generate(cu.Subroutines[0]);
+            foreach (var sub in cu.Subroutines)
+            {
+                SubGenerator sg = new SubGenerator();
+                var c = sg.Generate(sub).Compile();
+
+                if (sub.Name.Length == 0)
+                    main = c;
+                else
+                    Runtime.SymbolTable.SetCode(Runtime, sub.Name, new Code(c));
+            }
+
+            return main;
         }
+
+        Runtime Runtime;
     }
 }
