@@ -86,7 +86,17 @@ our %%EXPORT_TAGS =
 
 use constant +
   { FLAG_UNARY => 1,
-    map { $OPERATIONS[$_] => $_ + 1 } 0 .. $#OPERATIONS,
+EOT
+
+    my $index = 1;
+    foreach my $k ( sort keys %op ) {
+        print $out <<EOT;
+    $k => $index,
+EOT
+        ++$index;
+    }
+
+    printf $out <<'EOT';
     };
 
 our %%NUMBER_TO_NAME =
