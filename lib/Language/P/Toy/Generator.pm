@@ -298,7 +298,7 @@ sub finished {
         my $tree = $transform->all_to_tree( $main_int );
         ( my $outfile = $self->_intermediate->file_name ) =~ s/(\.\w+)?$/.pb/;
 
-        $serialize->serialize( [ @{$self->_saved_subs}, @$tree ], $outfile );
+        $serialize->serialize( [ @{$self->_saved_subs || []}, @$tree ], $outfile );
     }
 
     $self->_cleanup;
