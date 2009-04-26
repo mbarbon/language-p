@@ -468,6 +468,17 @@ sub lex_quote {
                     $v .= $qc;
                 }
             } elsif( $c =~ /^[\$\@]$/ && $self->quote->{interpolate} ) {
+                if( $c eq '$' && substr( $$buffer, 0, 1 ) eq '#' ) {
+                    # same code as in 'lex' below, handle $# as variable
+                    my $id = $self->lex_identifier( 0 );
+
+                    if( $id ) {
+                        $self->unlex( $id );
+                    } else {
+                        $c .= substr $$buffer, 0, 1, '';
+                    }
+                }
+
                 if(    $interpolated_pattern
                     && (    !length( $$buffer )
                          || index( "()| \r\n\t",

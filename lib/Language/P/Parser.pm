@@ -1021,7 +1021,9 @@ sub _parse_string_rest {
                                   } );
         } elsif( $value->[O_TYPE] == T_EOF ) {
             last;
-        } elsif( $value->[O_TYPE] == T_DOLLAR || $value->[O_TYPE] == T_AT ) {
+        } elsif(    $value->[O_TYPE] == T_DOLLAR
+                 || $value->[O_TYPE] == T_AT
+                 || $value->[O_TYPE] == T_ARYLEN ) {
             push @values, _parse_indirobj_maybe_subscripts( $self, $value );
         } else {
             _syntax_error( $self, $value );
