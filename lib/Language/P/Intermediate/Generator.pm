@@ -719,7 +719,7 @@ sub _lexical_declaration {
 sub _do_lexical_access {
     my( $self, $tree, $level, $is_decl ) = @_;
 
-    # maybe to it while parsing, in _find_symbol/_process_lexical_declaration
+    # maybe do it while parsing, in _find_symbol/_process_lexical_declaration
     my $lex_info = $self->_code_segments->[0]->lexicals->{$tree}
                        ||= { level => $level, lexical => $tree };
 
