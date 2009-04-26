@@ -22,6 +22,17 @@ my $build = My::Build->new
         { parrot         =>
               { type     => '=s',
                 },
+          dlr            =>
+              { type     => '=s',
+                },
           },
     );
 $build->create_build_script;
+
+if( my $dlr = $build->args( 'dlr' ) ) {
+    $dlr =~ s{/}{\\\\}g;
+
+    system $^X, '-i', '-p', '-e', 's/<HintPath>.*?\\\\Bin\\\\/<HintPath>'
+                            . $dlr . '\\\\Bin\\\\/', '--',
+                            'support/dotnet/dotnet.csproj';
+}

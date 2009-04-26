@@ -47,6 +47,22 @@ sub ACTION_code_parrot {
     }
 }
 
+=head2 code_dlr
+
+=cut
+
+sub ACTION_code_dlr {
+    my( $self ) = @_;
+    my @files = map glob( "support/dotnet/$_" ), qw(*.cs */*.cs);
+
+    # only works with MonoDevelop and when mdtool is in path
+    if( !$self->up_to_date( [ @files ],
+                            [ 'support/dotnet/bin/Debug/dotnet.exe' ] ) ) {
+        $self->do_system( 'mdtool', 'build', 'support/dotnet/dotnet.csproj' );
+    }
+
+}
+
 =head2 code
 
 Calls the defult C<code> action, C<code_parrot> if appropriate, and
@@ -72,6 +88,7 @@ sub ACTION_code {
         $self->add_to_cleanup( 'lib/Language/P/Opcodes.pm' );
     }
     $self->depends_on( 'code_parrot' ) if $self->args( 'parrot' );
+    $self->depends_on( 'code_dlr' ) if $self->args( 'dlr' );
 
     $self->SUPER::ACTION_code;
 }
