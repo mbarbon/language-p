@@ -8,9 +8,11 @@ sub ok_6 {
     print "ok 6\n";
 }
 
-print "ok 3\n";
+my $x;
 
-my $x = 5;
+print "ok $x\n";
+
+$x = 5;
 
 BEGIN {
     print "1..6\n";
@@ -23,7 +25,7 @@ print "ok $x\n";
 
 BEGIN {
     print "ok $x\n";
-    $x = 7;
+    $x = 3;
 }
 
 ok_6();

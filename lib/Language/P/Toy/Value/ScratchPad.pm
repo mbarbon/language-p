@@ -38,12 +38,21 @@ sub new_scope {
 sub add_value {
     my( $self, $lexical, $value ) = @_;
 
-    # FIXME lexical initialization
-    push @{$self->values}, @_ > 2 ? $value : Language::P::Toy::Value::Undef->new;
-    $self->{names}{$lexical->symbol_name} ||= [];
-    push @{$self->{names}{$lexical->symbol_name}}, $#{$self->values};
+    return add_value_index( $self, $lexical, $#{$self->{values}}, $value );
+}
 
-    return $#{$self->values};
+sub add_value_index {
+    my( $self, $lexical, $index, $value ) = @_;
+
+    # make repeated add a no-op
+    return if defined $self->values->[$index];
+
+    # FIXME lexical initialization
+    $self->values->[$index] = @_ > 3 ? $value : Language::P::Toy::Value::Undef->new;
+    $self->{names}{$lexical->symbol_name} ||= [];
+    push @{$self->{names}{$lexical->symbol_name}}, $index;
+
+    return $index;
 }
 
 sub is_empty { return $#{$_[0]->values} == -1 ? 1 : 0 }

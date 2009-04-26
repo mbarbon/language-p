@@ -48,7 +48,7 @@ L2:
   jump_if_null to=L5 (get index=1)
   jump to=L3
 L3:
-  lexical_set lexical=scalar(y) (get index=1)
+  lexical_set index=0 (get index=1)
   constant_integer value=3
   jump to=L2
 L5:
