@@ -95,6 +95,7 @@ sub to_ssa {
     $self->_converted_segments->{$code_segment} = $new_code;
 
     foreach my $inner ( @{$code_segment->inner} ) {
+        next unless $inner;
         my $new_inner = $self->to_ssa( $inner );
         $new_inner->{outer} = $new_code;
     }
