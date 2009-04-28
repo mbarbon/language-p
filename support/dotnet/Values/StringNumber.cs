@@ -60,7 +60,14 @@ namespace org.mbarbon.p.values
 
             throw new System.Exception();
         }
-        
+
+        public virtual bool AsBoolean(Runtime runtime)
+        {
+            return    ((flags & HasInteger) != 0 && integerValue != 0)
+                   || ((flags & HasString) != 0 && stringValue.Length != 0)
+                   || ((flags & HasFloat) != 0 && floatValue != 0);
+        }
+
         public virtual IScalarBody CloneBody(Runtime runtime)
         {
             return new StringNumber(runtime, flags, integerValue, stringValue, floatValue);

@@ -9,6 +9,8 @@ namespace org.mbarbon.p.values
         string AsString(Runtime runtime);
         int AsInteger(Runtime runtime);
         double AsFloat(Runtime runtime);
+        bool AsBoolean(Runtime runtime);
+        bool IsDefined(Runtime runtime);
 
         IAny Assign(Runtime runtime, IAny other);
         IAny AssignIterator(Runtime runtime, IEnumerator<IAny> e);

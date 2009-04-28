@@ -59,6 +59,7 @@ support/dotnet/Values/Handle.cs
 support/dotnet/Values/IAny.cs
 support/dotnet/Values/List.cs
 support/dotnet/Values/Scalar.cs
+support/dotnet/Values/ScratchPad.cs
 support/dotnet/Values/StringNumber.cs
 support/dotnet/Values/SymbolTable.cs
 support/dotnet/Values/Typeglob.cs

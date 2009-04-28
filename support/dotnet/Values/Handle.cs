@@ -22,6 +22,8 @@ namespace org.mbarbon.p.values
         public virtual string AsString(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual int AsInteger(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual double AsFloat(Runtime runtime) { throw new System.NotImplementedException(); }
+        public virtual bool AsBoolean(Runtime runtime) { return true; }
+        public virtual bool IsDefined(Runtime runtime) { return true; }
 
         public virtual IAny Clone(Runtime runtime, int depth)
         {

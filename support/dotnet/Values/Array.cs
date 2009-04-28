@@ -39,6 +39,8 @@ namespace org.mbarbon.p.values
         public virtual string AsString(Runtime runtime) { return AsScalar(runtime).AsString(runtime); }
         public virtual int AsInteger(Runtime runtime) { return array.Count; }
         public virtual double AsFloat(Runtime runtime) { return array.Count; }        
+        public virtual bool AsBoolean(Runtime runtime) { return array.Count != 0; }
+        public virtual bool IsDefined(Runtime runtime) { return true; }
 
         public virtual IAny Assign(Runtime runtime, IAny other)
         {

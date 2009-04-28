@@ -17,6 +17,8 @@ namespace org.mbarbon.p.values
         public Scalar(Runtime runtime, string val) : this(new StringNumber(runtime, val)) {}
         public Scalar(Runtime runtime, int val) : this(new StringNumber(runtime, val)) {}
         public Scalar(Runtime runtime, double val) : this(new StringNumber(runtime, val)) {}
+        public Scalar(Runtime runtime, bool val)
+            : this(val ? new StringNumber(runtime, 1) : new StringNumber(runtime, "")) {}
                 
         public virtual IAny Assign(Runtime runtime, IAny other)
         {
@@ -52,6 +54,8 @@ namespace org.mbarbon.p.values
         public virtual string AsString(Runtime runtime) { return body.AsString(runtime); }
         public virtual int AsInteger(Runtime runtime) { return body.AsInteger(runtime); }
         public virtual double AsFloat(Runtime runtime) { return body.AsFloat(runtime); }
+        public virtual bool AsBoolean(Runtime runtime) { return body.AsBoolean(runtime); }
+        public virtual bool IsDefined(Runtime runtime) { return !(body is Undef); }
 
         public virtual IAny Clone(Runtime runtime, int depth)
         {
@@ -67,5 +71,6 @@ namespace org.mbarbon.p.values
         string AsString(Runtime runtime);
         int AsInteger(Runtime runtime);
         double AsFloat(Runtime runtime);
+        bool AsBoolean(Runtime runtime);
     }
 }

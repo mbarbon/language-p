@@ -16,5 +16,6 @@ namespace org.mbarbon.p.values
         public virtual string AsString(Runtime runtime) { return ""; }
         public virtual int AsInteger(Runtime runtime) { return 0; }
         public virtual double AsFloat(Runtime runtime) { return 0.0; }
+        public virtual bool AsBoolean(Runtime runtime) { return false; }
     }
 }

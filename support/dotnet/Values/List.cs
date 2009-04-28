@@ -15,7 +15,7 @@ namespace org.mbarbon.p.values
 
         public override Scalar AsScalar(Runtime runtime)
         {
-            return array.Count == 0 ? null : array[array.Count - 1].AsScalar(runtime);
+            return array.Count == 0 ? new Scalar(runtime) : array[array.Count - 1].AsScalar(runtime);
         }
 
         public override IAny Assign(Runtime runtime, IAny other)

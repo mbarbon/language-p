@@ -9,9 +9,11 @@ namespace org.mbarbon.p.values
             Delegate = code;
         }
 
-        public void Call(Runtime runtime, Array args)
+        public IAny Call(Runtime runtime, Opcode.Context context, Array args)
         {
-            Delegate.DynamicInvoke(runtime, args);
+            var ret = Delegate.DynamicInvoke(runtime, context, null, args);
+
+            return (IAny)ret;
         }
         
         private System.Delegate Delegate;

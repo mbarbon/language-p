@@ -73,7 +73,7 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_CALL:
                 Call ca = new Call();
                 op = ca;
-                ca.Context = reader.ReadByte();
+                ca.CallContext = reader.ReadByte();
                 break;
             case Opcode.OpNumber.OP_GET:
             case Opcode.OpNumber.OP_SET:
@@ -100,6 +100,16 @@ namespace org.mbarbon.p.runtime
                 Jump jt = new Jump();
                 op = jt;
                 jt.To = reader.ReadInt32();
+                break;
+            case Opcode.OpNumber.OP_LEXICAL_PAD:
+            case Opcode.OpNumber.OP_LEXICAL:
+            case Opcode.OpNumber.OP_LEXICAL_PAD_SET:
+            case Opcode.OpNumber.OP_LEXICAL_SET:
+            case Opcode.OpNumber.OP_LEXICAL_PAD_CLEAR:
+            case Opcode.OpNumber.OP_LEXICAL_CLEAR:
+                Lexical lx = new Lexical();
+                op = lx;
+                lx.Index = reader.ReadInt32();
                 break;
             default:
                 op = new Opcode();
@@ -166,9 +176,28 @@ namespace org.mbarbon.p.runtime
             OP_CALL            = 13,
             OP_RETURN          = 147,
             OP_ARRAY_ELEMENT    = 4,
+            OP_LOG_NOT         = 102,
+            OP_DEFINED         = 25,
+            OP_CONSTANT_UNDEF   = 24,
             OP_LEXICAL         = 93,
+            OP_LEXICAL_PAD      = 95,
+            OP_LEXICAL_SET      = 98,
+            OP_LEXICAL_PAD_SET  = 97,
+            OP_LEXICAL_CLEAR    = 94,
+            OP_LEXICAL_PAD_CLEAR = 96,
+            OP_ADD              = 2,
+            OP_SUBTRACT         = 168,
+            OP_CONCAT          = 17,
         }
-        
+
+        public enum Context
+        {
+            CALLER = 1,
+            VOID   = 2,
+            SCALAR = 4,
+            LIST   = 8,
+        }
+
         public OpNumber Number;
         public Opcode[] Childs;
     }
@@ -201,7 +230,12 @@ namespace org.mbarbon.p.runtime
 
     public class Call : Opcode
     {
-        public int Context;
+        public int CallContext;
+    }
+
+    public class Lexical : Opcode
+    {
+        public int Index;
     }
 
     public class BasicBlock

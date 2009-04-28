@@ -18,7 +18,7 @@ namespace org.mbarbon.p
             var cu = Serializer.ReadCompilationUnit(reader);
 
             var lam = new Generator(runtime).Generate(cu);
-            lam.DynamicInvoke(runtime, null);
+            lam.DynamicInvoke(runtime, Opcode.Context.SCALAR, null, null);
         }
     }
 }
