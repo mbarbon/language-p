@@ -32,7 +32,7 @@ $build->create_build_script;
 if( my $dlr = $build->args( 'dlr' ) ) {
     $dlr =~ s{/}{\\\\}g;
 
-    system $^X, '-i', '-p', '-e', 's/<HintPath>.*?\\\\Bin\\\\/<HintPath>'
-                            . $dlr . '\\\\Bin\\\\/', '--',
+    system $^X, '-i', '-p', '-e', 's/<HintPath>.*?\\\\Src\\\\Runtime\\\\/<HintPath>'
+                            . $dlr . '\\\\Src\\\\Runtime\\\\/', '--',
                             'support/dotnet/dotnet.csproj';
 }
