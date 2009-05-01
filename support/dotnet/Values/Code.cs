@@ -1,4 +1,5 @@
 using org.mbarbon.p.runtime;
+using org.mbarbon.p.values;
 
 namespace org.mbarbon.p.values
 {
@@ -6,16 +7,19 @@ namespace org.mbarbon.p.values
     {       
         public Code(System.Delegate code)
         {
-            Delegate = code;
+            SubRef = (Sub)code;
         }
 
         public IAny Call(Runtime runtime, Opcode.Context context, Array args)
         {
-            var ret = Delegate.DynamicInvoke(runtime, context, null, args);
-
-            return (IAny)ret;
+            return SubRef(runtime, context, null, args);
         }
         
-        private System.Delegate Delegate;
+        public delegate IAny Sub(Runtime runtime, Opcode.Context context,
+                                 ScratchPad pad, Array args);
+        public delegate void Main(Runtime runtime, Opcode.Context context,
+                                  ScratchPad pad, Array args);
+
+        private Sub SubRef;
     }
 }

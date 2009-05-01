@@ -63,10 +63,11 @@ namespace org.mbarbon.p.runtime
             Variables.InsertRange(0, Lexicals);
 
             var block = Expression.Block(IsMain ? typeof(void) : typeof(IAny), Variables, Blocks);
-            var l = Expression.Lambda(Expression.Label(SubLabel, block),
-                                    new ParameterExpression[] { Runtime, Context, Pad, Arguments });
-
-            return l;
+            var args = new ParameterExpression[] { Runtime, Context, Pad, Arguments };
+            if (is_main)
+                return Expression.Lambda<Code.Main>(Expression.Label(SubLabel, block), args);
+            else
+                return Expression.Lambda<Code.Sub>(Expression.Label(SubLabel, block), args);
         }
         
         public void Generate(BasicBlock bb, List<Expression> expressions)
