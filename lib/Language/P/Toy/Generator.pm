@@ -449,7 +449,11 @@ sub _allocate_lexicals {
     my $needs_pad = 0;
 
     foreach my $lex_info ( values %{$ir_code->lexicals->{map}} ) {
-        next unless $lex_info->{in_pad};
+        unless( $lex_info->{in_pad} ) {
+            $toy_code->lexical_init->[$lex_info->{index}] =
+              $lex_info->{lexical}->sigil;
+            next;
+        }
         $needs_pad ||= 1;
         if( $lex_info->{from_main} ) {
             my $main_pad = _uplevel( $toy_code, $lex_info->{level} )->lexicals;
@@ -461,7 +465,16 @@ sub _allocate_lexicals {
             push @{$toy_code->{closed}},
                  [$lex_info->{outer_index}, $lex_info->{index}]
                    if $lex_info->{outer_index} >= 0;
-            push @{$pad->{clear}}, $lex_info->{index} if $lex_info->{declaration};
+            if( $lex_info->{declaration} ) {
+                push @{$pad->{clear}{indices}}, $lex_info->{index};
+                if( $lex_info->{lexical}->sigil == VALUE_SCALAR ) {
+                    push @{$pad->{clear}{scalar}}, $lex_info->{index};
+                } elsif( $lex_info->{lexical}->sigil == VALUE_ARRAY ) {
+                    push @{$pad->{clear}{array}}, $lex_info->{index};
+                } elsif( $lex_info->{lexical}->sigil == VALUE_HASH ) {
+                    push @{$pad->{clear}{hash}}, $lex_info->{index};
+                }
+            }
         }
     }
     if( !$needs_pad ) {

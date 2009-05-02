@@ -4,7 +4,10 @@ use strict;
 use warnings;
 use base qw(Language::P::Toy::Value::Any);
 
-__PACKAGE__->mk_ro_accessors( qw(bytecode stack_size lexicals outer closed) );
+use Language::P::ParseTree qw(VALUE_SCALAR VALUE_ARRAY VALUE_HASH);
+
+__PACKAGE__->mk_ro_accessors( qw(bytecode stack_size lexicals outer closed
+                                 lexical_init) );
 
 sub type { 9 }
 sub is_subroutine { 0 }
@@ -15,6 +18,7 @@ sub new {
 
     $self->{stack_size} ||= 0;
     $self->{closed} ||= [];
+    $self->{lexical_init} ||= [];
 
     return $self;
 }
@@ -31,9 +35,14 @@ sub call {
         $stack->[$frame - 1] = 'no_pad';
     }
     if( $self->stack_size ) {
-        # FIXME lexical values initialization
-        foreach my $slot ( 0 .. $self->stack_size ) {
-            $stack->[$frame - 2 - $slot] = Language::P::Toy::Value::Undef->new;
+        for( my $i = 0; $i <= $#{$self->lexical_init}; ++$i ) {
+            if( $self->lexical_init->[$i] == VALUE_SCALAR ) {
+                $stack->[$frame - 3 - $i] = Language::P::Toy::Value::Undef->new;
+            } elsif( $self->lexical_init->[$i] == VALUE_ARRAY ) {
+                $stack->[$frame - 3 - $i] = Language::P::Toy::Value::Array->new;
+            } elsif( $self->lexical_init->[$i] == VALUE_HASH ) {
+                $stack->[$frame - 3 - $i] = Language::P::Toy::Value::Hash->new;
+            }
         }
     }
     $stack->[$frame - 2] = [ $pc, $runtime->{_bytecode}, $context,
