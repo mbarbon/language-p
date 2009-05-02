@@ -4,10 +4,12 @@ namespace org.mbarbon.p.runtime
 {
     public class Serializer
     {
-        public static CompilationUnit ReadCompilationUnit(BinaryReader reader)
+        public static CompilationUnit ReadCompilationUnit(string file_name)
         {
+            BinaryReader reader = new BinaryReader(File.Open(file_name, FileMode.Open));
+
             int count = reader.ReadInt32();
-            var cu = new CompilationUnit(count);
+            var cu = new CompilationUnit(file_name, count);
 
             for (int i = 0; i < count; ++i)
             {
@@ -262,11 +264,13 @@ namespace org.mbarbon.p.runtime
     
     public class CompilationUnit
     {
-        public CompilationUnit(int subCount)
+        public CompilationUnit(string file_name, int subCount)
         {
             Subroutines = new Subroutine[subCount];
+            FileName = file_name;
         }
 
+        public string FileName;
         public Subroutine[] Subroutines;
     }
 }
