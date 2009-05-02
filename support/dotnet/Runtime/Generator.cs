@@ -1,13 +1,102 @@
 using org.mbarbon.p.values;
 
+using System.Reflection.Emit;
+using System.Reflection;
 using Microsoft.Linq.Expressions;
 using System.Collections.Generic;
 
 namespace org.mbarbon.p.runtime
 {
+    public class ModuleGenerator
+    {
+        private struct SubInfo
+        {
+            internal SubInfo(string method, string sub)
+            {
+                MethodName = method;
+                SubName = sub;
+            }
+
+            internal string MethodName;
+            internal string SubName;
+        }
+
+        public ModuleGenerator(TypeBuilder class_builder)
+        {
+            ClassBuilder = class_builder;
+            Initializers = new List<Expression>();
+            Subroutines = new List<SubInfo>();
+            InitRuntime = Expression.Parameter(typeof(Runtime), "runtime");
+        }
+
+        public FieldInfo AddField(Expression initializer)
+        {
+            string field_name = "const_" + Initializers.Count.ToString();
+            FieldInfo field = ClassBuilder.DefineField(field_name, typeof(Scalar), FieldAttributes.Private|FieldAttributes.Static);
+            var init = Expression.Assign(Expression.Field(null, field), initializer);
+            Initializers.Add(init);
+
+            return field;
+        }
+
+        public void AddMethod(Subroutine sub)
+        {
+            var sg = new SubGenerator(this);
+            bool is_main = sub.Name.Length == 0;
+            var body = sg.Generate(sub, is_main);
+            string suffix = is_main         ? "main" :
+                           sub.Name != null ? sub.Name :
+                                             "anonymous";
+            string method_name = "sub_" + suffix + "_" + MethodIndex++.ToString();
+            MethodBuilder method_builder = ClassBuilder.DefineMethod(method_name, MethodAttributes.Static|MethodAttributes.Public);
+            body.CompileToMethod(method_builder);
+
+            Subroutines.Add(new SubInfo(method_name, is_main ? null : sub.Name));
+        }
+
+        public void AddInitMethod()
+        {
+            MethodBuilder helper = ClassBuilder.DefineMethod("InitModule", MethodAttributes.Public|MethodAttributes.Static,
+                                                         typeof(void), new System.Type[] { typeof(Runtime) });
+            if (Initializers.Count == 0)
+                Initializers.Add(Expression.Empty());
+            var constants_init = Expression.Lambda(Expression.Block(Initializers), InitRuntime);
+            constants_init.CompileToMethod(helper);
+        }
+
+        public System.Delegate CompleteGeneration(Runtime runtime)
+        {
+            AddInitMethod();
+
+            System.Delegate main = null;
+            System.Type mod = ClassBuilder.CreateType();
+            mod.GetMethod("InitModule").Invoke(null, new object[] { runtime });
+
+            foreach (SubInfo si in Subroutines)
+            {
+                MethodInfo method = mod.GetMethod(si.MethodName);
+                if (si.SubName == null)
+                    main = System.Delegate.CreateDelegate(typeof(Code.Main), method);
+                else
+                {
+                    System.Delegate c = System.Delegate.CreateDelegate(typeof(Code.Sub), method);
+                    runtime.SymbolTable.SetCode(runtime, si.SubName, new Code(c));
+                }
+            }
+
+            return main;
+        }
+
+        private TypeBuilder ClassBuilder;
+        private List<Expression> Initializers;
+        private List<SubInfo> Subroutines;
+        private int MethodIndex = 0;
+        public ParameterExpression InitRuntime;
+    }
+
     public class SubGenerator
     {
-        public SubGenerator()
+        public SubGenerator(ModuleGenerator module_generator)
         {
             Runtime = Expression.Parameter(typeof(Runtime), "runtime");
             Arguments = Expression.Parameter(typeof(org.mbarbon.p.values.Array), "args");
@@ -17,6 +106,7 @@ namespace org.mbarbon.p.runtime
             Lexicals = new List<ParameterExpression>();
             BlockLabels = new List<LabelTarget>();
             Blocks = new List<Expression>();
+            ModuleGenerator = module_generator;
         }
 
         private ParameterExpression GetVariable(int index)
@@ -69,7 +159,7 @@ namespace org.mbarbon.p.runtime
             else
                 return Expression.Lambda<Code.Sub>(Expression.Label(SubLabel, block), args);
         }
-        
+
         public void Generate(BasicBlock bb, List<Expression> expressions)
         {
             foreach (var o in bb.Opcodes)
@@ -96,7 +186,10 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_CONSTANT_INTEGER:
             {
                 var ctor = typeof(Scalar).GetConstructor(new System.Type[] { typeof(Runtime), typeof(int) });
-                return Expression.New(ctor, new Expression[] { Runtime, Expression.Constant(((ConstantInt)op).Value) });
+                var init = Expression.New(ctor, new Expression[] { ModuleGenerator.InitRuntime, Expression.Constant(((ConstantInt)op).Value) });
+                FieldInfo field = ModuleGenerator.AddField(init);
+
+                return Expression.Field(null, field);
             }
             case Opcode.OpNumber.OP_GLOBAL:
             {
@@ -303,32 +396,33 @@ namespace org.mbarbon.p.runtime
         private List<LabelTarget> BlockLabels;
         private List<Expression> Blocks;
         private bool IsMain;
+        private ModuleGenerator ModuleGenerator;
     }
 
     public class Generator
-    {       
+    {
         public Generator(Runtime r)
         {
             Runtime = r;
         }
 
-        public System.Delegate Generate(CompilationUnit cu)
+        public System.Delegate Generate(string assembly_name, CompilationUnit cu)
         {
-            System.Delegate main = null;
+            var file = new System.IO.FileInfo(cu.FileName);
+            AssemblyName asm_name = new AssemblyName(assembly_name != null ? assembly_name : file.Name);
+            AssemblyBuilder asm_builder =
+                System.AppDomain.CurrentDomain.DefineDynamicAssembly(asm_name,
+                                                              AssemblyBuilderAccess.RunAndSave);
+            ModuleBuilder mod_builder = asm_builder.DefineDynamicModule(asm_name.Name, asm_name.Name + ".dll");
+            // FIXME should at least be the module name with which the file was loaded, in case
+            //       multiple modules are compiled to the same file; works for now
+            TypeBuilder perl_module = mod_builder.DefineType(file.Name, TypeAttributes.Public);
+            ModuleGenerator perl_mod_generator = new ModuleGenerator(perl_module);
 
             foreach (var sub in cu.Subroutines)
-            {
-                bool is_main = sub.Name.Length == 0 && main == null;
-                SubGenerator sg = new SubGenerator();
-                var c = sg.Generate(sub, is_main).Compile();
+                perl_mod_generator.AddMethod(sub);
 
-                if (is_main)
-                    main = c;
-                else
-                    Runtime.SymbolTable.SetCode(Runtime, sub.Name, new Code(c));
-            }
-
-            return main;
+            return perl_mod_generator.CompleteGeneration(Runtime);
         }
 
         Runtime Runtime;

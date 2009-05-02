@@ -1,6 +1,5 @@
 using org.mbarbon.p.runtime;
 using org.mbarbon.p.values;
-using System.IO;
 
 using Microsoft.Linq;
 using Microsoft.Linq.Expressions;
@@ -13,11 +12,9 @@ namespace org.mbarbon.p
         public static void Main(string[] args)
         {
             var runtime = new Runtime();
+            var cu = Serializer.ReadCompilationUnit(args[0]);
 
-            BinaryReader reader = new BinaryReader(File.Open(args[0], FileMode.Open));
-            var cu = Serializer.ReadCompilationUnit(reader);
-
-            Code.Main main = (Code.Main)new Generator(runtime).Generate(cu);
+            Code.Main main = (Code.Main)new Generator(runtime).Generate(null, cu);
             main(runtime, Opcode.Context.SCALAR, null, null);
         }
     }
