@@ -1334,16 +1334,17 @@ sub _parse_lexical {
 
     local $self->{_in_declaration} = 1;
     my $term = _parse_term_list_if_parens( $self, PREC_NAMED_UNOP );
+    my $force_closed = !$self->_lexical_state->[-1]{is_sub};
 
-    return _process_declaration( $self, $term, $keyword );
+    return _process_declaration( $self, $term, $keyword, $force_closed );
 }
 
 sub _process_declaration {
-    my( $self, $decl, $keyword ) = @_;
+    my( $self, $decl, $keyword, $force_closed ) = @_;
 
     if( $decl->isa( 'Language::P::ParseTree::List' ) ) {
         foreach my $e ( @{$decl->expressions} ) {
-            $e = _process_declaration( $self, $e, $keyword );
+            $e = _process_declaration( $self, $e, $keyword, $force_closed );
         }
 
         return $decl;
@@ -1353,6 +1354,9 @@ sub _process_declaration {
                            sigil   => $decl->sigil,
                            flags   => $declaration_to_flags{$keyword},
                            } );
+        # TODO maybe use a separate flag value, to decouple from
+        #      current implementation
+        $decl->set_closed_over if $force_closed;
         push @{$self->_pending_lexicals}, $decl;
 
         return $decl;
