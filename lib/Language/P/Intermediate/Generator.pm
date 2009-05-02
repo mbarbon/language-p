@@ -677,6 +677,7 @@ sub _do_lexical_access {
     _add_bytecode $self,
          opcode_nm( $lex_info->{in_pad} ? OP_LEXICAL_PAD : OP_LEXICAL,
                     index => $lex_info->{index},
+                    slot  => $tree->sigil,
                     );
 
     if( $is_decl ) {
@@ -685,6 +686,7 @@ sub _do_lexical_access {
         push @{$self->_current_block->{bytecode}},
              [ opcode_nm( $lex_info->{in_pad} ? OP_LEXICAL_PAD_CLEAR : OP_LEXICAL_CLEAR,
                           index => $lex_info->{index},
+                          slot  => $tree->sigil,
                           ),
                ];
     }
