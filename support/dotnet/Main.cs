@@ -14,8 +14,8 @@ namespace org.mbarbon.p
             var runtime = new Runtime();
             var cu = Serializer.ReadCompilationUnit(args[0]);
 
-            Code.Main main = (Code.Main)new Generator(runtime).Generate(null, cu);
-            main(runtime, Opcode.Context.SCALAR, null, null);
+            Code main = new Generator(runtime).Generate(null, cu);
+            main.Call(runtime, Opcode.Context.SCALAR, null);
         }
     }
 }

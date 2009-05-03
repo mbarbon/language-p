@@ -64,24 +64,22 @@ namespace org.mbarbon.p.runtime
             constants_init.CompileToMethod(helper);
         }
 
-        public System.Delegate CompleteGeneration(Runtime runtime)
+        public Code CompleteGeneration(Runtime runtime)
         {
             AddInitMethod();
 
-            System.Delegate main = null;
+            Code main = null;
             System.Type mod = ClassBuilder.CreateType();
             mod.GetMethod("InitModule").Invoke(null, new object[] { runtime });
 
             foreach (SubInfo si in Subroutines)
             {
                 MethodInfo method = mod.GetMethod(si.MethodName);
+                Code c = new Code(System.Delegate.CreateDelegate(typeof(Code.Sub), method));
                 if (si.SubName == null)
-                    main = System.Delegate.CreateDelegate(typeof(Code.Main), method);
+                    main = c;
                 else
-                {
-                    System.Delegate c = System.Delegate.CreateDelegate(typeof(Code.Sub), method);
-                    runtime.SymbolTable.SetCode(runtime, si.SubName, new Code(c));
-                }
+                    runtime.SymbolTable.SetCode(runtime, si.SubName, c);
             }
 
             return main;
@@ -128,7 +126,7 @@ namespace org.mbarbon.p.runtime
         public LambdaExpression Generate(Subroutine sub, bool is_main)
         {
             IsMain = is_main;
-            SubLabel = Expression.Label(IsMain ? typeof(void) : typeof(IAny));
+            SubLabel = Expression.Label(typeof(IAny));
 
             for (int i = 0; i < sub.BasicBlocks.Length; ++i)
                 BlockLabels.Add(Expression.Label());
@@ -152,12 +150,9 @@ namespace org.mbarbon.p.runtime
 
             Variables.InsertRange(0, Lexicals);
 
-            var block = Expression.Block(IsMain ? typeof(void) : typeof(IAny), Variables, Blocks);
+            var block = Expression.Block(typeof(IAny), Variables, Blocks);
             var args = new ParameterExpression[] { Runtime, Context, Pad, Arguments };
-            if (is_main)
-                return Expression.Lambda<Code.Main>(Expression.Label(SubLabel, block), args);
-            else
-                return Expression.Lambda<Code.Sub>(Expression.Label(SubLabel, block), args);
+            return Expression.Lambda<Code.Sub>(Expression.Label(SubLabel, block), args);
         }
 
         public void Generate(BasicBlock bb, List<Expression> expressions)
@@ -414,7 +409,7 @@ namespace org.mbarbon.p.runtime
             Runtime = r;
         }
 
-        public System.Delegate Generate(string assembly_name, CompilationUnit cu)
+        public Code Generate(string assembly_name, CompilationUnit cu)
         {
             var file = new System.IO.FileInfo(cu.FileName);
             AssemblyName asm_name = new AssemblyName(assembly_name != null ? assembly_name : file.Name);

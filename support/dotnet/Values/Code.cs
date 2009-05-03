@@ -17,8 +17,6 @@ namespace org.mbarbon.p.values
         
         public delegate IAny Sub(Runtime runtime, Opcode.Context context,
                                  ScratchPad pad, Array args);
-        public delegate void Main(Runtime runtime, Opcode.Context context,
-                                  ScratchPad pad, Array args);
 
         private Sub SubRef;
     }
