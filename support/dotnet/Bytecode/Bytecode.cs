@@ -112,6 +112,13 @@ namespace org.mbarbon.p.runtime
                 Lexical lx = new Lexical();
                 op = lx;
                 lx.Index = reader.ReadInt32();
+                if (   num == Opcode.OpNumber.OP_LEXICAL
+                    || num == Opcode.OpNumber.OP_LEXICAL_PAD
+                    || num == Opcode.OpNumber.OP_LEXICAL_CLEAR
+                    || num == Opcode.OpNumber.OP_LEXICAL_PAD_CLEAR)
+                {
+                    lx.Slot = reader.ReadInt32();
+                }
                 break;
             default:
                 op = new Opcode();
@@ -239,6 +246,7 @@ namespace org.mbarbon.p.runtime
     public class Lexical : Opcode
     {
         public int Index;
+        public int Slot;
     }
 
     public class BasicBlock
