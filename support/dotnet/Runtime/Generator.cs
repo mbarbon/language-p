@@ -204,6 +204,9 @@ namespace org.mbarbon.p.runtime
                 case 2:
                     name = "GetOrCreateArray";
                     break;
+                case 3:
+                    name = "GetOrCreateHash";
+                    break;
                 case 4:
                     name = "GetCode";
                     break;
@@ -360,6 +363,11 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_ARRAY_ELEMENT:
             {
                 return Expression.Call(Generate(op.Childs[1]), typeof(Array).GetMethod("GetItemOrUndef"),
+                                     Runtime, Generate(op.Childs[0]));
+            }
+            case Opcode.OpNumber.OP_HASH_ELEMENT:
+            {
+                return Expression.Call(Generate(op.Childs[1]), typeof(Hash).GetMethod("GetItemOrUndef"),
                                      Runtime, Generate(op.Childs[0]));
             }
             case Opcode.OpNumber.OP_LEXICAL:

@@ -56,6 +56,7 @@ support/dotnet/Runtime/Runtime.cs
 support/dotnet/Values/Array.cs
 support/dotnet/Values/Code.cs
 support/dotnet/Values/Handle.cs
+support/dotnet/Values/Hash.cs
 support/dotnet/Values/IAny.cs
 support/dotnet/Values/List.cs
 support/dotnet/Values/Scalar.cs

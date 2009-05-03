@@ -30,6 +30,16 @@ namespace org.mbarbon.p.values
             return array;
         }
 
+        public Hash GetOrCreateHash(Runtime runtime, string name)
+        {
+            var glob = GetOrCreateGlob(runtime, name);
+            Hash hash;
+            if ((hash = glob.Hash) == null)
+                hash = glob.Hash = new Hash(runtime);
+
+            return hash;
+        }
+
         public Handle GetOrCreateHandle(Runtime runtime, string name)
         {
             var glob = GetOrCreateGlob(runtime, name);

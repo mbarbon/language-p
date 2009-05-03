@@ -21,6 +21,12 @@ namespace org.mbarbon.p.values
             set { body.Array = value; }
         }
 
+        public Hash Hash
+        {
+            get { return body.Hash; }
+            set { body.Hash = value; }
+        }
+
         public Handle Handle
         {
             get { return body.Handle; }
@@ -54,6 +60,12 @@ namespace org.mbarbon.p.values
             set { array = value; }
         }
 
+        public Hash Hash
+        {
+            get { return hash; }
+            set { hash = value; }
+        }
+
         public Handle Handle
         {
             get { return handle; }
@@ -68,6 +80,7 @@ namespace org.mbarbon.p.values
 
         private Scalar scalar;
         private Array array;
+        private Hash hash;
         private Handle handle;
         private Code code;
     }

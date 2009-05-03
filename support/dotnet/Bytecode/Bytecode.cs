@@ -190,6 +190,7 @@ namespace org.mbarbon.p.runtime
             OP_ADD              = 2,
             OP_SUBTRACT         = 168,
             OP_CONCAT          = 17,
+            OP_HASH_ELEMENT     = 74,
         }
 
         public enum Context

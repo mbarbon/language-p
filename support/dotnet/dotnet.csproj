@@ -58,6 +58,7 @@
     <Compile Include="Values\Handle.cs" />
     <Compile Include="Values\Code.cs" />
     <Compile Include="Values\ScratchPad.cs" />
+    <Compile Include="Values\Hash.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
