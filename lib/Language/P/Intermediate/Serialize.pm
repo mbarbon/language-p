@@ -67,6 +67,12 @@ sub _write_op {
              || $opn == OP_LEXICAL_PAD_SET
              || $opn == OP_LEXICAL_PAD_CLEAR ) {
         print $out pack 'V', $op->{attributes}{index};
+        if(    $opn == OP_LEXICAL
+            || $opn == OP_LEXICAL_CLEAR
+            || $opn == OP_LEXICAL_PAD
+            || $opn == OP_LEXICAL_PAD_CLEAR ) {
+            print $out pack 'V', $op->{attributes}{slot};
+        }
     } elsif( $opn == OP_GLOBAL ) {
         _write_string( $out, $op->{attributes}{name} );
         print $out pack 'C', $op->{attributes}{slot};
