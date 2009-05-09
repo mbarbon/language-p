@@ -100,6 +100,7 @@ sub to_ssa {
         next unless $inner;
         my $new_inner = $self->to_ssa( $inner );
         $new_inner->{outer} = $new_code;
+        push @{$new_code->inner}, $new_inner;
     }
 
     # find all non-empty blocks without predecessors and enqueue them
