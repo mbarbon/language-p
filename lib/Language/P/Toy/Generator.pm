@@ -67,12 +67,7 @@ sub process {
         my $sub_int = $self->_intermediate->generate_subroutine( $tree );
 
         if( $self->_options->{'dump-bytecode'} ) {
-            require Language::P::Intermediate::Transform;
-
-            my $transform = Language::P::Intermediate::Transform->new;
-            my $tree = $transform->all_to_tree( $sub_int );
-
-            push @{$self->{_saved_subs} ||= []}, @$tree;
+            push @{$self->{_saved_subs} ||= []}, @$sub_int;
         }
 
         my $sub = _generate_segment( $self, $sub_int->[0], $self->_head );
@@ -239,13 +234,16 @@ sub finished {
 
         my $transform = Language::P::Intermediate::Transform->new;
         my $serialize = Language::P::Intermediate::Serialize->new;
-        my $tree = $transform->all_to_tree( $main_int );
+        my $tree = $transform->all_to_tree( [ @$main_int,
+                                              @{$self->_saved_subs || []} ] );
         ( my $outfile = $self->_intermediate->file_name ) =~ s/(\.\w+)?$/.pb/;
 
-        $serialize->serialize( [ @{$self->_saved_subs || []}, @$tree ], $outfile );
+        $serialize->serialize( $tree, $outfile );
+        $tree->[0]->weaken; # allow GC to happen
     }
 
     my $res = _generate_segment( $self, $main_int->[0], undef, $self->_head );
+    $main_int->[0]->weaken; # allow GC to happen
     $self->_cleanup;
 
     return $res;

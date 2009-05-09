@@ -143,10 +143,7 @@ sub _generate_regex {
              ( { type         => 3,
                  basic_blocks => [],
                  } );
-    if( $outer ) {
-        push @{$outer->inner}, $self->_code_segments->[-1];
-        Scalar::Util::weaken( $outer->inner->[-1] );
-    }
+    push @{$outer->inner}, $self->_code_segments->[-1] if $outer;
 
     _add_blocks $self, _new_block( $self );
     _add_bytecode $self, opcode_n( OP_RX_START_MATCH );
@@ -203,10 +200,7 @@ sub _generate_bytecode {
                      prototype    => $prototype,
                      } );
     }
-    if( $outer ) {
-        push @{$outer->inner}, $self->_code_segments->[-1];
-        Scalar::Util::weaken( $outer->inner->[-1] );
-    }
+    push @{$outer->inner}, $self->_code_segments->[-1] if $outer;
 
     _add_blocks $self, _new_block( $self );
     $self->push_block( $is_sub );
