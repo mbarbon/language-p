@@ -107,12 +107,24 @@ sub _run_p_tests {
     $aggregator->start();
     foreach my $test_dir ( @test_dirs ) {
         my( $interpreter, @directories ) = @$test_dir;
-        my $harness;
+        my( $run_bc, $harness ) = ( 0 );
 
         if( $interpreter ) {
+            my $cmdline;
+            if( ref $interpreter ) {
+                if( $interpreter->[-1] =~ /\.exe$/ ) {
+                    $cmdline = $interpreter;
+                    $run_bc = 1;
+                } else {
+                    $cmdline = [ $self->perl, '-Mblib', '--', @$interpreter ];
+                }
+            } else {
+                $cmdline = [ $self->perl, '-Mblib', '--', $interpreter ];
+            }
+
             $harness = TAP::Harness->new
               ( { formatter => $formatter,
-                  exec      => [ $self->perl, '-Mblib', '--', $interpreter ],
+                  exec      => $cmdline,
                   } );
         } else {
             $harness = TAP::Harness->new
@@ -122,6 +134,10 @@ sub _run_p_tests {
         }
 
         my @tests = $self->expand_test_dir( @directories );
+
+        if( $run_bc ) {
+            s/\.t$/.pb/ foreach @tests;
+        }
 
         local $ENV{PERL5OPT} = $ENV{HARNESS_PERL_SWITCHES}
           if $ENV{HARNESS_PERL_SWITCHES};
@@ -203,6 +219,28 @@ sub _expand_tags {
     }
 
     return @res;
+}
+
+sub _run_dotnet {
+    my( $self, @tags ) = @_;
+
+    my( @byte_compile, @run );
+    foreach my $tag ( @tags ) {
+        my( $interpreter, @directories ) = @$tag;
+
+        push @byte_compile, [ [ $interpreter, '-fdump-bytecode' ],
+                              @directories ];
+        push @run, [ [ 'mono', 'support/dotnet/bin/Debug/dotnet.exe' ],
+                     @directories ];
+    }
+
+    $self->_run_p_tests( @byte_compile, @run );
+}
+
+sub ACTION_test_dotnet_run {
+    my( $self ) = @_;
+
+    $self->_run_dotnet( _expand_tags( $self, 'run' ) );
 }
 
 =head2 test
