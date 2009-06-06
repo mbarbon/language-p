@@ -141,7 +141,11 @@ sub _bare_block {
 sub _function_call {
     my( $self, $tree, $cxt ) = @_;
 
-    $tree->set_attribute( 'context', $cxt );
+    if( !ref $tree->function && $tree->function == OP_RETURN ) {
+        $tree->set_attribute( 'context', CXT_CALLER );
+    } else {
+        $tree->set_attribute( 'context', $cxt );
+    }
     my $arg_cxts = $tree->runtime_context || [ CXT_LIST ];
     $self->visit( $tree->function, CXT_SCALAR ) if ref $tree->function;
 
