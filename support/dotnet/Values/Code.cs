@@ -5,19 +5,44 @@ namespace org.mbarbon.p.values
 {
     public class Code
     {       
-        public Code(System.Delegate code)
+        public Code(System.Delegate code, bool main)
         {
-            SubRef = (Sub)code;
+            subref = (Sub)code;
+            scratchpad = null;
+            is_main = main;
         }
 
         public IAny Call(Runtime runtime, Opcode.Context context, Array args)
         {
-            return SubRef(runtime, context, null, args);
+            ScratchPad pad = scratchpad;
+            if (scratchpad != null && !is_main)
+                pad = scratchpad.NewScope(runtime);
+
+            return subref(runtime, context, pad, args);
         }
-        
+
+        public bool HasLexicalFromMain()
+        {
+            return scratchpad != null && scratchpad.HasLexicalFromMain();
+        }
+
+        public void NewScope(Runtime runtime)
+        {
+            if (scratchpad != null)
+                scratchpad = scratchpad.NewScope(runtime);
+        }
+
+        public ScratchPad ScratchPad
+        {
+            get { return scratchpad; }
+            set { scratchpad = value; }
+        }
+
         public delegate IAny Sub(Runtime runtime, Opcode.Context context,
                                  ScratchPad pad, Array args);
 
-        private Sub SubRef;
+        private Sub subref;
+        private ScratchPad scratchpad;
+        private bool is_main;
     }
 }

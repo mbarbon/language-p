@@ -24,19 +24,40 @@ sub serialize {
 
 sub _write_sub {
     my( $self, $out, $code, $name ) = @_;
+    my $bb = $code->basic_blocks;
 
     _write_string( $out, defined $name ? $name : '' );
-    my $bb = $code->basic_blocks;
+
+    print $out pack 'V', $code->outer ? $self->{sub_map}{$code->outer} : -1;
+    print $out pack 'V', scalar values %{$code->lexicals->{map}};
+    print $out pack 'V', scalar @$bb;
+
+    my $index = 0;
+    foreach my $l ( values %{$code->lexicals->{map}} ) {
+        _write_lex_info( $self, $out, $l );
+        $self->{li_map}{$l->{index} . "|" . $l->{in_pad}} = $index++;
+    }
 
     $self->{bb_map} = {};
     for( my $i = 0; $i <= $#$bb; ++$i ) {
         $self->{bb_map}{$bb->[$i]} = $i;
     }
 
-    print $out pack 'V', scalar @$bb;
     for( my $i = 0; $i <= $#$bb; ++$i ) {
         _write_bb( $self, $out, $bb->[$i] );
     }
+}
+
+sub _write_lex_info {
+    my( $self, $out, $lex_info ) = @_;
+
+    print $out pack 'V', $lex_info->{level};
+    print $out pack 'V', $lex_info->{index};
+    print $out pack 'V', $lex_info->{outer_index};
+    _write_string( $out, $lex_info->{lexical}->name );
+    print $out pack 'C', $lex_info->{lexical}->sigil;
+    print $out pack 'C', $lex_info->{in_pad};
+    print $out pack 'C', $lex_info->{from_main};
 }
 
 sub _write_bb {
@@ -59,20 +80,16 @@ sub _write_op {
         _write_string( $out, $op->{attributes}{value} );
     } elsif( $opn == OP_CONSTANT_INTEGER ) {
         print $out pack 'V', $op->{attributes}{value};
-    } elsif(    $opn == OP_GET || $opn == OP_SET
-             || $opn == OP_LEXICAL
+    } elsif( $opn == OP_GET || $opn == OP_SET ) {
+        print $out pack 'V', $op->{attributes}{index};
+    } elsif(    $opn == OP_LEXICAL
              || $opn == OP_LEXICAL_SET
-             || $opn == OP_LEXICAL_CLEAR
-             || $opn == OP_LEXICAL_PAD
+             || $opn == OP_LEXICAL_CLEAR ) {
+        print $out pack 'V', $self->{li_map}{$op->{attributes}{index} . '|0'};
+    } elsif(    $opn == OP_LEXICAL_PAD
              || $opn == OP_LEXICAL_PAD_SET
              || $opn == OP_LEXICAL_PAD_CLEAR ) {
-        print $out pack 'V', $op->{attributes}{index};
-        if(    $opn == OP_LEXICAL
-            || $opn == OP_LEXICAL_CLEAR
-            || $opn == OP_LEXICAL_PAD
-            || $opn == OP_LEXICAL_PAD_CLEAR ) {
-            print $out pack 'V', $op->{attributes}{slot};
-        }
+        print $out pack 'V', $self->{li_map}{$op->{attributes}{index} . '|1'};
     } elsif( $opn == OP_GLOBAL ) {
         _write_string( $out, $op->{attributes}{name} );
         print $out pack 'C', $op->{attributes}{slot};

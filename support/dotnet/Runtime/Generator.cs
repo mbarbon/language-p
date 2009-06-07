@@ -4,6 +4,7 @@ using System.Reflection.Emit;
 using System.Reflection;
 using Microsoft.Linq.Expressions;
 using System.Collections.Generic;
+using Type = System.Type;
 
 namespace org.mbarbon.p.runtime
 {
@@ -11,14 +12,19 @@ namespace org.mbarbon.p.runtime
     {
         private struct SubInfo
         {
-            internal SubInfo(string method, string sub)
+            internal SubInfo(string method, Subroutine sub)
             {
                 MethodName = method;
-                SubName = sub;
+                if (sub.Name.Length == 0)
+                    SubName = null;
+                else
+                    SubName = sub.Name;
+                Lexicals = sub.Lexicals;
             }
 
             internal string MethodName;
             internal string SubName;
+            internal LexicalInfo[] Lexicals;
         }
 
         public ModuleGenerator(TypeBuilder class_builder)
@@ -29,14 +35,19 @@ namespace org.mbarbon.p.runtime
             InitRuntime = Expression.Parameter(typeof(Runtime), "runtime");
         }
 
-        public FieldInfo AddField(Expression initializer)
+        public FieldInfo AddField(Expression initializer, Type type)
         {
             string field_name = "const_" + Initializers.Count.ToString();
-            FieldInfo field = ClassBuilder.DefineField(field_name, typeof(Scalar), FieldAttributes.Private|FieldAttributes.Static);
+            FieldInfo field = ClassBuilder.DefineField(field_name, type, FieldAttributes.Private|FieldAttributes.Static);
             var init = Expression.Assign(Expression.Field(null, field), initializer);
             Initializers.Add(init);
 
             return field;
+        }
+
+        public FieldInfo AddField(Expression initializer)
+        {
+            return AddField(initializer, typeof(Scalar));
         }
 
         public void AddMethod(Subroutine sub)
@@ -51,38 +62,148 @@ namespace org.mbarbon.p.runtime
             MethodBuilder method_builder = ClassBuilder.DefineMethod(method_name, MethodAttributes.Static|MethodAttributes.Public);
             body.CompileToMethod(method_builder);
 
-            Subroutines.Add(new SubInfo(method_name, is_main ? null : sub.Name));
+            Subroutines.Add(new SubInfo(method_name, sub));
         }
 
-        public void AddInitMethod()
+        public void AddInitMethod(FieldInfo main)
         {
-            MethodBuilder helper = ClassBuilder.DefineMethod("InitModule", MethodAttributes.Public|MethodAttributes.Static,
-                                                         typeof(void), new System.Type[] { typeof(Runtime) });
-            if (Initializers.Count == 0)
-                Initializers.Add(Expression.Empty());
-            var constants_init = Expression.Lambda(Expression.Block(Initializers), InitRuntime);
+            LabelTarget sub_label = Expression.Label(typeof(Code));
+            MethodBuilder helper =
+                ClassBuilder.DefineMethod(
+                    "InitModule",
+                    MethodAttributes.Public|MethodAttributes.Static,
+                    typeof(void), new Type[] { typeof(Runtime) });
+            Initializers.Add(Expression.Return(sub_label,
+                                               Expression.Field(null, main),
+                                               typeof(Code)));
+            var constants_init =
+                Expression.Lambda(
+                    Expression.Label(
+                        sub_label,
+                        Expression.Block(Initializers)),
+                        InitRuntime);
+
             constants_init.CompileToMethod(helper);
+        }
+
+        FieldInfo AddSubInitialization()
+        {
+            var code_ctor = typeof(Code).GetConstructor(
+                new Type[] { typeof(Code.Sub), typeof(bool) });
+            var get_method =
+                typeof(Type).GetMethod(
+                    "GetMethod", new Type[] { typeof(string) });
+            var create_delegate =
+                typeof(System.Delegate).GetMethod(
+                    "CreateDelegate",
+                    new Type[] { typeof(Type),
+                                 typeof(MethodInfo) });
+            var lexinfo_new_params = new Type[] {
+                typeof(string), typeof(Opcode.Sigil), typeof(int),
+                typeof(int), typeof(int), typeof(bool), typeof(bool),
+            };
+            var lexinfo_new = typeof(LexicalInfo).GetConstructor(lexinfo_new_params);
+            var get_type =
+                typeof(Type).GetMethod(
+                    "GetType", new Type[] { typeof(string) });
+
+
+            FieldInfo main = null;
+            foreach (SubInfo si in Subroutines)
+            {
+                // new Code(System.Delegate.CreateDelegate(method, null)
+                Expression initcode =
+                    Expression.New(code_ctor, new Expression[] {
+                            Expression.Call(
+                                create_delegate,
+                                Expression.Constant(typeof(Code.Sub)),
+                                Expression.Call(
+                                    Expression.Call(
+                                        get_type,
+                                        Expression.Constant(ClassBuilder.FullName)),
+                                    get_method,
+                                    Expression.Constant(si.MethodName))),
+                            Expression.Constant(si.SubName == null),
+                        });
+                FieldInfo code = AddField(initcode, typeof(Code));
+
+                    // code.ScratchPad = ScratchPad.CreateSubPad(lexicals,
+                    //                       main.ScratchPad)
+                    Expression[] alllex = new Expression[si.Lexicals.Length];
+                    for (int i = 0; i < alllex.Length; ++i)
+                    {
+                        LexicalInfo lex = si.Lexicals[i];
+
+                        alllex[i] = Expression.New(
+                            lexinfo_new,
+                            new Expression[] {
+                                Expression.Constant(lex.Name),
+                                Expression.Constant(lex.Slot),
+                                Expression.Constant(lex.Level),
+                                Expression.Constant(lex.Index),
+                                Expression.Constant(lex.OuterIndex),
+                                Expression.Constant(lex.InPad),
+                                Expression.Constant(lex.FromMain),
+                            });
+                    }
+                    Expression lexicals =
+                        Expression.NewArrayInit(typeof(LexicalInfo), alllex);
+                    Expression init_pad =
+                        Expression.Assign(
+                            Expression.Property(
+                                Expression.Field(null, code),
+                                "ScratchPad"),
+                            Expression.Call(
+                                typeof(ScratchPad).GetMethod("CreateSubPad"),
+                                lexicals,
+                                main != null ?
+                                (Expression)Expression.Property(
+                                        Expression.Field(null, main),
+                                        "ScratchPad") :
+                                (Expression)Expression.Constant(null, typeof(ScratchPad))));
+                    Initializers.Add(init_pad);
+
+                if (si.SubName == null)
+                {
+                    // code.NewScope(runtime);
+                    Expression set_main_pad =
+                        Expression.Call(
+                            Expression.Field(null, code),
+                            typeof(Code).GetMethod("NewScope"),
+                            InitRuntime);
+
+                    Initializers.Add(set_main_pad);
+                    main = code;
+                }
+                else
+                {
+                    // runtime.SymbolTable.SetCode(runtime, sub_name, code)
+                    Expression add_to_symboltable = 
+                        Expression.Call(
+                            Expression.Field(
+                                InitRuntime,
+                                typeof(Runtime).GetField("SymbolTable")),
+                            typeof(SymbolTable).GetMethod("SetCode"),
+                            InitRuntime,
+                            Expression.Constant(si.SubName),
+                            Expression.Field(null, code));
+                    Initializers.Add(add_to_symboltable);
+                }
+            }
+
+            return main;
         }
 
         public Code CompleteGeneration(Runtime runtime)
         {
-            AddInitMethod();
+            FieldInfo main = AddSubInitialization();
+            AddInitMethod(main);
 
-            Code main = null;
-            System.Type mod = ClassBuilder.CreateType();
-            mod.GetMethod("InitModule").Invoke(null, new object[] { runtime });
+            Type mod = ClassBuilder.CreateType();
+            object main_sub = mod.GetMethod("InitModule")
+                                  .Invoke(null, new object[] { runtime });
 
-            foreach (SubInfo si in Subroutines)
-            {
-                MethodInfo method = mod.GetMethod(si.MethodName);
-                Code c = new Code(System.Delegate.CreateDelegate(typeof(Code.Sub), method));
-                if (si.SubName == null)
-                    main = c;
-                else
-                    runtime.SymbolTable.SetCode(runtime, si.SubName, c);
-            }
-
-            return main;
+            return (Code)main_sub;
         }
 
         private TypeBuilder ClassBuilder;
@@ -115,12 +236,43 @@ namespace org.mbarbon.p.runtime
             return Variables[index];
         }
 
-        private ParameterExpression GetLexical(int index)
+        private ParameterExpression GetLexical(int index, Opcode.Sigil slot)
         {
             while (Lexicals.Count <= index)
-                Lexicals.Add(Expression.Variable(typeof(IAny)));
+                Lexicals.Add(null);
+            if (Lexicals[index] == null)
+                Lexicals[index] =
+                    Expression.Variable(slot == Opcode.Sigil.SCALAR ? typeof(Scalar) :
+                                     slot == Opcode.Sigil.ARRAY  ? typeof(Array) :
+                                     slot == Opcode.Sigil.HASH   ? typeof(Hash) :
+                                                                typeof(void));
 
             return Lexicals[index];
+        }
+
+        private Expression GetLexicalPad(LexicalInfo info)
+        {
+            return GetLexicalPad(info, false);
+        }
+
+        private Expression GetLexicalPad(LexicalInfo info, bool writable)
+        {
+            var item =
+                Expression.MakeIndex(
+                    Pad, Pad.Type.GetProperty("Item"),
+                    new Expression[] { Expression.Constant(info.Index) });
+
+            if (writable)
+                return item;
+
+            if (info.Slot == Opcode.Sigil.SCALAR)
+                return Expression.Convert(item, typeof(Scalar));
+            else if (info.Slot == Opcode.Sigil.ARRAY)
+                return Expression.Convert(item, typeof(Array));
+            else if (info.Slot == Opcode.Sigil.HASH)
+                return Expression.Convert(item, typeof(Hash));
+            else
+                throw new System.Exception("Invalid slot " + info.Slot.ToString());
         }
 
         public LambdaExpression Generate(Subroutine sub, bool is_main)
@@ -137,13 +289,16 @@ namespace org.mbarbon.p.runtime
                 Generate(sub.BasicBlocks[i], exps);
                 Blocks.Add(Expression.Block(typeof(IAny), exps));
             }
+            // remove the dummy entry for @_ if present
+            if (Lexicals.Count > 0 && Lexicals[0] == null)
+                Lexicals.RemoveAt(0);
             if (Lexicals.Count != 0)
             {
                 List<Expression> init_exps = new List<Expression>();
                 foreach (var lex in Lexicals)
                 {
-                    init_exps.Add(Expression.Assign(lex, Expression.New(typeof(Scalar).GetConstructor(new System.Type[] { typeof(Runtime) }),
-                                                                   Runtime)));
+                    init_exps.Add(Expression.Assign(lex, Expression.New(lex.Type.GetConstructor(new Type[] { typeof(Runtime) }),
+                                                                 Runtime)));
                 }
                 Blocks.Insert(0, Expression.Block(typeof(void), init_exps));
             }
@@ -170,17 +325,17 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_FRESH_STRING:
             case Opcode.OpNumber.OP_CONSTANT_STRING:
             {
-                var ctor = typeof(Scalar).GetConstructor(new System.Type[] { typeof(Runtime), typeof(string) });
+                var ctor = typeof(Scalar).GetConstructor(new Type[] { typeof(Runtime), typeof(string) });
                 return Expression.New(ctor, new Expression[] { Runtime, Expression.Constant(((ConstantString)op).Value) });
             }
             case Opcode.OpNumber.OP_CONSTANT_UNDEF:
             {
-                var ctor = typeof(Scalar).GetConstructor(new System.Type[] { typeof(Runtime) });
+                var ctor = typeof(Scalar).GetConstructor(new Type[] { typeof(Runtime) });
                 return Expression.New(ctor, new Expression[] { Runtime });
             }
             case Opcode.OpNumber.OP_CONSTANT_INTEGER:
             {
-                var ctor = typeof(Scalar).GetConstructor(new System.Type[] { typeof(Runtime), typeof(int) });
+                var ctor = typeof(Scalar).GetConstructor(new Type[] { typeof(Runtime), typeof(int) });
                 var init = Expression.New(ctor, new Expression[] { ModuleGenerator.InitRuntime, Expression.Constant(((ConstantInt)op).Value) });
                 FieldInfo field = ModuleGenerator.AddField(init);
 
@@ -222,7 +377,7 @@ namespace org.mbarbon.p.runtime
                 List<Expression> data = new List<Expression>();
                 foreach (var i in op.Childs)
                     data.Add(Generate(i));
-                return Expression.New(typeof(org.mbarbon.p.values.List).GetConstructor(new System.Type[] {typeof(Runtime), typeof(IAny[])}),
+                return Expression.New(typeof(org.mbarbon.p.values.List).GetConstructor(new Type[] {typeof(Runtime), typeof(IAny[])}),
                                     new Expression[] { Runtime, Expression.NewArrayInit(typeof(IAny), data) });
             }
             case Opcode.OpNumber.OP_PRINT:
@@ -236,7 +391,7 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_RETURN:
             {
-                Expression empty = Expression.New(typeof(org.mbarbon.p.values.List).GetConstructor(new System.Type[] { typeof(Runtime) }), Runtime);
+                Expression empty = Expression.New(typeof(org.mbarbon.p.values.List).GetConstructor(new Type[] { typeof(Runtime) }), Runtime);
                 if (op.Childs.Length == 0)
                 {
                     return Expression.Return(SubLabel, empty, typeof(IAny));
@@ -310,12 +465,12 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_LOG_NOT:
             {
-                return Expression.New(typeof(Scalar).GetConstructor(new System.Type[] { typeof(Runtime), typeof(bool) }), Runtime,
-                                    Expression.Call(Generate(op.Childs[0]), typeof(IAny).GetMethod("AsBoolean"), Runtime));
+                return Expression.New(typeof(Scalar).GetConstructor(new Type[] { typeof(Runtime), typeof(bool) }), Runtime,
+                                      Expression.Not(Expression.Call(Generate(op.Childs[0]), typeof(IAny).GetMethod("AsBoolean"), Runtime)));
             }
             case Opcode.OpNumber.OP_DEFINED:
             {
-                return Expression.New(typeof(Scalar).GetConstructor(new System.Type[] { typeof(Runtime), typeof(bool) }), Runtime,
+                return Expression.New(typeof(Scalar).GetConstructor(new Type[] { typeof(Runtime), typeof(bool) }), Runtime,
                                     Expression.Call(Generate(op.Childs[0]), typeof(IAny).GetMethod("IsDefined"), Runtime));
             }
             case Opcode.OpNumber.OP_CONCAT:
@@ -324,8 +479,8 @@ namespace org.mbarbon.p.runtime
                                              typeof(IAny).GetMethod("AsString"), Runtime);
                 Expression s2 = Expression.Call(Generate(op.Childs[1]),
                                              typeof(IAny).GetMethod("AsString"), Runtime);
-                return Expression.New(typeof(Scalar).GetConstructor(new System.Type[] { typeof(Runtime), typeof(string) }), Runtime,
-                                    Expression.Call(typeof(string).GetMethod("Concat", new System.Type[] { typeof(string), typeof(string) }), s1, s2));
+                return Expression.New(typeof(Scalar).GetConstructor(new Type[] { typeof(Runtime), typeof(string) }), Runtime,
+                                    Expression.Call(typeof(string).GetMethod("Concat", new Type[] { typeof(string), typeof(string) }), s1, s2));
             }
             case Opcode.OpNumber.OP_CONCAT_ASSIGN:
             {
@@ -338,21 +493,21 @@ namespace org.mbarbon.p.runtime
                                               typeof(org.mbarbon.p.values.Array).GetMethod("GetCount"),
                                               Runtime);
                 Expression len_1 = Expression.Subtract(len, Expression.Constant(1));
-                return Expression.New(typeof(Scalar).GetConstructor(new System.Type[] {typeof(Runtime), typeof(int)}),
+                return Expression.New(typeof(Scalar).GetConstructor(new Type[] {typeof(Runtime), typeof(int)}),
                                     new Expression[] { Runtime, len_1 });
             }
             case Opcode.OpNumber.OP_ADD:
             {
                 Expression sum = Expression.Add(Expression.Call(Generate(op.Childs[0]), typeof(IAny).GetMethod("AsFloat"), Runtime),
                                              Expression.Call(Generate(op.Childs[1]), typeof(IAny).GetMethod("AsFloat"), Runtime));
-                return Expression.New(typeof(Scalar).GetConstructor(new System.Type[] {typeof(Runtime), typeof(double)}),
+                return Expression.New(typeof(Scalar).GetConstructor(new Type[] {typeof(Runtime), typeof(double)}),
                                     new Expression[] { Runtime, sum });
             }
             case Opcode.OpNumber.OP_SUBTRACT:
             {
                 Expression sum = Expression.Subtract(Expression.Call(Generate(op.Childs[0]), typeof(IAny).GetMethod("AsFloat"), Runtime),
                                                   Expression.Call(Generate(op.Childs[1]), typeof(IAny).GetMethod("AsFloat"), Runtime));
-                return Expression.New(typeof(Scalar).GetConstructor(new System.Type[] {typeof(Runtime), typeof(double)}),
+                return Expression.New(typeof(Scalar).GetConstructor(new Type[] {typeof(Runtime), typeof(double)}),
                                     new Expression[] { Runtime, sum });
             }
             case Opcode.OpNumber.OP_ARRAY_ELEMENT:
@@ -369,19 +524,27 @@ namespace org.mbarbon.p.runtime
             {
                 Lexical lx = (Lexical)op;
 
-                return lx.Index == 0 && !IsMain ? Arguments : GetLexical(lx.Index);
+                return lx.Index == 0 && !IsMain ? Arguments : GetLexical(lx.Index, lx.Slot);
             }
             case Opcode.OpNumber.OP_LEXICAL_CLEAR:
             {
                 Lexical lx = (Lexical)op;
+                Expression lexvar = GetLexical(lx.Index, lx.Slot);
 
-                return Expression.Assign(GetLexical(lx.Index), Expression.Constant(null, typeof(IAny)));
+                return Expression.Assign(lexvar, Expression.Constant(null, lexvar.Type));
             }
             case Opcode.OpNumber.OP_LEXICAL_PAD:
             {
                 Lexical lx = (Lexical)op;
 
-                return Expression.ArrayIndex(Pad, Expression.Constant(lx.Index));
+                return GetLexicalPad(lx.LexicalInfo);
+            }
+            case Opcode.OpNumber.OP_LEXICAL_PAD_CLEAR:
+            {
+                Lexical lx = (Lexical)op;
+                Expression lexvar = GetLexicalPad(lx.LexicalInfo, true);
+
+                return Expression.Assign(lexvar, Expression.Constant(null, lexvar.Type));
             }
             case Opcode.OpNumber.OP_CALL:
             {
