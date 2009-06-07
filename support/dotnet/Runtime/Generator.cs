@@ -193,22 +193,22 @@ namespace org.mbarbon.p.runtime
                 string name = null;
                 switch (gop.Slot)
                 {
-                case 1:
+                case Opcode.Sigil.SCALAR:
                     name = "GetOrCreateScalar";
                     break;
-                case 2:
+                case Opcode.Sigil.ARRAY:
                     name = "GetOrCreateArray";
                     break;
-                case 3:
+                case Opcode.Sigil.HASH:
                     name = "GetOrCreateHash";
                     break;
-                case 4:
+                case Opcode.Sigil.SUB:
                     name = "GetCode";
                     break;
-                case 5:
+                case Opcode.Sigil.GLOB:
                     name = "GetOrCreateGlob";
                     break;
-                case 7:
+                case Opcode.Sigil.HANDLE:
                     name = "GetOrCreateHandle";
                     break;
                 default:

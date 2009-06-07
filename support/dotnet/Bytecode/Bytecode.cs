@@ -70,7 +70,7 @@ namespace org.mbarbon.p.runtime
                 Global gl = new Global();
                 op = gl;
                 gl.Name = ReadString(reader);
-                gl.Slot = reader.ReadByte();
+                gl.Slot = (Opcode.Sigil)reader.ReadByte();
                 break;
             case Opcode.OpNumber.OP_CALL:
                 Call ca = new Call();
@@ -208,6 +208,16 @@ namespace org.mbarbon.p.runtime
             LIST   = 8,
         }
 
+        public enum Sigil
+        {
+            SCALAR    = 1,
+            ARRAY     = 2,
+            HASH      = 3,
+            SUB       = 4,
+            GLOB      = 5,
+            HANDLE    = 7,
+        }
+
         public OpNumber Number;
         public Opcode[] Childs;
     }
@@ -215,7 +225,7 @@ namespace org.mbarbon.p.runtime
     public class Global : Opcode
     {
         public string Name;
-        public int Slot;
+        public Opcode.Sigil Slot;
     }
 
     public class ConstantInt : Opcode
