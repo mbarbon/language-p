@@ -15,8 +15,7 @@ sub new {
 
     $self->{values} ||= [];
     $self->{names} ||= {};
-    $self->{clear} ||= { indices => [],
-                         scalar  => [],
+    $self->{clear} ||= { scalar  => [],
                          array   => [],
                          hash    => [],
                          };
