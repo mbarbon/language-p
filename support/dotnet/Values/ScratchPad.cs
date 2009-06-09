@@ -71,6 +71,22 @@ namespace org.mbarbon.p.values
             return scope;
         }
 
+        public ScratchPad CloseOver(Runtime runtime, ScratchPad outer)
+        {
+            ScratchPad closure = new ScratchPad(this, Lexicals);
+
+            foreach (var lex in Lexicals)
+            {
+                if (!lex.InPad || lex.OuterIndex == -1 || lex.FromMain)
+                    continue;
+                while (closure.Count <= lex.Index)
+                    closure.Add(null);
+                closure[lex.Index] = outer[lex.OuterIndex];
+            }
+
+            return closure;
+        }
+
         public bool HasLexicalFromMain()
         {
             foreach (var lex in Lexicals)

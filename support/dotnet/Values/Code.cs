@@ -32,6 +32,14 @@ namespace org.mbarbon.p.values
                 scratchpad = scratchpad.NewScope(runtime);
         }
 
+        public Scalar MakeClosure(Runtime runtime, ScratchPad outer)
+        {
+            Code closure = new Code(subref, is_main);
+            closure.scratchpad = scratchpad.CloseOver(runtime, outer);
+
+            return new Scalar(runtime, closure);
+        }
+
         public ScratchPad ScratchPad
         {
             get { return scratchpad; }
