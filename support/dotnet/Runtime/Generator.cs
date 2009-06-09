@@ -582,6 +582,20 @@ namespace org.mbarbon.p.runtime
                 return Expression.Call(Generate(op.Childs[1]), typeof(Code).GetMethod("Call"),
                                      Runtime, Context, Generate(op.Childs[0]));
             }
+            case Opcode.OpNumber.OP_DEREFERENCE_SUB:
+            {
+                return Expression.Call(
+                           Generate(op.Childs[0]),
+                           typeof(IAny).GetMethod("DereferenceSubroutine"),
+                           Runtime);
+            }
+            case Opcode.OpNumber.OP_MAKE_CLOSURE:
+            {
+                return Expression.Call(
+                           Generate(op.Childs[0]),
+                           typeof(Code).GetMethod("MakeClosure"),
+                           Runtime, Pad);
+            }
             default:
                 throw new System.Exception(string.Format("Unhandled opcode {0:S}", op.Number.ToString()));
             }
