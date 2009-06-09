@@ -22,6 +22,7 @@ namespace org.mbarbon.p.runtime
         public static Subroutine ReadSubroutine(BinaryReader reader)
         {
             var name = ReadString(reader);
+            int type = reader.ReadByte();
             int outer_sub = reader.ReadInt32();
             int lex_count = reader.ReadInt32();
             int bb_count = reader.ReadInt32();
@@ -35,8 +36,10 @@ namespace org.mbarbon.p.runtime
             var sub = new Subroutine(bb_count);
 
             sub.Lexicals = lexicals;
-            sub.Name = name;
+            if (name.Length != 0)
+                sub.Name = name;
             sub.Outer = outer_sub;
+            sub.Type = type;
             for (int i = 0; i < bb_count; ++i)
             {
                 sub.BasicBlocks[i] = ReadBasicBlock(reader, sub);
@@ -307,6 +310,7 @@ namespace org.mbarbon.p.runtime
             BasicBlocks = new BasicBlock[blockCount];
         }
 
+        public int Type;
         public int Outer;
         public string Name;
         public BasicBlock[] BasicBlocks;

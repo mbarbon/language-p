@@ -28,6 +28,7 @@ sub _write_sub {
 
     _write_string( $out, defined $name ? $name : '' );
 
+    print $out pack 'C', $code->type;
     print $out pack 'V', $code->outer ? $self->{sub_map}{$code->outer} : -1;
     print $out pack 'V', scalar values %{$code->lexicals->{map}};
     print $out pack 'V', scalar @$bb;
