@@ -89,6 +89,11 @@ namespace org.mbarbon.p.values
 
             return clone;
         }
+
+        public virtual Code DereferenceSubroutine(Runtime runtime)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
         
         protected List<IAny> array;
     }

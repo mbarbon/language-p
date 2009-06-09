@@ -73,6 +73,11 @@ namespace org.mbarbon.p.values
             return new StringNumber(runtime, flags, integerValue, stringValue, floatValue);
         }
 
+        public virtual Code DereferenceSubroutine(Runtime runtime)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
+
         internal int flags;
         internal string stringValue;
         internal int integerValue;

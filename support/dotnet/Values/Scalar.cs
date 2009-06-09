@@ -19,7 +19,8 @@ namespace org.mbarbon.p.values
         public Scalar(Runtime runtime, double val) : this(new StringNumber(runtime, val)) {}
         public Scalar(Runtime runtime, bool val)
             : this(val ? new StringNumber(runtime, 1) : new StringNumber(runtime, "")) {}
-                
+        public Scalar(Runtime runtime, IReferrable val) : this(new Reference(runtime, val)) {}
+
         public virtual IAny Assign(Runtime runtime, IAny other)
         {
             body = other.AsScalar(runtime).body.CloneBody(runtime);
@@ -62,6 +63,11 @@ namespace org.mbarbon.p.values
             return new Scalar(body.CloneBody(runtime));
         }
 
+        public virtual Code DereferenceSubroutine(Runtime runtime)
+        {
+            return body.DereferenceSubroutine(runtime);
+        }
+
         private IScalarBody body;
     }
 
@@ -72,5 +78,7 @@ namespace org.mbarbon.p.values
         int AsInteger(Runtime runtime);
         double AsFloat(Runtime runtime);
         bool AsBoolean(Runtime runtime);
+
+        Code DereferenceSubroutine(Runtime runtime);
     }
 }

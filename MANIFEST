@@ -59,6 +59,7 @@ support/dotnet/Values/Handle.cs
 support/dotnet/Values/Hash.cs
 support/dotnet/Values/IAny.cs
 support/dotnet/Values/List.cs
+support/dotnet/Values/Reference.cs
 support/dotnet/Values/Scalar.cs
 support/dotnet/Values/ScratchPad.cs
 support/dotnet/Values/StringNumber.cs

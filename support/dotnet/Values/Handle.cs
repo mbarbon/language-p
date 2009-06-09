@@ -44,5 +44,10 @@ namespace org.mbarbon.p.values
         {
             return Assign(runtime, iter.MoveNext() ? iter.Current : new Scalar(runtime));
         }
+
+        public virtual Code DereferenceSubroutine(Runtime runtime)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
     }
 }

@@ -59,6 +59,7 @@
     <Compile Include="Values\Code.cs" />
     <Compile Include="Values\ScratchPad.cs" />
     <Compile Include="Values\Hash.cs" />
+    <Compile Include="Values\Reference.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

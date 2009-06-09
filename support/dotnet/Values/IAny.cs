@@ -2,7 +2,11 @@ using Runtime = org.mbarbon.p.runtime.Runtime;
 using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
-{   
+{
+    public interface IReferrable
+    {
+    }
+
     public interface IAny
     {
         Scalar AsScalar(Runtime runtime);
@@ -17,5 +21,7 @@ namespace org.mbarbon.p.values
         IAny ConcatAssign(Runtime runtime, IAny other);
 
         IAny Clone(Runtime runtime, int depth);
+
+        Code DereferenceSubroutine(Runtime runtime);
     }
 }

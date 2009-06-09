@@ -3,7 +3,7 @@ using org.mbarbon.p.values;
 
 namespace org.mbarbon.p.values
 {
-    public class Code
+    public class Code : IReferrable
     {       
         public Code(System.Delegate code, bool main)
         {
