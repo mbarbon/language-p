@@ -81,6 +81,8 @@ sub _write_op {
         _write_string( $out, $op->{attributes}{value} );
     } elsif( $opn == OP_CONSTANT_INTEGER ) {
         print $out pack 'V', $op->{attributes}{value};
+    } elsif( $opn == OP_CONSTANT_SUB ) {
+        print $out pack 'V', $self->{sub_map}{$op->{attributes}{value}};
     } elsif( $opn == OP_GET || $opn == OP_SET ) {
         print $out pack 'V', $op->{attributes}{index};
     } elsif(    $opn == OP_LEXICAL

@@ -96,6 +96,11 @@ namespace org.mbarbon.p.runtime
                 op = ci;
                 ci.Value = reader.ReadInt32();
                 break;
+            case Opcode.OpNumber.OP_CONSTANT_SUB:
+                ConstantSub csu = new ConstantSub();
+                op = csu;
+                csu.Index = reader.ReadInt32();
+                break;
             case Opcode.OpNumber.OP_GLOBAL:
                 Global gl = new Global();
                 op = gl;
@@ -222,6 +227,9 @@ namespace org.mbarbon.p.runtime
             OP_SUBTRACT         = 168,
             OP_CONCAT          = 17,
             OP_HASH_ELEMENT     = 74,
+            OP_DEREFERENCE_SUB  = 30,
+            OP_MAKE_CLOSURE     = 105,
+            OP_CONSTANT_SUB     = 23,
         }
 
         public enum Context
@@ -260,6 +268,11 @@ namespace org.mbarbon.p.runtime
     public class ConstantString : Opcode
     {
         public string Value;
+    }
+
+    public class ConstantSub : Opcode
+    {
+        public int Index;
     }
 
     public class GetSet : Opcode
