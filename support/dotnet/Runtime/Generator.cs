@@ -8,23 +8,24 @@ using Type = System.Type;
 
 namespace org.mbarbon.p.runtime
 {
-    public class ModuleGenerator
+    internal class ModuleGenerator
     {
-        private struct SubInfo
+        internal struct SubInfo
         {
-            internal SubInfo(string method, Subroutine sub)
+            internal SubInfo(string method, Subroutine sub, FieldInfo codefield)
             {
                 MethodName = method;
-                if (sub.Name.Length == 0)
-                    SubName = null;
-                else
-                    SubName = sub.Name;
+                SubName = sub.Name;
+                IsMain = sub.Type == 1;
                 Lexicals = sub.Lexicals;
+                CodeField = codefield;
             }
 
             internal string MethodName;
             internal string SubName;
             internal LexicalInfo[] Lexicals;
+            internal FieldInfo CodeField;
+            internal bool IsMain;
         }
 
         public ModuleGenerator(TypeBuilder class_builder)
@@ -38,8 +39,14 @@ namespace org.mbarbon.p.runtime
         public FieldInfo AddField(Expression initializer, Type type)
         {
             string field_name = "const_" + Initializers.Count.ToString();
-            FieldInfo field = ClassBuilder.DefineField(field_name, type, FieldAttributes.Private|FieldAttributes.Static);
-            var init = Expression.Assign(Expression.Field(null, field), initializer);
+            FieldInfo field =
+                ClassBuilder.DefineField(
+                    field_name, type,
+                    FieldAttributes.Private|FieldAttributes.Static);
+            var init =
+                Expression.Assign(
+                    Expression.Field(null, field),
+                    initializer);
             Initializers.Add(init);
 
             return field;
@@ -50,19 +57,31 @@ namespace org.mbarbon.p.runtime
             return AddField(initializer, typeof(Scalar));
         }
 
-        public void AddMethod(Subroutine sub)
+        public void AddSubInfo(Subroutine sub)
         {
-            var sg = new SubGenerator(this);
-            bool is_main = sub.Name.Length == 0;
-            var body = sg.Generate(sub, is_main);
-            string suffix = is_main         ? "main" :
-                           sub.Name != null ? sub.Name :
-                                             "anonymous";
-            string method_name = "sub_" + suffix + "_" + MethodIndex++.ToString();
-            MethodBuilder method_builder = ClassBuilder.DefineMethod(method_name, MethodAttributes.Static|MethodAttributes.Public);
-            body.CompileToMethod(method_builder);
+            bool is_main = sub.Type == 1;
+            string suffix = is_main          ? "main" :
+                            sub.Name != null ? sub.Name :
+                                               "anonymous";
+            string method_name = "sub_" + suffix + "_" +
+                                     MethodIndex++.ToString();
+            FieldInfo field = ClassBuilder.DefineField(
+                method_name + "_code", typeof(Code),
+                FieldAttributes.Private|FieldAttributes.Static);
 
-            Subroutines.Add(new SubInfo(method_name, sub));
+            Subroutines.Add(new SubInfo(method_name, sub, field));
+        }
+
+        public void AddMethod(int index, Subroutine sub)
+        {
+            var sg = new SubGenerator(this, Subroutines);
+            var body = sg.Generate(sub, Subroutines[index].IsMain);
+
+            MethodBuilder method_builder =
+                ClassBuilder.DefineMethod(
+                    Subroutines[index].MethodName,
+                    MethodAttributes.Static|MethodAttributes.Public);
+            body.CompileToMethod(method_builder);
         }
 
         public void AddInitMethod(FieldInfo main)
@@ -123,59 +142,63 @@ namespace org.mbarbon.p.runtime
                                         Expression.Constant(ClassBuilder.FullName)),
                                     get_method,
                                     Expression.Constant(si.MethodName))),
-                            Expression.Constant(si.SubName == null),
+                            Expression.Constant(si.IsMain),
                         });
-                FieldInfo code = AddField(initcode, typeof(Code));
 
-                    // code.ScratchPad = ScratchPad.CreateSubPad(lexicals,
-                    //                       main.ScratchPad)
-                    Expression[] alllex = new Expression[si.Lexicals.Length];
-                    for (int i = 0; i < alllex.Length; ++i)
-                    {
-                        LexicalInfo lex = si.Lexicals[i];
+                Initializers.Add(
+                    Expression.Assign(
+                        Expression.Field(null, si.CodeField),
+                        initcode));
 
-                        alllex[i] = Expression.New(
-                            lexinfo_new,
-                            new Expression[] {
-                                Expression.Constant(lex.Name),
-                                Expression.Constant(lex.Slot),
-                                Expression.Constant(lex.Level),
-                                Expression.Constant(lex.Index),
-                                Expression.Constant(lex.OuterIndex),
-                                Expression.Constant(lex.InPad),
-                                Expression.Constant(lex.FromMain),
-                            });
-                    }
-                    Expression lexicals =
-                        Expression.NewArrayInit(typeof(LexicalInfo), alllex);
-                    Expression init_pad =
-                        Expression.Assign(
-                            Expression.Property(
-                                Expression.Field(null, code),
-                                "ScratchPad"),
-                            Expression.Call(
-                                typeof(ScratchPad).GetMethod("CreateSubPad"),
-                                lexicals,
-                                main != null ?
-                                (Expression)Expression.Property(
-                                        Expression.Field(null, main),
-                                        "ScratchPad") :
-                                (Expression)Expression.Constant(null, typeof(ScratchPad))));
-                    Initializers.Add(init_pad);
+                // code.ScratchPad = ScratchPad.CreateSubPad(lexicals,
+                //                       main.ScratchPad)
+                Expression[] alllex = new Expression[si.Lexicals.Length];
+                for (int i = 0; i < alllex.Length; ++i)
+                {
+                    LexicalInfo lex = si.Lexicals[i];
 
-                if (si.SubName == null)
+                    alllex[i] = Expression.New(
+                        lexinfo_new,
+                        new Expression[] {
+                            Expression.Constant(lex.Name),
+                            Expression.Constant(lex.Slot),
+                            Expression.Constant(lex.Level),
+                            Expression.Constant(lex.Index),
+                            Expression.Constant(lex.OuterIndex),
+                            Expression.Constant(lex.InPad),
+                            Expression.Constant(lex.FromMain),
+                        });
+                }
+                Expression lexicals =
+                    Expression.NewArrayInit(typeof(LexicalInfo), alllex);
+                Expression init_pad =
+                    Expression.Assign(
+                        Expression.Property(
+                            Expression.Field(null, si.CodeField),
+                            "ScratchPad"),
+                        Expression.Call(
+                            typeof(ScratchPad).GetMethod("CreateSubPad"),
+                            lexicals,
+                            main != null ?
+                            (Expression)Expression.Property(
+                                    Expression.Field(null, main),
+                                    "ScratchPad") :
+                            (Expression)Expression.Constant(null, typeof(ScratchPad))));
+                Initializers.Add(init_pad);
+
+                if (si.IsMain)
                 {
                     // code.NewScope(runtime);
                     Expression set_main_pad =
                         Expression.Call(
-                            Expression.Field(null, code),
+                            Expression.Field(null, si.CodeField),
                             typeof(Code).GetMethod("NewScope"),
                             InitRuntime);
 
                     Initializers.Add(set_main_pad);
-                    main = code;
+                    main = si.CodeField;
                 }
-                else
+                else if (si.SubName != null)
                 {
                     // runtime.SymbolTable.SetCode(runtime, sub_name, code)
                     Expression add_to_symboltable = 
@@ -186,7 +209,7 @@ namespace org.mbarbon.p.runtime
                             typeof(SymbolTable).GetMethod("SetCode"),
                             InitRuntime,
                             Expression.Constant(si.SubName),
-                            Expression.Field(null, code));
+                            Expression.Field(null, si.CodeField));
                     Initializers.Add(add_to_symboltable);
                 }
             }
@@ -213,9 +236,10 @@ namespace org.mbarbon.p.runtime
         public ParameterExpression InitRuntime;
     }
 
-    public class SubGenerator
+    internal class SubGenerator
     {
-        public SubGenerator(ModuleGenerator module_generator)
+        public SubGenerator(ModuleGenerator module_generator,
+                            List<ModuleGenerator.SubInfo> subroutines)
         {
             Runtime = Expression.Parameter(typeof(Runtime), "runtime");
             Arguments = Expression.Parameter(typeof(org.mbarbon.p.values.Array), "args");
@@ -226,6 +250,7 @@ namespace org.mbarbon.p.runtime
             BlockLabels = new List<LabelTarget>();
             Blocks = new List<Expression>();
             ModuleGenerator = module_generator;
+            Subroutines = subroutines;
         }
 
         private ParameterExpression GetVariable(int index)
@@ -340,6 +365,12 @@ namespace org.mbarbon.p.runtime
                 FieldInfo field = ModuleGenerator.AddField(init);
 
                 return Expression.Field(null, field);
+            }
+            case Opcode.OpNumber.OP_CONSTANT_SUB:
+            {
+                ConstantSub cs = (ConstantSub)op;
+
+                return Expression.Field(null, Subroutines[cs.Index].CodeField);
             }
             case Opcode.OpNumber.OP_GLOBAL:
             {
@@ -563,6 +594,7 @@ namespace org.mbarbon.p.runtime
         private List<Expression> Blocks;
         private bool IsMain;
         private ModuleGenerator ModuleGenerator;
+        private List<ModuleGenerator.SubInfo> Subroutines;
     }
 
     public class Generator
@@ -585,8 +617,10 @@ namespace org.mbarbon.p.runtime
             TypeBuilder perl_module = mod_builder.DefineType(file.Name, TypeAttributes.Public);
             ModuleGenerator perl_mod_generator = new ModuleGenerator(perl_module);
 
-            foreach (var sub in cu.Subroutines)
-                perl_mod_generator.AddMethod(sub);
+            for (int i = 0; i < cu.Subroutines.Length; ++i)
+                perl_mod_generator.AddSubInfo(cu.Subroutines[i]);
+            for (int i = 0; i < cu.Subroutines.Length; ++i)
+                perl_mod_generator.AddMethod(i, cu.Subroutines[i]);
 
             return perl_mod_generator.CompleteGeneration(Runtime);
         }
