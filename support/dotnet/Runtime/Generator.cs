@@ -201,7 +201,7 @@ namespace org.mbarbon.p.runtime
                 else if (si.SubName != null)
                 {
                     // runtime.SymbolTable.SetCode(runtime, sub_name, code)
-                    Expression add_to_symboltable = 
+                    Expression add_to_symboltable =
                         Expression.Call(
                             Expression.Field(
                                 InitRuntime,
@@ -238,6 +238,21 @@ namespace org.mbarbon.p.runtime
 
     internal class SubGenerator
     {
+        private static Type[] ProtoRuntime =
+            new Type[] { typeof(Runtime) };
+        private static Type[] ProtoRuntimeString =
+            new Type[] { typeof(Runtime), typeof(string) };
+        private static Type[] ProtoRuntimeInt =
+            new Type[] { typeof(Runtime), typeof(int) };
+        private static Type[] ProtoRuntimeBool =
+            new Type[] { typeof(Runtime), typeof(bool) };
+        private static Type[] ProtoRuntimeDouble =
+            new Type[] { typeof(Runtime), typeof(double) };
+        private static Type[] ProtoRuntimeIAny =
+            new Type[] { typeof(Runtime), typeof(IAny) };
+        private static Type[] ProtoStringString =
+            new Type[] { typeof(string), typeof(string) };
+
         public SubGenerator(ModuleGenerator module_generator,
                             List<ModuleGenerator.SubInfo> subroutines)
         {
@@ -261,16 +276,21 @@ namespace org.mbarbon.p.runtime
             return Variables[index];
         }
 
+        private Type TypeForSlot(Opcode.Sigil slot)
+        {
+            return slot == Opcode.Sigil.SCALAR ? typeof(Scalar) :
+                   slot == Opcode.Sigil.ARRAY  ? typeof(Array) :
+                   slot == Opcode.Sigil.HASH   ? typeof(Hash) :
+                                                 typeof(void);
+        }
+
         private ParameterExpression GetLexical(int index, Opcode.Sigil slot)
         {
             while (Lexicals.Count <= index)
                 Lexicals.Add(null);
             if (Lexicals[index] == null)
                 Lexicals[index] =
-                    Expression.Variable(slot == Opcode.Sigil.SCALAR ? typeof(Scalar) :
-                                     slot == Opcode.Sigil.ARRAY  ? typeof(Array) :
-                                     slot == Opcode.Sigil.HASH   ? typeof(Hash) :
-                                                                typeof(void));
+                    Expression.Variable(TypeForSlot(slot));
 
             return Lexicals[index];
         }
@@ -289,15 +309,8 @@ namespace org.mbarbon.p.runtime
 
             if (writable)
                 return item;
-
-            if (info.Slot == Opcode.Sigil.SCALAR)
-                return Expression.Convert(item, typeof(Scalar));
-            else if (info.Slot == Opcode.Sigil.ARRAY)
-                return Expression.Convert(item, typeof(Array));
-            else if (info.Slot == Opcode.Sigil.HASH)
-                return Expression.Convert(item, typeof(Hash));
             else
-                throw new System.Exception("Invalid slot " + info.Slot.ToString());
+                return Expression.Convert(item, TypeForSlot(info.Slot));
         }
 
         public LambdaExpression Generate(Subroutine sub, bool is_main)
@@ -322,8 +335,12 @@ namespace org.mbarbon.p.runtime
                 List<Expression> init_exps = new List<Expression>();
                 foreach (var lex in Lexicals)
                 {
-                    init_exps.Add(Expression.Assign(lex, Expression.New(lex.Type.GetConstructor(new Type[] { typeof(Runtime) }),
-                                                                 Runtime)));
+                    init_exps.Add(
+                        Expression.Assign(
+                            lex,
+                            Expression.New(
+                                lex.Type.GetConstructor(ProtoRuntime),
+                                Runtime)));
                 }
                 Blocks.Insert(0, Expression.Block(typeof(void), init_exps));
             }
@@ -350,18 +367,31 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_FRESH_STRING:
             case Opcode.OpNumber.OP_CONSTANT_STRING:
             {
-                var ctor = typeof(Scalar).GetConstructor(new Type[] { typeof(Runtime), typeof(string) });
-                return Expression.New(ctor, new Expression[] { Runtime, Expression.Constant(((ConstantString)op).Value) });
+                var ctor = typeof(Scalar).GetConstructor(ProtoRuntimeString);
+                var cs = (ConstantString)op;
+
+                return
+                    Expression.New(
+                        ctor,
+                        new Expression[] {
+                            Runtime,
+                            Expression.Constant(cs.Value) });
             }
             case Opcode.OpNumber.OP_CONSTANT_UNDEF:
             {
-                var ctor = typeof(Scalar).GetConstructor(new Type[] { typeof(Runtime) });
+                var ctor = typeof(Scalar).GetConstructor(ProtoRuntime);
+
                 return Expression.New(ctor, new Expression[] { Runtime });
             }
             case Opcode.OpNumber.OP_CONSTANT_INTEGER:
             {
-                var ctor = typeof(Scalar).GetConstructor(new Type[] { typeof(Runtime), typeof(int) });
-                var init = Expression.New(ctor, new Expression[] { ModuleGenerator.InitRuntime, Expression.Constant(((ConstantInt)op).Value) });
+                var ctor = typeof(Scalar).GetConstructor(ProtoRuntimeInt);
+                var ci = (ConstantInt)op;
+                var init =
+                    Expression.New(ctor,
+                                   new Expression[] {
+                                       ModuleGenerator.InitRuntime,
+                                       Expression.Constant(ci.Value) });
                 FieldInfo field = ModuleGenerator.AddField(init);
 
                 return Expression.Field(null, field);
@@ -400,29 +430,47 @@ namespace org.mbarbon.p.runtime
                 default:
                     throw new System.Exception(string.Format("Unhandled slot {0:D}", gop.Slot));
                 }
-                var gets = typeof(SymbolTable).GetMethod(name);
-                return Expression.Call(Expression.Field(Runtime, st), gets, Runtime, Expression.Constant(gop.Name));
+                return
+                    Expression.Call(
+                        Expression.Field(Runtime, st),
+                        typeof(SymbolTable).GetMethod(name),
+                        Runtime,
+                        Expression.Constant(gop.Name));
             }
             case Opcode.OpNumber.OP_MAKE_LIST:
             {
                 List<Expression> data = new List<Expression>();
                 foreach (var i in op.Childs)
                     data.Add(Generate(i));
-                return Expression.New(typeof(org.mbarbon.p.values.List).GetConstructor(new Type[] {typeof(Runtime), typeof(IAny[])}),
-                                    new Expression[] { Runtime, Expression.NewArrayInit(typeof(IAny), data) });
+                return
+                    Expression.New(
+                        typeof(org.mbarbon.p.values.List).GetConstructor(ProtoRuntimeIAny),
+                        new Expression[] {
+                            Runtime,
+                            Expression.NewArrayInit(typeof(IAny), data) });
             }
             case Opcode.OpNumber.OP_PRINT:
             {
-                return Expression.Call(typeof(Builtins).GetMethod("Print"), Runtime,
-                                     Expression.Convert(Generate(op.Childs[0]), typeof(org.mbarbon.p.values.List)));
+                return
+                    Expression.Call(
+                        typeof(Builtins).GetMethod("Print"),
+                        Runtime,
+                        Expression.Convert(
+                            Generate(op.Childs[0]),
+                            typeof(org.mbarbon.p.values.List)));
             }
             case Opcode.OpNumber.OP_END:
             {
-                return Expression.Return(SubLabel, Expression.Constant(null, typeof(IAny)), typeof(IAny));
+                return
+                    Expression.Return(
+                        SubLabel,
+                        Expression.Constant(null, typeof(IAny)),
+                        typeof(IAny));
             }
             case Opcode.OpNumber.OP_RETURN:
             {
-                Expression empty = Expression.New(typeof(org.mbarbon.p.values.List).GetConstructor(new Type[] { typeof(Runtime) }), Runtime);
+                Expression empty =
+                    Expression.New(typeof(org.mbarbon.p.values.List).GetConstructor(ProtoRuntime), Runtime);
                 if (op.Childs.Length == 0)
                 {
                     return Expression.Return(SubLabel, empty, typeof(IAny));
@@ -430,25 +478,42 @@ namespace org.mbarbon.p.runtime
                 else
                 {
                     ParameterExpression val = Expression.Variable(typeof(IAny), "ret");
-                    Expression assign = Expression.Assign(val, Generate(op.Childs[0]));
                     Expression iflist =
-                        Expression.Condition(Expression.Equal(Context, Expression.Constant(Opcode.Context.LIST)),
-                                           val, empty, typeof(IAny));
+                        Expression.Condition(
+                            Expression.Equal(
+                                Context,
+                                Expression.Constant(Opcode.Context.LIST)),
+                            val, empty, typeof(IAny));
                     Expression retscalar =
-                        Expression.Call(val, typeof(IAny).GetMethod("AsScalar"), Runtime);
+                        Expression.Call(
+                            val,
+                            typeof(IAny).GetMethod("AsScalar"),
+                            Runtime);
                     Expression ifscalar =
-                        Expression.Condition(Expression.Equal(Context, Expression.Constant(Opcode.Context.SCALAR)),
-                                           retscalar, iflist, typeof(IAny));
+                        Expression.Condition(
+                            Expression.Equal(
+                                Context,
+                                Expression.Constant(Opcode.Context.SCALAR)),
+                            retscalar, iflist, typeof(IAny));
 
-                    return Expression.Return(SubLabel, Expression.Block(typeof(IAny), new ParameterExpression[] { val },
-                                                                   new Expression[] { assign, ifscalar }),
-                                           typeof(IAny));
+                    return
+                        Expression.Return(
+                            SubLabel,
+                            Expression.Block(
+                                typeof(IAny), new ParameterExpression[] { val },
+                                new Expression[] {
+                                    Expression.Assign(val, Generate(op.Childs[0])),
+                                    ifscalar }),
+                            typeof(IAny));
                 }
             }
             case Opcode.OpNumber.OP_ASSIGN:
             {
-                return Expression.Call(Generate(op.Childs[0]), typeof(IAny).GetMethod("Assign"), Runtime,
-                                     Generate(op.Childs[1]));
+                return
+                    Expression.Call(
+                        Generate(op.Childs[0]),
+                        typeof(IAny).GetMethod("Assign"), Runtime,
+                        Generate(op.Childs[1]));
             }
             case Opcode.OpNumber.OP_GET:
             {
@@ -457,7 +522,7 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_SET:
             {
                 return Expression.Assign(GetVariable(((GetSet)op).Variable),
-                                       Generate(op.Childs[0]));
+                                         Generate(op.Childs[0]));
             }
             case Opcode.OpNumber.OP_JUMP:
             {
@@ -496,22 +561,35 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_LOG_NOT:
             {
-                return Expression.New(typeof(Scalar).GetConstructor(new Type[] { typeof(Runtime), typeof(bool) }), Runtime,
+                return Expression.New(typeof(Scalar).GetConstructor(ProtoRuntimeBool), Runtime,
                                       Expression.Not(Expression.Call(Generate(op.Childs[0]), typeof(IAny).GetMethod("AsBoolean"), Runtime)));
             }
             case Opcode.OpNumber.OP_DEFINED:
             {
-                return Expression.New(typeof(Scalar).GetConstructor(new Type[] { typeof(Runtime), typeof(bool) }), Runtime,
-                                    Expression.Call(Generate(op.Childs[0]), typeof(IAny).GetMethod("IsDefined"), Runtime));
+                return
+                    Expression.New(
+                        typeof(Scalar).GetConstructor(ProtoRuntimeBool),
+                        Runtime,
+                        Expression.Call(Generate(op.Childs[0]),
+                                        typeof(IAny).GetMethod("IsDefined"),
+                                        Runtime));
             }
             case Opcode.OpNumber.OP_CONCAT:
             {
-                Expression s1 = Expression.Call(Generate(op.Childs[0]),
-                                             typeof(IAny).GetMethod("AsString"), Runtime);
-                Expression s2 = Expression.Call(Generate(op.Childs[1]),
-                                             typeof(IAny).GetMethod("AsString"), Runtime);
-                return Expression.New(typeof(Scalar).GetConstructor(new Type[] { typeof(Runtime), typeof(string) }), Runtime,
-                                    Expression.Call(typeof(string).GetMethod("Concat", new Type[] { typeof(string), typeof(string) }), s1, s2));
+                Expression s1 =
+                    Expression.Call(Generate(op.Childs[0]),
+                                    typeof(IAny).GetMethod("AsString"),
+                                    Runtime);
+                Expression s2 =
+                    Expression.Call(Generate(op.Childs[1]),
+                                    typeof(IAny).GetMethod("AsString"),
+                                    Runtime);
+                return
+                    Expression.New(
+                        typeof(Scalar).GetConstructor(ProtoRuntimeString),
+                        Runtime,
+                        Expression.Call(
+                            typeof(string).GetMethod("Concat", ProtoStringString), s1, s2));
             }
             case Opcode.OpNumber.OP_CONCAT_ASSIGN:
             {
@@ -524,21 +602,21 @@ namespace org.mbarbon.p.runtime
                                               typeof(org.mbarbon.p.values.Array).GetMethod("GetCount"),
                                               Runtime);
                 Expression len_1 = Expression.Subtract(len, Expression.Constant(1));
-                return Expression.New(typeof(Scalar).GetConstructor(new Type[] {typeof(Runtime), typeof(int)}),
+                return Expression.New(typeof(Scalar).GetConstructor(ProtoRuntimeInt),
                                     new Expression[] { Runtime, len_1 });
             }
             case Opcode.OpNumber.OP_ADD:
             {
                 Expression sum = Expression.Add(Expression.Call(Generate(op.Childs[0]), typeof(IAny).GetMethod("AsFloat"), Runtime),
                                              Expression.Call(Generate(op.Childs[1]), typeof(IAny).GetMethod("AsFloat"), Runtime));
-                return Expression.New(typeof(Scalar).GetConstructor(new Type[] {typeof(Runtime), typeof(double)}),
+                return Expression.New(typeof(Scalar).GetConstructor(ProtoRuntimeDouble),
                                     new Expression[] { Runtime, sum });
             }
             case Opcode.OpNumber.OP_SUBTRACT:
             {
                 Expression sum = Expression.Subtract(Expression.Call(Generate(op.Childs[0]), typeof(IAny).GetMethod("AsFloat"), Runtime),
                                                   Expression.Call(Generate(op.Childs[1]), typeof(IAny).GetMethod("AsFloat"), Runtime));
-                return Expression.New(typeof(Scalar).GetConstructor(new Type[] {typeof(Runtime), typeof(double)}),
+                return Expression.New(typeof(Scalar).GetConstructor(ProtoRuntimeDouble),
                                     new Expression[] { Runtime, sum });
             }
             case Opcode.OpNumber.OP_ARRAY_ELEMENT:
@@ -579,8 +657,10 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_CALL:
             {
-                return Expression.Call(Generate(op.Childs[1]), typeof(Code).GetMethod("Call"),
-                                     Runtime, Context, Generate(op.Childs[0]));
+                return
+                    Expression.Call(
+                        Generate(op.Childs[1]), typeof(Code).GetMethod("Call"),
+                        Runtime, Context, Generate(op.Childs[0]));
             }
             case Opcode.OpNumber.OP_DEREFERENCE_SUB:
             {
@@ -623,11 +703,14 @@ namespace org.mbarbon.p.runtime
             var file = new System.IO.FileInfo(cu.FileName);
             AssemblyName asm_name = new AssemblyName(assembly_name != null ? assembly_name : file.Name);
             AssemblyBuilder asm_builder =
-                System.AppDomain.CurrentDomain.DefineDynamicAssembly(asm_name,
-                                                              AssemblyBuilderAccess.RunAndSave);
-            ModuleBuilder mod_builder = asm_builder.DefineDynamicModule(asm_name.Name, asm_name.Name + ".dll");
-            // FIXME should at least be the module name with which the file was loaded, in case
-            //       multiple modules are compiled to the same file; works for now
+                System.AppDomain.CurrentDomain.DefineDynamicAssembly(
+                    asm_name, AssemblyBuilderAccess.RunAndSave);
+            ModuleBuilder mod_builder =
+                asm_builder.DefineDynamicModule(asm_name.Name,
+                                                asm_name.Name + ".dll");
+            // FIXME should at least be the module name with which the
+            //       file was loaded, in case multiple modules are
+            //       compiled to the same file; works for now
             TypeBuilder perl_module = mod_builder.DefineType(file.Name, TypeAttributes.Public);
             ModuleGenerator perl_mod_generator = new ModuleGenerator(perl_module);
 
