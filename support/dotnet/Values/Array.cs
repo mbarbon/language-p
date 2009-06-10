@@ -3,80 +3,80 @@ using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
 {
-    public class Array : IAny
+    public class P5Array : IP5Any
     {       
-        public Array(Runtime runtime)
+        public P5Array(Runtime runtime)
         {
-            array = new List<IAny>();
+            array = new List<IP5Any>();
         }
 
-        public Array(Runtime runtime, IAny[] data)
+        public P5Array(Runtime runtime, IP5Any[] data)
         {
-            array = new List<IAny>(data);
+            array = new List<IP5Any>(data);
         }
 
         public int GetCount(Runtime runtime) { return array.Count; }
-        public IAny GetItem(Runtime runtime, int i) { return array[i]; }
-        public IAny GetItemOrUndef(Runtime runtime, IAny index)
+        public IP5Any GetItem(Runtime runtime, int i) { return array[i]; }
+        public IP5Any GetItemOrUndef(Runtime runtime, IP5Any index)
         {
             int i = index.AsInteger(runtime);
             if (array.Count > i)
                 return array[i];
-            return new Scalar(runtime);
+            return new P5Scalar(runtime);
         }
 
-        public IEnumerator<IAny> GetEnumerator()
+        public IEnumerator<IP5Any> GetEnumerator()
         {
             return array.GetEnumerator();
         }
 
-        public virtual void Push(Runtime runtime, IAny item)
+        public virtual void Push(Runtime runtime, IP5Any item)
         {
             array.Add(item);
         }
         
-        public virtual Scalar AsScalar(Runtime runtime) { return new Scalar(runtime, array.Count); }
+        public virtual P5Scalar AsScalar(Runtime runtime) { return new P5Scalar(runtime, array.Count); }
         public virtual string AsString(Runtime runtime) { return AsScalar(runtime).AsString(runtime); }
         public virtual int AsInteger(Runtime runtime) { return array.Count; }
         public virtual double AsFloat(Runtime runtime) { return array.Count; }        
         public virtual bool AsBoolean(Runtime runtime) { return array.Count != 0; }
         public virtual bool IsDefined(Runtime runtime) { return true; }
 
-        public virtual IAny Assign(Runtime runtime, IAny other)
+        public virtual IP5Any Assign(Runtime runtime, IP5Any other)
         {
             // FIXME multiple dispatch
-            Scalar s = other as Scalar;
-            Array a = other as Array;
+            P5Scalar s = other as P5Scalar;
+            P5Array a = other as P5Array;
             if (s != null)
             {
-                array = new List<IAny>(1);
+                array = new List<IP5Any>(1);
                 array[0] = s.Clone(runtime, 1);
             }
             else if (a != null)
             {
-                AssignIterator(runtime, ((Array)a.Clone(runtime, 1)).GetEnumerator());
+                AssignIterator(runtime, ((P5Array)a.Clone(runtime, 1)).GetEnumerator());
             }
 
             return this;
         }
 
-        public virtual IAny AssignIterator(Runtime runtime, IEnumerator<IAny> iter)
+        public virtual IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> iter)
         {
-            array = new List<IAny>();
+            array = new List<IP5Any>();
             while (iter.MoveNext())
                 array.Add(iter.Current);
 
             return this;
         }
 
-        public virtual IAny ConcatAssign(Runtime runtime, IAny other)
+        public virtual IP5Any ConcatAssign(Runtime runtime, IP5Any other)
         {
             throw new System.InvalidOperationException();
         }
 
-        public virtual IAny Clone(Runtime runtime, int depth)
+        public virtual IP5Any Clone(Runtime runtime, int depth)
         {
-            Array clone = new Array(runtime);
+            P5Array clone = new P5Array(runtime);
             clone.array.Capacity = array.Count;
 
             for (int i = 0; i < array.Count; ++i)
@@ -90,11 +90,11 @@ namespace org.mbarbon.p.values
             return clone;
         }
 
-        public virtual Code DereferenceSubroutine(Runtime runtime)
+        public virtual P5Code DereferenceSubroutine(Runtime runtime)
         {
             throw new System.InvalidOperationException("Not a reference");
         }
         
-        protected List<IAny> array;
+        protected List<IP5Any> array;
     }
 }

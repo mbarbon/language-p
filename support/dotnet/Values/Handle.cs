@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
 {
-    public class Handle : IAny
+    public class P5Handle : IP5Any
     {
-        public Handle(Runtime runtime)
+        public P5Handle(Runtime runtime)
         {
         }
 
-        public int Write(Runtime runtime, IAny scalar, int offset, int length)
+        public int Write(Runtime runtime, IP5Any scalar, int offset, int length)
         {
             // FIXME cheating
             System.Console.Write(scalar.AsString(runtime));
@@ -18,34 +18,34 @@ namespace org.mbarbon.p.values
         }
 
         // FIXME proper implementation
-        public virtual Scalar AsScalar(Runtime runtime) { throw new System.NotImplementedException(); }
+        public virtual P5Scalar AsScalar(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual string AsString(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual int AsInteger(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual double AsFloat(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual bool AsBoolean(Runtime runtime) { return true; }
         public virtual bool IsDefined(Runtime runtime) { return true; }
 
-        public virtual IAny Clone(Runtime runtime, int depth)
+        public virtual IP5Any Clone(Runtime runtime, int depth)
         {
-            return new Handle(runtime);
+            return new P5Handle(runtime);
         }
 
-        public virtual IAny Assign(Runtime runtime, IAny other)
+        public virtual IP5Any Assign(Runtime runtime, IP5Any other)
         {
             throw new System.NotImplementedException();
         }
 
-        public virtual IAny ConcatAssign(Runtime runtime, IAny other)
+        public virtual IP5Any ConcatAssign(Runtime runtime, IP5Any other)
         {
             throw new System.InvalidOperationException();
         }
 
-        public virtual IAny AssignIterator(Runtime runtime, IEnumerator<IAny> iter)
+        public virtual IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> iter)
         {
-            return Assign(runtime, iter.MoveNext() ? iter.Current : new Scalar(runtime));
+            return Assign(runtime, iter.MoveNext() ? iter.Current : new P5Scalar(runtime));
         }
 
-        public virtual Code DereferenceSubroutine(Runtime runtime)
+        public virtual P5Code DereferenceSubroutine(Runtime runtime)
         {
             throw new System.InvalidOperationException("Not a reference");
         }

@@ -4,23 +4,23 @@ using org.mbarbon.p.runtime;
 
 namespace org.mbarbon.p.values
 {
-    public class ScratchPad : List<IAny>
+    public class P5ScratchPad : List<IP5Any>
     {
-        public ScratchPad()
+        public P5ScratchPad()
         {
             Lexicals = new List<LexicalInfo>();
         }
 
-        public ScratchPad(IEnumerable<IAny> values, List<LexicalInfo> lexicals)
+        public P5ScratchPad(IEnumerable<IP5Any> values, List<LexicalInfo> lexicals)
             : base(values)
         {
             Lexicals = lexicals;
         }
 
-        public static ScratchPad CreateSubPad(LexicalInfo[] lexicals,
-                                              ScratchPad main)
+        public static P5ScratchPad CreateSubPad(LexicalInfo[] lexicals,
+                                                P5ScratchPad main)
         {
-            var pad = new ScratchPad();
+            var pad = new P5ScratchPad();
 
             foreach (var lex in lexicals)
             {
@@ -47,9 +47,9 @@ namespace org.mbarbon.p.values
                 Lexicals[info.Index] = info;
         }
 
-        public ScratchPad NewScope(Runtime runtime)
+        public P5ScratchPad NewScope(Runtime runtime)
         {
-            ScratchPad scope = new ScratchPad(this, Lexicals);
+            P5ScratchPad scope = new P5ScratchPad(this, Lexicals);
 
             foreach (var lex in Lexicals)
             {
@@ -61,19 +61,19 @@ namespace org.mbarbon.p.values
                 while (scope.Count <= lex.Index)
                     scope.Add(null);
                 if (lex.Slot == Opcode.Sigil.SCALAR)
-                    scope[lex.Index] = new Scalar(runtime);
+                    scope[lex.Index] = new P5Scalar(runtime);
                 else if (lex.Slot == Opcode.Sigil.ARRAY)
-                    scope[lex.Index] = new Array(runtime);
+                    scope[lex.Index] = new P5Array(runtime);
                 else if (lex.Slot == Opcode.Sigil.HASH)
-                    scope[lex.Index] = new Hash(runtime);
+                    scope[lex.Index] = new P5Hash(runtime);
             }
 
             return scope;
         }
 
-        public ScratchPad CloseOver(Runtime runtime, ScratchPad outer)
+        public P5ScratchPad CloseOver(Runtime runtime, P5ScratchPad outer)
         {
-            ScratchPad closure = new ScratchPad(this, Lexicals);
+            P5ScratchPad closure = new P5ScratchPad(this, Lexicals);
 
             foreach (var lex in Lexicals)
             {
@@ -85,15 +85,6 @@ namespace org.mbarbon.p.values
             }
 
             return closure;
-        }
-
-        public bool HasLexicalFromMain()
-        {
-            foreach (var lex in Lexicals)
-                if (lex.FromMain)
-                    return true;
-
-            return false;
         }
 
         private List<LexicalInfo> Lexicals;

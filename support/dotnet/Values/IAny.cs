@@ -3,25 +3,25 @@ using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
 {
-    public interface IReferrable
+    public interface IP5Referrable
     {
     }
 
-    public interface IAny
+    public interface IP5Any
     {
-        Scalar AsScalar(Runtime runtime);
+        P5Scalar AsScalar(Runtime runtime);
         string AsString(Runtime runtime);
         int AsInteger(Runtime runtime);
         double AsFloat(Runtime runtime);
         bool AsBoolean(Runtime runtime);
         bool IsDefined(Runtime runtime);
 
-        IAny Assign(Runtime runtime, IAny other);
-        IAny AssignIterator(Runtime runtime, IEnumerator<IAny> e);
-        IAny ConcatAssign(Runtime runtime, IAny other);
+        IP5Any Assign(Runtime runtime, IP5Any other);
+        IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> e);
+        IP5Any ConcatAssign(Runtime runtime, IP5Any other);
 
-        IAny Clone(Runtime runtime, int depth);
+        IP5Any Clone(Runtime runtime, int depth);
 
-        Code DereferenceSubroutine(Runtime runtime);
+        P5Code DereferenceSubroutine(Runtime runtime);
     }
 }

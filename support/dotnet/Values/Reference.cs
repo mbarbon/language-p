@@ -2,16 +2,16 @@ using Runtime = org.mbarbon.p.runtime.Runtime;
 
 namespace org.mbarbon.p.values
 {
-    public class Reference : IScalarBody
+    public class P5Reference : IP5ScalarBody
     {
-        public Reference(Runtime runtime, IReferrable val)
+        public P5Reference(Runtime runtime, IP5Referrable val)
         {
             referred = val;
         }
 
-        public virtual IScalarBody CloneBody(Runtime runtime)
+        public virtual IP5ScalarBody CloneBody(Runtime runtime)
         {
-            return new Reference(runtime, referred);
+            return new P5Reference(runtime, referred);
         }
 
         public virtual string AsString(Runtime runtime)
@@ -34,9 +34,9 @@ namespace org.mbarbon.p.values
             return true;
         }
 
-        public virtual Code DereferenceSubroutine(Runtime runtime)
+        public virtual P5Code DereferenceSubroutine(Runtime runtime)
         {
-            Code val = referred as Code;
+            P5Code val = referred as P5Code;
 
             if (val != null)
                 return val;
@@ -44,6 +44,6 @@ namespace org.mbarbon.p.values
                 throw new System.Exception("Not a CODE reference");
         }
 
-        private IReferrable referred;
+        private IP5Referrable referred;
     }
 }

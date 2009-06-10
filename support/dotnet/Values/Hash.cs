@@ -3,34 +3,34 @@ using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
 {
-    public class Hash : IAny
+    public class P5Hash : IP5Any
     {       
-        public Hash(Runtime runtime)
+        public P5Hash(Runtime runtime)
         {
-            hash = new Dictionary<string, IAny>();
+            hash = new Dictionary<string, IP5Any>();
         }
 
-        public IAny GetItemOrUndef(Runtime runtime, IAny key)
+        public IP5Any GetItemOrUndef(Runtime runtime, IP5Any key)
         {
             string k = key.AsString(runtime);
-            IAny v = null;
+            IP5Any v = null;
             if (hash.TryGetValue(k, out v))
                 return v;
-            return new Scalar(runtime);
+            return new P5Scalar(runtime);
         }
 
-        public virtual Scalar AsScalar(Runtime runtime) { throw new System.NotImplementedException(); }
+        public virtual P5Scalar AsScalar(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual int AsInteger(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual double AsFloat(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual string AsString(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual bool AsBoolean(Runtime runtime) { return hash.Count != 0; }
         public virtual bool IsDefined(Runtime runtime) { return hash.Count != 0; }
 
-        public virtual IAny Assign(Runtime runtime, IAny other)
+        public virtual IP5Any Assign(Runtime runtime, IP5Any other)
         {
             // FIXME multiple dispatch
-            Array a = other as Array;
-            Hash h = other as Hash;
+            P5Array a = other as P5Array;
+            P5Hash h = other as P5Hash;
 
             if (a != null)
                 return AssignIterator(runtime, a.GetEnumerator());
@@ -42,14 +42,14 @@ namespace org.mbarbon.p.values
             return this;
         }
 
-        public virtual IAny AssignIterator(Runtime runtime, IEnumerator<IAny> e)
+        public virtual IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> e)
         {
             hash.Clear();
             while (e.MoveNext())
             {
-                IAny k = e.Current;
+                IP5Any k = e.Current;
                 e.MoveNext();
-                IAny v = e.Current;
+                IP5Any v = e.Current;
 
                 hash[k.AsString(runtime)] = v;
             }
@@ -57,11 +57,11 @@ namespace org.mbarbon.p.values
             return this;
         }
 
-        public virtual IAny ConcatAssign(Runtime runtime, IAny other) { throw new System.InvalidOperationException(); }
+        public virtual IP5Any ConcatAssign(Runtime runtime, IP5Any other) { throw new System.InvalidOperationException(); }
 
-        public virtual IAny Clone(Runtime runtime, int depth)
+        public virtual IP5Any Clone(Runtime runtime, int depth)
         {
-            Hash clone = new Hash(runtime);
+            P5Hash clone = new P5Hash(runtime);
 
             foreach (var e in hash)
             {
@@ -74,11 +74,11 @@ namespace org.mbarbon.p.values
             return clone;
         }
 
-        public virtual Code DereferenceSubroutine(Runtime runtime)
+        public virtual P5Code DereferenceSubroutine(Runtime runtime)
         {
             throw new System.InvalidOperationException("Not a reference");
         }
 
-        private Dictionary<string, IAny> hash;
+        private Dictionary<string, IP5Any> hash;
     }
 }

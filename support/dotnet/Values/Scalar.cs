@@ -3,82 +3,82 @@ using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
 {   
-    public class Scalar : IAny
+    public class P5Scalar : IP5Any
     {       
-        public Scalar(Runtime runtime) : this(new Undef(runtime))
+        public P5Scalar(Runtime runtime) : this(new P5Undef(runtime))
         {
         }
 
-        private Scalar(IScalarBody b)
+        private P5Scalar(IP5ScalarBody b)
         {
             body = b;
         }
         
-        public Scalar(Runtime runtime, string val) : this(new StringNumber(runtime, val)) {}
-        public Scalar(Runtime runtime, int val) : this(new StringNumber(runtime, val)) {}
-        public Scalar(Runtime runtime, double val) : this(new StringNumber(runtime, val)) {}
-        public Scalar(Runtime runtime, bool val)
-            : this(val ? new StringNumber(runtime, 1) : new StringNumber(runtime, "")) {}
-        public Scalar(Runtime runtime, IReferrable val) : this(new Reference(runtime, val)) {}
+        public P5Scalar(Runtime runtime, string val) : this(new P5StringNumber(runtime, val)) {}
+        public P5Scalar(Runtime runtime, int val) : this(new P5StringNumber(runtime, val)) {}
+        public P5Scalar(Runtime runtime, double val) : this(new P5StringNumber(runtime, val)) {}
+        public P5Scalar(Runtime runtime, bool val)
+            : this(val ? new P5StringNumber(runtime, 1) : new P5StringNumber(runtime, "")) {}
+        public P5Scalar(Runtime runtime, IP5Referrable val) : this(new P5Reference(runtime, val)) {}
 
-        public virtual IAny Assign(Runtime runtime, IAny other)
+        public virtual IP5Any Assign(Runtime runtime, IP5Any other)
         {
             body = other.AsScalar(runtime).body.CloneBody(runtime);
 
             return this;
         }
 
-        public virtual IAny AssignIterator(Runtime runtime, IEnumerator<IAny> iter)
+        public virtual IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> iter)
         {
             if (iter.MoveNext())
                 Assign(runtime, iter.Current);
             else
-                body = new Undef(runtime);
+                body = new P5Undef(runtime);
 
             return this;
         }
 
-        public virtual IAny ConcatAssign(Runtime runtime, IAny other)
+        public virtual IP5Any ConcatAssign(Runtime runtime, IP5Any other)
         {
-            StringNumber sn = body as StringNumber;
-            if (sn == null || (sn.flags & StringNumber.HasString) == 0)
-                body = sn = new StringNumber(runtime, body.AsString(runtime));
+            P5StringNumber sn = body as P5StringNumber;
+            if (sn == null || (sn.flags & P5StringNumber.HasString) == 0)
+                body = sn = new P5StringNumber(runtime, body.AsString(runtime));
             else
-                sn.flags = StringNumber.HasString;
+                sn.flags = P5StringNumber.HasString;
 
             sn.stringValue = sn.stringValue + other.AsScalar(runtime).AsString(runtime);
 
             return this;
         }
 
-        public virtual Scalar AsScalar(Runtime runtime) { return this; }
+        public virtual P5Scalar AsScalar(Runtime runtime) { return this; }
         public virtual string AsString(Runtime runtime) { return body.AsString(runtime); }
         public virtual int AsInteger(Runtime runtime) { return body.AsInteger(runtime); }
         public virtual double AsFloat(Runtime runtime) { return body.AsFloat(runtime); }
         public virtual bool AsBoolean(Runtime runtime) { return body.AsBoolean(runtime); }
-        public virtual bool IsDefined(Runtime runtime) { return !(body is Undef); }
+        public virtual bool IsDefined(Runtime runtime) { return !(body is P5Undef); }
 
-        public virtual IAny Clone(Runtime runtime, int depth)
+        public virtual IP5Any Clone(Runtime runtime, int depth)
         {
-            return new Scalar(body.CloneBody(runtime));
+            return new P5Scalar(body.CloneBody(runtime));
         }
 
-        public virtual Code DereferenceSubroutine(Runtime runtime)
+        public virtual P5Code DereferenceSubroutine(Runtime runtime)
         {
             return body.DereferenceSubroutine(runtime);
         }
 
-        private IScalarBody body;
+        private IP5ScalarBody body;
     }
 
-    public interface IScalarBody
+    public interface IP5ScalarBody
     {
-        IScalarBody CloneBody(Runtime runtime);
+        IP5ScalarBody CloneBody(Runtime runtime);
         string AsString(Runtime runtime);
         int AsInteger(Runtime runtime);
         double AsFloat(Runtime runtime);
         bool AsBoolean(Runtime runtime);
 
-        Code DereferenceSubroutine(Runtime runtime);
+        P5Code DereferenceSubroutine(Runtime runtime);
     }
 }

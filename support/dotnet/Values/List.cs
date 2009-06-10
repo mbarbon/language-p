@@ -3,35 +3,35 @@ using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
 {   
-    public class List : Array
+    public class P5List : P5Array
     {    
-        public List(Runtime runtime) : base(runtime)
+        public P5List(Runtime runtime) : base(runtime)
         {
         }
 
-        public List(Runtime runtime, IAny[] data) : base(runtime, data)
+        public P5List(Runtime runtime, IP5Any[] data) : base(runtime, data)
         {
         }
 
-        public override Scalar AsScalar(Runtime runtime)
+        public override P5Scalar AsScalar(Runtime runtime)
         {
-            return array.Count == 0 ? new Scalar(runtime) : array[array.Count - 1].AsScalar(runtime);
+            return array.Count == 0 ? new P5Scalar(runtime) : array[array.Count - 1].AsScalar(runtime);
         }
 
-        public override IAny Assign(Runtime runtime, IAny other)
+        public override IP5Any Assign(Runtime runtime, IP5Any other)
         {
             // FIXME multiple dispatch
-            Scalar s = other as Scalar;
-            Array a = other as Array;
-            IEnumerator<IAny> e = null;
+            P5Scalar s = other as P5Scalar;
+            P5Array a = other as P5Array;
+            IEnumerator<IP5Any> e = null;
 
             if (s != null)
             {
-                e = new List<IAny>(new IAny[] { s }).GetEnumerator();
+                e = new List<IP5Any>(new IP5Any[] { s }).GetEnumerator();
             }
             else if (a != null)
             {
-                e = ((Array)a.Clone(runtime, 1)).GetEnumerator();
+                e = ((P5Array)a.Clone(runtime, 1)).GetEnumerator();
             }
 
             foreach (var i in this)

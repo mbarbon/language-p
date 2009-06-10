@@ -2,31 +2,31 @@ using Runtime = org.mbarbon.p.runtime.Runtime;
 
 namespace org.mbarbon.p.values
 {
-    public class StringNumber : IScalarBody
+    public class P5StringNumber : IP5ScalarBody
     {
         internal const int HasString  = 1;
         internal const int HasFloat   = 2;
         internal const int HasInteger = 4;
         
-        public StringNumber(Runtime runtime, int val)
+        public P5StringNumber(Runtime runtime, int val)
         {
             flags = HasInteger;
             integerValue = val;
         }
 
-        public StringNumber(Runtime runtime, string val)
+        public P5StringNumber(Runtime runtime, string val)
         {
             flags = HasString;
             stringValue = val;
         }
 
-        public StringNumber(Runtime runtime, double val)
+        public P5StringNumber(Runtime runtime, double val)
         {
             flags = HasFloat;
             floatValue = val;
         }
 
-        private StringNumber(Runtime runtime, int f, int ival, string sval, double fval)
+        private P5StringNumber(Runtime runtime, int f, int ival, string sval, double fval)
         {
             flags = f;
             integerValue = ival;
@@ -68,12 +68,12 @@ namespace org.mbarbon.p.values
                    || ((flags & HasFloat) != 0 && floatValue != 0);
         }
 
-        public virtual IScalarBody CloneBody(Runtime runtime)
+        public virtual IP5ScalarBody CloneBody(Runtime runtime)
         {
-            return new StringNumber(runtime, flags, integerValue, stringValue, floatValue);
+            return new P5StringNumber(runtime, flags, integerValue, stringValue, floatValue);
         }
 
-        public virtual Code DereferenceSubroutine(Runtime runtime)
+        public virtual P5Code DereferenceSubroutine(Runtime runtime)
         {
             throw new System.InvalidOperationException("Not a reference");
         }

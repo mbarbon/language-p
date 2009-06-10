@@ -2,15 +2,15 @@ using Runtime = org.mbarbon.p.runtime.Runtime;
 
 namespace org.mbarbon.p.values
 {
-    public class Undef : IScalarBody
+    public class P5Undef : IP5ScalarBody
     {
-        public Undef(Runtime runtime)
+        public P5Undef(Runtime runtime)
         {
         }
 
-        public virtual IScalarBody CloneBody(Runtime runtime)
+        public virtual IP5ScalarBody CloneBody(Runtime runtime)
         {
-            return new Undef(runtime);
+            return new P5Undef(runtime);
         }
 
         public virtual string AsString(Runtime runtime) { return ""; }
@@ -18,7 +18,7 @@ namespace org.mbarbon.p.values
         public virtual double AsFloat(Runtime runtime) { return 0.0; }
         public virtual bool AsBoolean(Runtime runtime) { return false; }
 
-        public virtual Code DereferenceSubroutine(Runtime runtime)
+        public virtual P5Code DereferenceSubroutine(Runtime runtime)
         {
             throw new System.InvalidOperationException("Not a reference");
         }

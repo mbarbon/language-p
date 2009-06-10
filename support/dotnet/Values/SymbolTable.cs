@@ -3,89 +3,89 @@ using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
 {
-    public class SymbolTable
+    public class P5SymbolTable
     {       
-        public SymbolTable(Runtime runtime)
+        public P5SymbolTable(Runtime runtime)
         {
-            symbols = new Dictionary<string, Typeglob>();
+            symbols = new Dictionary<string, P5Typeglob>();
         }
 
-        public Scalar GetOrCreateScalar(Runtime runtime, string name)
+        public P5Scalar GetOrCreateScalar(Runtime runtime, string name)
         {
             var glob = GetOrCreateGlob(runtime, name);
-            Scalar scalar;
+            P5Scalar scalar;
             if ((scalar = glob.Scalar) == null)
-                scalar = glob.Scalar = new Scalar(runtime);
+                scalar = glob.Scalar = new P5Scalar(runtime);
 
             return scalar;
         }
 
-        public Array GetOrCreateArray(Runtime runtime, string name)
+        public P5Array GetOrCreateArray(Runtime runtime, string name)
         {
             var glob = GetOrCreateGlob(runtime, name);
-            Array array;
+            P5Array array;
             if ((array = glob.Array) == null)
-                array = glob.Array = new Array(runtime);
+                array = glob.Array = new P5Array(runtime);
 
             return array;
         }
 
-        public Hash GetOrCreateHash(Runtime runtime, string name)
+        public P5Hash GetOrCreateHash(Runtime runtime, string name)
         {
             var glob = GetOrCreateGlob(runtime, name);
-            Hash hash;
+            P5Hash hash;
             if ((hash = glob.Hash) == null)
-                hash = glob.Hash = new Hash(runtime);
+                hash = glob.Hash = new P5Hash(runtime);
 
             return hash;
         }
 
-        public Handle GetOrCreateHandle(Runtime runtime, string name)
+        public P5Handle GetOrCreateHandle(Runtime runtime, string name)
         {
             var glob = GetOrCreateGlob(runtime, name);
-            Handle handle;
+            P5Handle handle;
             if ((handle = glob.Handle) == null)
-                handle = glob.Handle = new Handle(runtime);
+                handle = glob.Handle = new P5Handle(runtime);
 
             return handle;
         }
 
-        public Typeglob GetOrCreateGlob(Runtime runtime, string name)
+        public P5Typeglob GetOrCreateGlob(Runtime runtime, string name)
         {
-            Typeglob glob;
+            P5Typeglob glob;
             if (!symbols.TryGetValue(name, out glob))
             {
-                glob = new Typeglob(runtime);
+                glob = new P5Typeglob(runtime);
                 symbols.Add(name, glob);
             }
 
             return glob;
         }
 
-        public Code GetCode(Runtime runtime, string name)
+        public P5Code GetCode(Runtime runtime, string name)
         {
-            Typeglob glob;
+            P5Typeglob glob;
             if (symbols.TryGetValue(name, out glob))
                 return glob.Code;
 
             return null;
         }
 
-        public void SetCode(Runtime runtime, string name, Code code)
+        public void SetCode(Runtime runtime, string name, P5Code code)
         {
-            Typeglob glob = GetOrCreateGlob(runtime, name);
+            P5Typeglob glob = GetOrCreateGlob(runtime, name);
             glob.Code = code;
         }
 
-        protected Dictionary<string, Typeglob> symbols;
+        protected Dictionary<string, P5Typeglob> symbols;
     }
 
-    public class MainSymbolTable : SymbolTable
+    public class P5MainSymbolTable : P5SymbolTable
     {
-        public MainSymbolTable(Runtime runtime) : base(runtime)
+        public P5MainSymbolTable(Runtime runtime) : base(runtime)
         {
             var stdout = GetOrCreateGlob(runtime, "STDOUT");
-            stdout.Handle = new Handle(runtime);
+            stdout.Handle = new P5Handle(runtime);
         }
     }
 }

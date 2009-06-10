@@ -3,27 +3,22 @@ using org.mbarbon.p.values;
 
 namespace org.mbarbon.p.values
 {
-    public class Code : IReferrable
+    public class P5Code : IP5Referrable
     {       
-        public Code(System.Delegate code, bool main)
+        public P5Code(System.Delegate code, bool main)
         {
             subref = (Sub)code;
             scratchpad = null;
             is_main = main;
         }
 
-        public IAny Call(Runtime runtime, Opcode.Context context, Array args)
+        public IP5Any Call(Runtime runtime, Opcode.Context context, P5Array args)
         {
-            ScratchPad pad = scratchpad;
+            P5ScratchPad pad = scratchpad;
             if (scratchpad != null && !is_main)
                 pad = scratchpad.NewScope(runtime);
 
             return subref(runtime, context, pad, args);
-        }
-
-        public bool HasLexicalFromMain()
-        {
-            return scratchpad != null && scratchpad.HasLexicalFromMain();
         }
 
         public void NewScope(Runtime runtime)
@@ -32,25 +27,25 @@ namespace org.mbarbon.p.values
                 scratchpad = scratchpad.NewScope(runtime);
         }
 
-        public Scalar MakeClosure(Runtime runtime, ScratchPad outer)
+        public P5Scalar MakeClosure(Runtime runtime, P5ScratchPad outer)
         {
-            Code closure = new Code(subref, is_main);
+            P5Code closure = new P5Code(subref, is_main);
             closure.scratchpad = scratchpad.CloseOver(runtime, outer);
 
-            return new Scalar(runtime, closure);
+            return new P5Scalar(runtime, closure);
         }
 
-        public ScratchPad ScratchPad
+        public P5ScratchPad ScratchPad
         {
             get { return scratchpad; }
             set { scratchpad = value; }
         }
 
-        public delegate IAny Sub(Runtime runtime, Opcode.Context context,
-                                 ScratchPad pad, Array args);
+        public delegate IP5Any Sub(Runtime runtime, Opcode.Context context,
+                                   P5ScratchPad pad, P5Array args);
 
         private Sub subref;
-        private ScratchPad scratchpad;
+        private P5ScratchPad scratchpad;
         private bool is_main;
     }
 }
