@@ -248,8 +248,8 @@ namespace org.mbarbon.p.runtime
             new Type[] { typeof(Runtime), typeof(bool) };
         private static Type[] ProtoRuntimeDouble =
             new Type[] { typeof(Runtime), typeof(double) };
-        private static Type[] ProtoRuntimeIP5Any =
-            new Type[] { typeof(Runtime), typeof(IP5Any) };
+        private static Type[] ProtoRuntimeIP5AnyArray =
+            new Type[] { typeof(Runtime), typeof(IP5Any[]) };
         private static Type[] ProtoStringString =
             new Type[] { typeof(string), typeof(string) };
 
@@ -443,7 +443,7 @@ namespace org.mbarbon.p.runtime
                     data.Add(Generate(i));
                 return
                     Expression.New(
-                        typeof(P5List).GetConstructor(ProtoRuntimeIP5Any),
+                        typeof(P5List).GetConstructor(ProtoRuntimeIP5AnyArray),
                         new Expression[] {
                             Runtime,
                             Expression.NewArrayInit(typeof(IP5Any), data) });
