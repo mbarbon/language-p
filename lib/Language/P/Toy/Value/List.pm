@@ -22,7 +22,8 @@ sub push {
     my( $self, @values ) = @_;
 
     foreach my $value ( @values ) {
-        if( $value->isa( 'Language::P::Toy::Value::Array' ) ) {
+        if(    $value->isa( 'Language::P::Toy::Value::Array' )
+            || $value->isa( 'Language::P::Toy::Value::Hash' ) ) {
             for( my $it = $value->iterator; $it->next; ) {
                 push @{$self->{array}}, $it->item;
             }

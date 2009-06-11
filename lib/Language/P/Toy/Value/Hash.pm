@@ -20,7 +20,7 @@ sub new {
 sub clone {
     my( $self, $level ) = @_;
 
-    my $clone = ref( $self )->new( { array  => { @{$self->{hash}} },
+    my $clone = ref( $self )->new( { hash  => { %{$self->{hash}} },
                                      } );
 
     if( $level > 0 ) {
@@ -82,6 +82,17 @@ sub has_item {
     my( $self, $key ) = @_;
 
     return exists $self->{hash}{$key};
+}
+
+sub iterator {
+    my( $self ) = @_;
+
+    return Language::P::Toy::Value::Array->new
+               ( { array => [ map { Language::P::Toy::Value::Scalar
+                                        ->new_string( $_ ),
+                                    $self->{hash}->{$_} }
+                                  keys %{$self->hash} ] } )
+               ->iterator;
 }
 
 1;
