@@ -819,6 +819,24 @@ sub o_dereference_scalar {
     return $pc + 1;
 }
 
+sub o_dereference_array {
+    my( $op, $runtime, $pc ) = @_;
+    my $ref = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $ref->dereference_array;
+
+    return $pc + 1;
+}
+
+sub o_dereference_hash {
+    my( $op, $runtime, $pc ) = @_;
+    my $ref = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $ref->dereference_hash;
+
+    return $pc + 1;
+}
+
 sub o_dereference_subroutine {
     my( $op, $runtime, $pc ) = @_;
     my $ref = pop @{$runtime->{_stack}};

@@ -915,14 +915,16 @@ sub _subscript {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
-    die if $tree->reference;
-
     $self->dispatch( $tree->subscript );
     $self->dispatch( $tree->subscripted );
 
     if( $tree->type == VALUE_ARRAY ) {
+        _add_bytecode $self, opcode_n( OP_DEREFERENCE_ARRAY )
+          if $tree->reference;
         _add_bytecode $self, opcode_n( OP_ARRAY_ELEMENT );
     } elsif( $tree->type == VALUE_HASH ) {
+        _add_bytecode $self, opcode_n( OP_DEREFERENCE_HASH )
+          if $tree->reference;
         _add_bytecode $self, opcode_n( OP_HASH_ELEMENT );
     } else {
         die $tree->type;
