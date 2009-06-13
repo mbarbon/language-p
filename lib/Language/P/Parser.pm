@@ -1275,8 +1275,12 @@ sub _parse_indirobj_maybe_subscripts {
     # simplify the code below by resolving the symbol here, so a
     # dereference will be constructed below (probably an unary
     # operator would be more consistent)
-    if( $sigil == VALUE_ARRAY_LENGTH && $is_id ) {
-        $indir = _find_symbol( $self, VALUE_ARRAY, $indir->[O_VALUE], $indir->[O_ID_TYPE] );
+    if( $sigil == VALUE_ARRAY_LENGTH ) {
+        $indir = $is_id ? _find_symbol( $self, VALUE_ARRAY, $indir->[O_VALUE], $indir->[O_ID_TYPE] ) :
+                          Language::P::ParseTree::Dereference->new
+                              ( { left  => $indir,
+                                  op    => OP_DEREFERENCE_ARRAY,
+                                  } );
         $is_id = 0;
     }
 
