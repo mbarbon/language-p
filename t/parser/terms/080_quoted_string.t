@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 23;
+use Test::More tests => 25;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -344,6 +344,35 @@ components:
       name: x
       sigil: VALUE_ARRAY
     op: OP_ARRAY_LENGTH
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+"$#{2}";
+EOP
+--- !parsetree:QuotedString
+components:
+  - !parsetree:Dereference
+    context: CXT_SCALAR
+    left: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: 2
+      sigil: VALUE_ARRAY
+    op: OP_ARRAY_LENGTH
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+"$# {2}";
+EOP
+--- !parsetree:QuotedString
+components:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: '#'
+    sigil: VALUE_SCALAR
+  - !parsetree:Constant
+    context: CXT_SCALAR
+    flags: CONST_STRING
+    value: ' {2}'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
