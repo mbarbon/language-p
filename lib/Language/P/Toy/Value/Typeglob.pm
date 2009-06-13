@@ -41,6 +41,24 @@ sub as_boolean_int {
     return 1;
 }
 
+sub dereference_scalar {
+    my( $self ) = @_;
+
+    return $self->body->scalar || Language::P::Toy::Value::Undef->new;
+}
+
+sub dereference_array {
+    my( $self ) = @_;
+
+    return $self->body->array || Language::P::Toy::Value::Undef->new;
+}
+
+sub dereference_hash {
+    my( $self ) = @_;
+
+    return $self->body->hash || Language::P::Toy::Value::Undef->new;
+}
+
 package Language::P::Toy::Value::Typeglob::Body;
 
 use strict;

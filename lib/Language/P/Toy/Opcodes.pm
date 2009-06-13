@@ -837,6 +837,15 @@ sub o_dereference_hash {
     return $pc + 1;
 }
 
+sub o_dereference_glob {
+    my( $op, $runtime, $pc ) = @_;
+    my $ref = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $ref->dereference_glob;
+
+    return $pc + 1;
+}
+
 sub o_dereference_subroutine {
     my( $op, $runtime, $pc ) = @_;
     my $ref = pop @{$runtime->{_stack}};

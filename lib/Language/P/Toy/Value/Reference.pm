@@ -55,7 +55,7 @@ sub dereference_subroutine {
     return $self->{reference};
 }
 
-sub dereference_typeglob {
+sub dereference_glob {
     my( $self ) = @_;
 
     die unless $self->{reference}->isa( 'Language::P::Toy::Value::Typeglob' );
