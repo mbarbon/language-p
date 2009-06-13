@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 14;
+use Test::More tests => 15;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -17,6 +17,18 @@ left: !parsetree:Symbol
   name: a
   sigil: VALUE_SCALAR
 op: OP_DEREFERENCE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+$#$a
+EOP
+--- !parsetree:Dereference
+context: CXT_VOID
+left: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: a
+  sigil: VALUE_SCALAR
+op: OP_ARRAY_LENGTH
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

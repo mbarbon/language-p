@@ -468,7 +468,9 @@ sub lex_quote {
                     $v .= $qc;
                 }
             } elsif( $c =~ /^[\$\@]$/ && $self->quote->{interpolate} ) {
-                if( $c eq '$' && substr( $$buffer, 0, 2 ) eq '#{' ) {
+                if(    $c eq '$'
+                    && (    substr( $$buffer, 0, 2 ) eq '#{'
+                         || substr( $$buffer, 0, 2 ) eq '#$' ) ) {
                     $c .= substr $$buffer, 0, 1, '';
                 } elsif( $c eq '$' && substr( $$buffer, 0, 1 ) eq '#' ) {
                     # same code as in 'lex' below, handle $# as variable
@@ -953,7 +955,7 @@ sub lex {
                 |\+=|\-=|\*=|\/=
                 |\&\&|\|\|)//x and return [ $self->{pos}, $ops{$1}, $1 ];
     $$_ =~ s/^\$//x and do {
-        if( $$_ =~ s/^\#(?={)//x ) {
+        if( $$_ =~ s/^\#(?=[{\$])//x ) {
             return [ $self->{pos}, $ops{'$#'}, '$#' ];
         } elsif( $$_ =~ /^\#/ ) {
             my $id = $self->lex_identifier( 0 );
