@@ -59,6 +59,38 @@ sub dereference_hash {
     return $self->body->hash || Language::P::Toy::Value::Undef->new;
 }
 
+sub assign {
+    my( $self, $other ) = @_;
+
+    if( $other->isa( 'Language::P::Toy::Value::Reference' ) ) {
+        my $ref = $other->reference;
+
+        if( $ref->isa( 'Language::P::Toy::Value::Scalar' ) ) {
+            $self->body->set_slot( 'scalar', $ref );
+        } elsif( $ref->isa( 'Language::P::Toy::Value::Array' ) ) {
+            $self->body->set_slot( 'array', $ref );
+        } elsif( $ref->isa( 'Language::P::Toy::Value::Hash' ) ) {
+            $self->body->set_slot( 'hash', $ref );
+        } elsif( $ref->isa( 'Language::P::Toy::Value::Code' ) ) {
+            $self->body->set_slot( 'subroutine', $ref );
+        } elsif( $ref->isa( 'Language::P::Toy::Value::Typeglob' ) ) {
+            $self->_assign_glob( $other );
+        } else {
+            die 'Unhandled ', ref( $ref ), ' reference in glob assignment';
+        }
+    } elsif( $other->isa( 'Language::P::Toy::Value::Typeglob' ) ) {
+        $self->_assign_glob( $other );
+    } else {
+        die 'Unhandled ', ref( $other ), ' in glob assignment';
+    }
+}
+
+sub _assign_glob {
+    my( $self, $other ) = @_;
+
+    $self->{body} = $other->body;
+}
+
 package Language::P::Toy::Value::Typeglob::Body;
 
 use strict;

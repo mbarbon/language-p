@@ -139,6 +139,7 @@ t/parser/terms/140_prototypes.t
 t/parser/terms/150_closure.t
 t/run/001_hello.t
 t/run/005_assignment.t
+t/run/005_glob_assignment.t
 t/run/006_brackets.t
 t/run/007_if.t
 t/run/008_loops.t
