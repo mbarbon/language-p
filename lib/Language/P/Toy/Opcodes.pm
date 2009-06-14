@@ -862,7 +862,7 @@ sub o_make_closure {
                     ( { bytecode   => $sub->bytecode,
                         stack_size => $sub->stack_size,
                         outer      => $sub->outer,
-                        lexicals   => $sub->lexicals->new_scope,
+                        lexicals   => $sub->lexicals ? $sub->lexicals->new_scope : undef,
                         } );
 
     if( my $closed_values = $sub->closed ) {
