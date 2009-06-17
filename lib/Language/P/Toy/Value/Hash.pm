@@ -62,7 +62,7 @@ sub get_item_or_undef {
     my( $self, $key ) = @_;
 
     if( !exists $self->{hash}{$key} ) {
-        return Language::P::Toy::Value::Undef->new;
+        return $self->{hash}{$key} = Language::P::Toy::Value::Undef->new;
     }
 
     return $self->{hash}{$key};
