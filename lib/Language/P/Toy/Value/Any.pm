@@ -17,6 +17,8 @@ our @METHODS = qw(as_integer as_float as_string as_scalar as_boolean_int
                   dereference_array dereference_typeglob
                   dereference_subroutine dereference_io
                   dereference
+
+                  reference_type
                   );
 
 sub type { 1 }

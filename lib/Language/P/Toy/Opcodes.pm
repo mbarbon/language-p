@@ -810,6 +810,15 @@ sub o_reference {
     return $pc + 1;
 }
 
+sub o_reftype {
+    my( $op, $runtime, $pc ) = @_;
+    my $value = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $value->reference_type;
+
+    return $pc + 1;
+}
+
 sub o_dereference_scalar {
     my( $op, $runtime, $pc ) = @_;
     my $ref = pop @{$runtime->{_stack}};

@@ -64,23 +64,35 @@ sub dereference_glob {
 
 sub as_string {
     my( $self ) = @_;
-    my $ref = $self->{reference};
 
-    my $prefix = $ref->isa( 'Language::P::Toy::Value::Reference' ) ? 'REF' :
-                 $ref->isa( 'Language::P::Toy::Value::Scalar' ) ? 'SCALAR' :
-                 $ref->isa( 'Language::P::Toy::Value::Hash' ) ? 'HASH' :
-                 $ref->isa( 'Language::P::Toy::Value::Array' ) ? 'ARRAY' :
-                 $ref->isa( 'Language::P::Toy::Value::Typeglob' ) ? 'GLOB' :
-                 $ref->isa( 'Language::P::Toy::Value::Subroutine' ) ? 'CODE' :
-                                                            die "$ref";
-
-    return sprintf '%s(0x%p)', $prefix, $ref;
+    return sprintf '%s(0x%p)', _reference_string( $self ), $self->{reference};
 }
 
 sub as_boolean_int {
     my( $self ) = @_;
 
     return 1;
+}
+
+sub _reference_string {
+    my( $self ) = @_;
+    my $ref = $self->{reference};
+
+    return $ref->isa( 'Language::P::Toy::Value::Reference' )  ? 'REF' :
+           $ref->isa( 'Language::P::Toy::Value::Scalar' )     ? 'SCALAR' :
+           $ref->isa( 'Language::P::Toy::Value::Hash' )       ? 'HASH' :
+           $ref->isa( 'Language::P::Toy::Value::Array' )      ? 'ARRAY' :
+           $ref->isa( 'Language::P::Toy::Value::Typeglob' )   ? 'GLOB' :
+           $ref->isa( 'Language::P::Toy::Value::Subroutine' ) ? 'CODE' :
+                                                                die "$ref";
+}
+
+sub reference_type {
+    my( $self ) = @_;
+
+    return Language::P::Toy::Value::StringNumber->new
+               ( { string => _reference_string( $self ),
+                   } );
 }
 
 1;

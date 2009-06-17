@@ -153,6 +153,7 @@ our %PROTOTYPE =
     OP_ABS()         => [  0,  1, 0, PROTO_SCALAR ],
     OP_CHR()         => [  0,  1, 0, PROTO_SCALAR ],
     OP_WANTARRAY()   => [  0,  0, 0 ],
+    OP_REFTYPE()     => [  0,  1, 0, PROTO_SCALAR ],
     );
 
 our %CONTEXT =

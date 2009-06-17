@@ -135,3 +135,4 @@ binmode             o
 abs                 o       
 wantarray           o       
 chr                 o       
+ref                 o       KEY_REFTYPE

@@ -51,4 +51,10 @@ sub localize {
     return Language::P::Toy::Value::Undef->new;
 }
 
+sub reference_type {
+    my( $self ) = @_;
+
+    return Language::P::Toy::Value::Scalar->new_boolean( 0 );
+}
+
 1;

@@ -291,6 +291,7 @@ ql_s
 ql_tr
 readline            u       noattr      same                 1   1
 reference
+reftype             u       noattr      same                 1   1
 repeat
 require_file        u       noattr      same                 1   1
 restore_glob_slot   0       noattr      same                 0   0
