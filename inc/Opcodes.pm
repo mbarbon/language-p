@@ -313,6 +313,9 @@ temporary           0       index=i     same                 0   1
 temporary_set       0       noattr      same                 1   0
 undef               u       noattr      same                 -1  1
 unlink              
+vivify_array        0       noattr      same                 1   1
+vivify_hash         0       noattr      same                 1   1
+vivify_scalar       0       noattr      same                 1   1
 wantarray           u       noattr      want                 0   1
 
 rx_accept

@@ -54,4 +54,34 @@ sub is_defined {
     return 0;
 }
 
+sub vivify_scalar {
+    my( $self ) = @_;
+    my $new = Language::P::Toy::Value::Reference->new
+                  ( { reference => Language::P::Toy::Value::Undef->new,
+                      } );
+    $self->assign( $new );
+
+    return $self->dereference_scalar;
+}
+
+sub vivify_array {
+    my( $self ) = @_;
+    my $new = Language::P::Toy::Value::Reference->new
+                  ( { reference => Language::P::Toy::Value::Array->new,
+                      } );
+    $self->assign( $new );
+
+    return $self->dereference_array;
+}
+
+sub vivify_hash {
+    my( $self ) = @_;
+    my $new = Language::P::Toy::Value::Reference->new
+                  ( { reference => Language::P::Toy::Value::Hash->new,
+                      } );
+    $self->assign( $new );
+
+    return $self->dereference_hash;
+}
+
 1;

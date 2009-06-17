@@ -16,7 +16,7 @@ our @METHODS = qw(as_integer as_float as_string as_scalar as_boolean_int
                   dereference_scalar dereference_hash
                   dereference_array dereference_typeglob
                   dereference_subroutine dereference_io
-                  dereference
+                  dereference vivify_scalar vivify_array vivify_hash
 
                   reference_type
                   );

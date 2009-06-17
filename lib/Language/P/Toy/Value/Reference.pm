@@ -34,6 +34,13 @@ sub dereference_scalar {
     return $self->{reference};
 }
 
+sub vivify_scalar {
+    my( $self ) = @_;
+
+    die unless $self->{reference}->isa( 'Language::P::Toy::Value::Scalar' );
+    return $self->{reference};
+}
+
 sub dereference_hash {
     my( $self ) = @_;
 
@@ -41,7 +48,21 @@ sub dereference_hash {
     return $self->{reference};
 }
 
+sub vivify_hash {
+    my( $self ) = @_;
+
+    die unless $self->{reference}->isa( 'Language::P::Toy::Value::Hash' );
+    return $self->{reference};
+}
+
 sub dereference_array {
+    my( $self ) = @_;
+
+    die unless $self->{reference}->isa( 'Language::P::Toy::Value::Array' );
+    return $self->{reference};
+}
+
+sub vivify_array {
     my( $self ) = @_;
 
     die unless $self->{reference}->isa( 'Language::P::Toy::Value::Array' );

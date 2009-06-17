@@ -383,7 +383,18 @@ sub _unary_op {
 
     $self->dispatch( $tree->left );
 
-    _add_bytecode $self, opcode_n( $tree->op );
+    my $op = $tree->op;
+    if( $tree->get_attribute( 'context' ) & CXT_VIVIFY ) {
+        if( $op == OP_DEREFERENCE_SCALAR ) {
+            $op = OP_VIVIFY_SCALAR;
+        } elsif( $op == OP_DEREFERENCE_ARRAY ) {
+            $op = OP_VIVIFY_ARRAY;
+        } elsif( $op == OP_DEREFERENCE_HASH ) {
+            $op = OP_VIVIFY_HASH;
+        }
+    }
+
+    _add_bytecode $self, opcode_n( $op );
 }
 
 sub _local {
@@ -919,11 +930,11 @@ sub _subscript {
     $self->dispatch( $tree->subscripted );
 
     if( $tree->type == VALUE_ARRAY ) {
-        _add_bytecode $self, opcode_n( OP_DEREFERENCE_ARRAY )
+        _add_bytecode $self, opcode_n( OP_VIVIFY_ARRAY )
           if $tree->reference;
         _add_bytecode $self, opcode_n( OP_ARRAY_ELEMENT );
     } elsif( $tree->type == VALUE_HASH ) {
-        _add_bytecode $self, opcode_n( OP_DEREFERENCE_HASH )
+        _add_bytecode $self, opcode_n( OP_VIVIFY_HASH )
           if $tree->reference;
         _add_bytecode $self, opcode_n( OP_HASH_ELEMENT );
     } else {

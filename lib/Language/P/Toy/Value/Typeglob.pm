@@ -44,19 +44,37 @@ sub as_boolean_int {
 sub dereference_scalar {
     my( $self ) = @_;
 
-    return $self->body->scalar || Language::P::Toy::Value::Undef->new;
+    return $self->body->get_or_create( 'scalar' );
+}
+
+sub vivify_scalar {
+    my( $self ) = @_;
+
+    return $self->body->get_or_create( 'scalar' );
 }
 
 sub dereference_array {
     my( $self ) = @_;
 
-    return $self->body->array || Language::P::Toy::Value::Undef->new;
+    return $self->body->get_or_create( 'array' );
+}
+
+sub vivify_array {
+    my( $self ) = @_;
+
+    return $self->body->get_or_create( 'array' );
 }
 
 sub dereference_hash {
     my( $self ) = @_;
 
-    return $self->body->hash || Language::P::Toy::Value::Undef->new;
+    return $self->body->get_or_create( 'hash' );
+}
+
+sub vivify_hash {
+    my( $self ) = @_;
+
+    return $self->body->get_or_create( 'hash' );
 }
 
 sub assign {

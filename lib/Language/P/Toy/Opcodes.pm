@@ -828,6 +828,15 @@ sub o_dereference_scalar {
     return $pc + 1;
 }
 
+sub o_vivify_scalar {
+    my( $op, $runtime, $pc ) = @_;
+    my $ref = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $ref->vivify_scalar;
+
+    return $pc + 1;
+}
+
 sub o_dereference_array {
     my( $op, $runtime, $pc ) = @_;
     my $ref = pop @{$runtime->{_stack}};
@@ -837,11 +846,29 @@ sub o_dereference_array {
     return $pc + 1;
 }
 
+sub o_vivify_array {
+    my( $op, $runtime, $pc ) = @_;
+    my $ref = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $ref->vivify_array;
+
+    return $pc + 1;
+}
+
 sub o_dereference_hash {
     my( $op, $runtime, $pc ) = @_;
     my $ref = pop @{$runtime->{_stack}};
 
     push @{$runtime->{_stack}}, $ref->dereference_hash;
+
+    return $pc + 1;
+}
+
+sub o_vivify_hash {
+    my( $op, $runtime, $pc ) = @_;
+    my $ref = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $ref->vivify_hash;
 
     return $pc + 1;
 }
