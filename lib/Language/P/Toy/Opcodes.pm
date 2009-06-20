@@ -1010,4 +1010,14 @@ sub o_eval {
     return $pc + 1;
 }
 
+sub o_eval_regex {
+    my( $op, $runtime, $pc ) = @_;
+    my $string = pop @{$runtime->{_stack}};
+
+    my $re = $runtime->compile_regex( $string->as_string );
+    push @{$runtime->{_stack}}, $re;
+
+    return $pc + 1;
+}
+
 1;

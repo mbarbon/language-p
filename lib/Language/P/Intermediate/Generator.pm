@@ -240,6 +240,7 @@ my %dispatch =
     'Language::P::ParseTree::Subscript'              => '_subscript',
     'Language::P::ParseTree::Jump'                   => '_jump',
     'Language::P::ParseTree::Pattern'                => '_pattern',
+    'Language::P::ParseTree::InterpolatedPattern'    => '_interpolated_pattern',
     'Language::P::ParseTree::Parentheses'            => '_parentheses',
     );
 
@@ -1072,6 +1073,14 @@ sub _pattern {
 
     my $re = $generator->_generate_regex( $tree, $self->_code_segments->[0] );
     _add_bytecode $self, opcode_n( OP_CONSTANT_REGEX, $re->[0] );
+}
+
+sub _interpolated_pattern {
+    my( $self, $tree ) = @_;
+
+    $self->dispatch( $tree->string );
+
+    _add_bytecode $self, opcode_n( OP_EVAL_REGEX );
 }
 
 sub _exit_scope {

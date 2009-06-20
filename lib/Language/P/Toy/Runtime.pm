@@ -90,6 +90,22 @@ sub eval_string {
     $self->run_last_file( $code, $context );
 }
 
+sub compile_regex {
+    my( $self, $string ) = @_;
+    my $parser = Language::P::Parser::Regex->new
+                     ( { runtime     => $self,
+                         generator   => $self->parser->generator,
+                         interpolate => 1,
+                         } );
+    my $parsed_rx = $parser->parse_string( $string );
+    my $pattern = Language::P::ParseTree::Pattern->new
+                      ( { components => $parsed_rx,
+                          } );
+    my $re = $self->parser->generator->process_regex( $pattern );
+
+    return $re;
+}
+
 sub search_file {
     my( $self, $file_str ) = @_;
     my $inc = $self->symbol_table->get_symbol( 'INC', '@', 1 );
