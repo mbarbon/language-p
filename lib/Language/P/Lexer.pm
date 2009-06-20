@@ -589,7 +589,7 @@ sub lex_identifier {
     $id or $$_ =~ /^\$[\${:]/ and do {
         return;
     };
-    $id or $$_ =~ s/^(\W)(?=\W)// and do {
+    $id or $$_ =~ s/^(\W)(?=\W|$)// and do {
         $id = [ $self->{pos}, T_ID, $1, T_FQ_ID ];
     };
 

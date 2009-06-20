@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 25;
+use Test::More tests => 28;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -388,4 +388,45 @@ components:
     context: CXT_SCALAR
     flags: CONST_STRING
     value: ' '
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+"$ x";
+EOP
+--- !parsetree:QuotedString
+components:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: x
+    sigil: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+" $@";
+EOP
+--- !parsetree:QuotedString
+components:
+  - !parsetree:Constant
+    context: CXT_SCALAR
+    flags: CONST_STRING
+    value: ' '
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: '@'
+    sigil: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+" $ @";
+EOP
+--- !parsetree:QuotedString
+components:
+  - !parsetree:Constant
+    context: CXT_SCALAR
+    flags: CONST_STRING
+    value: ' '
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: '@'
+    sigil: VALUE_SCALAR
 EOE
