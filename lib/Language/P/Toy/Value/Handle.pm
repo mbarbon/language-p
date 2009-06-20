@@ -24,10 +24,24 @@ sub write {
     }
 }
 
+sub close {
+    my( $self ) = @_;
+    my $ret = close $self->handle;
+
+    return Language::P::Toy::Value::Scalar->new_boolean( $ret );
+}
+
 sub readline {
     my( $self ) = @_;
 
     return scalar readline $self->handle;
+}
+
+sub set_layer {
+    my( $self, $layer ) = @_;
+    my $ret = binmode $self->handle, $layer;
+
+    return Language::P::Toy::Scalar->new_string( $ret );
 }
 
 1;

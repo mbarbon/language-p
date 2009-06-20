@@ -20,6 +20,8 @@ our @METHODS = qw(as_integer as_float as_string as_scalar as_boolean_int
                   dereference vivify_scalar vivify_array vivify_hash
 
                   reference_type
+
+                  set_layer
                   );
 
 sub type { 1 }

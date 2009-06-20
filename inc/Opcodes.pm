@@ -158,7 +158,7 @@ array_element       0       noattr      same                 2   1
 array_length        0       noattr      array_size           1   1
 assign              0       noattr      same                 2   1
 backtick
-binmode             
+binmode             u       noattr      same                 1   1
 bit_and
 bit_or
 bit_not
@@ -166,7 +166,7 @@ bit_xor
 call                0       noattr      same                 2   1
 chdir               u       noattr      same                 1   1
 chr                 u       noattr      same                 1   1
-close               
+close               u       noattr      same                 1   1
 concat_assign       0       noattr      same                 2   1
 concatenate         0       noattr      concat               2   1
 constant_float      0       noattr      same                 0   1
@@ -297,7 +297,7 @@ repeat
 require_file        u       noattr      same                 1   1
 restore_glob_slot   0       noattr      same                 0   0
 return              0       noattr      same                 1   0
-rmdir               
+rmdir               u       noattr      same                 1   1
 set                 0       noattr      same                 2   0
 str_cmp
 str_eq              0       noattr      compare_s_eq_scalar

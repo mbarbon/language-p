@@ -741,6 +741,28 @@ sub o_unlink {
     return $pc + 1;
 }
 
+sub o_rmdir {
+    my( $op, $runtime, $pc ) = @_;
+    my $arg = pop @{$runtime->{_stack}};
+    my $ret = rmdir $arg->as_string;
+
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::Scalar
+                                    ->new_boolean( $ret );
+
+    return $pc + 1;
+}
+
+sub o_binmode {
+    my( $op, $runtime, $pc ) = @_;
+    my $args = pop @{$runtime->{_stack}};
+    my $handle = $args->get_item( 0 );
+    my $layer = $args->get_count == 2 ? $args->get_item( 1 )->as_string : ':raw';
+
+    push @{$runtime->{_stack}}, $handle->set_layer( $layer );
+
+    return $pc + 1;
+}
+
 sub o_open {
     my( $op, $runtime, $pc ) = @_;
     my $args = pop @{$runtime->{_stack}};
@@ -760,6 +782,15 @@ sub o_open {
 
     push @{$runtime->{_stack}}, Language::P::Toy::Value::Scalar
                                     ->new_boolean( $ret );
+    return $pc + 1;
+}
+
+sub o_close {
+    my( $op, $runtime, $pc ) = @_;
+    my $handle = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $handle->close;
+
     return $pc + 1;
 }
 
