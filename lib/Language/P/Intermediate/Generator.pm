@@ -460,6 +460,14 @@ sub _binary_op {
         _add_bytecode $self,
                       opcode_n( OP_SWAP ),
                       opcode_n( $tree->op );
+    } elsif( $tree->op == OP_NOT_MATCH ) {
+        $self->dispatch( $tree->left );
+        $self->dispatch( $tree->right );
+
+        # maybe perform the transformation during parsing, but remeber
+        # to correctly propagate context
+        _add_bytecode $self, opcode_n( OP_MATCH );
+        _add_bytecode $self, opcode_n( OP_LOG_NOT );
     } else {
         $self->dispatch( $tree->left );
         $self->dispatch( $tree->right );

@@ -262,7 +262,7 @@ multiply            0       noattr      same                 2   1
 multiply_assign
 negate
 noop
-not_match
+not_match           0       noattr      rx_not_match
 num_cmp
 num_eq              0       noattr      compare_f_eq_scalar
 num_ge              0       noattr      compare_f_ge_scalar
