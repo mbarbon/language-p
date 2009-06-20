@@ -57,4 +57,41 @@ sub reference_type {
     return Language::P::Toy::Value::Scalar->new_boolean( 0 );
 }
 
+# FIXME integer arithmetic, "aaa"++
+sub pre_increment {
+    my( $self ) = @_;
+    $self->assign( Language::P::Toy::Value::StringNumber->new
+                       ( { float => $self->as_float + 1,
+                           } ) );
+
+    return $self;
+}
+
+sub pre_decrement {
+    my( $self ) = @_;
+    $self->assign( Language::P::Toy::Value::StringNumber->new
+                       ( { float => $self->as_float - 1,
+                           } ) );
+
+    return $self;
+}
+
+sub post_increment {
+    my( $self ) = @_;
+    my $rv = $self->clone( 0 );
+
+    pre_increment( $self );
+
+    return $rv;
+}
+
+sub post_decrement {
+    my( $self ) = @_;
+    my $rv = $self->clone( 0 );
+
+    pre_decrement( $self );
+
+    return $rv;
+}
+
 1;

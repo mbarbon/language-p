@@ -7,7 +7,8 @@ use base qw(Class::Accessor::Fast);
 use Carp;
 
 our @METHODS = qw(as_integer as_float as_string as_scalar as_boolean_int
-                  localize
+                  localize pre_increment post_increment pre_decrement
+                  post_decrement
 
                   get_item iterator iterator_from push get_count
 

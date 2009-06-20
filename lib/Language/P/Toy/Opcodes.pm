@@ -154,6 +154,7 @@ EOT
     die $@ if $@;
 }
 
+# fixme integer arithmetic
 _make_binary_op( $_ ) foreach
   ( { name     => 'o_add',
       convert  => 'as_float',
@@ -643,6 +644,42 @@ _make_boolean_unary( $_ ) foreach
       expression => '$v->is_defined',
       },
     );
+
+sub o_preinc {
+    my( $op, $runtime, $pc ) = @_;
+    my $v = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $v->pre_increment;
+
+    return $pc + 1;
+}
+
+sub o_postinc {
+    my( $op, $runtime, $pc ) = @_;
+    my $v = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $v->post_increment;
+
+    return $pc + 1;
+}
+
+sub o_predec {
+    my( $op, $runtime, $pc ) = @_;
+    my $v = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $v->pre_decrement;
+
+    return $pc + 1;
+}
+
+sub o_postdec {
+    my( $op, $runtime, $pc ) = @_;
+    my $v = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $v->post_decrement;
+
+    return $pc + 1;
+}
 
 sub o_assign {
     my( $op, $runtime, $pc ) = @_;
