@@ -242,6 +242,7 @@ my %dispatch =
     'Language::P::ParseTree::Pattern'                => '_pattern',
     'Language::P::ParseTree::InterpolatedPattern'    => '_interpolated_pattern',
     'Language::P::ParseTree::Parentheses'            => '_parentheses',
+    'Language::P::ParseTree::ReferenceConstructor'   => '_ref_constructor',
     );
 
 my %dispatch_cond =
@@ -946,6 +947,26 @@ sub _subscript {
         _add_bytecode $self, opcode_n( OP_VIVIFY_HASH )
           if $tree->reference;
         _add_bytecode $self, opcode_n( OP_HASH_ELEMENT );
+    } else {
+        die $tree->type;
+    }
+}
+
+sub _ref_constructor {
+    my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
+
+    # the empty list constructor can be optimized away when emitting
+    if( $tree->expression ) {
+        $self->dispatch( $tree->expression );
+    } else {
+        _add_bytecode $self, opcode_nm( OP_MAKE_LIST, count => 0 );
+    }
+
+    if( $tree->type == VALUE_ARRAY ) {
+        _add_bytecode $self, opcode_n( OP_ANONYMOUS_ARRAY );
+    } elsif( $tree->type == VALUE_HASH ) {
+        _add_bytecode $self, opcode_n( OP_ANONYMOUS_HASH );
     } else {
         die $tree->type;
     }

@@ -154,6 +154,8 @@ __DATA__
 abs                 u       noattr      same                 1   1
 add                 0       noattr      same                 2   1
 add_assign
+anonymous_array     0       noattr      same                 1   1
+anonymous_hash      0       noattr      same                 1   1
 array_element       0       noattr      same                 2   1
 array_length        0       noattr      array_size           1   1
 assign              0       noattr      same                 2   1

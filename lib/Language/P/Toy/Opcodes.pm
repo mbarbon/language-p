@@ -878,6 +878,30 @@ sub o_reference {
     return $pc + 1;
 }
 
+sub o_anonymous_array {
+    my( $op, $runtime, $pc ) = @_;
+    my $list = pop @{$runtime->{_stack}};
+    my $array = Language::P::Toy::Value::Array->new;
+
+    $array->assign( $list );
+
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::Reference->new( { reference => $array } );
+
+    return $pc + 1;
+}
+
+sub o_anonymous_hash {
+    my( $op, $runtime, $pc ) = @_;
+    my $list = pop @{$runtime->{_stack}};
+    my $hash = Language::P::Toy::Value::Hash->new;
+
+    $hash->assign( $list );
+
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::Reference->new( { reference => $hash } );
+
+    return $pc + 1;
+}
+
 sub o_reftype {
     my( $op, $runtime, $pc ) = @_;
     my $value = pop @{$runtime->{_stack}};

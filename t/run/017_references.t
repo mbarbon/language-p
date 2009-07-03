@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..12\n";
+print "1..15\n";
 
 $rs = \$s;
 $ra = \@a;
@@ -36,3 +36,14 @@ print ${*$rg}{4} == 2 ? "ok 10\n" : "not ok 10\n";
 print *$rg->{4} == 2 ? "ok 11\n" : "not ok 11\n";
 
 print $#$ra == 1 ? "ok 12\n" : "not ok 12\n";
+
+$aa = [ 0, 1, 4, 9, 16 ];
+$ah = { a => 1, b => 4, c => 9, d => 16 };
+
+print $aa->[1] == 1 ? "ok 13\n" : "not ok 13\n";
+print $ah->{c} == 9 ? "ok 14\n" : "not ok 14\n";
+
+$aae = [];
+$ahe = {};
+
+print $#$aae == -1 ? "ok 15\n" : "not ok 15\n";
