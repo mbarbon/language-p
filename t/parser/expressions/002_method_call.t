@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 7;
+use Test::More tests => 8;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -177,4 +177,31 @@ method: !parsetree:Symbol
   context: CXT_SCALAR
   name: moo::boo
   sigil: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print Foo->moo( 1, 2 );
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:MethodCall
+    arguments:
+      - !parsetree:Constant
+        context: CXT_LIST
+        flags: CONST_NUMBER|NUM_INTEGER
+        value: 1
+      - !parsetree:Constant
+        context: 8
+        flags: CONST_NUMBER|NUM_INTEGER
+        value: 2
+    context: CXT_LIST
+    indirect: 0
+    invocant: !parsetree:Constant
+      context: CXT_SCALAR
+      flags: CONST_STRING
+      value: Foo
+    method: moo
+context: CXT_VOID
+function: OP_PRINT
+indirect: ~
 EOE

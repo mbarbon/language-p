@@ -1822,7 +1822,7 @@ sub _parse_arglist {
 
             # approximate what would happen in Perl LALR parser
             my $tt = $la2->[O_TYPE];
-            if( $declared ) {
+            if( $declared || $tt == T_ARROW ) {
                 $self->lexer->unlex( $la );
                 $indirect_term = 0;
             } elsif(    $prec_assoc_bin{$tt}
