@@ -21,10 +21,10 @@ sub new {
 }
 
 sub get_package {
-    my( $self, $package ) = @_;
+    my( $self, $package, $create ) = @_;
 
     return $self if $self->is_main && $package eq 'main';
-    return $self->get_symbol( $package, '::' );
+    return $self->_get_symbol( $package, '::', $create );
 }
 
 our %sigils =
@@ -35,7 +35,7 @@ our %sigils =
     '*'  => [ undef,        'Language::P::Toy::Value::Typeglob' ],
     'I'  => [ 'io',         'Language::P::Toy::Value::Handle' ],
     'F'  => [ 'format',     'Language::P::Toy::Value::Format' ],
-    '::' => [ undef,        'language::P::Value::SymbolTable' ],
+    '::' => [ undef,        'language::P::Toy::Value::SymbolTable' ],
     );
 
 sub get_symbol {
@@ -55,8 +55,7 @@ sub _get_symbol {
     my $index = 0;
     my $current = $self;
     foreach my $package ( @packages ) {
-        if( $index == $#packages ) {
-            return $current if $sigil eq '::';
+        if( $index == $#packages && $sigil ne '::' ) {
             my $glob = $current->{symbols}{$package};
             my $created = 0;
             return ( undef, $created ) if !$glob && !$create;
@@ -79,6 +78,8 @@ sub _get_symbol {
             } else {
                 $current = $current->{symbols}{$subpackage};
             }
+
+            return $current if $index == $#packages;
         }
 
         ++$index;
