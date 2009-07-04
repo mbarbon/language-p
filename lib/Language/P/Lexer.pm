@@ -459,11 +459,21 @@ sub lex_quote {
                     } elsif( $qc eq 'c' ) {
                         my $next = uc substr $$buffer, 0, 1, '';
                         $v .= chr( ord( $next ) ^ 0x40 );
+                    } elsif( $qc eq 'x' ) {
+                        if( $$buffer =~ s/^([0-9a-fA-F]{1,2})// ) {
+                            $v .= chr( oct '0x' . $1 );
+                        } else {
+                            $v .= "\0";
+                        }
                     } else {
                         die "Invalid escape '$qc'";
                     }
-                } elsif( $qc =~ /^[0-9]$/ ) {
-                    die "Unsupported numeric escape";
+                } elsif( $qc =~ /^[0-7]$/ ) {
+                    if( $$buffer =~ s/^([0-7]{1,2})// ) {
+                        $qc .= $1;
+                    }
+
+                    $v .= chr( oct '0' . $qc );
                 } else {
                     $v .= $qc;
                 }
@@ -815,7 +825,7 @@ sub _prepare_sublex_heredoc {
         }
 
         $$_ =~ s/^(\w*)//;
-        warn "Deprecated" unless $1;
+        # warn "Deprecated" unless $1;
         $end = $1;
     }
     $end .= "\n";

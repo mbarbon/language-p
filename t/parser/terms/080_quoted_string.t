@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 28;
+use Test::More tests => 30;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -59,6 +59,24 @@ EOP
 context: CXT_VOID
 flags: CONST_STRING
 value: "x\n"
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+"\0\100\77";
+EOP
+--- !parsetree:Constant
+context: CXT_VOID
+flags: CONST_STRING
+value: "\0@?"
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+"\xg\x20F\x1g";
+EOP
+--- !parsetree:Constant
+context: CXT_VOID
+flags: CONST_STRING
+value: "\0g F\x01g"
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
