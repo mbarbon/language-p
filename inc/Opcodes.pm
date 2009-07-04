@@ -165,6 +165,7 @@ bit_and
 bit_or
 bit_not
 bit_xor
+bless               u       noattr      same                 2   1
 call                0       noattr      same                 2   1
 chdir               u       noattr      same                 1   1
 chr                 u       noattr      same                 1   1

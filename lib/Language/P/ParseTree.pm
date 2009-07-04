@@ -154,6 +154,7 @@ our %PROTOTYPE =
     OP_CHR()         => [  0,  1, 0, PROTO_SCALAR ],
     OP_WANTARRAY()   => [  0,  0, 0 ],
     OP_REFTYPE()     => [  0,  1, 0, PROTO_SCALAR ],
+    OP_BLESS()       => [  1,  2, 0, PROTO_SCALAR, PROTO_SCALAR ],
     );
 
 our %CONTEXT =
