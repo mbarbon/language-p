@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
+__PACKAGE__->mk_ro_accessors( qw(stash) );
+
 use Carp;
 
 our @METHODS = qw(as_integer as_float as_string as_scalar as_boolean_int
@@ -19,13 +21,15 @@ our @METHODS = qw(as_integer as_float as_string as_scalar as_boolean_int
                   dereference_subroutine dereference_io
                   dereference vivify_scalar vivify_array vivify_hash
 
-                  reference_type
+                  reference_type bless
 
                   set_layer
                   );
 
 sub type { 1 }
 sub is_defined { 1 }
+sub is_blessed { $_[0]->{stash} ? 1 : 0 }
+sub set_stash { $_[0]->{stash} = $_[1] }
 
 sub unimplemented {
     my $m = $_[0];

@@ -116,4 +116,10 @@ sub reference_type {
                    } );
 }
 
+sub bless {
+    my( $self, $stash ) = @_;
+
+    $self->reference->set_stash( $stash );
+}
+
 1;

@@ -911,6 +911,18 @@ sub o_reftype {
     return $pc + 1;
 }
 
+sub o_bless {
+    my( $op, $runtime, $pc ) = @_;
+    my $name = pop @{$runtime->{_stack}};
+    my $stash = $runtime->symbol_table->get_package( $name->as_string, 1 );
+    my $ref = pop @{$runtime->{_stack}};
+
+    $ref->bless( $stash );
+    push @{$runtime->{_stack}}, $ref;
+
+    return $pc + 1;
+}
+
 sub o_dereference_scalar {
     my( $op, $runtime, $pc ) = @_;
     my $ref = pop @{$runtime->{_stack}};
