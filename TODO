@@ -20,6 +20,7 @@ Parsing:
   - check invalid declarations
   - check non-lvaluable expressions
 - implicit $_ in various builtins
+  - implicit package in bless()
 - handling of parse errors with recovery
 - lexical pragmas/hints
   - strictures
@@ -37,7 +38,8 @@ Parsing:
   - => quoting of -foo => 1
 - quoted strings
   - \Q\L\U\E in quoted strings/patterns
-  - \xaf, \011,etc when lexing quoted strings
+  - \x{af}, when lexing quoted strings
+  - Unicode handling
 - regexp
   - char classes
     - [a-\w] is not a range
@@ -45,7 +47,7 @@ Parsing:
     - [[] is a "["
     - ^ negation
   - other metacharacters
-  - backreferences, also in substitution
+  - backreferences, also in substitution; backref vs. octal escaper
   - magic variables
   - (?...) syntax and grouping
   - empty pattern
@@ -67,6 +69,7 @@ Runtime:
   - mixed-mode arithmetic
 - better handling of sub calls
   - encapsulate enter/leave
+  - AUTOLOAD
 - autovivification
 - multiple dispatch operators
 - array/list/hash assignment
@@ -99,9 +102,17 @@ Runtime:
   - code generation for return/die/last/redo/next, ...
   - test global my() vs. local my(), lexical arrays, hashes
   - integrate in stack unwinding
-- objects, tie, overload
+- objects
+  - AUTOLOAD in method resolution
+  - $foo->$bar( ... )
+  - $foo->Bar::baz( ... )
+  - $foo->SUPER::baz( ... )
+  - magic ISA, method caching, pluggable MRO
+- tie, overload
 - for all runtime functions, define which take/return perl types and which
   are only overloads on top of the others
+- pass a runtime instance into all methods
+- symbolic references
 
 Refactoring:
 - check offsets for call sequence, refactor stack handling
