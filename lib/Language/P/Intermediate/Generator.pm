@@ -215,6 +215,7 @@ sub _generate_bytecode {
 
 my %dispatch =
   ( 'Language::P::ParseTree::FunctionCall'           => '_function_call',
+    'Language::P::ParseTree::MethodCall'             => '_method_call',
     'Language::P::ParseTree::Builtin'                => '_builtin',
     'Language::P::ParseTree::Overridable'            => '_builtin',
     'Language::P::ParseTree::BuiltinIndirect'        => '_indirect',
@@ -371,6 +372,33 @@ sub _function_call {
         }
 
         _add_bytecode $self, opcode_n( $tree->function );
+    }
+}
+
+sub _method_call {
+    my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
+
+    $self->dispatch( $tree->method )
+        if $tree->indirect;
+    $self->dispatch( $tree->invocant );
+
+    my $args = $tree->arguments || [];
+    foreach my $arg ( @$args ) {
+        $self->dispatch( $arg );
+    }
+
+    _add_bytecode $self,
+        opcode_nm( OP_MAKE_LIST, count => 1 + scalar @$args );
+
+    if( $tree->indirect ) {
+        _add_bytecode $self,
+            opcode_nm( OP_CALL_METHOD_INDIRECT, context  => _context( $tree ) );
+    } else {
+        _add_bytecode $self,
+            opcode_nm( OP_CALL_METHOD,
+                       context  => _context( $tree ),
+                       method   => $tree->method );
     }
 }
 
