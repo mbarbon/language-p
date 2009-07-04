@@ -243,6 +243,7 @@ my %dispatch =
     'Language::P::ParseTree::InterpolatedPattern'    => '_interpolated_pattern',
     'Language::P::ParseTree::Parentheses'            => '_parentheses',
     'Language::P::ParseTree::ReferenceConstructor'   => '_ref_constructor',
+    'Language::P::ParseTree::Package'                => '_package',
     );
 
 my %dispatch_cond =
@@ -290,6 +291,12 @@ my %conditionals =
     OP_NUM_NE() => OP_JUMP_IF_F_NE,
     OP_STR_NE() => OP_JUMP_IF_S_NE,
     );
+
+sub _package {
+    my( $self, $tree ) = @_;
+
+    # do nothing for now
+}
 
 sub _indirect {
     my( $self, $tree ) = @_;
