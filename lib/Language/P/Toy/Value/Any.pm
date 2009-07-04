@@ -14,7 +14,7 @@ our @METHODS = qw(as_integer as_float as_string as_scalar as_boolean_int
 
                   get_item iterator iterator_from push get_count
 
-                  call
+                  call find_method
 
                   dereference_scalar dereference_hash
                   dereference_array dereference_typeglob

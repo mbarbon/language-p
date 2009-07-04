@@ -122,4 +122,11 @@ sub bless {
     $self->reference->set_stash( $stash );
 }
 
+sub find_method {
+    my( $self, $runtime, $name ) = @_;
+
+    die "Value is not blessed" unless $self->reference->is_blessed;
+    return $self->reference->stash->find_method( $runtime, $name );
+}
+
 1;

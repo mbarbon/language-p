@@ -95,4 +95,30 @@ sub set_symbol {
     return;
 }
 
+sub find_method {
+    my( $self, $runtime, $name ) = @_;
+
+    my $name_glob = $self->{symbols}{$name};
+    if( $name_glob ) {
+        my $sub = $name_glob->body->subroutine;
+
+        return $sub if $sub;
+    }
+
+    my $isa_glob = $self->{symbols}{ISA};
+    return unless $isa_glob;
+    my $isa_array = $isa_glob->body->array;
+
+    for( my $i = 0; $i < $isa_array->get_count; ++$i ) {
+        my $base = $isa_array->get_item( $i )->as_string;
+        my $base_stash = $runtime->symbol_table->get_package( $base );
+        next unless $base_stash;
+        my $sub = $base_stash->find_method( $runtime, $name );
+
+        return $sub if $sub;
+    }
+
+    return undef;
+}
+
 1;

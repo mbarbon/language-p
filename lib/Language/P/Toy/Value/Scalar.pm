@@ -57,6 +57,14 @@ sub reference_type {
     return Language::P::Toy::Value::Scalar->new_boolean( 0 );
 }
 
+sub find_method {
+    my( $self, $runtime, $name ) = @_;
+    my $stash = $runtime->symbol_table->get_package( $self->as_string );
+
+    return undef unless $stash;
+    return $stash->find_method( $runtime, $name );
+}
+
 # FIXME integer arithmetic, "aaa"++
 sub pre_increment {
     my( $self ) = @_;

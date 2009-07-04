@@ -255,6 +255,19 @@ sub o_call {
     return 0;
 }
 
+sub o_call_method {
+    my( $op, $runtime, $pc ) = @_;
+    my $args = $runtime->{_stack}[-1];
+    my $invocant = $args->get_item( 0 );
+    my $sub = $invocant->find_method( $runtime, $op->{method} );
+
+    die "Can't find method $op->{method}" unless $sub;
+
+    $sub->call( $runtime, $pc, _context( $op, $runtime ) );
+
+    return 0;
+}
+
 my $empty_list = Language::P::Toy::Value::List->new;
 
 sub o_return {

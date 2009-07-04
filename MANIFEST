@@ -154,6 +154,7 @@ t/run/025_begin.t
 t/run/035_local.t
 t/run/038_goto.t
 t/run/039_loop_control.t
+t/run/070_objects.t
 t/run/080_recursion.t
 t/run/081_context.t
 t/run/085_closure.t
