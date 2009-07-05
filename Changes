@@ -12,7 +12,7 @@ Revision history for Perl extension Language::P.
 	    - Fix code generation for nested if-then-else constructs.
 	- Toy runtime
 	    - Execute BEGIN blocks as soon as they are parsed.
-	    - Implemented do 'file, require and eval 'string'.
+	    - Implemented do 'file', require and eval 'string'.
 	    - Basic hash implementation.
 	    - Basic autovivification implementation.
 	    - Interpolated regular expressions.
