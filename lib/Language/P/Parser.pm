@@ -348,6 +348,25 @@ sub _parse_line_rest {
             return Language::P::ParseTree::Package->new
                        ( { name => $id->[O_VALUE],
                            } );
+        } elsif( $tokidt == KEY_USE || $tokidt == KEY_NO ) {
+            _lex_token( $self );
+
+            my $tok_ver = $self->lexer->lex_version;
+            my $tok_id = $self->lexer->lex_alphabetic_identifier( 0 );
+            my $package = $tok_id ? $tok_id->[2] : undef;
+
+            if( $package && !$tok_ver ) {
+                $tok_ver = $self->lexer->lex_version;
+            }
+            my $version = $tok_ver ? $tok_ver->[2] : undef;
+            my $args = _parse_expr( $self );
+
+            return Language::P::ParseTree::Use->new
+                       ( { package => $package,
+                           version => $version,
+                           import  => $args,
+                           is_no   => $tokidt == KEY_NO ? 1 : 0,
+                           } );
         } elsif(    $tokidt == OP_MY
                  || $tokidt == OP_OUR
                  || $tokidt == OP_STATE

@@ -103,6 +103,8 @@ while               k
 until               k       
 continue            k       
 do                  k       
+use                 k       
+no                  k       
 last                k       OP_LAST
 next                k       OP_NEXT
 redo                k       OP_REDO

@@ -42,6 +42,7 @@ my %dispatch =
     'Language::P::ParseTree::For'                    => '_for',
     'Language::P::ParseTree::Package'                => '_noop',
     'Language::P::ParseTree::Empty'                  => '_noop',
+    'Language::P::ParseTree::Use'                    => '_noop',
     'DEFAULT'                                        => '_noisy_noop',
     );
 
