@@ -55,6 +55,7 @@ Parsing:
   - context-dependent bexaviour
   - always a pattern after =~/!~
   - tr/// lexing/parsing
+- vstrings and versions in 'use' and 'no'
 
 IR:
 - generate glob dereferences for open/binmode/pipe

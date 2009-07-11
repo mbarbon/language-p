@@ -26,6 +26,7 @@ BEGIN {
        T_MINUSMINUS T_ANDAND T_OROR T_ARYLEN T_ARROW T_MATCH T_NOTMATCH
        T_ANDANDLOW T_ORORLOW T_NOTLOW T_XORLOW T_CMP T_SCMP T_SSTAR T_POWER
        T_PLUSEQUAL T_MINUSEQUAL T_STAREQUAL T_SLASHEQUAL T_LABEL T_TILDE
+       T_VSTRING T_VERSION
 
        T_CLASS_START T_CLASS_END T_CLASS T_QUANTIFIER T_ASSERTION T_ALTERNATE
        T_CLGROUP
@@ -512,6 +513,26 @@ sub lex_quote {
     }
 
     die "Can't get there";
+}
+
+sub lex_version {
+    my( $self ) = @_;
+
+    local $_ = $self->buffer;
+
+    _skip_space( $self )
+      if defined( $$_ ) && $$_ =~ /^[ \t\r\n]/;
+
+    return [ $self->{pos}, T_EOF, '' ] unless length $$_;
+
+    # TODO review version comparing in 5.10
+    if( $$_ =~ s/^v((?:\d+\.)*\d+)// ) {
+        return [ $self->{pos}, T_VSTRING, $1 ]
+    } elsif( $$_ =~ s/^((?:\d+\.)*\d+)// ) {
+        return [ $self->{pos}, T_VERSION, $1 ]
+    }
+
+    return undef;
 }
 
 sub lex_alphabetic_identifier {
