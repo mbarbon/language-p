@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 6;
+use Test::More tests => 7;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -58,17 +58,29 @@ version: 5.0
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
+use strict 'vars';
+EOP
+--- !parsetree:Use
+import:
+  - !parsetree:Constant
+    flags: CONST_STRING
+    value: vars
+is_no: 0
+package: strict
+version: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 use strict 5.0 'vars', 'refs';
 EOP
 --- !parsetree:Use
-import: !parsetree:List
-  expressions:
-    - !parsetree:Constant
-      flags: CONST_STRING
-      value: vars
-    - !parsetree:Constant
-      flags: CONST_STRING
-      value: refs
+import:
+  - !parsetree:Constant
+    flags: CONST_STRING
+    value: vars
+  - !parsetree:Constant
+    flags: CONST_STRING
+    value: refs
 is_no: 0
 package: strict
 version: 5.0

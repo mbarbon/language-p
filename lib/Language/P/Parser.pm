@@ -359,7 +359,7 @@ sub _parse_line_rest {
                 $tok_ver = $self->lexer->lex_version;
             }
             my $version = $tok_ver ? $tok_ver->[2] : undef;
-            my $args = _parse_expr( $self );
+            ( my $args, undef ) = _parse_arglist( $self, PREC_LOWEST, 0, 0 );
 
             return Language::P::ParseTree::Use->new
                        ( { package => $package,
