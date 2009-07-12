@@ -42,7 +42,7 @@ my %dispatch =
     'Language::P::ParseTree::For'                    => '_for',
     'Language::P::ParseTree::Package'                => '_noop',
     'Language::P::ParseTree::Empty'                  => '_noop',
-    'Language::P::ParseTree::Use'                    => '_noop',
+    'Language::P::ParseTree::Use'                    => '_use',
     'DEFAULT'                                        => '_noisy_noop',
     );
 
@@ -286,6 +286,15 @@ sub _cond {
     foreach my $iftrue ( @{$tree->iftrues} ) {
         $self->visit( $iftrue->condition, CXT_SCALAR );
         $self->visit( $iftrue->block, $cxt );
+    }
+}
+
+sub _use {
+    my( $self, $tree, $cxt ) = @_;
+
+    return unless $tree->import;
+    foreach my $arg ( @{$tree->import} ) {
+        $self->visit( $arg, CXT_LIST );
     }
 }
 

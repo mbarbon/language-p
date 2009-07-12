@@ -63,6 +63,7 @@ EOP
 --- !parsetree:Use
 import:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_STRING
     value: vars
 is_no: 0
@@ -76,9 +77,11 @@ EOP
 --- !parsetree:Use
 import:
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_STRING
     value: vars
   - !parsetree:Constant
+    context: CXT_LIST
     flags: CONST_STRING
     value: refs
 is_no: 0
