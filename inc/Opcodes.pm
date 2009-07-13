@@ -196,6 +196,7 @@ dup
 end
 eval                u       noattr      same                 1   1
 eval_regex          u       noattr      same                 1   1
+find_method         u       noattr      same                 1   1
 fresh_string        0       s           same                 0   1
 ft_atime            u       noattr      same                 1   1
 ft_ctime            u       noattr      same                 1   1

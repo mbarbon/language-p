@@ -161,7 +161,10 @@ t/run/081_context.t
 t/run/085_closure.t
 t/run/100_do_file.t
 t/run/102_require_file.t
+t/run/103_use_file.t
 t/run/110_eval.t
+t/run/files/Bar.pm
+t/run/files/Foo.pm
 t/run/files/foo.pl
 t/runtime/001_load.t
 t/runtime/002_base.t

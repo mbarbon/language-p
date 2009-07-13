@@ -73,6 +73,17 @@ sub _add {
 sub process {
     my( $self, $tree ) = @_;
 
+    if( $tree->isa( 'Language::P::ParseTree::Use' ) ) {
+        # emit the 'use' almost the same way as the corresponding
+        # BEGIN block would look if written in Perl
+        my $sub_int = $self->_intermediate->generate_use( $tree );
+        my $sub = _generate_segment( $self, $sub_int->[0] );
+
+        my $args = Language::P::Toy::Value::List->new;
+        $self->runtime->call_subroutine( $sub, CXT_VOID, $args );
+
+        return;
+    }
     if( $tree->isa( 'Language::P::ParseTree::NamedSubroutine' ) ) {
         my $sub_int = $self->_intermediate->generate_subroutine( $tree );
         my $sub = _generate_segment( $self, $sub_int->[0] );

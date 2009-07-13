@@ -44,4 +44,6 @@ sub call {
     $runtime->{_code} = $self;
 }
 
+sub as_boolean_int { return 1 }
+
 1;

@@ -128,6 +128,94 @@ sub _generate_regex {
     return $self->_code_segments;
 }
 
+sub generate_use {
+    my( $self, $tree ) = @_;
+
+    my $context = Language::P::ParseTree::PropagateContext->new;
+    $context->visit( $tree, CXT_VOID );
+
+    $self->_code_segments( [] );
+
+    my $head = $self->_new_block;
+    my $empty = $self->_new_block;
+    my $call_import = $self->_new_block;
+    my $return = $self->_new_block;
+
+    push @{$self->_code_segments},
+         Language::P::Intermediate::Code->new
+             ( { type         => 1,
+                 name         => undef,
+                 basic_blocks => [],
+                 outer        => undef,
+                 lexicals     => {},
+                 prototype    => undef,
+                 } );
+
+    _add_blocks $self, $head;
+    $self->push_block( 1 );
+
+    # TODO require perl version
+    ( my $file = $tree->package ) =~ s{::}{/}g;
+    _add_bytecode $self,
+         opcode_n( OP_CONSTANT_STRING, "$file.pm" ),
+         opcode_nm( OP_REQUIRE_FILE, context => CXT_VOID ),
+         opcode_n( OP_POP );
+
+    # TODO check version
+
+    # always evaluate arguments, even if no import/unimport is present
+    _add_bytecode $self,
+        opcode_n( OP_CONSTANT_STRING, $tree->package );
+    if( $tree->import ) {
+        foreach my $arg ( @{$tree->import} ) {
+            $self->dispatch( $arg );
+        }
+        _add_bytecode $self,
+            opcode_nm( OP_MAKE_LIST, count => @{$tree->import} + 1 );
+    } else {
+        _add_bytecode $self,
+            opcode_nm( OP_MAKE_LIST, count => 1 );
+    }
+
+    _add_bytecode $self,
+        opcode_n( OP_CONSTANT_STRING, $tree->package ),
+        opcode_nm( OP_FIND_METHOD,
+                   method => $tree->is_no ? 'unimport' : 'import' ),
+        opcode_n( OP_DUP );
+    _add_jump $self,
+        opcode_nm( OP_JUMP_IF_TRUE,
+                   true  => $call_import,
+                   false => $empty ),
+        $call_import, $empty;
+
+    # empty block, for SSA conversion
+    _add_blocks $self, $empty;
+    _add_bytecode $self, # pop undef value and arguments
+        opcode_n( OP_POP ),
+        opcode_n( OP_POP );
+    _add_jump $self,
+        opcode_nm( OP_JUMP, to => $return ),
+        $return;
+
+    # call the import method
+    _add_blocks $self, $call_import;
+
+    _add_bytecode $self,
+        opcode_nm( OP_CALL, context => CXT_VOID ),
+        opcode_n( OP_POP );
+    _add_jump $self,
+        opcode_nm( OP_JUMP, to => $return ),
+        $return;
+
+    # return
+    _add_blocks $self, $return;
+    $self->pop_block;
+    _add_bytecode $self, opcode_n( OP_RETURN );
+    _add_bytecode $self, opcode_n( OP_END );
+
+    return $self->_code_segments;
+}
+
 sub generate_subroutine {
     my( $self, $tree, $outer ) = @_;
 

@@ -268,6 +268,16 @@ sub o_call_method {
     return 0;
 }
 
+sub o_find_method {
+    my( $op, $runtime, $pc ) = @_;
+    my $invocant = pop @{$runtime->{_stack}};
+    my $sub = $invocant->find_method( $runtime, $op->{method} );
+
+    push @{$runtime->{_stack}}, $sub || Language::P::Toy::Value::Undef->new;
+
+    return $pc + 1;
+}
+
 my $empty_list = Language::P::Toy::Value::List->new;
 
 sub o_return {
