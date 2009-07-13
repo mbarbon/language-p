@@ -61,10 +61,23 @@ sub run_file {
     $self->run_last_file( $code, $context );
 }
 
+# maybe put in teh code object
+sub make_closure {
+    my( $self, $code ) = @_;
+
+    if( my $closed_values = $code->closed ) {
+        my $outer_pad = $self->{_stack}->[$self->{_frame} - 1];
+        my $pad = $code->lexicals;
+
+        foreach my $from_to ( @$closed_values ) {
+            $pad->values->[$from_to->[1]] = $outer_pad->values->[$from_to->[0]];
+        }
+    }
+}
+
 sub eval_string {
     my( $self, $string, $context, $lexicals ) = @_;
     $context ||= CXT_VOID;
-    my $outer_pad = $self->{_stack}->[$self->{_frame} - 1];
     my $parse_lex = Language::P::Parser::Lexicals->new;
     foreach my $k ( keys %$lexicals ) {
         my( $sigil, $name ) = split /\0/, $k;
@@ -79,14 +92,7 @@ sub eval_string {
     # FIXME propagate runtime package
     my $code = $self->parser->parse_string( $string, 'main',
                                             $context != CXT_VOID, $parse_lex );
-
-    my $pad = $code->lexicals;
-
-    if( $code->closed ) {
-        foreach my $from_to ( @{$code->closed} ) {
-            $pad->values->[$from_to->[1]] = $outer_pad->values->[$from_to->[0]];
-        }
-    }
+    $self->make_closure( $code );
     $self->run_last_file( $code, $context );
 }
 

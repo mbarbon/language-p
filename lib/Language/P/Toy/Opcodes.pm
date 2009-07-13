@@ -1015,16 +1015,9 @@ sub o_make_closure {
                     ( { bytecode   => $sub->bytecode,
                         stack_size => $sub->stack_size,
                         lexicals   => $sub->lexicals ? $sub->lexicals->new_scope : undef,
+                        closed     => $sub->closed,
                         } );
-
-    if( my $closed_values = $sub->closed ) {
-        my $outer = $runtime->{_stack}->[$runtime->{_frame} - 1];
-        my $pad = $clone->lexicals;
-
-        foreach my $from_to ( @$closed_values ) {
-            $pad->values->[$from_to->[1]] = $outer->values->[$from_to->[0]];
-        }
-    }
+    $runtime->make_closure( $clone );
 
     push @{$runtime->{_stack}}, Language::P::Toy::Value::Reference->new
                                     ( { reference => $clone,
