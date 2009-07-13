@@ -76,28 +76,20 @@ sub make_closure {
 }
 
 sub eval_string {
-    my( $self, $string, $context, $lexicals ) = @_;
+    my( $self, $string, $context, $lexicals, $generator_context ) = @_;
     $context ||= CXT_VOID;
-    my $parse_lex = Language::P::Parser::Lexicals->new;
-    foreach my $k ( keys %$lexicals ) {
-        my( $sigil, $name ) = split /\0/, $k;
-        $parse_lex->add_lexical( Language::P::ParseTree::LexicalDeclaration->new
-                                     ( { name  => $name,
-                                         sigil => $sigil,
-                                         flags => 0,
-                                         } ) );
-    }
 
-    $self->parser->generator->_eval_context( [ $lexicals, $self->{_code}, $parse_lex ] );
+    $self->parser->generator->_eval_context( $generator_context );
     # FIXME propagate runtime package
     my $code = $self->parser->parse_string( $string, 'main',
-                                            $context != CXT_VOID, $parse_lex );
+                                            $context != CXT_VOID, $lexicals );
     $self->make_closure( $code );
     $self->run_last_file( $code, $context );
 }
 
 sub compile_regex {
     my( $self, $string ) = @_;
+    # FIXME encapsulation
     my $parser = Language::P::Parser::Regex->new
                      ( { runtime     => $self,
                          generator   => $self->parser->generator,

@@ -1112,9 +1112,16 @@ sub o_require_file {
 sub o_eval {
     my( $op, $runtime, $pc ) = @_;
     my $string = pop @{$runtime->{_stack}};
+    # lexicals for parsing
+    my $parse_lex = Language::P::Parser::Lexicals->new;
+    foreach my $k ( keys %{$op->{lexicals}} ) {
+        my( $sigil, $name ) = split /\0/, $k;
+        $parse_lex->add_name( $sigil, $name );
+    }
 
     $runtime->eval_string( $string->as_string, _context( $op, $runtime ),
-                           $op->{lexicals} );
+                           $parse_lex,
+                           [ $op->{lexicals}, $runtime->{_code}, $parse_lex ] );
 
     return $pc + 1;
 }
