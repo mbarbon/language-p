@@ -40,6 +40,19 @@ sub new {
     return $self;
 }
 
+sub safe_instance {
+    my( $self ) = @_;
+
+    return $self unless $self->is_generating;
+    return ref( $self )->new
+               ( { _options => { %{$self->{_options}},
+                                 # performed by caller
+                                 'dump-ir' => 0,
+                                 },
+                   runtime  => $self->runtime,
+                   } );
+}
+
 sub set_option {
     my( $self, $option, $value ) = @_;
 
@@ -260,6 +273,8 @@ sub end_code_generation {
 
     return $res;
 }
+
+sub is_generating { return $_[0]->_processing ? 1 : 0 }
 
 sub _end {
     my( $self, $bytecode, $op ) = @_;

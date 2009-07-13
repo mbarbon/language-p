@@ -57,7 +57,7 @@ sub run_file {
     my( $self, $program, $context ) = @_;
 
     $context ||= CXT_VOID;
-    my $code = $self->parser->parse_file( $program, $context != CXT_VOID );
+    my $code = $self->parser->safe_instance->parse_file( $program, $context != CXT_VOID );
     $self->run_last_file( $code, $context );
 }
 
@@ -79,10 +79,11 @@ sub eval_string {
     my( $self, $string, $context, $lexicals, $generator_context ) = @_;
     $context ||= CXT_VOID;
 
-    $self->parser->generator->_eval_context( $generator_context );
+    my $parser = $self->parser->safe_instance;
+    $parser->generator->_eval_context( $generator_context );
     # FIXME propagate runtime package
-    my $code = $self->parser->parse_string( $string, 'main',
-                                            $context != CXT_VOID, $lexicals );
+    my $code = $parser->parse_string( $string, 'main',
+                                      $context != CXT_VOID, $lexicals );
     $self->make_closure( $code );
     $self->run_last_file( $code, $context );
 }
@@ -90,16 +91,17 @@ sub eval_string {
 sub compile_regex {
     my( $self, $string ) = @_;
     # FIXME encapsulation
+    my $generator = $self->parser->generator->safe_instance;
     my $parser = Language::P::Parser::Regex->new
                      ( { runtime     => $self,
-                         generator   => $self->parser->generator,
+                         generator   => $generator,
                          interpolate => 1,
                          } );
     my $parsed_rx = $parser->parse_string( $string );
     my $pattern = Language::P::ParseTree::Pattern->new
                       ( { components => $parsed_rx,
                           } );
-    my $re = $self->parser->generator->process_regex( $pattern );
+    my $re = $generator->process_regex( $pattern );
 
     return $re;
 }

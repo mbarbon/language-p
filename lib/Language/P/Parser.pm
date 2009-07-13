@@ -128,6 +128,17 @@ sub new {
     return $self;
 }
 
+sub safe_instance {
+    my( $self ) = @_;
+
+    return $self unless $self->is_parsing || $self->generator->is_generating;
+    return ref( $self )->new
+               ( { _options  => { %{$self->{_options}} },
+                   runtime   => $self->runtime,
+                   generator => $self->generator->safe_instance,
+                   } );
+}
+
 sub set_option {
     my( $self, $option, $value ) = @_;
 
@@ -215,6 +226,10 @@ sub _parse {
     my $code = $self->generator->end_code_generation;
 
     return $code;
+}
+
+sub is_parsing {
+    return $_[0]->{_lexical_state} && @{$_[0]->{_lexical_state}} ? 1 : 0;
 }
 
 sub _enter_scope {

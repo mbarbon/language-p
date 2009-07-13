@@ -1,6 +1,8 @@
 #!/usr/bin/perl -w
 
-print "1..5\n";
+BEGIN {
+    eval 'print "1..5\n"';
+}
 
 my $y = 2;
 my $x = 7;
