@@ -1014,7 +1014,6 @@ sub o_make_closure {
     my $clone = Language::P::Toy::Value::Subroutine->new
                     ( { bytecode   => $sub->bytecode,
                         stack_size => $sub->stack_size,
-                        outer      => $sub->outer,
                         lexicals   => $sub->lexicals ? $sub->lexicals->new_scope : undef,
                         } );
 

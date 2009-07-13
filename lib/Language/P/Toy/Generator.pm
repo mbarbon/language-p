@@ -6,7 +6,7 @@ use base qw(Language::P::ParseTree::Visitor);
 
 __PACKAGE__->mk_ro_accessors( qw(runtime) );
 __PACKAGE__->mk_accessors( qw(_code _pending _block_map _temporary_map
-                              _options _generated _intermediate _head
+                              _options _generated _intermediate _processing
                               _eval_context) );
 
 use Language::P::Intermediate::Generator;
@@ -62,7 +62,7 @@ sub process {
 
     if( $tree->isa( 'Language::P::ParseTree::NamedSubroutine' ) ) {
         my $sub_int = $self->_intermediate->generate_subroutine( $tree );
-        my $sub = _generate_segment( $self, $sub_int->[0], $self->_head );
+        my $sub = _generate_segment( $self, $sub_int->[0] );
 
         # run right away if it is a begin block
         if( $tree->name eq 'BEGIN' ) {
@@ -125,7 +125,7 @@ my %opcode_map =
     );
 
 sub _generate_segment {
-    my( $self, $segment, $outer, $target ) = @_;
+    my( $self, $segment, $target ) = @_;
     my $is_sub = $segment->is_sub;
     my $is_regex = $segment->is_regex;
     my $pad = Language::P::Toy::Value::ScratchPad->new;
@@ -136,7 +136,6 @@ sub _generate_segment {
                     ( { bytecode => [],
                         name     => $segment->name,
                         lexicals => $pad,
-                        outer    => $outer,
                         prototype=> $segment->prototype,
                         } );
     } elsif( $is_regex && !$code ) {
@@ -148,14 +147,14 @@ sub _generate_segment {
         $code = Language::P::Toy::Value::Code->new
                     ( { bytecode => [],
                         lexicals => $pad,
-                        outer    => $outer,
                         } );
     }
+    push @{$self->{_processing}}, $code;
 
     $self->_generated->{$segment} = $code;
 
     foreach my $inner ( @{$segment->inner} ) {
-        _generate_segment( $self, $inner, $code );
+        _generate_segment( $self, $inner );
     }
 
     $self->_code( $code );
@@ -195,6 +194,7 @@ sub _generate_segment {
     $self->_allocate_lexicals( $is_sub );
     $self->runtime->symbol_table->set_symbol( $segment->name, '&', $code )
       if defined $segment->name;
+    pop @{$self->{_processing}};
 
     return $code;
 }
@@ -204,7 +204,7 @@ sub process_regex {
 
     $self->start_code_generation;
     my $regex_int = $self->_intermediate->generate_regex( $regex );
-    my $res = _generate_segment( $self, $regex_int->[0], undef );
+    my $res = _generate_segment( $self, $regex_int->[0] );
     $self->_cleanup;
 
     return $res;
@@ -213,7 +213,8 @@ sub process_regex {
 sub finished {
     my( $self ) = @_;
     my $main_int = $self->_intermediate->generate_bytecode( $self->_pending );
-    my $res = _generate_segment( $self, $main_int->[0], undef, $self->_head );
+    my $head = pop @{$self->{_processing}};
+    my $res = _generate_segment( $self, $main_int->[0], $head );
     $self->_cleanup;
 
     return $res;
@@ -227,7 +228,7 @@ sub _cleanup {
     $self->_block_map( undef );
     $self->_temporary_map( undef );
     $self->_generated( undef );
-    $self->_head( undef );
+    $self->_processing( undef );
 }
 
 sub start_code_generation {
@@ -244,9 +245,8 @@ sub start_code_generation {
     my $code = Language::P::Toy::Value::Code->new
                    ( { bytecode => [],
                        lexicals => Language::P::Toy::Value::ScratchPad->new,
-                       outer    => $outer,
                        } );
-    $self->_head( $code );
+    $self->{_processing} = [ $outer, $code ];
 
     $self->_generated( {} );
     $self->_intermediate->file_name( $args->{file_name} )
@@ -440,14 +440,6 @@ sub _find_add_value {
     return $lex_map{$pad}{$lexical} = $pad->add_value( $lexical );
 }
 
-sub _uplevel {
-    my( $code, $level ) = @_;
-
-    $code = $code->outer foreach 1 .. $level;
-
-    return $code;
-}
-
 sub _allocate_single {
     my( $self, $lexical, $level, $map ) = @_;
     my $pad = $self->_code->lexicals;
@@ -458,13 +450,13 @@ sub _allocate_single {
             $map->{$lexical} = 0; # arguments are always first
         } elsif( $lexical->closed_over ) {
             if( $level ) {
-                my $code_from = _uplevel( $self->_code, $level );
+                my $code_from = $self->{_processing}[-$level - 1];
                 my $pad_from = $code_from->lexicals;
                 my $val = _find_add_value( $pad_from, $lexical );
                 if( $code_from->is_subroutine ) {
                     foreach my $index ( -$level .. -1 ) {
-                        my $inner_code = _uplevel( $self->_code, -$index - 1 );
-                        my $outer_code = _uplevel( $inner_code, 1 );
+                        my $inner_code = $self->{_processing}[$index];
+                        my $outer_code = $self->{_processing}[$index - 1];
                         my $outer_pad = $outer_code->lexicals;
                         my $inner_pad = $inner_code->lexicals;
 

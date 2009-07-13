@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use base qw(Language::P::Toy::Value::Any);
 
-__PACKAGE__->mk_ro_accessors( qw(bytecode stack_size lexicals outer closed) );
+__PACKAGE__->mk_ro_accessors( qw(bytecode stack_size lexicals closed) );
 
 sub type { 9 }
 sub is_subroutine { 0 }
