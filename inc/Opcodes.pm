@@ -297,7 +297,7 @@ ql_qx
 ql_s
 ql_tr
 readline            u       noattr      same                 1   1
-reference
+reference           u       noattr      same                 1   1
 reftype             u       noattr      same                 1   1
 repeat
 require_file        u       noattr      same                 1   1
