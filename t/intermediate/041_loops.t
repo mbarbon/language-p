@@ -27,7 +27,7 @@ L2:
 L3:
   global name=STDOUT, slot=7
   global name=i, slot=1
-  make_list count=2
+  make_list count=1
   print
   pop
   jump to=L4

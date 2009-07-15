@@ -288,7 +288,7 @@ postinc             0       noattr      same                 1   1
 power
 predec              0       noattr      same                 1   1
 preinc              0       noattr      same                 1   1
-print               0       noattr      same                 1   1
+print               0       noattr      same                 2   1
 ql_lt
 ql_m
 ql_qr

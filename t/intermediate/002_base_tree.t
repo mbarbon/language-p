@@ -14,7 +14,7 @@ EOP
 # main
 L1:
   assign (global name=x, slot=1), (add (global name=a, slot=1), (constant_integer 2))
-  print (make_list (global name=STDOUT, slot=7), (not (global name=a, slot=1)))
+  print (global name=STDOUT, slot=7), (make_list (not (global name=a, slot=1)))
   end
 EOI
 

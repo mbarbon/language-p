@@ -30,7 +30,7 @@ L1:
   global name=STDOUT, slot=7
   global name=a, slot=1
   not
-  make_list count=2
+  make_list count=1
   print
   pop
   end

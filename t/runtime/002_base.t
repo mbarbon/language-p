@@ -25,7 +25,7 @@ my @program1 =
     o( 'constant',
        value => Language::P::Toy::Value::StringNumber->new( { string => "Hello, world!\n" } ),
        ),
-    o( 'make_list', count => 2 ),
+    o( 'make_list', count => 1 ),
     o( 'print' ),
     o( 'end' ),
   );
@@ -48,7 +48,7 @@ my @program2 =
     o( 'constant',
        value => Language::P::Toy::Value::StringNumber->new( { string => "\n" } ),
        ),
-    o( 'make_list', count => 4 ),
+    o( 'make_list', count => 3 ),
     o( 'print' ),
     o( 'end' ),
     );

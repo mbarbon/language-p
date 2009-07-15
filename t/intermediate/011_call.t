@@ -34,7 +34,7 @@ L1:
   concat_assign
   constant_string "\x0a"
   concat_assign
-  make_list count=2
+  make_list count=1
   print
   make_list count=1
   return

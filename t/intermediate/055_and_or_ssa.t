@@ -115,7 +115,7 @@ L2:
   jump L3
 L3:
   set t4, (phi L4, t1, L2, t3)
-  print (make_list (get t2), (get t4))
+  print (get t2), (make_list (get t4))
   end
 L4:
   jump L3

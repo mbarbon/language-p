@@ -403,7 +403,7 @@ sub _indirect {
     }
 
     _add_bytecode $self,
-         opcode_nm( OP_MAKE_LIST, count => @{$tree->arguments} + 1 ),
+         opcode_nm( OP_MAKE_LIST, count => scalar @{$tree->arguments} ),
          opcode_n( $tree->function );
 }
 

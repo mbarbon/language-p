@@ -62,7 +62,7 @@ L1:
   jump L4
 L2:
   set t4, (phi L3, t2, L4, t3)
-  print (make_list (get t1), (get t4))
+  print (get t1), (make_list (get t4))
   end
 L3:
   set t2, (global name=b, slot=1)

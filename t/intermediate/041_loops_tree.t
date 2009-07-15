@@ -20,7 +20,7 @@ L2:
   jump_if_f_lt (global name=i, slot=1), (constant_integer 10), L3
   jump L5
 L3:
-  print (make_list (global name=STDOUT, slot=7), (global name=i, slot=1))
+  print (global name=STDOUT, slot=7), (make_list (global name=i, slot=1))
   jump L4
 L4:
   assign (global name=i, slot=1), (add (global name=i, slot=1), (constant_integer 1))
@@ -47,7 +47,7 @@ L2:
   jump L3
 L3:
   glob_slot_set slot=1 (temporary index=1), (get t2)
-  print (make_list (global name=STDOUT, slot=7), (global name=i, slot=1))
+  print (global name=STDOUT, slot=7), (make_list (global name=i, slot=1))
   jump L2
 L5:
   jump L6

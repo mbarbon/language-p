@@ -73,9 +73,9 @@ sub o_pop {
 sub o_print {
     my( $op, $runtime, $pc ) = @_;
     my $args = pop @{$runtime->{_stack}};
+    my $fh = pop @{$runtime->{_stack}};
 
-    my $fh = $args->get_item( 0 );
-    for( my $iter = $args->iterator_from( 1 ); $iter->next; ) {
+    for( my $iter = $args->iterator; $iter->next; ) {
         $fh->write( $iter->item );
     }
 
