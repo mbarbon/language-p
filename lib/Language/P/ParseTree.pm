@@ -313,8 +313,18 @@ our @FIELDS = qw(function arguments);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+# quick and dirty mapping from parsing prototype to runtime context
+sub _make_rtproto {
+    my( $proto ) = @_;
+
+    return [ map { $_ == Language::P::ParseTree::PROTO_SCALAR ?
+                       Language::P::ParseTree::CXT_SCALAR :
+                       Language::P::ParseTree::CXT_LIST }
+                 @{$proto}[ 3 .. $#$proto ] ];
+}
+
 sub parsing_prototype { return $_[0]->{prototype} || Language::P::ParseTree::PROTO_DEFAULT }
-sub runtime_context   { return undef }
+sub runtime_context   { return $_[0]->{prototype} ? _make_rtproto( $_[0]->{prototype} ) : undef }
 sub is_plain_function { 1 }
 
 package Language::P::ParseTree::SpecialFunctionCall;
