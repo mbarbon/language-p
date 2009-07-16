@@ -209,7 +209,7 @@ sub o_make_list {
     my $list = Language::P::Toy::Value::List->new;
     if( $op->{count} ) {
         for( my $j = $#$st - $op->{count} + 1; $j <= $#$st; ++$j ) {
-            $list->push( $st->[$j] );
+            $list->push_value( $st->[$j] );
         }
         # clear the stack
         $#$st -= $op->{count} - 1;
@@ -888,6 +888,48 @@ sub o_array_size {
     my $array = pop @{$runtime->{_stack}};
 
     push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( { integer => $array->get_count - 1 } );
+
+    return $pc + 1;
+}
+
+sub o_array_push {
+    my( $op, $runtime, $pc ) = @_;
+    my $args = pop @{$runtime->{_stack}};
+    my $arr = pop @{$runtime->{_stack}};
+    my $v = $arr->push_list( $args );
+
+    push @{$runtime->{_stack}}, $v;
+
+    return $pc + 1;
+}
+
+sub o_array_pop {
+    my( $op, $runtime, $pc ) = @_;
+    my $arr = pop @{$runtime->{_stack}};
+    my $v = $arr->pop_value;
+
+    push @{$runtime->{_stack}}, $v;
+
+    return $pc + 1;
+}
+
+sub o_array_unshift {
+    my( $op, $runtime, $pc ) = @_;
+    my $args = pop @{$runtime->{_stack}};
+    my $arr = pop @{$runtime->{_stack}};
+    my $v = $arr->unshift_list( $args );
+
+    push @{$runtime->{_stack}}, $v;
+
+    return $pc + 1;
+}
+
+sub o_array_shift {
+    my( $op, $runtime, $pc ) = @_;
+    my $arr = pop @{$runtime->{_stack}};
+    my $v = $arr->shift_value;
+
+    push @{$runtime->{_stack}}, $v;
 
     return $pc + 1;
 }

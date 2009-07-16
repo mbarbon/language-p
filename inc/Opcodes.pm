@@ -108,6 +108,7 @@ EOT
 
     foreach my $k ( sort @OVERRIDABLES, @BUILTINS ) {
         ( my $o = $k ) =~ s/KEY_/OP_/;
+        $o =~ s/^OP_(PUSH|POP|SHIFT|UNSHIFT)/OP_ARRAY_$1/;
         printf $out <<'EOT', $k, $o;
     %s() => %s(),
 EOT
@@ -158,6 +159,10 @@ anonymous_array     0       noattr      same                 1   1
 anonymous_hash      0       noattr      same                 1   1
 array_element       0       noattr      same                 2   1
 array_length        0       noattr      array_size           1   1
+array_pop           u       noattr      same                 1   1
+array_push          0       noattr      same                 2   1
+array_shift         u       noattr      same                 1   1
+array_unshift       0       noattr      same                 2   1
 assign              0       noattr      same                 2   1
 backtick
 binmode             u       noattr      same                 1   1

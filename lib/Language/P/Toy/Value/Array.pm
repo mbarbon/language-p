@@ -60,12 +60,40 @@ sub assign_iterator {
     }
 }
 
-sub push {
+sub push_value {
     my( $self, @values ) = @_;
 
     push @{$self->{array}}, @values;
+}
 
-    return;
+sub push_list {
+    my( $self, $list ) = @_;
+
+    push @{$self->{array}}, @{$list->array};
+
+    return Language::P::Toy::Value::StringNumber->new
+               ( { integer => scalar @{$self->array} } );
+}
+
+sub pop_value {
+    my( $self ) = @_;
+
+    return pop @{$self->{array}};
+}
+
+sub unshift_list {
+    my( $self, $list ) = @_;
+
+    unshift @{$self->{array}}, @{$list->array};
+
+    return Language::P::Toy::Value::StringNumber->new
+               ( { integer => scalar @{$self->array} } );
+}
+
+sub shift_value {
+    my( $self ) = @_;
+
+    return shift @{$self->{array}};
 }
 
 sub iterator {

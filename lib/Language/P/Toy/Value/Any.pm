@@ -12,7 +12,8 @@ our @METHODS = qw(as_integer as_float as_string as_scalar as_boolean_int
                   localize pre_increment post_increment pre_decrement
                   post_decrement
 
-                  get_item iterator iterator_from push get_count
+                  get_item iterator iterator_from push_value get_count
+                  push_list pop_value unshift_list shift_value
 
                   call find_method
 

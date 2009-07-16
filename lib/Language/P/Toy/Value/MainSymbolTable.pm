@@ -25,7 +25,7 @@ sub new {
     $self->set_symbol( "\030", '$', $interpreter );
 
     my $inc = Language::P::Toy::Value::Array->new;
-    $inc->push( Language::P::Toy::Value::StringNumber->new( { string => '.' } ) );
+    $inc->push_value( Language::P::Toy::Value::StringNumber->new( { string => '.' } ) );
     $self->set_symbol( 'INC', '@', $inc );
 
     return $self;

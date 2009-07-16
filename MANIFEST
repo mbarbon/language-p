@@ -78,6 +78,7 @@ t/intermediate/055_and_or_tree.t
 t/intermediate/060_complex_trees_ssa.t
 t/intermediate/085_closure_ssa.t
 t/intermediate/100_begin.t
+t/intermediate/110_prototypes.t
 t/lib/TestIntermediate.pm
 t/lib/TestParser.pm
 t/lib/TestRegex.pm
@@ -99,6 +100,7 @@ t/parser/expressions/018_ternary.t
 t/parser/expressions/019_assignment.t
 t/parser/expressions/020_fat_arrow.t
 t/parser/expressions/020_sequence.t
+t/parser/expressions/021_builtins.t
 t/parser/expressions/021_call_proto.t
 t/parser/expressions/021_indirect_method.t
 t/parser/expressions/021_list_op.t
@@ -146,6 +148,7 @@ t/run/007_if.t
 t/run/008_loops.t
 t/run/010_arithmetic.t
 t/run/011_call.t
+t/run/015_array_ops.t
 t/run/015_defined.t
 t/run/017_references.t
 t/run/018_vivification.t

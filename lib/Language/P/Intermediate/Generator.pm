@@ -438,14 +438,28 @@ sub _function_call {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
+    my $is_func = ref( $tree->function );
+    my $proto = $tree->parsing_prototype;
+    my $i = 0;
+    my $argcount = 0;
     foreach my $arg ( @{$tree->arguments || []} ) {
         $self->dispatch( $arg );
+        if(    $i + 3 <= $#$proto
+            && ( $proto->[$i + 3] & PROTO_REFERENCE ) ) {
+            if( $is_func ) {
+                _add_bytecode $self, opcode_n( OP_REFERENCE );
+            } else {
+                --$argcount;
+            }
+        }
+        ++$argcount;
+        ++$i;
     }
 
     _add_bytecode $self,
-         opcode_nm( OP_MAKE_LIST, count => scalar @{$tree->arguments || []} );
+         opcode_nm( OP_MAKE_LIST, count => $argcount );
 
-    if( ref( $tree->function ) ) {
+    if( $is_func ) {
         $self->dispatch( $tree->function );
         _add_bytecode $self,
              opcode_nm( OP_CALL, context => _context( $tree ) );

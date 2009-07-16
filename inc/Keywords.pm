@@ -139,3 +139,7 @@ wantarray           o
 chr                 o       
 ref                 o       KEY_REFTYPE
 bless               o       
+push                o       
+pop                 o       
+shift               o       
+unshift             o       

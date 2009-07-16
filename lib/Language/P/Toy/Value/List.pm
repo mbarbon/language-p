@@ -18,7 +18,7 @@ sub assign {
     }
 }
 
-sub push {
+sub push_value {
     my( $self, @values ) = @_;
 
     foreach my $value ( @values ) {

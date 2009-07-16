@@ -1831,6 +1831,25 @@ sub _apply_prototype {
                                       sigil => VALUE_GLOB,
                                       } );
         }
+        if( $proto_char & PROTO_REFERENCE ) {
+            my $arg = $args->[$i - 3];
+            my $value = $arg->is_symbol ? $arg->sigil : 0;
+            my $ref = $arg->isa( 'Language::P::ParseTree::Dereference' ) ?
+                            $arg->op : 0;
+            my $is_arr = $value == VALUE_ARRAY || $ref == OP_DEREFERENCE_ARRAY;
+            my $is_hash = $value == VALUE_HASH || $ref == OP_DEREFERENCE_HASH;
+            my $is_sc = $value == VALUE_SCALAR || $ref == OP_DEREFERENCE_SCALAR;
+            my $is_glob = $value == VALUE_GLOB || $ref == OP_DEREFERENCE_GLOB;
+
+            if(    ( ( $proto_char & PROTO_ARRAY ) && $is_arr )
+                || ( ( $proto_char & PROTO_HASH ) && $is_hash )
+                || ( ( $proto_char & PROTO_SCALAR ) && $is_sc )
+                || ( ( $proto_char & PROTO_GLOB ) && $is_glob ) ) {
+                # reference op added during code generation
+            } else {
+                die 'Invalid argument for reference prototype';
+            }
+        }
     }
 }
 
