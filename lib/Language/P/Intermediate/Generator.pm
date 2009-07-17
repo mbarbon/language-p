@@ -1065,7 +1065,7 @@ sub _quoted_string {
     for( my $i = 0; $i < @{$tree->components}; ++$i ) {
         $self->dispatch( $tree->components->[$i] );
 
-        _add_bytecode $self, opcode_n( OP_CONCAT_ASSIGN );
+        _add_bytecode $self, opcode_n( OP_CONCATENATE_ASSIGN );
     }
 }
 

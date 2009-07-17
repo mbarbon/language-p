@@ -26,7 +26,9 @@ BEGIN {
        T_MINUSMINUS T_ANDAND T_OROR T_ARYLEN T_ARROW T_MATCH T_NOTMATCH
        T_ANDANDLOW T_ORORLOW T_NOTLOW T_XORLOW T_CMP T_SCMP T_SSTAR T_POWER
        T_PLUSEQUAL T_MINUSEQUAL T_STAREQUAL T_SLASHEQUAL T_LABEL T_TILDE
-       T_VSTRING T_VERSION
+       T_VSTRING T_VERSION T_DOTEQUAL T_SSTAREQUAL T_PERCENTEQUAL
+       T_POWEREQUAL T_AMPERSANDEQUAL T_OREQUAL T_XOREQUAL
+       T_ANDANDEQUAL T_OROREQUAL
 
        T_CLASS_START T_CLASS_END T_CLASS T_QUANTIFIER T_ASSERTION T_ALTERNATE
        T_CLGROUP
@@ -131,26 +133,39 @@ my %ops =
     '<=>' => T_CMP,
     'cmp' => T_SCMP,
     '/'   => T_SLASH,
+    '/='  => T_SLASHEQUAL,
     '\\'  => T_BACKSLASH,
     '.'   => T_DOT,
+    '.='  => T_DOTEQUAL,
     '..'  => T_DOTDOT,
     '...' => T_DOTDOTDOT,
     '~'   => T_TILDE,
     '+'   => T_PLUS,
+    '+='  => T_PLUSEQUAL,
     '-'   => T_MINUS,
+    '-='  => T_MINUSEQUAL,
     '*'   => T_STAR,
+    '*='  => T_STAREQUAL,
     'x'   => T_SSTAR,
+    'x='  => T_SSTAREQUAL,
     '$'   => T_DOLLAR,
     '%'   => T_PERCENT,
+    '%='  => T_PERCENTEQUAL,
     '**'  => T_POWER,
+    '**=' => T_POWEREQUAL,
     '@'   => T_AT,
     '&'   => T_AMPERSAND,
+    '&='  => T_AMPERSANDEQUAL,
     '|'   => T_OR,
+    '|='  => T_OREQUAL,
     '^'   => T_XOR,
+    '^='  => T_XOREQUAL,
     '++'  => T_PLUSPLUS,
     '--'  => T_MINUSMINUS,
     '&&'  => T_ANDAND,
+    '&&=' => T_ANDANDEQUAL,
     '||'  => T_OROR,
+    '||=' => T_OROREQUAL,
     '$#'  => T_ARYLEN,
     '->'  => T_ARROW,
     '=~'  => T_MATCH,
@@ -983,7 +998,7 @@ sub lex {
                 |=~|!~
                 |\.\.|\.\.\.
                 |\+\+|\-\-
-                |\+=|\-=|\*=|\/=
+                |\+=|\-=|\*=|\/=|\.=|x=|%=|\*\*=|&=|\|=|\^=|&&=|\|\|=
                 |\&\&|\|\|)//x and return [ $self->{pos}, $ops{$1}, $1 ];
     $$_ =~ s/^\$//x and do {
         if( $$_ =~ s/^\#(?=[{\$])//x ) {

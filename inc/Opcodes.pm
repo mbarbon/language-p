@@ -167,9 +167,12 @@ assign              0       noattr      same                 2   1
 backtick
 binmode             u       noattr      same                 1   1
 bit_and
+bit_and_equal
 bit_or
+bit_or_equal
 bit_not
 bit_xor
+bit_xor_equal
 bless               u       noattr      same                 2   1
 call                0       noattr      same                 2   1
 call_method         0       noattr      same                 2   1
@@ -177,7 +180,7 @@ call_method_indirect 0      noattr      same                 2   1
 chdir               u       noattr      same                 1   1
 chr                 u       noattr      same                 1   1
 close               u       noattr      same                 1   1
-concat_assign       0       noattr      same                 2   1
+concatenate_assign  0       noattr      concat_assign        2   1
 concatenate         0       noattr      concat               2   1
 constant_float      0       noattr      same                 0   1
 constant_integer    0       noattr      same                 0   1
@@ -261,8 +264,10 @@ lexical_set         0       noattr      same                 1   0
 local               
 localize_glob_slot  0       noattr      same                 0   1
 log_and             0       noattr      same                 2   1
+log_and_equal       0       noattr      same                 2   1
 log_not             0       noattr      not                  1   1
 log_or              0       noattr      same                 2   1
+log_or_equal        0       noattr      same                 2   1
 log_xor             0       noattr      same                 2   1
 make_closure        0       noattr      same                 1   1
 make_list           0       count=i     same                -1   1
@@ -270,6 +275,7 @@ map
 match               0       noattr      rx_match
 minus               0       noattr      negate
 modulus
+modulus_assign
 multiply            0       noattr      same                 2   1
 multiply_assign
 negate
@@ -291,6 +297,7 @@ pop                 0       noattr      same                 1   0
 postdec             0       noattr      same                 1   1
 postinc             0       noattr      same                 1   1
 power
+power_assign
 predec              0       noattr      same                 1   1
 preinc              0       noattr      same                 1   1
 print               0       noattr      same                 2   1
@@ -305,6 +312,7 @@ readline            u       noattr      same                 1   1
 reference           u       noattr      same                 1   1
 reftype             u       noattr      same                 1   1
 repeat
+repeat_assign
 require_file        u       noattr      same                 1   1
 restore_glob_slot   0       noattr      same                 0   0
 return              0       noattr      same                 1   0
