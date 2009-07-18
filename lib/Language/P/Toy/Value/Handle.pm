@@ -31,10 +31,16 @@ sub close {
     return Language::P::Toy::Value::Scalar->new_boolean( $ret );
 }
 
-sub readline {
+sub read_line {
     my( $self ) = @_;
 
     return scalar readline $self->handle;
+}
+
+sub read_lines {
+    my( $self ) = @_;
+
+    return [ readline $self->handle ];
 }
 
 sub set_layer {

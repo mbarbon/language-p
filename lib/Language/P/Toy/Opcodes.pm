@@ -89,11 +89,18 @@ sub o_readline {
     my( $op, $runtime, $pc ) = @_;
     my $glob = pop @{$runtime->{_stack}};
     my $fh = $glob->get_slot( 'io' );
+    my $cxt = _context( $op, $runtime );
 
-    # FIXME context
-    my $val = $fh->readline;
-    push @{$runtime->{_stack}}, Language::P::Toy::Value::Scalar
-                                    ->new_string( $val );
+    if( $cxt == CXT_LIST ) {
+        my $val = [ map Language::P::Toy::Value::Scalar->new_string( $_ ),
+                        @{$fh->read_lines} ];
+        push @{$runtime->{_stack}}, Language::P::Toy::Value::List->new
+                                        ( { array => $val } );
+    } else {
+        my $val = $fh->read_line;
+        push @{$runtime->{_stack}}, Language::P::Toy::Value::Scalar
+                                        ->new_string( $val );
+    }
 
     return $pc + 1;
 }
