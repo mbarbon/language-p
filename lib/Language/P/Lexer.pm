@@ -262,6 +262,17 @@ sub _skip_space {
             $self->{file} = $2 if $2;
             $reset_pos = 1;
             next;
+        } elsif(    $self->{_start_of_line}
+                 && $$buffer =~ /^=[a-zA-Z]/ ) {
+            $reset_pos = 1;
+            do {
+                ++$self->{line};
+                $$buffer = '';
+                $self->_fill_buffer;
+            } while( $$buffer && $$buffer !~ /^=cut\b/ );
+            ++$self->{line};
+            $$buffer = '';
+            next;
         }
 
         $$buffer =~ s/^([ \t]+)// && defined wantarray and $retval .= $1;

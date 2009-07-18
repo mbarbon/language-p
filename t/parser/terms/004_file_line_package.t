@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 5;
+use Test::More tests => 6;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -90,4 +90,31 @@ EOP
 context: CXT_VOID
 flags: CONST_NUMBER|NUM_INTEGER
 value: 3
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+# a line
+__LINE__
+=cut
+
+ =pod
+=pod
+=cut
+ =
+__LINE__;
+=tail
+
+
+EOP
+--- !parsetree:BinOp
+context: CXT_VOID
+left: !parsetree:Constant
+  context: CXT_SCALAR|CXT_LVALUE
+  flags: CONST_NUMBER|NUM_INTEGER
+  value: 2
+op: OP_ASSIGN
+right: !parsetree:Constant
+  context: CXT_SCALAR
+  flags: CONST_NUMBER|NUM_INTEGER
+  value: 9
 EOE
