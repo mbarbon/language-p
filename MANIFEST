@@ -167,6 +167,7 @@ t/run/100_do_file.t
 t/run/102_require_file.t
 t/run/103_use_file.t
 t/run/110_eval.t
+t/run/115_data_handle.t
 t/run/files/Bar.pm
 t/run/files/Foo.pm
 t/run/files/foo.pl

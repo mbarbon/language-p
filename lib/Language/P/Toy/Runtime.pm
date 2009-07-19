@@ -6,6 +6,7 @@ use base qw(Class::Accessor::Fast);
 
 use Language::P::Toy::Value::MainSymbolTable;
 use Language::P::ParseTree qw(:all);
+use Language::P::Parser qw(:all);
 
 __PACKAGE__->mk_ro_accessors( qw(symbol_table _variables) );
 __PACKAGE__->mk_accessors( qw(parser) );
@@ -39,6 +40,15 @@ sub reset {
     $self->{_frame} = @{$self->{_stack}};
 }
 
+sub set_data_handle {
+    my( $self, $package, $handle ) = @_;
+    my $data = $self->symbol_table->get_package( $package )
+                    ->get_symbol( 'DATA', '*', 1 );
+
+    $data->set_slot( 'io', Language::P::Toy::Value::Handle->new
+                               ( { handle => $handle } ) );
+}
+
 sub run_last_file {
     my( $self, $code, $context ) = @_;
     # FIXME duplicates Language::P::Toy::Value::Code::call
@@ -54,10 +64,13 @@ sub run_last_file {
 }
 
 sub run_file {
-    my( $self, $program, $context ) = @_;
+    my( $self, $program, $is_main, $context ) = @_;
 
     $context ||= CXT_VOID;
-    my $code = $self->parser->safe_instance->parse_file( $program, $context != CXT_VOID );
+    my $parser = $self->parser->safe_instance;
+    my $flags =   ( $context != CXT_VOID ? PARSE_ADD_RETURN : 0 )
+                | ( $is_main             ? PARSE_MAIN : 0 );
+    my $code = $parser->parse_file( $program, $flags );
     $self->run_last_file( $code, $context );
 }
 
@@ -81,9 +94,9 @@ sub eval_string {
 
     my $parser = $self->parser->safe_instance;
     $parser->generator->_eval_context( $generator_context );
-    # FIXME propagate runtime package
-    my $code = $parser->parse_string( $string, 'main',
-                                      $context != CXT_VOID, $lexicals );
+    # FIXME propagate runtime package and hints
+    my $flags = $context != CXT_VOID ? PARSE_ADD_RETURN : 0;
+    my $code = $parser->parse_string( $string, 'main', $flags, $lexicals );
     $self->make_closure( $code );
     $self->run_last_file( $code, $context );
 }

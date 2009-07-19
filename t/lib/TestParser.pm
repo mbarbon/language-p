@@ -58,6 +58,7 @@ my @lines;
 
     sub symbol_table { $_[0]->{symbol_table} }
     sub set_bytecode { }
+    sub set_data_handle { }
 }
 
 sub fresh_parser {
@@ -79,7 +80,7 @@ sub parse_string {
     my( $expr, $package ) = @_;
 
     my $parser = fresh_parser();
-    $parser->parse_string( $expr, $package || 'main' );
+    $parser->parse_string( $expr, $package || 'main', 0 );
 
     return parsed_program();
 }

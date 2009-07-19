@@ -1135,7 +1135,7 @@ sub o_do_file {
     my $real_path = $runtime->search_file( $file_str );
     my $real_path_str = $real_path->as_string;
 
-    $runtime->run_file( $real_path_str, _context( $op, $runtime ) );
+    $runtime->run_file( $real_path_str, 0, _context( $op, $runtime ) );
 
     my $inc = $runtime->symbol_table->get_symbol( 'INC', '%', 1 );
     $inc->set_item( $file_str, $real_path );
@@ -1159,7 +1159,7 @@ sub o_require_file {
     my $real_path = $runtime->search_file( $file_str );
     my $real_path_str = $real_path->as_string;
 
-    $runtime->run_file( $real_path_str, _context( $op, $runtime ) );
+    $runtime->run_file( $real_path_str, 0, _context( $op, $runtime ) );
 
     # FIXME check return value
 

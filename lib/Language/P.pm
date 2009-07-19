@@ -108,7 +108,7 @@ sub process_command_line {
 sub run {
     my( $self ) = @_;
 
-    $self->runtime->run_file( $self->program );
+    $self->runtime->run_file( $self->program, 1 );
 }
 
 =head1 AUTHOR

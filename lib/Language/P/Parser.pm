@@ -4,11 +4,18 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
+use Exporter 'import';
+
 use Language::P::Lexer qw(:all);
 use Language::P::ParseTree qw(:all);
 use Language::P::Parser::Regex;
 use Language::P::Parser::Lexicals;
 use Language::P::Keywords;
+
+our @EXPORT_OK = qw(PARSE_MAIN PARSE_ADD_RETURN);
+our %EXPORT_TAGS =
+  ( all => \@EXPORT_OK,
+    );
 
 __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime) );
 __PACKAGE__->mk_accessors( qw(_package _lexicals _pending_lexicals
@@ -35,6 +42,9 @@ use constant
     ASSOC_LEFT         => 1,
     ASSOC_RIGHT        => 2,
     ASSOC_NON          => 3,
+
+    PARSE_ADD_RETURN   => 1,
+    PARSE_MAIN         => 2,
     };
 
 my %token_to_sigil =
@@ -159,25 +169,25 @@ sub set_option {
 }
 
 sub parse_string {
-    my( $self, $string, $package, $add_return, $lexicals ) = @_;
+    my( $self, $string, $package, $flags, $lexicals ) = @_;
 
     open my $fh, '<', \$string;
 
     $self->_package( $package );
-    $self->parse_stream( $fh, '<string>', $add_return, $lexicals );
+    $self->parse_stream( $fh, '<string>', $flags, $lexicals );
 }
 
 sub parse_file {
-    my( $self, $file, $add_return ) = @_;
+    my( $self, $file, $flags ) = @_;
 
     open my $fh, '<', $file or die "open '$file': $!";
 
     $self->_package( 'main' );
-    $self->parse_stream( $fh, $file, $add_return );
+    $self->parse_stream( $fh, $file, $flags );
 }
 
 sub parse_stream {
-    my( $self, $stream, $filename, $add_return, $lexicals ) = @_;
+    my( $self, $stream, $filename, $flags, $lexicals ) = @_;
 
     $self->{lexer} = Language::P::Lexer->new
                          ( { stream       => $stream,
@@ -185,7 +195,7 @@ sub parse_stream {
                              symbol_table => $self->runtime->symbol_table,
                              } );
     $self->{_lexical_state} = [];
-    $self->_parse( $add_return, $lexicals );
+    $self->_parse( $flags, $lexicals );
 }
 
 sub _qualify {
@@ -199,7 +209,7 @@ sub _qualify {
 }
 
 sub _parse {
-    my( $self, $add_return, $lexicals ) = @_;
+    my( $self, $flags, $lexicals ) = @_;
 
     my $dumper;
     if(    $self->_options->{'dump-parse-tree'}
@@ -229,10 +239,14 @@ sub _parse {
         }
     }
     $self->_leave_scope;
-    _lines_implicit_return( $self, \@lines ) if $add_return;
+    _lines_implicit_return( $self, \@lines ) if $flags & PARSE_ADD_RETURN;
     $self->generator->process( $_ ) foreach @lines;
 
     my $code = $self->generator->end_code_generation;
+
+    my $data = $self->lexer->data_handle;
+    $self->runtime->set_data_handle( $self->_package, $data->[1] )
+      if $data && ( ( $flags & PARSE_MAIN ) || $data->[0] eq 'DATA' );
 
     return $code;
 }
