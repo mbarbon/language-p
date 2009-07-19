@@ -9,6 +9,15 @@ __PACKAGE__->mk_ro_accessors( qw(stream buffer tokens symbol_table
                                  ) );
 __PACKAGE__->mk_accessors( qw(quote) );
 
+sub data_handle {
+    my( $self ) = @_;
+    my $data = $self->{data_handle};
+
+    $self->{data_handle} = undef;
+
+    return $data;
+}
+
 use Language::P::ParseTree qw(:all);
 use Language::P::Keywords;
 
@@ -273,6 +282,12 @@ sub _skip_space {
             ++$self->{line};
             $$buffer = '';
             next;
+        } elsif(    $self->{_start_of_line}
+                 && $$buffer =~ /^__(END|DATA)__\b/ ) {
+            $$buffer = ''; # assumes the buffer contains at most one line
+            $self->{data_handle} = [ $1, $self->{stream} ];
+            $self->{stream} = undef;
+            return;
         }
 
         $$buffer =~ s/^([ \t]+)// && defined wantarray and $retval .= $1;
