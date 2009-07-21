@@ -145,7 +145,7 @@ sub _make_binary_op_assign {
     my( $op ) = @_;
 
     eval sprintf <<'EOT',
-sub %s {
+sub %s_assign {
     my( $op, $runtime, $pc ) = @_;
     my $vr = pop @{$runtime->{_stack}};
     my $vl = $runtime->{_stack}[-1];
@@ -162,7 +162,7 @@ EOT
 }
 
 # fixme integer arithmetic
-_make_binary_op( $_ ) foreach
+_make_binary_op( $_ ), _make_binary_op_assign( $_ ) foreach
   ( { name     => 'o_add',
       convert  => 'as_float',
       operator => '+',
@@ -194,14 +194,6 @@ _make_binary_op( $_ ) foreach
       new_type => 'integer',
       },
     { name     => 'o_concat',
-      convert  => 'as_string',
-      operator => '.',
-      new_type => 'string',
-      },
-    );
-
-_make_binary_op_assign( $_ ) foreach
-  ( { name     => 'o_concat_assign',
       convert  => 'as_string',
       operator => '.',
       new_type => 'string',
