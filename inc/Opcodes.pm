@@ -167,12 +167,12 @@ assign              0       noattr      same                 2   1
 backtick
 binmode             u       noattr      same                 1   1
 bit_and
-bit_and_equal
+bit_and_assign
 bit_or
-bit_or_equal
+bit_or_assign
 bit_not
 bit_xor
-bit_xor_equal
+bit_xor_assign
 bless               u       noattr      same                 2   1
 call                0       noattr      same                 2   1
 call_method         0       noattr      same                 2   1
@@ -264,10 +264,10 @@ lexical_set         0       noattr      same                 1   0
 local               
 localize_glob_slot  0       noattr      same                 0   1
 log_and             0       noattr      same                 2   1
-log_and_equal       0       noattr      same                 2   1
+log_and_assign      0       noattr      same                 2   1
 log_not             0       noattr      not                  1   1
 log_or              0       noattr      same                 2   1
-log_or_equal        0       noattr      same                 2   1
+log_or_assign       0       noattr      same                 2   1
 log_xor             0       noattr      same                 2   1
 make_closure        0       noattr      same                 1   1
 make_list           0       count=i     same                -1   1
