@@ -15,4 +15,12 @@ my $p = Language::P->new_from_argv( \@ARGV,
                                       generator => $generator,
                                       } );
 
-$p->run;
+eval {
+    $p->run;
+};
+my $e = $@;
+if( $e && ref( $e ) && $e->isa( 'Language::P::Exception' ) ) {
+    print STDERR $e->full_message, "\n";
+} elsif( $e ) {
+    print STDERR $e, "\n";
+}

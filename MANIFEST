@@ -11,6 +11,7 @@ inc/Opcodes.pm
 inc/p_parrot
 lib/Language/P.pm
 lib/Language/P/Assembly.pm
+lib/Language/P/Exception.pm
 lib/Language/P/Intermediate/BasicBlock.pm
 lib/Language/P/Intermediate/Code.pm
 lib/Language/P/Intermediate/Generator.pm
@@ -23,6 +24,7 @@ lib/Language/P/ParseTree/DumpYAML.pm
 lib/Language/P/ParseTree/PropagateContext.pm
 lib/Language/P/ParseTree/Visitor.pm
 lib/Language/P/Parser.pm
+lib/Language/P/Parser/Exception.pm
 lib/Language/P/Parser/Lexicals.pm
 lib/Language/P/Parser/Regex.pm
 lib/Language/P/Toy/Generator.pm

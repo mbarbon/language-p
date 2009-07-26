@@ -11,6 +11,8 @@ use Language::P::ParseTree qw(:all);
 use Language::P::ParseTree::PropagateContext;
 use Language::P::Toy::Value::MainSymbolTable;
 
+use YAML qw(Bless Dump);
+
 our @EXPORT_OK = qw(fresh_parser parsed_program
                     parse_and_diff_yaml parse_string);
 our %EXPORT_TAGS =
@@ -95,8 +97,20 @@ sub parse_and_diff_yaml {
 
     my $got = '';
     my $dumper = Language::P::ParseTree::DumpYAML->new;
-    foreach my $line ( @{parse_string( $expr )} ) {
-        $got .= $dumper->dump( $line );
+    eval {
+        foreach my $line ( @{parse_string( $expr )} ) {
+            $got .= $dumper->dump( $line );
+        }
+    };
+    my $e = $@;
+    if( $e && ref( $e ) && $e->isa( 'Language::P::Exception' ) ) {
+        my $v = { message => $e->message,
+                  file    => $e->position->[0],
+                  line    => $e->position->[1],
+                  };
+        Bless( $v )->tag( 'p:Exception' );
+
+        $got .= Dump( $v );
     }
 
     require Test::Differences;
