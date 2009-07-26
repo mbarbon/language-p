@@ -78,7 +78,7 @@ EOT
     ) );
 }
 
-our @EXPORT = ( qw(%%KEYWORD_TO_OP %%NUMBER_TO_NAME @OPERATIONS
+our @EXPORT = ( qw(%%KEYWORD_TO_OP %%OP_TO_KEYWORD %%NUMBER_TO_NAME @OPERATIONS
                    %%OP_ATTRIBUTES), @OPERATIONS );
 our %%EXPORT_TAGS =
   ( all => \@EXPORT,
@@ -116,6 +116,8 @@ EOT
 
     printf $out <<'EOT';
     );
+
+our %%OP_TO_KEYWORD = reverse %%KEYWORD_TO_OP;
 
 our %%OP_ATTRIBUTES =
   (

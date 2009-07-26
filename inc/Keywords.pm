@@ -47,7 +47,7 @@ BEGIN {
 };
 
 our @EXPORT = ( @KEYWORDS, @BUILTINS, @OVERRIDABLES,
-                qw(@KEYWORDS @BUILTINS @OVERRIDABLES),
+                qw(@KEYWORDS @BUILTINS @OVERRIDABLES %ID_TO_KEYWORD),
                 qw(is_keyword is_builtin is_overridable is_id)
                 );
 our %%EXPORT_TAGS =
@@ -85,6 +85,8 @@ EOT
 
     print $out <<'EOT';
     );
+
+our %ID_TO_KEYWORD = reverse %KEYWORDS;
 
 1;
 EOT
