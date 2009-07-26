@@ -424,7 +424,8 @@ sub _builtin {
             _add_bytecode $self,
                 opcode_nm( $tree->function,
                            context  => _context( $tree ),
-                           lexicals => $tree->get_attribute( 'lexicals' ) );
+                           lexicals => $tree->get_attribute( 'lexicals' ),
+                           globals  => $tree->get_attribute( 'globals' ) );
         } else {
             _add_bytecode $self,
                 opcode_nm( $tree->function, context => _context( $tree ) );

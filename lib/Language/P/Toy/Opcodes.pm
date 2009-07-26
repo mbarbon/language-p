@@ -1169,6 +1169,10 @@ sub o_eval {
         my( $sigil, $name ) = split /\0/, $k;
         $parse_lex->add_name( $sigil, $name );
     }
+    foreach my $k ( keys %{$op->{globals}} ) {
+        my( $sigil, $name ) = split /\0/, $k;
+        $parse_lex->add_name_our( $sigil, $name, $op->{globals}{$k} );
+    }
 
     $runtime->eval_string( $string->as_string, _context( $op, $runtime ),
                            $parse_lex,

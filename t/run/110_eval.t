@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    eval 'print "1..5\n"';
+    eval 'print "1..6\n"';
 }
 
 my $y = 2;
@@ -23,3 +23,12 @@ eval '$y = $y + 1';
 
 print "ok $x\n";
 print "ok $y\n";
+
+$main::x = $main::x = 66; # avoid warning
+
+package p;
+our $x;
+package main;
+$p::x = 6;
+
+eval 'print "ok $x\n"';

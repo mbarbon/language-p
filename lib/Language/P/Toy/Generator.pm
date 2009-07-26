@@ -474,6 +474,8 @@ sub _allocate_single {
         if(    $lexical->name eq '_'
             && $lexical->sigil == VALUE_ARRAY ) {
             $map->{$lexical} = 0; # arguments are always first
+        } elsif( $lexical->isa( 'Language::P::ParseTree::Symbol' ) ) {
+            $map->{$lexical} = -1;
         } elsif( $lexical->closed_over ) {
             if( $level ) {
                 my $code_from = $self->{_processing}[-$level - 1];

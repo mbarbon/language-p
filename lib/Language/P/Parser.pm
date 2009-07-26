@@ -1216,10 +1216,11 @@ sub _parse_term_terminal {
         my $tokidt = $token->[O_ID_TYPE];
 
         if( $token->[O_ID_TYPE] == KEY_EVAL ) {
-            my $lex = $self->_lexicals->all_visible_lexicals;
+            my( $lex, $glob ) = $self->_lexicals->all_visible_lexicals;
             my $tree = _parse_listop( $self, $token );
             $_->set_closed_over foreach values %$lex;
             $tree->set_attribute( 'lexicals', $lex );
+            $tree->set_attribute( 'globals', $glob );
 
             return $tree;
         } elsif( $token->[O_ID_TYPE] == KEY_REQUIRE_FILE ) {
