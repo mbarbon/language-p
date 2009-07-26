@@ -31,8 +31,6 @@ Parsing:
 - CORE::builtin to always call builtin
 - special treatment for glob()
 - simplify detection of <foo> vs. <foo >, avoid constructing a lexer
-- packages
-  - package handling in our()
 - parsing of nullary/unary vs. list operators
 - => auto-quoting
   - => quoting of -foo => 1

@@ -379,6 +379,10 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Identifier);
 
+sub symbol_name { return $_[0]->{symbol_name} }
+sub set_closed_over {}
+sub closed_over { 0 }
+
 package Language::P::ParseTree::LexicalSymbol;
 
 use strict;

@@ -431,7 +431,6 @@ sub _parse_line_rest {
 sub _add_pending_lexicals {
     my( $self ) = @_;
 
-    # FIXME our() is different
     foreach my $lexical ( @{$self->_pending_lexicals} ) {
         $self->_lexicals->add_lexical( $lexical );
     }
@@ -663,7 +662,7 @@ sub _parse_for {
         my $name = $self->lexer->lex_identifier( 0 );
         die "No name" unless $name;
 
-        # FIXME our() variable refers to package it was declared in
+        # all the special handling for our() is done by _process_declaration
         $foreach_var = Language::P::ParseTree::Symbol->new
                            ( { name    => $name->[O_VALUE],
                                sigil   => VALUE_SCALAR,
@@ -810,6 +809,13 @@ sub _find_symbol {
     my( $level, $lex ) = $self->_lexicals->find_name( $sigil . "\0" . $name );
 
     if( $lex ) {
+        if( $lex->isa( 'Language::P::ParseTree::Symbol' ) ) {
+            return Language::P::ParseTree::Symbol->new
+                       ( { name  => $lex->name,
+                           sigil => $lex->sigil,
+                           } );
+        }
+
         $lex->set_closed_over if $level > 0;
 
         return Language::P::ParseTree::LexicalSymbol->new
@@ -1411,14 +1417,23 @@ sub _process_declaration {
 
         return $decl;
     } elsif( $decl->isa( 'Language::P::ParseTree::Symbol' ) ) {
-        my $decl = Language::P::ParseTree::LexicalDeclaration->new
+        my $sym;
+        if( $keyword == OP_OUR ) {
+            $sym = Language::P::ParseTree::Symbol->new
+                       ( { name        => _qualify( $self, $decl->name, T_ID ),
+                           sigil       => $decl->sigil,
+                           symbol_name => $decl->sigil . "\0" . $decl->name
+                           } );
+        } else {
+            $sym = Language::P::ParseTree::LexicalDeclaration->new
                        ( { name    => $decl->name,
                            sigil   => $decl->sigil,
                            flags   => $declaration_to_flags{$keyword},
                            } );
-        push @{$self->_pending_lexicals}, $decl;
+        }
+        push @{$self->_pending_lexicals}, $sym;
 
-        return $decl;
+        return $sym;
     } else {
         die 'Invalid node ', ref( $decl ), ' in declaration';
     }

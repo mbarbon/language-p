@@ -8,6 +8,7 @@ Revision history for Perl extension Language::P.
 	    - Various fixes to the parsing of $#, $#foo and $#{foo} in
 	      quoted strings.
 	    - Octal and hexadecimal string escapes.
+	    - our() declarations.
 	- Intermediate representation:
 	    - Fix code generation for nested if-then-else constructs.
 	- Toy runtime
