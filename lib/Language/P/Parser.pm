@@ -1899,6 +1899,13 @@ sub _apply_prototype {
                                       sigil => VALUE_GLOB,
                                       } );
         }
+        if(    ( $proto_char & PROTO_MAKE_ARRAY ) == PROTO_MAKE_ARRAY
+            && $term->is_bareword ) {
+            $args->[$i - 3] = Language::P::ParseTree::Symbol->new
+                                  ( { name  => $term->value,
+                                      sigil => VALUE_ARRAY,
+                                      } );
+        }
         if( $proto_char & PROTO_REFERENCE ) {
             my $arg = $args->[$i - 3];
             my $value = $arg->is_symbol ? $arg->sigil : 0;
