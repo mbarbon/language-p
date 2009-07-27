@@ -16,7 +16,7 @@ our @EXPORT_OK =
        PROTO_DEFAULT PROTO_SCALAR PROTO_ARRAY PROTO_HASH PROTO_SUB
        PROTO_GLOB PROTO_REFERENCE PROTO_BLOCK PROTO_AMPER PROTO_ANY
        PROTO_INDIROBJ PROTO_FILEHANDLE PROTO_MAKE_GLOB PROTO_MAKE_ARRAY
-       PROTO_MAKE_HASH
+       PROTO_MAKE_HASH PROTO_DEFAULT_ARG
 
        FLAG_IMPLICITARGUMENTS FLAG_ERASEFRAME
        FLAG_RX_MULTI_LINE FLAG_RX_SINGLE_LINE FLAG_RX_CASE_INSENSITIVE
@@ -69,6 +69,7 @@ use constant
     PROTO_MAKE_ARRAY   => 1024|2,
     PROTO_MAKE_HASH    => 1024|4,
     PROTO_MAKE_GLOB    => 1024|16,
+    PROTO_DEFAULT_ARG  => 2048,
     PROTO_DEFAULT      => [ -1, -1, 0, 2 ],
 
     # sigils, anonymous array/hash constructors, dereferences
@@ -106,15 +107,15 @@ use constant
     };
 
 our %PROTOTYPE =
-  ( OP_PRINT()       => [  0, -1, PROTO_FILEHANDLE, PROTO_ARRAY ],
-    OP_DEFINED()     => [  0,  1, PROTO_AMPER, PROTO_AMPER|PROTO_ANY ],
+  ( OP_PRINT()       => [  0, -1, PROTO_FILEHANDLE|PROTO_DEFAULT_ARG, PROTO_ARRAY ],
+    OP_DEFINED()     => [  1,  1, PROTO_AMPER|PROTO_DEFAULT_ARG, PROTO_AMPER|PROTO_ANY ],
     OP_RETURN()      => [  0, -1, 0, PROTO_ARRAY ],
     OP_UNDEF()       => [  0,  1, 0, PROTO_ANY ],
-    OP_EVAL()        => [  0,  1, PROTO_BLOCK, PROTO_ANY ],
+    OP_EVAL()        => [  1,  1, PROTO_BLOCK|PROTO_DEFAULT_ARG, PROTO_ANY ],
     OP_DO_FILE()     => [  1,  1, 0, PROTO_ANY ],
     OP_REQUIRE_FILE()=> [  1,  1, 0, PROTO_ANY ],
     OP_MAP()         => [  2, -1, PROTO_INDIROBJ, PROTO_ARRAY ],
-    ( map { $_ => [ 0, 1, 0, PROTO_MAKE_GLOB ] }
+    ( map { $_ => [ 1, 1, PROTO_DEFAULT_ARG, PROTO_MAKE_GLOB ] }
           ( OP_FT_EREADABLE,
             OP_FT_EWRITABLE,
             OP_FT_EEXECUTABLE,
@@ -143,25 +144,25 @@ our %PROTOTYPE =
             OP_FT_ATIME,
             OP_FT_CTIME,
             ) ),
-    OP_UNLINK()      => [  0, -1, 0, PROTO_ARRAY ],
+    OP_UNLINK()      => [  1, -1, PROTO_DEFAULT_ARG, PROTO_ARRAY ],
     OP_DIE()         => [  0, -1, 0, PROTO_ARRAY ],
     OP_OPEN()        => [  1, -1, 0, PROTO_MAKE_GLOB, PROTO_SCALAR, PROTO_ARRAY ],
     OP_PIPE()        => [  2,  2, 0, PROTO_MAKE_GLOB, PROTO_MAKE_GLOB ],
     OP_CHDIR()       => [  0,  1, 0, PROTO_SCALAR ],
-    OP_RMDIR()       => [  0,  1, 0, PROTO_SCALAR ],
+    OP_RMDIR()       => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
     OP_READLINE()    => [  0,  1, 0, PROTO_MAKE_GLOB ],
-    OP_GLOB()        => [  0, -1, 0, PROTO_ARRAY ],
+    OP_GLOB()        => [  1, -1, PROTO_DEFAULT_ARG, PROTO_ARRAY ],
     OP_CLOSE()       => [  0,  1, 0, PROTO_MAKE_GLOB ],
     OP_BINMODE()     => [  0,  2, 0, PROTO_MAKE_GLOB, PROTO_SCALAR ],
-    OP_ABS()         => [  0,  1, 0, PROTO_SCALAR ],
-    OP_CHR()         => [  0,  1, 0, PROTO_SCALAR ],
+    OP_ABS()         => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
+    OP_CHR()         => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
     OP_WANTARRAY()   => [  0,  0, 0 ],
-    OP_REFTYPE()     => [  0,  1, 0, PROTO_SCALAR ],
+    OP_REFTYPE()     => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
     OP_BLESS()       => [  1,  2, 0, PROTO_SCALAR, PROTO_SCALAR ],
     OP_ARRAY_PUSH()  => [  1, -1, 0, PROTO_MAKE_ARRAY|PROTO_REFERENCE, PROTO_ARRAY ],
     OP_ARRAY_UNSHIFT()=>[  1, -1, 0, PROTO_MAKE_ARRAY|PROTO_REFERENCE, PROTO_ARRAY ],
-    OP_ARRAY_POP()   => [  1,  1, 0, PROTO_MAKE_ARRAY|PROTO_REFERENCE ],
-    OP_ARRAY_SHIFT() => [  1,  1, 0, PROTO_MAKE_ARRAY|PROTO_REFERENCE ],
+    OP_ARRAY_POP()   => [  1,  1, PROTO_DEFAULT_ARG, PROTO_MAKE_ARRAY|PROTO_REFERENCE ],
+    OP_ARRAY_SHIFT() => [  1,  1, PROTO_DEFAULT_ARG, PROTO_MAKE_ARRAY|PROTO_REFERENCE ],
     );
 
 our %CONTEXT =

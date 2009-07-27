@@ -811,21 +811,8 @@ sub _parse_expr {
     return _parse_term( $self, PREC_LOWEST );
 }
 
-sub _find_symbol {
-    my( $self, $pos, $sigil, $name, $type ) = @_;
-
-    if( $self->_in_declaration ) {
-        return Language::P::ParseTree::Symbol->new
-                   ( { name  => $name,
-                       sigil => $sigil,
-                       } );
-    } elsif( $type == T_FQ_ID ) {
-        return Language::P::ParseTree::Symbol->new
-                   ( { name  => _qualify( $self, $name, $type ),
-                       sigil => $sigil,
-                       } );
-    }
-
+sub _find_lexical {
+    my( $self, $sigil, $name ) = @_;
     my( $level, $lex ) = $self->_lexicals->find_name( $sigil . "\0" . $name );
 
     if( $lex ) {
@@ -843,6 +830,26 @@ sub _find_symbol {
                        level       => $level,
                        } );
     }
+
+    return undef;
+}
+
+sub _find_symbol {
+    my( $self, $pos, $sigil, $name, $type ) = @_;
+
+    if( $self->_in_declaration ) {
+        return Language::P::ParseTree::Symbol->new
+                   ( { name  => $name,
+                       sigil => $sigil,
+                       } );
+    } elsif( $type == T_FQ_ID ) {
+        return Language::P::ParseTree::Symbol->new
+                   ( { name  => _qualify( $self, $name, $type ),
+                       sigil => $sigil,
+                       } );
+    }
+    my $lex = _find_lexical( $self, $sigil, $name );
+    return $lex if $lex;
 
     return Language::P::ParseTree::Symbol->new
                ( { name  => _qualify( $self, $name, $type ),
@@ -1870,6 +1877,26 @@ sub _apply_prototype {
     my( $self, $pos, $call ) = @_;
     my $proto = $call->parsing_prototype;
     my $args = $call->arguments || [];
+
+    if( !$call->arguments && ( $proto->[2] & PROTO_DEFAULT_ARG ) ) {
+        my $op = !ref( $call->function ) ? $call->function : 0;
+
+        if( $op == OP_FT_ISTTY ) {
+            $call->{arguments} = [ _find_symbol( $self, undef, VALUE_GLOB,
+                                                 'STDIN', T_FQ_ID ) ];
+        } elsif( $op == OP_ARRAY_SHIFT || $op == OP_ARRAY_POP ) {
+            if( my $lex = _find_lexical( $self, VALUE_ARRAY, '_' ) ) {
+                $call->{arguments} = [ $lex ];
+            } else {
+                $call->{arguments} = [ _find_symbol( $self, undef, VALUE_ARRAY,
+                                                     'ARGV', T_FQ_ID ) ];
+            }
+        } else {
+            $call->{arguments} = [ _find_symbol( $self, undef, VALUE_SCALAR,
+                                                 '_', T_FQ_ID ) ];
+        }
+        $args = $call->arguments;
+    }
 
     if( @$args < $proto->[0] ) {
         _parse_error( $self, $pos, "Too few arguments for %s",

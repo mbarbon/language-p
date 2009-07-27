@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 3;
+use Test::More tests => 8;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -58,4 +58,85 @@ arguments:
     sigil: VALUE_ARRAY
 context: CXT_VOID
 function: OP_ARRAY_SHIFT
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+chr
+EOP
+--- !parsetree:Overridable
+arguments:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: _
+    sigil: VALUE_SCALAR
+context: CXT_VOID
+function: OP_CHR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+-t
+EOP
+--- !parsetree:Builtin
+arguments:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: STDIN
+    sigil: VALUE_GLOB
+context: CXT_VOID
+function: OP_FT_ISTTY
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+pop
+EOP
+--- !parsetree:Overridable
+arguments:
+  - !parsetree:Symbol
+    context: CXT_LIST
+    name: ARGV
+    sigil: VALUE_ARRAY
+context: CXT_VOID
+function: OP_ARRAY_POP
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+sub a { shift }
+EOP
+--- !parsetree:NamedSubroutine
+lines:
+  - !parsetree:Builtin
+    arguments:
+      - !parsetree:Overridable
+        arguments:
+          - !parsetree:LexicalSymbol
+            context: CXT_LIST
+            level: 0
+            name: _
+            sigil: VALUE_ARRAY
+        context: CXT_CALLER
+        function: OP_ARRAY_SHIFT
+    context: CXT_CALLER
+    function: OP_RETURN
+name: a
+prototype: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+sub { shift };
+EOP
+--- !parsetree:AnonymousSubroutine
+lines:
+  - !parsetree:Builtin
+    arguments:
+      - !parsetree:Overridable
+        arguments:
+          - !parsetree:LexicalSymbol
+            context: CXT_LIST
+            level: 0
+            name: _
+            sigil: VALUE_ARRAY
+        context: CXT_CALLER
+        function: OP_ARRAY_SHIFT
+    context: CXT_CALLER
+    function: OP_RETURN
 EOE

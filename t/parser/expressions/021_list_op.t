@@ -116,7 +116,11 @@ EOP
 context: CXT_VOID
 expressions:
   - !parsetree:BuiltinIndirect
-    arguments: ~
+    arguments:
+      - !parsetree:Symbol
+        context: CXT_SCALAR
+        name: _
+        sigil: VALUE_SCALAR
     context: CXT_VOID
     function: OP_PRINT
     indirect: ~
@@ -125,7 +129,11 @@ expressions:
     flags: CONST_NUMBER|NUM_INTEGER
     value: 1
   - !parsetree:BuiltinIndirect
-    arguments: ~
+    arguments:
+      - !parsetree:Symbol
+        context: CXT_SCALAR
+        name: _
+        sigil: VALUE_SCALAR
     context: CXT_VOID
     function: OP_PRINT
     indirect: ~
@@ -143,7 +151,11 @@ EOP
 context: CXT_VOID
 expressions:
   - !parsetree:BuiltinIndirect
-    arguments: ~
+    arguments:
+      - !parsetree:Symbol
+        context: CXT_SCALAR
+        name: _
+        sigil: VALUE_SCALAR
     context: CXT_VOID
     function: OP_PRINT
     indirect: ~

@@ -100,7 +100,11 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 print FILE;
 EOP
 --- !parsetree:BuiltinIndirect
-arguments: ~
+arguments:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: _
+    sigil: VALUE_SCALAR
 context: CXT_VOID
 function: OP_PRINT
 indirect: !parsetree:Symbol
