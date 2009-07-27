@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 7;
+use Test::More tests => 8;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -13,6 +13,23 @@ sub name {
 EOP
 --- !parsetree:NamedSubroutine
 lines: []
+name: name
+prototype: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+sub name { a }
+EOP
+--- !parsetree:NamedSubroutine
+lines:
+  - !parsetree:Builtin
+    arguments:
+      - !parsetree:Constant
+        context: CXT_CALLER
+        flags: CONST_STRING|STRING_BARE
+        value: a
+    context: CXT_CALLER
+    function: OP_RETURN
 name: name
 prototype: ~
 EOE

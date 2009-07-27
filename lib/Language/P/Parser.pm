@@ -463,10 +463,10 @@ sub _parse_sub {
         _parse_error( $self, $name->[O_POS], "Named sub not allowed" )
           unless $flags & 1;
 
-        my $next = $self->lexer->lex( X_OPERATOR );
+        my $next = $self->lexer->lex( X_BLOCK );
         if( $next->[O_TYPE] == T_OPPAR ) {
             $proto = _parse_sub_proto( $self );
-            $next = $self->lexer->lex( X_OPERATOR );
+            $next = $self->lexer->lex( X_BLOCK );
         }
 
         if( $next->[O_TYPE] == T_SEMICOLON ) {
@@ -480,7 +480,7 @@ sub _parse_sub {
             _syntax_error( $self, $next );
         }
     } else {
-        _lex_token( $self, T_OPBRK );
+        _lex_token( $self, T_OPBRK, undef, X_BLOCK );
         _parse_error( "Anonymous sub not allowed" )
           unless $flags & 2;
     }
