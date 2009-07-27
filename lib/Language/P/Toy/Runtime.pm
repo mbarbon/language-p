@@ -208,4 +208,16 @@ sub call_return {
     return $rpc;
 }
 
+sub get_symbol {
+    my( $self, $name, $sigil ) = @_;
+
+    return $self->symbol_table->get_symbol( $name, $sigil );
+}
+
+sub get_package {
+    my( $self, $name ) = @_;
+
+    return $self->symbol_table->get_package( $name );
+}
+
 1;

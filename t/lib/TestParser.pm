@@ -47,7 +47,8 @@ my @lines;
                       ( { name     => $name,
                           prototype=> $prototype,
                           } );
-        $self->runtime->symbol_table->set_symbol( $name, '&', $sub );
+        $self->runtime->_symbol_table->set_symbol( $self->runtime,
+                                                   $name, '&', $sub );
     }
 
     package TestParserRuntime;
@@ -58,7 +59,9 @@ my @lines;
         return bless { symbol_table => $st }, __PACKAGE__;
     }
 
-    sub symbol_table { $_[0]->{symbol_table} }
+    sub get_symbol { $_[0]->_symbol_table->get_symbol( $_[1], $_[2] ) }
+    sub get_package { $_[0]->_symbol_table->get_package( $_[1] ) }
+    sub _symbol_table { $_[0]->{symbol_table} }
     sub set_bytecode { }
     sub set_data_handle { }
 }
@@ -111,6 +114,8 @@ sub parse_and_diff_yaml {
         Bless( $v )->tag( 'p:Exception' );
 
         $got .= Dump( $v );
+    } elsif( $e ) {
+        $got .= $e;
     }
 
     require Test::Differences;

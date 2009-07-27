@@ -196,7 +196,7 @@ sub parse_stream {
     $self->{lexer} = Language::P::Lexer->new
                          ( { stream       => $stream,
                              file         => $filename,
-                             symbol_table => $self->runtime->symbol_table,
+                             runtime      => $self->runtime,
                              } );
     $self->{_lexical_state} = [];
     $self->_parse( $flags, $lexicals );
@@ -1067,7 +1067,7 @@ sub _parse_substitution {
     if( $match->flags & FLAG_RX_EVAL ) {
         local $self->{lexer} = Language::P::Lexer->new
                                    ( { string       => $token->[O_RX_SECOND_HALF]->[O_QS_BUFFER],
-                                       symbol_table => $self->runtime->symbol_table,
+                                       runtime      => $self->runtime,
                                        _heredoc_lexer => $self->lexer,
                                        } );
         $replace = _parse_block_rest( $self, BLOCK_OPEN_SCOPE, T_EOF );
@@ -1088,7 +1088,7 @@ sub _parse_string_rest {
     my @values;
     local $self->{lexer} = Language::P::Lexer->new
                                ( { string       => $token->[O_QS_BUFFER],
-                                   symbol_table => $self->runtime->symbol_table,
+                                   runtime      => $self->runtime,
                                    } );
 
     $self->lexer->quote( { interpolate          => $token->[O_QS_INTERPOLATE],
@@ -1740,9 +1740,9 @@ sub _declared_id {
     my $opidt = $op->[O_ID_TYPE];
 
     if( is_overridable( $opidt ) ) {
-        my $st = $self->runtime->symbol_table;
+        my $rt = $self->runtime;
 
-        if( $st->get_symbol( _qualify( $self, $op->[O_VALUE], $opidt ), '&' ) ) {
+        if( $rt->get_symbol( _qualify( $self, $op->[O_VALUE], $opidt ), '&' ) ) {
             die "Overriding '" . $op->[O_VALUE] . "' not implemented";
         }
         $call = Language::P::ParseTree::Overridable->new
@@ -1757,7 +1757,7 @@ sub _declared_id {
 
         return ( $call, 1 );
     } else {
-        my $st = $self->runtime->symbol_table;
+        my $rt = $self->runtime;
         my $fqname = _qualify( $self, $op->[O_VALUE], $opidt );
 
         my $symbol = Language::P::ParseTree::Symbol->new
@@ -1769,7 +1769,7 @@ sub _declared_id {
                         arguments => undef,
                         } );
 
-        if( my $decl = $st->get_symbol( $fqname, '&' ) ) {
+        if( my $decl = $rt->get_symbol( $fqname, '&' ) ) {
             # FIXME accessor
             $call->{prototype} = $decl->prototype;
             return ( $call, 1 );
@@ -1797,8 +1797,6 @@ sub _parse_listop_like {
     my( $args, $fh );
 
     if( !$call || !$declared || $call->is_plain_function ) {
-        my $st = $self->runtime->symbol_table;
-
         if( $next->[O_TYPE] == T_ARROW ) {
             _lex_token( $self, T_ARROW );
             my $la = $self->lexer->peek( X_OPERATOR );
@@ -1826,7 +1824,7 @@ sub _parse_listop_like {
             # try to see if it is some sort of (indirect) method call
             return _parse_maybe_indirect_method_call( $self, $op, $next );
         } elsif(    $next->[O_TYPE] == T_ID
-                 && $st->get_package( $next->[O_VALUE] ) ) {
+                 && $self->runtime->get_package( $next->[O_VALUE] ) ) {
             # foo Bar:: is always a method call
             return _parse_maybe_indirect_method_call( $self, $op, $next );
         }
@@ -1939,7 +1937,7 @@ sub _parse_arglist {
                  && $la->[O_TYPE] == T_ID
                  && $la->[O_ID_TYPE] == T_ID ) {
             # check if it is a declared id
-            my $declared = $self->runtime->symbol_table
+            my $declared = $self->runtime
                 ->get_symbol( _qualify( $self, $la->[O_VALUE], $la->[O_ID_TYPE] ), '&' );
             # look ahead one more token
             _lex_token( $self );

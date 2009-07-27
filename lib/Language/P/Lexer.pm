@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
-__PACKAGE__->mk_ro_accessors( qw(stream buffer tokens symbol_table
+__PACKAGE__->mk_ro_accessors( qw(stream buffer tokens runtime
                                  file line _start_of_line _heredoc_lexer
                                  ) );
 __PACKAGE__->mk_accessors( qw(quote) );
@@ -978,7 +978,7 @@ sub lex {
         if( $$_ =~ /^=>/ ) {
             # fully qualified name (foo::moo) is quoted only if not declared
             if(    $type == T_FQ_ID
-                && $self->symbol_table->get_symbol( $ids, '*' ) ) {
+                && $self->runtime->get_symbol( $ids, '*' ) ) {
                 return [ $pos, T_ID, $ids, $type ];
             } else {
                 return [ $pos, T_STRING, $ids ];
