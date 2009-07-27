@@ -10,8 +10,8 @@ sub type { 9 }
 sub is_subroutine { 0 }
 
 sub new {
-    my( $class, $args ) = @_;
-    my $self = $class->SUPER::new( $args );
+    my( $class, $runtime, $args ) = @_;
+    my $self = $class->SUPER::new( $runtime, $args );
 
     $self->{stack_size} ||= 0;
     $self->{closed} ||= [];
@@ -25,7 +25,7 @@ sub call {
 
     my $stack = $runtime->{_stack};
     if( $self->lexicals ) {
-        my $pad = $self->lexicals->new_scope( undef );
+        my $pad = $self->lexicals->new_scope( $runtime, undef );
         $stack->[$frame - 1] = $pad;
     } else {
         $stack->[$frame - 1] = 'no_pad';
@@ -33,7 +33,7 @@ sub call {
     if( $self->stack_size ) {
         # FIXME lexical values initialization
         foreach my $slot ( 0 .. $self->stack_size ) {
-            $stack->[$frame - 2 - $slot] = Language::P::Toy::Value::Undef->new;
+            $stack->[$frame - 2 - $slot] = Language::P::Toy::Value::Undef->new( $runtime );
         }
     }
     $stack->[$frame - 2] = [ $pc, $runtime->{_bytecode}, $context,

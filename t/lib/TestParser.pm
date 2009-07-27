@@ -44,7 +44,8 @@ my @lines;
         my( $self, $name, $prototype ) = @_;
 
         my $sub = Language::P::Toy::Value::Subroutine::Stub->new
-                      ( { name     => $name,
+                      ( $self->runtime,
+                        { name     => $name,
                           prototype=> $prototype,
                           } );
         $self->runtime->_symbol_table->set_symbol( $self->runtime,
@@ -54,13 +55,16 @@ my @lines;
     package TestParserRuntime;
 
     sub new {
-        my $st = Language::P::Toy::Value::MainSymbolTable->new;
+        my $self = bless {}, __PACKAGE__;
+        my $st = Language::P::Toy::Value::MainSymbolTable->new( $self );
 
-        return bless { symbol_table => $st }, __PACKAGE__;
+        $self->{symbol_table} = $st;
+
+        return $self;
     }
 
-    sub get_symbol { $_[0]->_symbol_table->get_symbol( $_[1], $_[2] ) }
-    sub get_package { $_[0]->_symbol_table->get_package( $_[1] ) }
+    sub get_symbol { $_[0]->_symbol_table->get_symbol( $_[0], $_[1], $_[2] ) }
+    sub get_package { $_[0]->_symbol_table->get_package( $_[0], $_[1] ) }
     sub _symbol_table { $_[0]->{symbol_table} }
     sub set_bytecode { }
     sub set_data_handle { }

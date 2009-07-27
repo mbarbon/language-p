@@ -9,8 +9,8 @@ __PACKAGE__->mk_ro_accessors( qw(array) );
 sub type { 2 }
 
 sub new {
-    my( $class, $args ) = @_;
-    my $self = $class->SUPER::new( $args );
+    my( $class, $runtime, $args ) = @_;
+    my $self = $class->SUPER::new( $runtime, $args );
 
     $self->{array} ||= [];
 
@@ -18,14 +18,15 @@ sub new {
 }
 
 sub clone {
-    my( $self, $level ) = @_;
+    my( $self, $runtime, $level ) = @_;
 
-    my $clone = ref( $self )->new( { array  => [ @{$self->{array}} ],
+    my $clone = ref( $self )->new( $runtime,
+                                   { array  => [ @{$self->{array}} ],
                                      } );
 
     if( $level > 0 ) {
         foreach my $entry ( @{$clone->{array}} ) {
-            $entry = $entry->clone( $level - 1 );
+            $entry = $entry->clone( $runtime, $level - 1 );
         }
     }
 
@@ -33,26 +34,26 @@ sub clone {
 }
 
 sub localize {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
-    return __PACKAGE__->new;
+    return __PACKAGE__->new( $runtime );
 }
 
 sub assign {
-    my( $self, $other ) = @_;
+    my( $self, $runtime, $other ) = @_;
 
     # FIXME multiple dispatch
     if( $other->isa( 'Language::P::Toy::Value::Scalar' ) ) {
-        $self->{array} = [ $other->clone( 1 ) ];
+        $self->{array} = [ $other->clone( $runtime, 1 ) ];
     } else {
         # FIXME optimize: don't do it unless necessary
-        my $oiter = $other->clone( 1 )->iterator;
-        $self->assign_iterator( $oiter );
+        my $oiter = $other->clone( $runtime, 1 )->iterator( $runtime );
+        $self->assign_iterator( $runtime, $oiter );
     }
 }
 
 sub assign_iterator {
-    my( $self, $iter ) = @_;
+    my( $self, $runtime, $iter ) = @_;
 
     $self->{array} = [];
     while( $iter->next ) {
@@ -61,55 +62,55 @@ sub assign_iterator {
 }
 
 sub push_value {
-    my( $self, @values ) = @_;
+    my( $self, $runtime, @values ) = @_;
 
     push @{$self->{array}}, @values;
 }
 
 sub push_list {
-    my( $self, $list ) = @_;
+    my( $self, $runtime, $list ) = @_;
 
     push @{$self->{array}}, @{$list->array};
 
     return Language::P::Toy::Value::StringNumber->new
-               ( { integer => scalar @{$self->array} } );
+               ( $runtime, { integer => scalar @{$self->array} } );
 }
 
 sub pop_value {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     return pop @{$self->{array}};
 }
 
 sub unshift_list {
-    my( $self, $list ) = @_;
+    my( $self, $runtime, $list ) = @_;
 
     unshift @{$self->{array}}, @{$list->array};
 
     return Language::P::Toy::Value::StringNumber->new
-               ( { integer => scalar @{$self->array} } );
+               ( $runtime, { integer => scalar @{$self->array} } );
 }
 
 sub shift_value {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     return shift @{$self->{array}};
 }
 
 sub iterator {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
-    return Language::P::Toy::Value::Array::Iterator->new( $self );
+    return Language::P::Toy::Value::Array::Iterator->new( $runtime, $self );
 }
 
 sub iterator_from {
-    my( $self, $index ) = @_;
+    my( $self, $runtime, $index ) = @_;
 
-    return Language::P::Toy::Value::Array::Iterator->new( $self, $index );
+    return Language::P::Toy::Value::Array::Iterator->new( $runtime, $self, $index );
 }
 
 sub get_item {
-    my( $self, $index ) = @_;
+    my( $self, $runtime, $index ) = @_;
 
     Carp::confess "Array index out of range ($index > $#{$self->{array}})"
         if $index < 0 || $index > $#{$self->{array}};
@@ -118,10 +119,10 @@ sub get_item {
 }
 
 sub get_item_or_undef {
-    my( $self, $index ) = @_;
+    my( $self, $runtime, $index ) = @_;
 
     if( $index > $#{$self->{array}} ) {
-        CORE::push @{$self->{array}}, Language::P::Toy::Value::Undef->new
+        push @{$self->{array}}, Language::P::Toy::Value::Undef->new( $runtime )
           foreach 1 .. $index - $#{$self->{array}};
     }
 
@@ -129,21 +130,21 @@ sub get_item_or_undef {
 }
 
 sub get_count {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     return scalar @{$self->{array}};
 }
 
 sub as_scalar {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
-    return Language::P::Toy::Value::StringNumber->new( { integer => $self->get_count } );
+    return Language::P::Toy::Value::StringNumber->new( $runtime, { integer => $self->get_count( $runtime ) } );
 }
 
 sub as_boolean_int {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
-    return $self->get_count ? 1 : 0;
+    return $self->get_count( $runtime ) ? 1 : 0;
 }
 
 package Language::P::Toy::Value::Array::Iterator;
@@ -157,15 +158,16 @@ __PACKAGE__->mk_ro_accessors( qw(array index) );
 sub type { 3 }
 
 sub new {
-    my( $class, $array, $index ) = @_;
-    my $self = $class->SUPER::new( { array => $array,
+    my( $class, $runtime, $array, $index ) = @_;
+    my $self = $class->SUPER::new( $runtime,
+                                   { array => $array,
                                      index => ( $index || 0 ) - 1,
                                      } );
 }
 
 sub next {
-    my( $self ) = @_;
-    return 0 if $self->{index} >= $self->{array}->get_count - 1;
+    my( $self, $runtime ) = @_;
+    return 0 if $self->{index} >= $self->{array}->get_count( $runtime ) - 1;
 
     ++$self->{index};
 
@@ -173,9 +175,9 @@ sub next {
 }
 
 sub item {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
-    return $self->{array}->get_item( $self->{index} );
+    return $self->{array}->get_item( $runtime, $self->{index} );
 }
 
 1;

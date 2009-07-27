@@ -9,16 +9,18 @@ __PACKAGE__->mk_ro_accessors( qw(string integer float) );
 sub type { 11 }
 
 sub clone {
-    my( $self, $level ) = @_;
+    my( $self, $runtime, $level ) = @_;
 
-    return Language::P::Toy::Value::StringNumber->new( { string  => $self->{string},
-                                                    integer => $self->{integer},
-                                                    float   => $self->{float},
-                                                    } );
+    return Language::P::Toy::Value::StringNumber->new
+               ( $runtime,
+                 { string  => $self->{string},
+                   integer => $self->{integer},
+                   float   => $self->{float},
+                   } );
 }
 
 sub as_string {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     return $self->{string} if defined $self->{string};
     return sprintf "%d", $self->{integer} if defined $self->{integer};
@@ -27,7 +29,7 @@ sub as_string {
 }
 
 sub as_integer {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     return $self->{integer} if defined $self->{integer};
     return int( $self->{float} ) if defined $self->{float};
@@ -36,7 +38,7 @@ sub as_integer {
 }
 
 sub as_float {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     return $self->{float} if defined $self->{float};
     return $self->{integer} if defined $self->{integer};
@@ -45,9 +47,9 @@ sub as_float {
 }
 
 sub assign {
-    my( $self, $other ) = @_;
+    my( $self, $runtime, $other ) = @_;
 
-    Language::P::Toy::Value::Scalar::assign( $self, $other )
+    Language::P::Toy::Value::Scalar::assign( $self, $runtime, $other )
         unless ref( $self ) eq ref( $other );
 
     $self->{string} = $other->{string};
@@ -56,7 +58,7 @@ sub assign {
 }
 
 sub as_boolean_int {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     if( defined $self->{integer} ) {
         return $self->{integer} != 0 ? 1 : 0;
@@ -70,7 +72,7 @@ sub as_boolean_int {
 }
 
 sub is_defined {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     return 1;
 }

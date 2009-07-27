@@ -11,20 +11,15 @@ use Language::P::Parser qw(:all);
 __PACKAGE__->mk_ro_accessors( qw(symbol_table _variables) );
 __PACKAGE__->mk_accessors( qw(parser) );
 
-our $current;
-
 sub new {
     my( $class, $args ) = @_;
-
-    Carp::confess( "Only one runtime supported" ) if $current;
-
     my $self = $class->SUPER::new( $args );
 
-    $self->{symbol_table} ||= Language::P::Toy::Value::MainSymbolTable->new;
+    $self->{symbol_table} ||= Language::P::Toy::Value::MainSymbolTable->new( $self );
     $self->{_variables} = { osname      => $^O,
                             };
 
-    return $current = $self;
+    return $self;
 }
 
 sub set_option {
@@ -42,11 +37,11 @@ sub reset {
 
 sub set_data_handle {
     my( $self, $package, $handle ) = @_;
-    my $data = $self->symbol_table->get_package( $package )
-                    ->get_symbol( 'DATA', '*', 1 );
+    my $data = $self->symbol_table->get_package( $self, $package )
+                    ->get_symbol( $self, 'DATA', '*', 1 );
 
-    $data->set_slot( 'io', Language::P::Toy::Value::Handle->new
-                               ( { handle => $handle } ) );
+    $data->set_slot( $self, 'io', Language::P::Toy::Value::Handle->new
+                                      ( $self, { handle => $handle } ) );
 }
 
 sub run_last_file {
@@ -121,12 +116,12 @@ sub compile_regex {
 
 sub search_file {
     my( $self, $file_str ) = @_;
-    my $inc = $self->symbol_table->get_symbol( 'INC', '@', 1 );
+    my $inc = $self->symbol_table->get_symbol( $self, 'INC', '@', 1 );
 
-    for( my $it = $inc->iterator; $it->next; ) {
-        my $path = $it->item->as_string . '/' . $file_str;
+    for( my $it = $inc->iterator( $self ); $it->next( $self ); ) {
+        my $path = $it->item->as_string( $self ) . '/' . $file_str;
         if( -f $path ) {
-            return Language::P::Toy::Value::StringNumber->new( { string => $path } );
+            return Language::P::Toy::Value::StringNumber->new( $self, { string => $path } );
         }
     }
 
@@ -211,13 +206,13 @@ sub call_return {
 sub get_symbol {
     my( $self, $name, $sigil ) = @_;
 
-    return $self->symbol_table->get_symbol( $name, $sigil );
+    return $self->symbol_table->get_symbol( $self, $name, $sigil );
 }
 
 sub get_package {
     my( $self, $name ) = @_;
 
-    return $self->symbol_table->get_package( $name );
+    return $self->symbol_table->get_package( $self, $name );
 }
 
 1;

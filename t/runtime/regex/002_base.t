@@ -19,7 +19,8 @@ my @re5 =
     );
 
 my $re5 = Language::P::Toy::Value::Regex->new
-              ( { bytecode   => \@re5,
+              ( $runtime,
+                { bytecode   => \@re5,
                   stack_size => 0,
                   } );
 

@@ -9,88 +9,88 @@ __PACKAGE__->mk_ro_accessors( qw(reference) );
 sub type { 10 }
 
 sub clone {
-    my( $self, $level ) = @_;
-    my $clone = Language::P::Toy::Value::Reference->new( { reference => $self->{reference} } );
+    my( $self, $runtime, $level ) = @_;
+    my $clone = Language::P::Toy::Value::Reference->new( $runtime, { reference => $self->{reference} } );
 
-    $clone->{reference} = $clone->{reference}->clone( $level -1 )
+    $clone->{reference} = $clone->{reference}->clone( $runtime, $level - 1 )
       if $level > 0;
 
     return $clone;
 }
 
 sub assign {
-    my( $self, $other ) = @_;
+    my( $self, $runtime, $other ) = @_;
 
-    Language::P::Toy::Value::Scalar::assign( $self, $other )
+    Language::P::Toy::Value::Scalar::assign( $self, $runtime, $other )
         unless ref( $self ) eq ref( $other );
 
     $self->{reference} = $other->{reference};
 }
 
 sub dereference_scalar {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     die unless $self->{reference}->isa( 'Language::P::Toy::Value::Scalar' );
     return $self->{reference};
 }
 
 sub vivify_scalar {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     die unless $self->{reference}->isa( 'Language::P::Toy::Value::Scalar' );
     return $self->{reference};
 }
 
 sub dereference_hash {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     die unless $self->{reference}->isa( 'Language::P::Toy::Value::Hash' );
     return $self->{reference};
 }
 
 sub vivify_hash {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     die unless $self->{reference}->isa( 'Language::P::Toy::Value::Hash' );
     return $self->{reference};
 }
 
 sub dereference_array {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     die unless $self->{reference}->isa( 'Language::P::Toy::Value::Array' );
     return $self->{reference};
 }
 
 sub vivify_array {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     die unless $self->{reference}->isa( 'Language::P::Toy::Value::Array' );
     return $self->{reference};
 }
 
 sub dereference_subroutine {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     die unless $self->{reference}->isa( 'Language::P::Toy::Value::Subroutine' );
     return $self->{reference};
 }
 
 sub dereference_glob {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     die unless $self->{reference}->isa( 'Language::P::Toy::Value::Typeglob' );
     return $self->{reference};
 }
 
 sub as_string {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     return sprintf '%s(0x%p)', _reference_string( $self ), $self->{reference};
 }
 
 sub as_boolean_int {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     return 1;
 }
@@ -109,15 +109,16 @@ sub _reference_string {
 }
 
 sub reference_type {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
     return Language::P::Toy::Value::StringNumber->new
-               ( { string => _reference_string( $self ),
+               ( $runtime,
+                 { string => _reference_string( $self ),
                    } );
 }
 
 sub bless {
-    my( $self, $stash ) = @_;
+    my( $self, $runtime, $stash ) = @_;
 
     $self->reference->set_stash( $stash );
 }

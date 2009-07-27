@@ -31,7 +31,8 @@ my @re4 =
     o( 'rx_accept',      groups   => 0 ), # 11
     );
 my $re4 = Language::P::Toy::Value::Regex->new
-              ( { bytecode   => \@re4,
+              ( $runtime,
+                { bytecode   => \@re4,
                   stack_size => 0,
                   } );
 
@@ -59,7 +60,8 @@ my @re6 =
     o( 'rx_accept',      groups   => 1 ),
     );
 my $re6 = Language::P::Toy::Value::Regex->new
-              ( { bytecode   => \@re6,
+              ( $runtime,
+                { bytecode   => \@re6,
                   stack_size => 0,
                   } );
 
@@ -95,7 +97,8 @@ my @re8 =
     o( 'rx_accept',      groups   => 3 ),
     );
 my $re8 = Language::P::Toy::Value::Regex->new
-              ( { bytecode   => \@re8,
+              ( $runtime,
+                { bytecode   => \@re8,
                   stack_size => 0,
                   } );
 

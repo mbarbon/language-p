@@ -75,12 +75,12 @@ sub o_print {
     my $args = pop @{$runtime->{_stack}};
     my $fh = pop @{$runtime->{_stack}};
 
-    for( my $iter = $args->iterator; $iter->next; ) {
-        $fh->write( $iter->item );
+    for( my $iter = $args->iterator( $runtime ); $iter->next( $runtime ); ) {
+        $fh->write( $runtime, $iter->item( $runtime ) );
     }
 
     # HACK
-    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( { integer => 1 } );
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( $runtime, { integer => 1 } );
 
     return $pc + 1;
 }
@@ -88,18 +88,18 @@ sub o_print {
 sub o_readline {
     my( $op, $runtime, $pc ) = @_;
     my $glob = pop @{$runtime->{_stack}};
-    my $fh = $glob->get_slot( 'io' );
+    my $fh = $glob->get_slot( $runtime, 'io' );
     my $cxt = _context( $op, $runtime );
 
     if( $cxt == CXT_LIST ) {
-        my $val = [ map Language::P::Toy::Value::Scalar->new_string( $_ ),
-                        @{$fh->read_lines} ];
+        my $val = [ map Language::P::Toy::Value::Scalar->new_string( $runtime, $_ ),
+                        @{$fh->read_lines( $runtime )} ];
         push @{$runtime->{_stack}}, Language::P::Toy::Value::List->new
-                                        ( { array => $val } );
+                                        ( $runtime, { array => $val } );
     } else {
-        my $val = $fh->read_line;
+        my $val = $fh->read_line( $runtime );
         push @{$runtime->{_stack}}, Language::P::Toy::Value::Scalar
-                                        ->new_string( $val );
+                                        ->new_string( $runtime, $val );
     }
 
     return $pc + 1;
@@ -115,7 +115,7 @@ sub o_constant {
 sub o_fresh_string {
     my( $op, $runtime, $pc ) = @_;
     push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new
-                                    ( { string => $op->{value} } );
+                                    ( $runtime, { string => $op->{value} } );
 
     return $pc + 1;
 }
@@ -131,7 +131,7 @@ sub %s {
     my $r = $vl->%s %s $vr->%s;
 
     push @{$runtime->{_stack}},
-         Language::P::Toy::Value::StringNumber->new( { %s => $r } );
+         Language::P::Toy::Value::StringNumber->new( $runtime, { %s => $r } );
 
     return $pc + 1;
 }
@@ -205,10 +205,10 @@ sub o_make_list {
     my $st = $runtime->{_stack};
 
     # create the list
-    my $list = Language::P::Toy::Value::List->new;
+    my $list = Language::P::Toy::Value::List->new( $runtime );
     if( $op->{count} ) {
         for( my $j = $#$st - $op->{count} + 1; $j <= $#$st; ++$j ) {
-            $list->push_value( $st->[$j] );
+            $list->push_value( $runtime, $st->[$j] );
         }
         # clear the stack
         $#$st -= $op->{count} - 1;
@@ -232,11 +232,11 @@ sub o_want {
     my $v;
 
     if( $cxt == CXT_VOID ) {
-        $v = Language::P::Toy::Value::Undef->new;
+        $v = Language::P::Toy::Value::Undef->new( $runtime );
     } elsif( $cxt == CXT_SCALAR ) {
-        $v = Language::P::Toy::Value::StringNumber->new( { string => '' } );
+        $v = Language::P::Toy::Value::StringNumber->new( $runtime, { string => '' } );
     } elsif( $cxt == CXT_LIST ) {
-        $v = Language::P::Toy::Value::StringNumber->new( { integer => 1 } );
+        $v = Language::P::Toy::Value::StringNumber->new( $runtime, { integer => 1 } );
     } else {
         die "Unknow context $cxt";
     }
@@ -257,7 +257,7 @@ sub o_call {
 sub o_call_method {
     my( $op, $runtime, $pc ) = @_;
     my $args = $runtime->{_stack}[-1];
-    my $invocant = $args->get_item( 0 );
+    my $invocant = $args->get_item( $runtime, 0 );
     my $sub = $invocant->find_method( $runtime, $op->{method} );
 
     die "Can't find method $op->{method}" unless $sub;
@@ -272,12 +272,12 @@ sub o_find_method {
     my $invocant = pop @{$runtime->{_stack}};
     my $sub = $invocant->find_method( $runtime, $op->{method} );
 
-    push @{$runtime->{_stack}}, $sub || Language::P::Toy::Value::Undef->new;
+    push @{$runtime->{_stack}}, $sub || Language::P::Toy::Value::Undef->new( $runtime );
 
     return $pc + 1;
 }
 
-my $empty_list = Language::P::Toy::Value::List->new;
+my $empty_list = Language::P::Toy::Value::List->new( undef );
 
 sub o_return {
     my( $op, $runtime, $pc ) = @_;
@@ -286,11 +286,11 @@ sub o_return {
     my $rpc = $runtime->call_return;
 
     if( $cxt == CXT_SCALAR ) {
-        if( $rv->get_count > 0 ) {
-            push @{$runtime->{_stack}}, $rv->get_item( $rv->get_count - 1 )
-                                           ->as_scalar;
+        if( $rv->get_count( $runtime ) > 0 ) {
+            push @{$runtime->{_stack}}, $rv->get_item( $runtime, $rv->get_count( $runtime ) - 1 )
+                                           ->as_scalar( $runtime );
         } else {
-            push @{$runtime->{_stack}}, Language::P::Toy::Value::Undef->new;
+            push @{$runtime->{_stack}}, Language::P::Toy::Value::Undef->new( $runtime );
         }
     } elsif( $cxt == CXT_LIST ) {
         push @{$runtime->{_stack}}, $rv;
@@ -305,7 +305,7 @@ sub o_return {
 
 sub o_glob {
     my( $op, $runtime, $pc ) = @_;
-    my $value = $runtime->symbol_table->get_symbol( $op->{name}, '*',
+    my $value = $runtime->symbol_table->get_symbol( $runtime, $op->{name}, '*',
                                                     $op->{create} );
 
     push @{$runtime->{_stack}}, $value;
@@ -316,7 +316,7 @@ sub o_glob {
 sub o_lexical {
     my( $op, $runtime, $pc ) = @_;
     my $value = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}]
-                  ||= Language::P::Toy::Value::Undef->new;
+                  ||= Language::P::Toy::Value::Undef->new( $runtime );
 
     push @{$runtime->{_stack}}, $value;
 
@@ -360,7 +360,7 @@ sub o_lexical_pad_clear {
 
 sub o_parameter_index {
     my( $op, $runtime, $pc ) = @_;
-    my $value = $runtime->{_stack}->[$runtime->{_frame} - 3]->get_item( $op->{index} );
+    my $value = $runtime->{_stack}->[$runtime->{_frame} - 3]->get_item( $runtime, $op->{index} );
 
     push @{$runtime->{_stack}}, $value;
 
@@ -384,14 +384,14 @@ sub o_jump_if_false {
     my( $op, $runtime, $pc ) = @_;
     my $v1 = pop @{$runtime->{_stack}};
 
-    return !$v1->as_boolean_int ? $op->{to} : $pc + 1;
+    return !$v1->as_boolean_int( $runtime ) ? $op->{to} : $pc + 1;
 }
 
 sub o_jump_if_true {
     my( $op, $runtime, $pc ) = @_;
     my $v1 = pop @{$runtime->{_stack}};
 
-    return $v1->as_boolean_int ? $op->{to} : $pc + 1;
+    return $v1->as_boolean_int( $runtime ) ? $op->{to} : $pc + 1;
 }
 
 sub o_jump_if_null {
@@ -410,7 +410,7 @@ sub %s {
     my $vr = pop @{$runtime->{_stack}};
     my $vl = pop @{$runtime->{_stack}};
 
-    return $vl->%s %s $vr->%s ? $op->{to} : $pc + 1;
+    return $vl->%s( $runtime ) %s $vr->%s( $runtime ) ? $op->{to} : $pc + 1;
 }
 EOT
         $op->{name}, $op->{convert}, $op->{operator}, $op->{convert};
@@ -474,14 +474,14 @@ sub _make_compare {
 
     my $ret = $op->{new_type} eq 'int' ?
                   '$r' :
-                  'Language::P::Toy::Value::StringNumber->new( { integer => $r } )';
+                  'Language::P::Toy::Value::StringNumber->new( $runtime, { integer => $r } )';
 
     eval sprintf <<'EOT',
 sub %s {
     my( $op, $runtime, $pc ) = @_;
     my $vr = pop @{$runtime->{_stack}};
     my $vl = pop @{$runtime->{_stack}};
-    my $r = $vl->%s %s $vr->%s ? 1 : 0;
+    my $r = $vl->%s( $runtime ) %s $vr->%s( $runtime ) ? 1 : 0;
 
     push @{$runtime->{_stack}}, %s;
 
@@ -609,7 +609,7 @@ sub %s {
     my $v = pop @{$runtime->{_stack}};
 
     push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber
-                                    ->new( { %s => %s } );
+                                    ->new( $runtime, { %s => %s } );
 
     return $pc + 1;
 }
@@ -621,19 +621,19 @@ EOT
 _make_unary( $_ ) foreach
   ( { name       => 'o_negate',
       type       => 'float',
-      expression => '-$v->as_float',
+      expression => '-$v->as_float( $runtime )',
       },
     { name       => 'o_stringify',
       type       => 'string',
-      expression => '$v->as_string',
+      expression => '$v->as_string( $runtime )',
       },
     { name       => 'o_abs',
       type       => 'float',
-      expression => 'abs $v->as_float',
+      expression => 'abs $v->as_float( $runtime )',
       },
     { name       => 'o_chr',
       type       => 'string',
-      expression => 'chr $v->as_integer',
+      expression => 'chr $v->as_integer( $runtime )',
       },
     );
 
@@ -646,7 +646,7 @@ sub %s {
     my $v = pop @{$runtime->{_stack}};
 
     push @{$runtime->{_stack}}, Language::P::Toy::Value::Scalar
-                                    ->new_boolean( %s );
+                                    ->new_boolean( $runtime, %s );
 
     return $pc + 1;
 }
@@ -657,13 +657,13 @@ EOT
 
 _make_boolean_unary( $_ ) foreach
   ( { name       => 'o_not',
-      expression => '!$v->as_boolean_int',
+      expression => '!$v->as_boolean_int( $runtime )',
       },
     { name       => 'o_chdir',
-      expression => 'chdir $v->as_string',
+      expression => 'chdir $v->as_string( $runtime )',
       },
     { name       => 'o_defined',
-      expression => '$v->is_defined',
+      expression => '$v->is_defined( $runtime )',
       },
     );
 
@@ -671,7 +671,7 @@ sub o_preinc {
     my( $op, $runtime, $pc ) = @_;
     my $v = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $v->pre_increment;
+    push @{$runtime->{_stack}}, $v->pre_increment( $runtime );
 
     return $pc + 1;
 }
@@ -680,7 +680,7 @@ sub o_postinc {
     my( $op, $runtime, $pc ) = @_;
     my $v = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $v->post_increment;
+    push @{$runtime->{_stack}}, $v->post_increment( $runtime );
 
     return $pc + 1;
 }
@@ -689,7 +689,7 @@ sub o_predec {
     my( $op, $runtime, $pc ) = @_;
     my $v = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $v->pre_decrement;
+    push @{$runtime->{_stack}}, $v->pre_decrement( $runtime );
 
     return $pc + 1;
 }
@@ -698,7 +698,7 @@ sub o_postdec {
     my( $op, $runtime, $pc ) = @_;
     my $v = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $v->post_decrement;
+    push @{$runtime->{_stack}}, $v->post_decrement( $runtime );
 
     return $pc + 1;
 }
@@ -708,7 +708,7 @@ sub o_assign {
     my $vr = pop @{$runtime->{_stack}};
     my $vl = $runtime->{_stack}[-1];
 
-    $vl->assign( $vr );
+    $vl->assign( $runtime, $vr );
 
     return $pc + 1;
 }
@@ -718,7 +718,7 @@ sub o_glob_slot_create {
     my $glob = pop @{$runtime->{_stack}};
     my $slot = $op->{slot};
 
-    push @{$runtime->{_stack}}, $glob->get_or_create_slot( $slot );
+    push @{$runtime->{_stack}}, $glob->get_or_create_slot( $runtime, $slot );
 
     return $pc + 1;
 }
@@ -728,7 +728,7 @@ sub o_glob_slot {
     my $glob = pop @{$runtime->{_stack}};
     my $slot = $op->{slot};
 
-    push @{$runtime->{_stack}}, $glob->get_slot( $slot );
+    push @{$runtime->{_stack}}, $glob->get_slot( $runtime, $slot );
 
     return $pc + 1;
 }
@@ -740,7 +740,7 @@ sub o_glob_slot_set {
     my $glob = pop @{$runtime->{_stack}};
     my $slot = $op->{slot};
 
-    $glob->set_slot( $slot, $value );
+    $glob->set_slot( $runtime, $slot, $value );
 
     return $pc + 1;
 }
@@ -750,26 +750,26 @@ sub o_unlink {
     my $args = pop @{$runtime->{_stack}};
     my @args;
 
-    for( my $it = $args->iterator; $it->next; ) {
-        my $arg = $it->item;
+    for( my $it = $args->iterator( $runtime ); $it->next( $runtime ); ) {
+        my $arg = $it->item( $runtime );
 
-        push @args, $arg->as_string;
+        push @args, $arg->as_string( $runtime );
     }
 
     my $ret = unlink @args;
 
     push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber
-                                    ->new( { integer => $ret } );
+                                    ->new( $runtime, { integer => $ret } );
     return $pc + 1;
 }
 
 sub o_rmdir {
     my( $op, $runtime, $pc ) = @_;
     my $arg = pop @{$runtime->{_stack}};
-    my $ret = rmdir $arg->as_string;
+    my $ret = rmdir $arg->as_string( $runtime );
 
     push @{$runtime->{_stack}}, Language::P::Toy::Value::Scalar
-                                    ->new_boolean( $ret );
+                                    ->new_boolean( $runtime, $ret );
 
     return $pc + 1;
 }
@@ -777,10 +777,10 @@ sub o_rmdir {
 sub o_binmode {
     my( $op, $runtime, $pc ) = @_;
     my $args = pop @{$runtime->{_stack}};
-    my $handle = $args->get_item( 0 );
-    my $layer = $args->get_count == 2 ? $args->get_item( 1 )->as_string : ':raw';
+    my $handle = $args->get_item( $runtime, 0 );
+    my $layer = $args->get_count( $runtime ) == 2 ? $args->get_item( $runtime, 1 )->as_string( $runtime ) : ':raw';
 
-    push @{$runtime->{_stack}}, $handle->set_layer( $layer );
+    push @{$runtime->{_stack}}, $handle->set_layer( $runtime, $layer );
 
     return $pc + 1;
 }
@@ -790,20 +790,20 @@ sub o_open {
     my $args = pop @{$runtime->{_stack}};
 
     my( $ret, $fh );
-    if( $args->get_count == 2 ) {
-        $ret = open $fh, $args->get_item( 1 )->as_string;
-    } elsif( $args->get_count == 3 ) {
-        $ret = open $fh, $args->get_item( 1 )->as_string,
-                         $args->get_item( 2 )->as_string;
+    if( $args->get_count( $runtime ) == 2 ) {
+        $ret = open $fh, $args->get_item( $runtime, 1 )->as_string( $runtime );
+    } elsif( $args->get_count( $runtime ) == 3 ) {
+        $ret = open $fh, $args->get_item( $runtime, 1 )->as_string( $runtime ),
+                         $args->get_item( $runtime, 2 )->as_string( $runtime );
     } else {
         die "Only 2/3-arg open supported";
     }
-    my $dest = $args->get_item( 0 );
-    my $pfh = Language::P::Toy::Value::Handle->new( { handle => $fh } );
-    $dest->set_slot( 'io', $pfh );
+    my $dest = $args->get_item( $runtime, 0 );
+    my $pfh = Language::P::Toy::Value::Handle->new( $runtime, { handle => $fh } );
+    $dest->set_slot( $runtime, 'io', $pfh );
 
     push @{$runtime->{_stack}}, Language::P::Toy::Value::Scalar
-                                    ->new_boolean( $ret );
+                                    ->new_boolean( $runtime, $ret );
     return $pc + 1;
 }
 
@@ -811,7 +811,7 @@ sub o_close {
     my( $op, $runtime, $pc ) = @_;
     my $handle = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $handle->close;
+    push @{$runtime->{_stack}}, $handle->close( $runtime );
 
     return $pc + 1;
 }
@@ -825,12 +825,12 @@ sub o_die {
 sub o_backtick {
     my( $op, $runtime, $pc ) = @_;
     my $arg = pop @{$runtime->{_stack}};
-    my $command = $arg->as_string;
+    my $command = $arg->as_string( $runtime );
 
     # FIXME context
     my $ret = `$command`;
 
-    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( { string => $ret } );
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( $runtime, { string => $ret } );
 
     return $pc + 1;
 }
@@ -844,7 +844,7 @@ sub %s {
     my $file = pop @{$runtime->{_stack}};
 
     push @{$runtime->{_stack}}, Language::P::Toy::Value::Scalar
-                                    ->new_boolean( -%s( $file->as_string ) );
+                                    ->new_boolean( $runtime, -%s( $file->as_string( $runtime ) ) );
 
     return $pc + 1;
 }
@@ -867,7 +867,7 @@ sub o_array_element {
     my $array = pop @{$runtime->{_stack}};
     my $index = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $array->get_item_or_undef( $index->as_integer );
+    push @{$runtime->{_stack}}, $array->get_item_or_undef( $runtime, $index->as_integer( $runtime ) );
 
     return $pc + 1;
 }
@@ -877,7 +877,7 @@ sub o_hash_element {
     my $hash = pop @{$runtime->{_stack}};
     my $key = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $hash->get_item_or_undef( $key->as_string );
+    push @{$runtime->{_stack}}, $hash->get_item_or_undef( $runtime, $key->as_string( $runtime ) );
 
     return $pc + 1;
 }
@@ -886,7 +886,7 @@ sub o_array_size {
     my( $op, $runtime, $pc ) = @_;
     my $array = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( { integer => $array->get_count - 1 } );
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( $runtime, { integer => $array->get_count( $runtime ) - 1 } );
 
     return $pc + 1;
 }
@@ -895,7 +895,7 @@ sub o_array_push {
     my( $op, $runtime, $pc ) = @_;
     my $args = pop @{$runtime->{_stack}};
     my $arr = pop @{$runtime->{_stack}};
-    my $v = $arr->push_list( $args );
+    my $v = $arr->push_list( $runtime, $args );
 
     push @{$runtime->{_stack}}, $v;
 
@@ -905,7 +905,7 @@ sub o_array_push {
 sub o_array_pop {
     my( $op, $runtime, $pc ) = @_;
     my $arr = pop @{$runtime->{_stack}};
-    my $v = $arr->pop_value;
+    my $v = $arr->pop_value( $runtime );
 
     push @{$runtime->{_stack}}, $v;
 
@@ -916,7 +916,7 @@ sub o_array_unshift {
     my( $op, $runtime, $pc ) = @_;
     my $args = pop @{$runtime->{_stack}};
     my $arr = pop @{$runtime->{_stack}};
-    my $v = $arr->unshift_list( $args );
+    my $v = $arr->unshift_list( $runtime, $args );
 
     push @{$runtime->{_stack}}, $v;
 
@@ -926,7 +926,7 @@ sub o_array_unshift {
 sub o_array_shift {
     my( $op, $runtime, $pc ) = @_;
     my $arr = pop @{$runtime->{_stack}};
-    my $v = $arr->shift_value;
+    my $v = $arr->shift_value( $runtime );
 
     push @{$runtime->{_stack}}, $v;
 
@@ -937,7 +937,7 @@ sub o_reference {
     my( $op, $runtime, $pc ) = @_;
     my $value = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, Language::P::Toy::Value::Reference->new( { reference => $value } );
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::Reference->new( $runtime, { reference => $value } );
 
     return $pc + 1;
 }
@@ -945,11 +945,11 @@ sub o_reference {
 sub o_anonymous_array {
     my( $op, $runtime, $pc ) = @_;
     my $list = pop @{$runtime->{_stack}};
-    my $array = Language::P::Toy::Value::Array->new;
+    my $array = Language::P::Toy::Value::Array->new( $runtime );
 
-    $array->assign( $list );
+    $array->assign( $runtime, $list );
 
-    push @{$runtime->{_stack}}, Language::P::Toy::Value::Reference->new( { reference => $array } );
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::Reference->new( $runtime, { reference => $array } );
 
     return $pc + 1;
 }
@@ -957,11 +957,11 @@ sub o_anonymous_array {
 sub o_anonymous_hash {
     my( $op, $runtime, $pc ) = @_;
     my $list = pop @{$runtime->{_stack}};
-    my $hash = Language::P::Toy::Value::Hash->new;
+    my $hash = Language::P::Toy::Value::Hash->new( $runtime );
 
-    $hash->assign( $list );
+    $hash->assign( $runtime, $list );
 
-    push @{$runtime->{_stack}}, Language::P::Toy::Value::Reference->new( { reference => $hash } );
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::Reference->new( $runtime, { reference => $hash } );
 
     return $pc + 1;
 }
@@ -970,7 +970,7 @@ sub o_reftype {
     my( $op, $runtime, $pc ) = @_;
     my $value = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $value->reference_type;
+    push @{$runtime->{_stack}}, $value->reference_type( $runtime );
 
     return $pc + 1;
 }
@@ -978,10 +978,10 @@ sub o_reftype {
 sub o_bless {
     my( $op, $runtime, $pc ) = @_;
     my $name = pop @{$runtime->{_stack}};
-    my $stash = $runtime->symbol_table->get_package( $name->as_string, 1 );
+    my $stash = $runtime->symbol_table->get_package( $runtime, $name->as_string( $runtime ), 1 );
     my $ref = pop @{$runtime->{_stack}};
 
-    $ref->bless( $stash );
+    $ref->bless( $runtime, $stash );
     push @{$runtime->{_stack}}, $ref;
 
     return $pc + 1;
@@ -991,7 +991,7 @@ sub o_dereference_scalar {
     my( $op, $runtime, $pc ) = @_;
     my $ref = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $ref->dereference_scalar;
+    push @{$runtime->{_stack}}, $ref->dereference_scalar( $runtime );
 
     return $pc + 1;
 }
@@ -1000,7 +1000,7 @@ sub o_vivify_scalar {
     my( $op, $runtime, $pc ) = @_;
     my $ref = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $ref->vivify_scalar;
+    push @{$runtime->{_stack}}, $ref->vivify_scalar( $runtime );
 
     return $pc + 1;
 }
@@ -1009,7 +1009,7 @@ sub o_dereference_array {
     my( $op, $runtime, $pc ) = @_;
     my $ref = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $ref->dereference_array;
+    push @{$runtime->{_stack}}, $ref->dereference_array( $runtime );
 
     return $pc + 1;
 }
@@ -1018,7 +1018,7 @@ sub o_vivify_array {
     my( $op, $runtime, $pc ) = @_;
     my $ref = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $ref->vivify_array;
+    push @{$runtime->{_stack}}, $ref->vivify_array( $runtime );
 
     return $pc + 1;
 }
@@ -1027,7 +1027,7 @@ sub o_dereference_hash {
     my( $op, $runtime, $pc ) = @_;
     my $ref = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $ref->dereference_hash;
+    push @{$runtime->{_stack}}, $ref->dereference_hash( $runtime );
 
     return $pc + 1;
 }
@@ -1036,7 +1036,7 @@ sub o_vivify_hash {
     my( $op, $runtime, $pc ) = @_;
     my $ref = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $ref->vivify_hash;
+    push @{$runtime->{_stack}}, $ref->vivify_hash( $runtime );
 
     return $pc + 1;
 }
@@ -1045,7 +1045,7 @@ sub o_dereference_glob {
     my( $op, $runtime, $pc ) = @_;
     my $ref = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $ref->dereference_glob;
+    push @{$runtime->{_stack}}, $ref->dereference_glob( $runtime );
 
     return $pc + 1;
 }
@@ -1054,7 +1054,7 @@ sub o_dereference_subroutine {
     my( $op, $runtime, $pc ) = @_;
     my $ref = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $ref->dereference_subroutine;
+    push @{$runtime->{_stack}}, $ref->dereference_subroutine( $runtime );
 
     return $pc + 1;
 }
@@ -1063,15 +1063,17 @@ sub o_make_closure {
     my( $op, $runtime, $pc ) = @_;
     my $sub = pop @{$runtime->{_stack}};
     my $clone = Language::P::Toy::Value::Subroutine->new
-                    ( { bytecode   => $sub->bytecode,
+                    ( $runtime,
+                      { bytecode   => $sub->bytecode,
                         stack_size => $sub->stack_size,
-                        lexicals   => $sub->lexicals ? $sub->lexicals->new_scope : undef,
+                        lexicals   => $sub->lexicals ? $sub->lexicals->new_scope( $runtime ) : undef,
                         closed     => $sub->closed,
                         } );
     $runtime->make_closure( $clone );
 
     push @{$runtime->{_stack}}, Language::P::Toy::Value::Reference->new
-                                    ( { reference => $clone,
+                                    ( $runtime,
+                                      { reference => $clone,
                                         } );
 
     return $pc + 1;
@@ -1079,12 +1081,12 @@ sub o_make_closure {
 
 sub o_localize_glob_slot {
     my( $op, $runtime, $pc ) = @_;
-    my $glob = $runtime->symbol_table->get_symbol( $op->{name}, '*', 1 );
-    my $to_save = $glob->get_slot( $op->{slot} );
-    my $saved = $to_save->localize;
+    my $glob = $runtime->symbol_table->get_symbol( $runtime, $op->{name}, '*', 1 );
+    my $to_save = $glob->get_slot( $runtime, $op->{slot} );
+    my $saved = $to_save->localize( $runtime );
 
     $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = $to_save;
-    $glob->set_slot( $op->{slot}, $saved );
+    $glob->set_slot( $runtime, $op->{slot}, $saved );
     push @{$runtime->{_stack}}, $saved;
 
     return $pc + 1;
@@ -1092,10 +1094,10 @@ sub o_localize_glob_slot {
 
 sub o_restore_glob_slot {
     my( $op, $runtime, $pc ) = @_;
-    my $glob = $runtime->symbol_table->get_symbol( $op->{name}, '*', 1 );
+    my $glob = $runtime->symbol_table->get_symbol( $runtime, $op->{name}, '*', 1 );
     my $saved = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
 
-    $glob->set_slot( $op->{slot}, $saved ) if $saved;
+    $glob->set_slot( $runtime, $op->{slot}, $saved ) if $saved;
     $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = undef;
 
     return $pc + 1;
@@ -1104,7 +1106,7 @@ sub o_restore_glob_slot {
 sub o_iterator {
     my( $op, $runtime, $pc ) = @_;
     my $list = pop @{$runtime->{_stack}};
-    my $iter = $list->iterator;
+    my $iter = $list->iterator( $runtime );
 
     push @{$runtime->{_stack}}, $iter;
 
@@ -1115,7 +1117,7 @@ sub o_iterator_next {
     my( $op, $runtime, $pc ) = @_;
     my $iter = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $iter->next ? $iter->item : undef;
+    push @{$runtime->{_stack}}, $iter->next( $runtime ) ? $iter->item( $runtime ) : undef;
 
     return $pc + 1;
 }
@@ -1123,14 +1125,14 @@ sub o_iterator_next {
 sub o_do_file {
     my( $op, $runtime, $pc ) = @_;
     my $file = pop @{$runtime->{_stack}};
-    my $file_str = $file->as_string;
+    my $file_str = $file->as_string( $runtime );
     my $real_path = $runtime->search_file( $file_str );
-    my $real_path_str = $real_path->as_string;
+    my $real_path_str = $real_path->as_string( $runtime );
 
     $runtime->run_file( $real_path_str, 0, _context( $op, $runtime ) );
 
-    my $inc = $runtime->symbol_table->get_symbol( 'INC', '%', 1 );
-    $inc->set_item( $file_str, $real_path );
+    my $inc = $runtime->symbol_table->get_symbol( $runtime, 'INC', '%', 1 );
+    $inc->set_item( $runtime, $file_str, $real_path );
 
     return $pc + 1;
 }
@@ -1138,24 +1140,24 @@ sub o_do_file {
 sub o_require_file {
     my( $op, $runtime, $pc ) = @_;
     my $file = pop @{$runtime->{_stack}};
-    my $file_str = $file->as_string;
-    my $inc = $runtime->symbol_table->get_symbol( 'INC', '%', 1 );
+    my $file_str = $file->as_string( $runtime );
+    my $inc = $runtime->symbol_table->get_symbol( $runtime, 'INC', '%', 1 );
 
-    if( $inc->has_item( $file_str ) ) {
+    if( $inc->has_item( $runtime, $file_str ) ) {
         push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new
-                                        ( { integer => 1 } );
+                                        ( $runtime, { integer => 1 } );
 
         return $pc + 1;
     }
 
     my $real_path = $runtime->search_file( $file_str );
-    my $real_path_str = $real_path->as_string;
+    my $real_path_str = $real_path->as_string( $runtime );
 
     $runtime->run_file( $real_path_str, 0, _context( $op, $runtime ) );
 
     # FIXME check return value
 
-    $inc->set_item( $file_str, $real_path );
+    $inc->set_item( $runtime, $file_str, $real_path );
 
     return $pc + 1;
 }
@@ -1164,7 +1166,7 @@ sub o_eval {
     my( $op, $runtime, $pc ) = @_;
     my $string = pop @{$runtime->{_stack}};
     # lexicals for parsing
-    my $parse_lex = Language::P::Parser::Lexicals->new;
+    my $parse_lex = Language::P::Parser::Lexicals->new( $runtime );
     foreach my $k ( keys %{$op->{lexicals}} ) {
         my( $sigil, $name ) = split /\0/, $k;
         $parse_lex->add_name( $sigil, $name );
@@ -1174,8 +1176,8 @@ sub o_eval {
         $parse_lex->add_name_our( $sigil, $name, $op->{globals}{$k} );
     }
 
-    $runtime->eval_string( $string->as_string, _context( $op, $runtime ),
-                           $parse_lex,
+    $runtime->eval_string( $string->as_string( $runtime ),
+                           _context( $op, $runtime ), $parse_lex,
                            [ $op->{lexicals}, $runtime->{_code}, $parse_lex ] );
 
     return $pc + 1;
@@ -1185,7 +1187,7 @@ sub o_eval_regex {
     my( $op, $runtime, $pc ) = @_;
     my $string = pop @{$runtime->{_stack}};
 
-    my $re = $runtime->compile_regex( $string->as_string );
+    my $re = $runtime->compile_regex( $string->as_string( $runtime ) );
     push @{$runtime->{_stack}}, $re;
 
     return $pc + 1;

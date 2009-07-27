@@ -18,7 +18,8 @@ my @wantarray =
     );
 
 my $want = Language::P::Toy::Value::Subroutine->new
-               ( { bytecode   => \@wantarray,
+               ( $runtime,
+                 { bytecode   => \@wantarray,
                    stack_size => 1,
                    } );
 
@@ -41,7 +42,7 @@ my @stack = $runtime->stack_copy;
 
 is( scalar @stack, 5 );
 isa_ok( $stack[2], 'Language::P::Toy::Value::List' );
-is( $stack[3]->as_string, '' );
-is( $stack[4]->get_item( 0 )->as_integer, 1 );
+is( $stack[3]->as_string( $runtime ), '' );
+is( $stack[4]->get_item( $runtime, 0 )->as_integer( $runtime ), 1 );
 
 1;

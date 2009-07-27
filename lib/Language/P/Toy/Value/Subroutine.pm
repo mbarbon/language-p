@@ -10,8 +10,8 @@ sub type { 6 }
 sub is_subroutine { 1 }
 
 sub new {
-    my( $class, $args ) = @_;
-    my $self = $class->SUPER::new( $args );
+    my( $class, $runtime, $args ) = @_;
+    my $self = $class->SUPER::new( $runtime, $args );
 
     # for @_
     $self->{stack_size} ||= 1;

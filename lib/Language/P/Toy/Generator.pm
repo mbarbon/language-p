@@ -79,7 +79,7 @@ sub process {
         my $sub_int = $self->_intermediate->generate_use( $tree );
         my $sub = _generate_segment( $self, $sub_int->[0] );
 
-        my $args = Language::P::Toy::Value::List->new;
+        my $args = Language::P::Toy::Value::List->new( $self->runtime );
         $self->runtime->call_subroutine( $sub, CXT_VOID, $args );
 
         return;
@@ -90,7 +90,7 @@ sub process {
 
         # run right away if it is a begin block
         if( $tree->name eq 'BEGIN' ) {
-            my $args = Language::P::Toy::Value::List->new;
+            my $args = Language::P::Toy::Value::List->new( $self->runtime );
             $self->runtime->call_subroutine( $sub, CXT_VOID, $args );
         }
 
@@ -104,10 +104,11 @@ sub add_declaration {
     my( $self, $name, $prototype ) = @_;
 
     my $sub = Language::P::Toy::Value::Subroutine::Stub->new
-                  ( { name      => $name,
+                  ( $self->runtime,
+                    { name      => $name,
                       prototype => $prototype,
                       } );
-    $self->runtime->symbol_table->set_symbol( $name, '&', $sub );
+    $self->runtime->symbol_table->set_symbol( $self->runtime, $name, '&', $sub );
 }
 
 my %opcode_map =
@@ -152,24 +153,27 @@ sub _generate_segment {
     my( $self, $segment, $target ) = @_;
     my $is_sub = $segment->is_sub;
     my $is_regex = $segment->is_regex;
-    my $pad = Language::P::Toy::Value::ScratchPad->new;
+    my $pad = Language::P::Toy::Value::ScratchPad->new( $self->runtime );
 
     my $code = $target;
     if( $is_sub && !$code ) {
         $code = Language::P::Toy::Value::Subroutine->new
-                    ( { bytecode => [],
+                    ( $self->runtime,
+                      { bytecode => [],
                         name     => $segment->name,
                         lexicals => $pad,
                         prototype=> $segment->prototype,
                         } );
     } elsif( $is_regex && !$code ) {
         $code = Language::P::Toy::Value::Regex->new
-                    ( { bytecode   => [],
+                    ( $self->runtime,
+                      { bytecode   => [],
                         stack_size => 0,
                         } );
     } elsif( !$code ) {
         $code = Language::P::Toy::Value::Code->new
-                    ( { bytecode => [],
+                    ( $self->runtime,
+                      { bytecode => [],
                         lexicals => $pad,
                         } );
     }
@@ -216,7 +220,7 @@ sub _generate_segment {
     }
 
     $self->_allocate_lexicals( $is_sub );
-    $self->runtime->symbol_table->set_symbol( $segment->name, '&', $code )
+    $self->runtime->symbol_table->set_symbol( $self->runtime, $segment->name, '&', $code )
       if defined $segment->name;
     pop @{$self->{_processing}};
 
@@ -263,12 +267,15 @@ sub start_code_generation {
         $outer = $cxt->[1];
 
         while( my( $name, $index ) = each %{$cxt->[0]} ) {
-            _add_value( $outer->lexicals, $cxt->[2]->names->{$name}, $index );
+            _add_value( $self, $outer->lexicals,
+                        $cxt->[2]->names->{$name}, $index );
         }
     }
     my $code = Language::P::Toy::Value::Code->new
-                   ( { bytecode => [],
-                       lexicals => Language::P::Toy::Value::ScratchPad->new,
+                   ( $self->runtime,
+                     { bytecode => [],
+                       lexicals => Language::P::Toy::Value::ScratchPad->new
+                                       ( $self->runtime ),
                        } );
     $self->{_processing} = [ $outer, $code ];
 
@@ -340,8 +347,8 @@ sub _lexical_clear {
 sub _const_string {
     my( $self, $bytecode, $op ) = @_;
 
-    my $v = Language::P::Toy::Value::StringNumber->new
-                ( { string => $op->{parameters}[0] } );
+    my $v = Language::P::Toy::Value::Scalar->new_string
+                ( $self->runtime, $op->{parameters}[0] );
     push @$bytecode,
          o( 'constant', value => $v );
 }
@@ -357,7 +364,7 @@ sub _const_integer {
     my( $self, $bytecode, $op ) = @_;
 
     my $v = Language::P::Toy::Value::StringNumber->new
-                ( { integer => $op->{parameters}[0] } );
+                ( $self->runtime, { integer => $op->{parameters}[0] } );
     push @$bytecode,
          o( 'constant', value => $v );
 }
@@ -366,7 +373,7 @@ sub _const_float {
     my( $self, $bytecode, $op ) = @_;
 
     my $v = Language::P::Toy::Value::StringNumber->new
-                ( { float => $op->{parameters}[0] } );
+                ( $self->runtime, { float => $op->{parameters}[0] } );
     push @$bytecode,
          o( 'constant', value => $v );
 }
@@ -374,7 +381,7 @@ sub _const_float {
 sub _const_undef {
     my( $self, $bytecode, $op ) = @_;
 
-    my $v = Language::P::Toy::Value::Undef->new;
+    my $v = Language::P::Toy::Value::Undef->new( $self->runtime );
     push @$bytecode,
          o( 'constant', value => $v );
 }
@@ -454,16 +461,16 @@ sub _rx_quantifier {
 my %lex_map;
 
 sub _add_value {
-    my( $pad, $lexical, $index ) = @_;
+    my( $self, $pad, $lexical, $index ) = @_;
 
     return $lex_map{$pad}{$lexical} = $index;
 }
 
 sub _find_add_value {
-    my( $pad, $lexical ) = @_;
+    my( $self, $pad, $lexical ) = @_;
 
     return $lex_map{$pad}{$lexical} if exists $lex_map{$pad}{$lexical};
-    return $lex_map{$pad}{$lexical} = $pad->add_value( $lexical );
+    return $lex_map{$pad}{$lexical} = $pad->add_value( $self->runtime, $lexical );
 }
 
 sub _allocate_single {
@@ -480,7 +487,7 @@ sub _allocate_single {
             if( $level ) {
                 my $code_from = $self->{_processing}[-$level - 1];
                 my $pad_from = $code_from->lexicals;
-                my $val = _find_add_value( $pad_from, $lexical );
+                my $val = _find_add_value( $self, $pad_from, $lexical );
                 if( $code_from->is_subroutine ) {
                     foreach my $index ( -$level .. -1 ) {
                         my $inner_code = $self->{_processing}[$index];
@@ -488,8 +495,8 @@ sub _allocate_single {
                         my $outer_pad = $outer_code->lexicals;
                         my $inner_pad = $inner_code->lexicals;
 
-                        my $outer_idx = _find_add_value( $outer_pad, $lexical );
-                        my $inner_idx = _find_add_value( $inner_pad, $lexical );
+                        my $outer_idx = _find_add_value( $self, $outer_pad, $lexical );
+                        my $inner_idx = _find_add_value( $self, $inner_pad, $lexical );
                         push @{$inner_code->closed},
                              [$outer_idx, $inner_idx];
                         $map->{$lexical} = $inner_idx
@@ -497,11 +504,11 @@ sub _allocate_single {
                     }
                 } else {
                     $map->{$lexical} =
-                        $pad->add_value( $lexical,
+                        $pad->add_value( $self->runtime, $lexical,
                                          $pad_from->values->[ $val ] );
                 }
             } else {
-                $map->{$lexical} = _find_add_value( $pad, $lexical );
+                $map->{$lexical} = _find_add_value( $self, $pad, $lexical );
             }
         } else {
             $map->{$lexical} = $self->_code->stack_size;

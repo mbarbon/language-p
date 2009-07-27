@@ -27,6 +27,12 @@ our @METHODS = qw(as_integer as_float as_string as_scalar as_boolean_int
                   set_layer
                   );
 
+sub new {
+    my( $class, $runtime, $args ) = @_;
+
+    return $class->SUPER::new( $args );
+}
+
 sub type { 1 }
 sub is_defined { 1 }
 sub is_blessed { $_[0]->{stash} ? 1 : 0 }

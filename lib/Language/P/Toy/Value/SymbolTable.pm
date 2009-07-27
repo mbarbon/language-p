@@ -12,8 +12,8 @@ sub type { 7 }
 sub is_main { 0 }
 
 sub new {
-    my( $class, $args ) = @_;
-    my $self = $class->SUPER::new( $args );
+    my( $class, $runtime, $args ) = @_;
+    my $self = $class->SUPER::new( $runtime, $args );
 
     $self->{symbols} ||= {};
 
@@ -21,10 +21,10 @@ sub new {
 }
 
 sub get_package {
-    my( $self, $package, $create ) = @_;
+    my( $self, $runtime, $package, $create ) = @_;
 
     return $self if $self->is_main && $package eq 'main';
-    return $self->_get_symbol( $package, '::', $create );
+    return $self->_get_symbol( $runtime, $package, '::', $create );
 }
 
 our %sigils =
@@ -39,14 +39,14 @@ our %sigils =
     );
 
 sub get_symbol {
-    my( $self, $name, $sigil, $create ) = @_;
-    my( $symbol, $created ) = $self->_get_symbol( $name, $sigil, $create );
+    my( $self, $runtime, $name, $sigil, $create ) = @_;
+    my( $symbol, $created ) = $self->_get_symbol( $runtime, $name, $sigil, $create );
 
     return $symbol;
 }
 
 sub _get_symbol {
-    my( $self, $name, $sigil, $create ) = @_;
+    my( $self, $runtime, $name, $sigil, $create ) = @_;
     my( @packages ) = split /::/, $name;
     if( $self->is_main && ( $packages[0] eq '' || $packages[0] eq 'main' ) ) {
         shift @packages;
@@ -62,11 +62,11 @@ sub _get_symbol {
             if( !$glob ) {
                 $created = 1;
                 $glob = $current->{symbols}{$package} =
-                    Language::P::Toy::Value::Typeglob->new;
+                    Language::P::Toy::Value::Typeglob->new( $runtime );
             }
             return ( $glob, $created ) if $sigil eq '*';
-            return ( $create ? $glob->get_or_create_slot( $sigils{$sigil}[0] ) :
-                               $glob->get_slot( $sigils{$sigil}[0] ),
+            return ( $create ? $glob->get_or_create_slot( $runtime, $sigils{$sigil}[0] ) :
+                               $glob->get_slot( $runtime, $sigils{$sigil}[0] ),
                      $created );
         } else {
             my $subpackage = $package . '::';
@@ -74,7 +74,7 @@ sub _get_symbol {
                 return ( undef, 0 ) unless $create;
 
                 $current = $current->{symbols}{$subpackage} =
-                  Language::P::Toy::Value::SymbolTable->new;
+                  Language::P::Toy::Value::SymbolTable->new( $runtime );
             } else {
                 $current = $current->{symbols}{$subpackage};
             }
@@ -87,10 +87,10 @@ sub _get_symbol {
 }
 
 sub set_symbol {
-    my( $self, $name, $sigil, $value ) = @_;
-    my $glob = $self->get_symbol( $name, '*', 1 );
+    my( $self, $runtime, $name, $sigil, $value ) = @_;
+    my $glob = $self->get_symbol( $runtime, $name, '*', 1 );
 
-    $glob->set_slot( $sigils{$sigil}[0], $value );
+    $glob->set_slot( $runtime, $sigils{$sigil}[0], $value );
 
     return;
 }
@@ -109,9 +109,9 @@ sub find_method {
     return unless $isa_glob;
     my $isa_array = $isa_glob->body->array;
 
-    for( my $i = 0; $i < $isa_array->get_count; ++$i ) {
-        my $base = $isa_array->get_item( $i )->as_string;
-        my $base_stash = $runtime->symbol_table->get_package( $base );
+    for( my $i = 0; $i < $isa_array->get_count( $runtime ); ++$i ) {
+        my $base = $isa_array->get_item( $runtime, $i )->as_string( $runtime );
+        my $base_stash = $runtime->symbol_table->get_package( $runtime, $base );
         next unless $base_stash;
         my $sub = $base_stash->find_method( $runtime, $name );
 
