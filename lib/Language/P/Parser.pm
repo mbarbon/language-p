@@ -20,7 +20,7 @@ our %EXPORT_TAGS =
     );
 
 __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime) );
-__PACKAGE__->mk_accessors( qw(_package _lexicals _pending_lexicals
+__PACKAGE__->mk_accessors( qw(_lexicals _pending_lexicals
                               _in_declaration _lexical_state
                               _options) );
 
@@ -47,6 +47,11 @@ use constant
 
     PARSE_ADD_RETURN   => 1,
     PARSE_MAIN         => 2,
+
+    CHANGED_HINTS      => 1,
+    CHANGED_WARNINGS   => 2,
+    CHANGED_PACKAGE    => 4,
+    CHANGED_ALL        => 7,
     };
 
 my %token_to_sigil =
@@ -175,8 +180,7 @@ sub parse_string {
 
     open my $fh, '<', \$string;
 
-    $self->_package( $package );
-    $self->parse_stream( $fh, '<string>', $flags, $lexicals );
+    $self->parse_stream( $fh, '<string>', $flags, $lexicals, $package );
 }
 
 sub parse_file {
@@ -186,12 +190,11 @@ sub parse_file {
         throw Language::P::Exception
                   ( message => "Can't open perl script \"$file\": $!" );
 
-    $self->_package( 'main' );
-    $self->parse_stream( $fh, $file, $flags );
+    $self->parse_stream( $fh, $file, $flags, undef, 'main' );
 }
 
 sub parse_stream {
-    my( $self, $stream, $filename, $flags, $lexicals ) = @_;
+    my( $self, $stream, $filename, $flags, $lexicals, $package ) = @_;
 
     $self->{lexer} = Language::P::Lexer->new
                          ( { stream       => $stream,
@@ -199,7 +202,21 @@ sub parse_stream {
                              runtime      => $self->runtime,
                              } );
     $self->{_lexical_state} = [];
-    $self->_parse( $flags, $lexicals );
+    $self->_parse( $flags, $lexicals, $package );
+}
+
+sub set_hints {
+    my( $self, $hints ) = @_;
+
+    $self->{_lexical_state}[-1]{hints} = $hints;
+    $self->{_lexical_state}[-1]{changed} |= CHANGED_HINTS;
+}
+
+sub set_warnings {
+    my( $self, $warnings ) = @_;
+
+    $self->{_lexical_state}[-1]{warnings} = $warnings;
+    $self->{_lexical_state}[-1]{changed} |= CHANGED_WARNINGS;
 }
 
 sub _qualify {
@@ -208,12 +225,13 @@ sub _qualify {
         ( my $normalized = $name ) =~ s/^(?:::)?(?:main::)?//;
         return $normalized;
     }
-    my $prefix = $self->_package eq 'main' ? '' : $self->_package . '::';
+    my $package = $self->{_lexical_state}[-1]{package};
+    my $prefix = $package eq 'main' ? '' : $package . '::';
     return $prefix . $name;
 }
 
 sub _parse {
-    my( $self, $flags, $lexicals ) = @_;
+    my( $self, $flags, $lexicals, $package ) = @_;
 
     my $dumper;
     if(    $self->_options->{'dump-parse-tree'}
@@ -230,6 +248,7 @@ sub _parse {
     $self->_pending_lexicals( [] );
     $self->_lexicals( $lexicals );
     $self->_enter_scope( $lexicals ? 1 : 0, 1 );
+    $self->{_lexical_state}[-1]{package} = $package;
 
     $self->generator->start_code_generation( { file_name => $self->lexer->file,
                                                } );
@@ -238,10 +257,13 @@ sub _parse {
         $dumper->( $line ) if $dumper;
         if( $line->isa( 'Language::P::ParseTree::NamedSubroutine' ) ) {
             $self->generator->process( $line );
-        } else {
+        } elsif( !$line->is_empty ) {
             push @lines, $line;
         }
+        my $lex_state = _lexical_state_node( $self );
+        push @lines, $lex_state if $lex_state;
     }
+    $package = $self->{_lexical_state}[-1]{package};
     $self->_leave_scope;
     _lines_implicit_return( $self, \@lines ) if $flags & PARSE_ADD_RETURN;
     $self->generator->process( $_ ) foreach @lines;
@@ -249,7 +271,7 @@ sub _parse {
     my $code = $self->generator->end_code_generation;
 
     my $data = $self->lexer->data_handle;
-    $self->runtime->set_data_handle( $self->_package, $data->[1] )
+    $self->runtime->set_data_handle( $package, $data->[1] )
       if $data && ( ( $flags & PARSE_MAIN ) || $data->[0] eq 'DATA' );
 
     return $code;
@@ -262,11 +284,19 @@ sub is_parsing {
 sub _enter_scope {
     my( $self, $is_sub, $top_level ) = @_;
 
-    push @{$self->{_lexical_state}}, { package  => $self->_package,
+    push @{$self->{_lexical_state}}, { package  => undef,
                                        lexicals => $self->_lexicals,
                                        is_sub   => $is_sub,
                                        top_level=> $top_level,
+                                       hints    => 0,
+                                       warnings => undef,
+                                       changed  => 0,
                                        };
+    if( !$top_level ) {
+        $self->{_lexical_state}[-1]{hints} = $self->{_lexical_state}[-2]{hints};
+        $self->{_lexical_state}[-1]{warnings} = $self->{_lexical_state}[-2]{warnings};
+        $self->{_lexical_state}[-1]{package} = $self->{_lexical_state}[-2]{package};
+    }
     if( $is_sub || $top_level ) {
         $self->{_lexical_state}[-1]{sub} = { labels  => {},
                                              jumps   => [],
@@ -285,7 +315,6 @@ sub _leave_scope {
     my( $self ) = @_;
 
     my $state = pop @{$self->{_lexical_state}};
-    $self->_package( $state->{package} );
     $self->_lexicals( $state->{lexicals} );
     _patch_gotos( $self, $state ) if $state->{is_sub} || $state->{top_level};
 }
@@ -394,11 +423,10 @@ sub _parse_line_rest {
             my $id = $self->lexer->lex_identifier( 0 );
             _lex_semicolon( $self );
 
-            $self->_package( $id->[O_VALUE] );
+            $self->{_lexical_state}[-1]{package} = $id->[O_VALUE];
+            $self->{_lexical_state}[-1]{changed} |= CHANGED_PACKAGE;
 
-            return Language::P::ParseTree::Package->new
-                       ( { name => $id->[O_VALUE],
-                           } );
+            return Language::P::ParseTree::Empty->new;
         } elsif( $tokidt == KEY_USE || $tokidt == KEY_NO ) {
             _lex_token( $self );
 
@@ -452,6 +480,31 @@ sub _add_pending_lexicals {
     $self->_pending_lexicals( [] );
 }
 
+sub _lexical_state_node {
+    my( $self, $force ) = @_;
+    my $changed = $force ? CHANGED_ALL : $self->{_lexical_state}[-1]{changed};
+    return unless $changed;
+
+    my $node = Language::P::ParseTree::LexicalState->new
+                   ( { hints    => 0,
+                       warnings => undef,
+                       package  => undef,
+                       } );
+    if( $changed & CHANGED_WARNINGS ) {
+        $node->{warnings} = $self->{_lexical_state}[-1]{warnings};
+    }
+    if( $changed & CHANGED_HINTS ) {
+        $node->{hints} = $self->{_lexical_state}[-1]{hints};
+    }
+    if( $changed & CHANGED_PACKAGE ) {
+        $node->{package} = $self->{_lexical_state}[-1]{package};
+    }
+
+    $self->{_lexical_state}[-1]{changed} = 0;
+
+    return $node;
+}
+
 sub _parse_sub {
     my( $self, $flags, $no_sub_token ) = @_;
     _lex_token( $self, T_ID ) unless $no_sub_token;
@@ -493,9 +546,12 @@ sub _parse_sub {
                         Language::P::ParseTree::AnonymousSubroutine->new;
     # add @_ to lexical scope
     $self->_lexicals->add_name( VALUE_ARRAY, '_' );
+    my $lex_state = _lexical_state_node( $self, 1 );
 
     my $block = _parse_block_rest( $self, BLOCK_IMPLICIT_RETURN );
-    $sub->{lines} = $block->{lines}; # FIXME encapsulation
+    my $lines = $block->lines;
+    # FIXME encapsulation
+    $sub->{lines} = @$lines ? [ $lex_state, @$lines ] : $lines;
     $sub->set_parent_for_all_childs;
     $self->_leave_scope;
 
@@ -1226,7 +1282,7 @@ sub _parse_term_terminal {
                        } );
     } elsif( $token->[O_TYPE] == T_PACKAGE ) {
         return Language::P::ParseTree::Constant->new
-                   ( { value => $self->_package,
+                   ( { value => $self->{_lexical_state}[-1]{package},
                        flags => CONST_STRING,
                        } );
     } elsif( $token->[O_TYPE] == T_STRING ) {
@@ -1701,8 +1757,10 @@ sub _parse_block_rest {
         } else {
             $self->lexer->unlex( $token );
             my $line = _parse_line( $self );
+            my $lex_state = _lexical_state_node( $self );
 
-            push @lines, $line if $line; # skip empty satements
+            push @lines, $line if $line && !$line->is_empty;
+            push @lines, $lex_state if $lex_state;
         }
     }
 }

@@ -104,6 +104,10 @@ sub a { shift }
 EOP
 --- !parsetree:NamedSubroutine
 lines:
+  - !parsetree:LexicalState
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:Builtin
     arguments:
       - !parsetree:Overridable
@@ -126,6 +130,10 @@ sub { shift };
 EOP
 --- !parsetree:AnonymousSubroutine
 lines:
+  - !parsetree:LexicalState
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:Builtin
     arguments:
       - !parsetree:Overridable

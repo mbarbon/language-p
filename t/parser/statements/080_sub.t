@@ -22,6 +22,10 @@ sub name { a }
 EOP
 --- !parsetree:NamedSubroutine
 lines:
+  - !parsetree:LexicalState
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:Builtin
     arguments:
       - !parsetree:Constant
@@ -41,6 +45,10 @@ sub name {
 EOP
 --- !parsetree:NamedSubroutine
 lines:
+  - !parsetree:LexicalState
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:Builtin
     arguments:
       - !parsetree:Symbol
@@ -61,6 +69,10 @@ sub name {
 EOP
 --- !parsetree:NamedSubroutine
 lines:
+  - !parsetree:LexicalState
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:Builtin
     arguments:
       - !parsetree:LexicalSymbol
@@ -87,6 +99,10 @@ sub name {
 EOP
 --- !parsetree:NamedSubroutine
 lines:
+  - !parsetree:LexicalState
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:LexicalDeclaration
     context: CXT_VOID
     flags: DECLARATION_MY
@@ -115,8 +131,16 @@ sub name {
 EOP
 --- !parsetree:NamedSubroutine
 lines:
+  - !parsetree:LexicalState
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:NamedSubroutine
     lines:
+      - !parsetree:LexicalState
+        hints: 0
+        package: main
+        warnings: ~
       - !parsetree:Builtin
         arguments:
           - !parsetree:LexicalSymbol
@@ -155,6 +179,10 @@ continue: ~
 lines:
   - !parsetree:NamedSubroutine
     lines:
+      - !parsetree:LexicalState
+        hints: 0
+        package: main
+        warnings: ~
       - !parsetree:Builtin
         arguments:
           - !parsetree:LexicalSymbol
@@ -186,6 +214,10 @@ lines:
     sigil: VALUE_SCALAR
   - !parsetree:NamedSubroutine
     lines:
+      - !parsetree:LexicalState
+        hints: 0
+        package: main
+        warnings: ~
       - !parsetree:Builtin
         arguments:
           - !parsetree:LexicalSymbol

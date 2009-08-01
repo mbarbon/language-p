@@ -55,14 +55,18 @@ __PACKAGE__;
 package main;
 __PACKAGE__;
 EOP
---- !parsetree:Package
-name: foo::moo::boo
+--- !parsetree:LexicalState
+hints: 0
+package: foo::moo::boo
+warnings: ~
 --- !parsetree:Constant
 context: CXT_VOID
 flags: CONST_STRING
 value: foo::moo::boo
---- !parsetree:Package
-name: main
+--- !parsetree:LexicalState
+hints: 0
+package: main
+warnings: ~
 --- !parsetree:Constant
 context: CXT_VOID
 flags: CONST_STRING

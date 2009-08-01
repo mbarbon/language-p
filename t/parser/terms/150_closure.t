@@ -21,6 +21,10 @@ left: !parsetree:Symbol
 op: OP_ASSIGN
 right: !parsetree:AnonymousSubroutine
   lines:
+    - !parsetree:LexicalState
+      hints: 0
+      package: main
+      warnings: ~
     - !parsetree:Builtin
       arguments:
         - !parsetree:Constant
@@ -58,6 +62,10 @@ left: !parsetree:Symbol
 op: OP_ASSIGN
 right: !parsetree:AnonymousSubroutine
   lines:
+    - !parsetree:LexicalState
+      hints: 0
+      package: main
+      warnings: ~
     - !parsetree:Builtin
       arguments:
         - !parsetree:LexicalSymbol
@@ -86,6 +94,10 @@ sub add3 {
 EOP
 --- !parsetree:NamedSubroutine
 lines:
+  - !parsetree:LexicalState
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:BinOp
     context: CXT_VOID
     left: !parsetree:List
@@ -106,6 +118,10 @@ lines:
     arguments:
       - !parsetree:AnonymousSubroutine
         lines:
+          - !parsetree:LexicalState
+            hints: 0
+            package: main
+            warnings: ~
           - !parsetree:BinOp
             context: CXT_VOID
             left: !parsetree:List
@@ -126,6 +142,10 @@ lines:
             arguments:
               - !parsetree:AnonymousSubroutine
                 lines:
+                  - !parsetree:LexicalState
+                    hints: 0
+                    package: main
+                    warnings: ~
                   - !parsetree:BinOp
                     context: CXT_VOID
                     left: !parsetree:List

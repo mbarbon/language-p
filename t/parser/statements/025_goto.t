@@ -90,6 +90,6 @@ is( @$tree, 4 );
 is( $tree->[3]->get_attribute( 'target' ), $tree->[2] );
 # in sub
 my $lines = $tree->[0]->lines;
-is( @$lines, 3 );
-is( $lines->[0]->get_attribute( 'target' ), undef );
-is( $lines->[1]->get_attribute( 'target' ), $lines->[2] );
+is( @$lines, 4 );
+is( $lines->[1]->get_attribute( 'target' ), undef );
+is( $lines->[2]->get_attribute( 'target' ), $lines->[3] );

@@ -161,6 +161,10 @@ sub foo { do { 1; 2 } }
 EOP
 --- !parsetree:NamedSubroutine
 lines:
+  - !parsetree:LexicalState
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:Builtin
     arguments:
       - !parsetree:DoBlock

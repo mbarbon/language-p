@@ -10,16 +10,20 @@ use TestParser qw(:all);
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 package x;
 EOP
---- !parsetree:Package
-name: x
+--- !parsetree:LexicalState
+hints: 0
+package: x
+warnings: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 package x;
 $!;
 EOP
---- !parsetree:Package
-name: x
+--- !parsetree:LexicalState
+hints: 0
+package: x
+warnings: ~
 --- !parsetree:Symbol
 context: CXT_VOID
 name: '!'
@@ -45,8 +49,10 @@ sigil: VALUE_SCALAR
 --- !parsetree:BareBlock
 continue: ~
 lines:
-  - !parsetree:Package
-    name: x
+  - !parsetree:LexicalState
+    hints: 0
+    package: x
+    warnings: ~
   - !parsetree:Symbol
     context: CXT_VOID
     name: x::x
@@ -55,14 +61,18 @@ lines:
     context: CXT_VOID
     name: w
     sigil: VALUE_SCALAR
-  - !parsetree:Package
-    name: z
+  - !parsetree:LexicalState
+    hints: 0
+    package: z
+    warnings: ~
 --- !parsetree:Symbol
 context: CXT_VOID
 name: x
 sigil: VALUE_SCALAR
---- !parsetree:Package
-name: y
+--- !parsetree:LexicalState
+hints: 0
+package: y
+warnings: ~
 --- !parsetree:Symbol
 context: CXT_VOID
 name: y::x
@@ -77,8 +87,10 @@ EOP
 --- !parsetree:SubroutineDeclaration
 name: y
 prototype: ~
---- !parsetree:Package
-name: x
+--- !parsetree:LexicalState
+hints: 0
+package: x
+warnings: ~
 --- !parsetree:SubroutineDeclaration
 name: x::z
 prototype: ~
@@ -93,8 +105,10 @@ EOP
 --- !parsetree:SubroutineDeclaration
 name: x
 prototype: ~
---- !parsetree:Package
-name: y
+--- !parsetree:LexicalState
+hints: 0
+package: y
+warnings: ~
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
@@ -138,13 +152,17 @@ main::xm 1;
 ::xm 1;
 w::xw 1;
 EOP
---- !parsetree:Package
-name: main
+--- !parsetree:LexicalState
+hints: 0
+package: main
+warnings: ~
 --- !parsetree:SubroutineDeclaration
 name: xm
 prototype: ~
---- !parsetree:Package
-name: w
+--- !parsetree:LexicalState
+hints: 0
+package: w
+warnings: ~
 --- !parsetree:SubroutineDeclaration
 name: w::xw
 prototype: ~
@@ -192,8 +210,10 @@ function: !parsetree:Symbol
   context: CXT_SCALAR
   name: w::xw
   sigil: VALUE_SUB
---- !parsetree:Package
-name: main
+--- !parsetree:LexicalState
+hints: 0
+package: main
+warnings: ~
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
@@ -251,8 +271,10 @@ EOP
 --- !parsetree:SubroutineDeclaration
 name: y::x
 prototype: ~
---- !parsetree:Package
-name: y
+--- !parsetree:LexicalState
+hints: 0
+package: y
+warnings: ~
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant
@@ -267,8 +289,10 @@ function: !parsetree:Symbol
 --- !parsetree:SubroutineDeclaration
 name: w
 prototype: ~
---- !parsetree:Package
-name: main
+--- !parsetree:LexicalState
+hints: 0
+package: main
+warnings: ~
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Constant

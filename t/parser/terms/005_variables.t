@@ -29,8 +29,10 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 package x;
 @'foo
 EOP
---- !parsetree:Package
-name: x
+--- !parsetree:LexicalState
+hints: 0
+package: x
+warnings: ~
 --- !parsetree:Symbol
 context: CXT_VOID
 name: foo

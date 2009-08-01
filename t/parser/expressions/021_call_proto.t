@@ -49,6 +49,10 @@ prototype:
 arguments:
   - !parsetree:AnonymousSubroutine
     lines:
+      - !parsetree:LexicalState
+        hints: 0
+        package: main
+        warnings: ~
       - !parsetree:Builtin
         arguments:
           - !parsetree:Constant
@@ -88,6 +92,10 @@ prototype:
 arguments:
   - !parsetree:AnonymousSubroutine
     lines:
+      - !parsetree:LexicalState
+        hints: 0
+        package: main
+        warnings: ~
       - !parsetree:Builtin
         arguments:
           - !parsetree:Constant
@@ -130,6 +138,10 @@ expressions:
     arguments:
       - !parsetree:AnonymousSubroutine
         lines:
+          - !parsetree:LexicalState
+            hints: 0
+            package: main
+            warnings: ~
           - !parsetree:Builtin
             arguments:
               - !parsetree:Constant

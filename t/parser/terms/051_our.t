@@ -23,8 +23,10 @@ our $foo;
 package main;
 $foo = 1;
 EOP
---- !parsetree:Package
-name: x
+--- !parsetree:LexicalState
+hints: 0
+package: x
+warnings: ~
 --- !parsetree:LexicalDeclaration
 context: CXT_VOID
 flags: DECLARATION_MY
@@ -34,8 +36,10 @@ sigil: VALUE_SCALAR
 context: CXT_VOID
 name: x::foo
 sigil: VALUE_SCALAR
---- !parsetree:Package
-name: main
+--- !parsetree:LexicalState
+hints: 0
+package: main
+warnings: ~
 --- !parsetree:BinOp
 context: CXT_VOID
 left: !parsetree:Symbol

@@ -195,6 +195,7 @@ sub is_symbol { 0 }
 sub is_compound { 0 }
 sub is_loop { 0 }
 sub is_plain_function { 0 }
+sub is_empty { 0 }
 sub can_implicit_return { 1 }
 sub is_declaration { 0 }
 sub lvalue_context { Language::P::ParseTree::CXT_SCALAR }
@@ -248,13 +249,13 @@ sub set_attribute  {
     Scalar::Util::weaken( $self->{attributes}->{$name} ) if $weak;
 }
 
-package Language::P::ParseTree::Package;
+package Language::P::ParseTree::LexicalState;
 
 use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(name);
+our @FIELDS = qw(package hints warnings);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -275,6 +276,7 @@ use warnings;
 use base qw(Language::P::ParseTree::Node);
 
 sub can_implicit_return { 0 }
+sub is_empty { return !$_[0]->has_attribute( 'label' ) }
 
 package Language::P::ParseTree::Constant;
 
