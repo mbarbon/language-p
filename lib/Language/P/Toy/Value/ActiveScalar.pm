@@ -31,19 +31,19 @@ sub assign {
 sub as_string {
     my( $self, $runtime ) = @_;
 
-    return $self->_get->as_string( $runtime );
+    return $self->_get( $runtime )->as_string( $runtime );
 }
 
 sub as_integer {
     my( $self, $runtime ) = @_;
 
-    return $self->_get->as_integer( $runtime );
+    return $self->_get( $runtime )->as_integer( $runtime );
 }
 
 sub as_float {
     my( $self, $runtime ) = @_;
 
-    return $self->_get->as_float( $runtime );
+    return $self->_get( $runtime )->as_float( $runtime );
 }
 
 package Language::P::Toy::Value::ActiveScalarCallbacks;
