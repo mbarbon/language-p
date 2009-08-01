@@ -188,6 +188,11 @@ _make_binary_op( $_ ), _make_binary_op_assign( $_ ) foreach
       operator => '|',
       new_type => 'integer',
       },
+    { name     => 'o_bit_and',
+      convert  => 'as_integer',
+      operator => '&',
+      new_type => 'integer',
+      },
     { name     => 'o_modulus',
       convert  => 'as_integer',
       operator => '%',
@@ -634,6 +639,10 @@ _make_unary( $_ ) foreach
     { name       => 'o_chr',
       type       => 'string',
       expression => 'chr $v->as_integer( $runtime )',
+      },
+    { name       => 'o_bit_not',
+      type       => 'int',
+      expression => '~ $v->as_integer( $runtime )',
       },
     );
 
