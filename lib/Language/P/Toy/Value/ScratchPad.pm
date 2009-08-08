@@ -36,15 +36,18 @@ sub new_scope {
     return $new;
 }
 
-sub add_value {
-    my( $self, $runtime, $lexical, $value ) = @_;
+sub add_value_index {
+    my( $self, $runtime, $lexical, $index, $value ) = @_;
+
+    # make repeated add a no-op
+    return if defined $self->values->[$index];
 
     # FIXME lexical initialization
-    push @{$self->values}, @_ > 3 ? $value : Language::P::Toy::Value::Undef->new( $runtime );
+    $self->values->[$index] = @_ == 5 ? $value : Language::P::Toy::Value::Undef->new( $runtime );
     $self->{names}{$lexical->symbol_name} ||= [];
-    push @{$self->{names}{$lexical->symbol_name}}, $#{$self->values};
+    push @{$self->{names}{$lexical->symbol_name}}, $index;
 
-    return $#{$self->values};
+    return $index;
 }
 
 sub is_empty { return $#{$_[0]->values} == -1 ? 1 : 0 }

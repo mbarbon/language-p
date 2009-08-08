@@ -64,12 +64,6 @@ sub set_option {
     return 0;
 }
 
-sub _add {
-    my( $self, @bytecode ) = @_;
-
-    push @{$self->_code->bytecode}, @bytecode;
-}
-
 sub process {
     my( $self, $tree ) = @_;
 
@@ -113,8 +107,6 @@ sub add_declaration {
 
 my %opcode_map =
   ( OP_GLOBAL()                      => \&_global,
-    OP_LEXICAL()                     => \&_lexical,
-    OP_LEXICAL_CLEAR()               => \&_lexical_clear,
     OP_CONSTANT_STRING()             => \&_const_string,
     OP_FRESH_STRING()                => \&_fresh_string,
     OP_CONSTANT_INTEGER()            => \&_const_integer,
@@ -179,9 +171,16 @@ sub _generate_segment {
     }
     push @{$self->{_processing}}, $code;
 
+    # Toy subroutine start with stack_size = 1 (for args), and so does
+    # the IR code segment
+    $code->{stack_size} +=   $segment->lexicals->{max_stack}
+                           - ( $code->is_subroutine ? 1 : 0 )
+        if $segment->lexicals;
+
     $self->_generated->{$segment} = $code;
 
     foreach my $inner ( @{$segment->inner} ) {
+        next unless $inner;
         _generate_segment( $self, $inner );
     }
 
@@ -219,7 +218,8 @@ sub _generate_segment {
         }
     }
 
-    $self->_allocate_lexicals( $is_sub );
+    $self->_allocate_lexicals( $segment, $code )
+      if $segment->lexicals;
     $self->runtime->symbol_table->set_symbol( $self->runtime, $segment->name, '&', $code )
       if defined $segment->name;
     pop @{$self->{_processing}};
@@ -261,15 +261,11 @@ sub _cleanup {
 
 sub start_code_generation {
     my( $self, $args ) = @_;
-    my $outer;
+    my( $outer_toy, $outer_int );
     if( my $cxt = $self->_eval_context ) {
-        $self->_eval_context( undef );
-        $outer = $cxt->[1];
-
-        while( my( $name, $index ) = each %{$cxt->[0]} ) {
-            _add_value( $self, $outer->lexicals,
-                        $cxt->[2]->names->{$name}, $index );
-        }
+        $outer_toy = $cxt->[1];
+        $outer_int = $self->_intermediate
+                          ->create_eval_context( $cxt->[0], $cxt->[2] );
     }
     my $code = Language::P::Toy::Value::Code->new
                    ( $self->runtime,
@@ -277,11 +273,12 @@ sub start_code_generation {
                        lexicals => Language::P::Toy::Value::ScratchPad->new
                                        ( $self->runtime ),
                        } );
-    $self->{_processing} = [ $outer, $code ];
+    $self->{_processing} = [ $outer_toy, $code ];
 
     $self->_generated( {} );
     $self->_intermediate->file_name( $args->{file_name} )
       if $args && $args->{file_name};
+    $self->_intermediate->create_main( $outer_int );
     $self->_pending( [] );
 }
 
@@ -322,26 +319,6 @@ sub _global {
     push @$bytecode,
          o( 'glob',             name => $op->{attributes}{name}, create => 1 ),
          o( 'glob_slot_create', slot => $slot );
-}
-
-sub _lexical {
-    my( $self, $bytecode, $op ) = @_;
-
-    push @$bytecode,
-         o( $op->{attributes}{lexical}->closed_over ? 'lexical_pad' : 'lexical',
-            lexical => $op->{attributes}{lexical},
-            level   => $op->{attributes}{level},
-            );
-}
-
-sub _lexical_clear {
-    my( $self, $bytecode, $op ) = @_;
-
-    push @$bytecode,
-         o( $op->{attributes}{lexical}->closed_over ? 'lexical_pad_clear' : 'lexical_clear',
-            lexical => $op->{attributes}{lexical},
-            level   => $op->{attributes}{level},
-            );
 }
 
 sub _const_string {
@@ -458,99 +435,31 @@ sub _rx_quantifier {
     push @{$self->_block_map->{$op->{attributes}{false}}}, $bytecode->[-1];
 }
 
-my %lex_map;
-
-sub _add_value {
-    my( $self, $pad, $lexical, $index ) = @_;
-
-    return $lex_map{$pad}{$lexical} = $index;
-}
-
-sub _find_add_value {
-    my( $self, $pad, $lexical ) = @_;
-
-    return $lex_map{$pad}{$lexical} if exists $lex_map{$pad}{$lexical};
-    return $lex_map{$pad}{$lexical} = $pad->add_value( $self->runtime, $lexical );
-}
-
-sub _allocate_single {
-    my( $self, $lexical, $level, $map ) = @_;
-    my $pad = $self->_code->lexicals;
-
-    if( !exists $map->{$lexical} ) {
-        if(    $lexical->name eq '_'
-            && $lexical->sigil == VALUE_ARRAY ) {
-            $map->{$lexical} = 0; # arguments are always first
-        } elsif( $lexical->isa( 'Language::P::ParseTree::Symbol' ) ) {
-            $map->{$lexical} = -1;
-        } elsif( $lexical->closed_over ) {
-            if( $level ) {
-                my $code_from = $self->{_processing}[-$level - 1];
-                my $pad_from = $code_from->lexicals;
-                my $val = _find_add_value( $self, $pad_from, $lexical );
-                if( $code_from->is_subroutine ) {
-                    foreach my $index ( -$level .. -1 ) {
-                        my $inner_code = $self->{_processing}[$index];
-                        my $outer_code = $self->{_processing}[$index - 1];
-                        my $outer_pad = $outer_code->lexicals;
-                        my $inner_pad = $inner_code->lexicals;
-
-                        my $outer_idx = _find_add_value( $self, $outer_pad, $lexical );
-                        my $inner_idx = _find_add_value( $self, $inner_pad, $lexical );
-                        push @{$inner_code->closed},
-                             [$outer_idx, $inner_idx];
-                        $map->{$lexical} = $inner_idx
-                          if $index == -1;
-                    }
-                } else {
-                    $map->{$lexical} =
-                        $pad->add_value( $self->runtime, $lexical,
-                                         $pad_from->values->[ $val ] );
-                }
-            } else {
-                $map->{$lexical} = _find_add_value( $self, $pad, $lexical );
-            }
-        } else {
-            $map->{$lexical} = $self->_code->stack_size;
-            ++$self->_code->{stack_size};
-        }
-    }
-}
-
 sub _allocate_lexicals {
-    my( $self, $is_sub ) = @_;
+    my( $self, $ir_code, $toy_code ) = @_;
+    my $pad = $toy_code->lexicals;
+    my $needs_pad = 0;
 
-    my $pad = $self->_code->lexicals;
-    return unless $pad;
-    my %map = $lex_map{$pad} ? %{ delete $lex_map{$pad} } : ();
-    my %clear;
-    my $needs_pad;
-    foreach my $op ( @{$self->_code->bytecode} ) {
-        if( $op->{op_name} eq 'eval' ) {
-            while( my( $k, $v ) = each %{$op->{lexicals}} ) {
-                _allocate_single( $self, $v, 1, \%map );
-                $op->{lexicals}{$k} = $map{$v};
-            }
-            $needs_pad = 1;
+    foreach my $lex_info ( values %{$ir_code->lexicals->{map}} ) {
+        next unless $lex_info->{in_pad};
+        $needs_pad ||= 1;
+        if( $lex_info->{from_main} ) {
+            my $main_pad = $self->_processing->[-$lex_info->{level} - 1]->lexicals;
+            $main_pad->add_value_index( $self->runtime, $lex_info->{lexical}, $lex_info->{outer_index} );
+            $pad->add_value_index( $self->runtime, $lex_info->{lexical}, $lex_info->{index},
+                                   $main_pad->values->[$lex_info->{outer_index}] );
         } else {
-            next if !$op->{lexical};
-            _allocate_single( $self, $op->{lexical}, $op->{level}, \%map );
-
-            if( $op->{lexical}->closed_over ) {
-                $needs_pad = 1;
-            }
-            $op->{index} = $map{$op->{lexical}};
-            $clear{$op->{index}} ||= 1 if $op->{lexical}->closed_over && !$op->{level};
-            delete $op->{lexical};
-            delete $op->{level};
+            $pad->add_value_index( $self->runtime, $lex_info->{lexical}, $lex_info->{index} );
+            push @{$toy_code->{closed}},
+                 [$lex_info->{outer_index}, $lex_info->{index}]
+                   if $lex_info->{outer_index} >= 0;
+            push @{$pad->{clear}}, $lex_info->{index} if $lex_info->{declaration};
         }
     }
-
-    $self->_code->{closed} = undef unless @{$self->_code->closed};
     if( !$needs_pad ) {
-        $self->_code->{lexicals} = undef;
+        $toy_code->{lexicals} = undef;
     }
-    $pad->{clear} = [ keys %clear ];
+    $toy_code->{closed} = undef unless @{$toy_code->closed};
 }
 
 1;

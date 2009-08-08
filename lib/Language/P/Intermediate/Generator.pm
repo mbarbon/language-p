@@ -6,7 +6,7 @@ use base qw(Language::P::ParseTree::Visitor);
 
 __PACKAGE__->mk_accessors( qw(_code_segments _current_basic_block _options
                               _label_count _temporary_count _current_block
-                              _group_count file_name) );
+                              _group_count _main file_name) );
 
 use Scalar::Util qw();
 
@@ -90,6 +90,42 @@ sub pop_block {
     return $to_ret;
 }
 
+sub create_main {
+    my( $self, $outer ) = @_;
+    my $main = Language::P::Intermediate::Code->new
+                   ( { type         => 1,
+                       name         => undef,
+                       basic_blocks => [],
+                       outer        => $outer,
+                       lexicals     => { max_stack => 0 },
+                       prototype    => undef,
+                       } );
+    $self->_main( $main );
+}
+
+sub create_eval_context {
+    my( $self, $indices, $lexicals ) = @_;
+    my $lex = {};
+    my $cxt = Language::P::Intermediate::Code->new
+                  ( { type     => 1,
+                      name     => undef,
+                      outer    => undef,
+                      lexicals => { map => $lex },
+                      } );
+    while( my( $name, $index ) = each %$indices ) {
+        my $lexical = $lexicals->names->{$name};
+        $lex->{$lexical} =
+          { index       => $index,
+            outer_index => -1,
+            lexical     => $lexical,
+            level       => 0,
+            in_pad      => 1,
+            };
+    }
+
+    return $cxt;
+}
+
 sub generate_regex {
     my( $self, $regex ) = @_;
 
@@ -106,7 +142,6 @@ sub _generate_regex {
          Language::P::Intermediate::Code->new
              ( { type         => 3,
                  basic_blocks => [],
-                 lexicals     => {},
                  } );
     if( $outer ) {
         push @{$outer->inner}, $self->_code_segments->[-1];
@@ -147,7 +182,7 @@ sub generate_use {
                  name         => undef,
                  basic_blocks => [],
                  outer        => undef,
-                 lexicals     => {},
+                 lexicals     => { max_stack => 0 },
                  prototype    => undef,
                  } );
 
@@ -223,18 +258,18 @@ sub generate_subroutine {
     $context->visit( $tree, CXT_VOID );
 
     _generate_bytecode( $self, 1, $tree->name, $tree->prototype,
-                        $outer, $tree->lines );
+                        $outer || $self->_main, $tree->lines );
 }
 
 sub generate_bytecode {
-    my( $self, $statements ) = @_;
+    my( $self, $statements, $outer ) = @_;
 
     my $context = Language::P::ParseTree::PropagateContext->new;
     foreach my $tree ( @$statements ) {
         $context->visit( $tree, CXT_VOID );
     }
 
-    _generate_bytecode( $self, 0, undef, undef, undef, $statements );
+    _generate_bytecode( $self, 0, undef, undef, $outer, $statements );
 }
 
 sub _generate_bytecode {
@@ -242,15 +277,20 @@ sub _generate_bytecode {
 
     $self->_code_segments( [] );
 
-    push @{$self->_code_segments},
-         Language::P::Intermediate::Code->new
-             ( { type         => $is_sub ? 2 : 1,
-                 name         => $name,
-                 basic_blocks => [],
-                 outer        => $outer,
-                 lexicals     => {},
-                 prototype    => $prototype,
-                 } );
+    if( !$is_sub && $self->_main ) {
+        push @{$self->_code_segments}, $self->_main;
+        $self->_main( undef );
+    } else {
+        push @{$self->_code_segments},
+             Language::P::Intermediate::Code->new
+                 ( { type         => $is_sub ? 2 : 1,
+                     name         => $name,
+                     basic_blocks => [],
+                     outer        => $outer,
+                     lexicals     => { max_stack => $is_sub ? 1 : 0 },
+                     prototype    => $prototype,
+                     } );
+    }
     if( $outer ) {
         push @{$outer->inner}, $self->_code_segments->[-1];
         Scalar::Util::weaken( $outer->inner->[-1] );
@@ -421,6 +461,12 @@ sub _builtin {
         }
 
         if( $tree->function == OP_EVAL ) {
+            my $plex = $tree->get_attribute( 'lexicals' );
+            my %lex;
+            while( my( $n, $l ) = each %$plex ) {
+                $lex{$n} = _allocate_lexical( $self, $self->_code_segments->[0],
+                                              $l, 1 )->{index};
+            }
             my $env = $tree->get_attribute( 'environment' );
             _add_bytecode $self,
                 opcode_nm( $tree->function,
@@ -428,7 +474,7 @@ sub _builtin {
                            hints    => $env->{hints},
                            warnings => $env->{warnings},
                            package  => $env->{package},
-                           lexicals => $tree->get_attribute( 'lexicals' ),
+                           lexicals => \%lex,
                            globals  => $tree->get_attribute( 'globals' ) );
         } else {
             _add_bytecode $self,
@@ -716,26 +762,91 @@ sub _lexical_declaration {
     _do_lexical_access( $self, $tree, 0, 1 );
 }
 
+sub _add_value {
+    my( $code, $lexical, $index ) = @_;
+
+    return $code->lexicals->{map}{$lexical}{index} = $index;
+}
+
+sub _find_add_value {
+    my( $code, $lexical ) = @_;
+    my $lex = $code->lexicals;
+
+    return $lex->{map}{$lexical}{index}
+        if $lex->{map}{$lexical} && $lex->{map}{$lexical}{index} >= 0;
+    return $lex->{map}{$lexical}{index} = $lex->{max_pad}++;
+}
+
+sub _uplevel {
+    my( $code, $level ) = @_;
+
+    $code = $code->outer foreach 1 .. $level;
+
+    return $code;
+}
+
+sub _allocate_lexical {
+    my( $self, $code, $lexical, $level ) = @_;
+    my $lex_info = $code->lexicals->{map}->{$lexical} ||=
+        { level       => $level,
+          lexical     => $lexical,
+          index       => -1,
+          outer_index => -1,
+          in_pad      => $lexical->closed_over ? 1 : 0,
+          from_main   => 0,
+          };
+    return $lex_info if $lex_info->{index} >= 0;
+
+    if(    $lexical->name eq '_'
+        && $lexical->sigil == VALUE_ARRAY ) {
+        $lex_info->{index} = 0; # arguments are always first
+    } elsif( $lexical->closed_over ) {
+        my $level = $lex_info->{level};
+        if( $level ) {
+            my $code_from = _uplevel( $code, $level );
+            my $val = _allocate_lexical( $self, $code_from,
+                                         $lexical, 0 )->{index};
+            if( $code_from->is_sub ) {
+                my $outer = $code->outer;
+                _allocate_lexical( $self, $outer, $lexical, $level - 1 );
+                $lex_info->{index} = _find_add_value( $code, $lexical );
+                $lex_info->{outer_index} = _find_add_value( $outer, $lexical );
+            } else {
+                $lex_info->{index} = _find_add_value( $code, $lexical );
+                $lex_info->{outer_index} = $val;
+                $lex_info->{from_main} = 1;
+            }
+        } else {
+            $lex_info->{index} = _find_add_value( $code, $lexical );
+        }
+    } else {
+        $lex_info->{index} = $code->lexicals->{max_stack}++;
+    }
+
+    return  $lex_info;
+}
+
 sub _do_lexical_access {
     my( $self, $tree, $level, $is_decl ) = @_;
 
     # maybe do it while parsing, in _find_symbol/_process_lexical_declaration
-    my $lex_info = $self->_code_segments->[0]->lexicals->{$tree}
-                       ||= { level => $level, lexical => $tree };
+    my $lex_info = $self->_code_segments->[0]->lexicals->{map}->{$tree};
+    if( !$lex_info || $lex_info->{index} < 0 ) {
+        $lex_info = _allocate_lexical( $self, $self->_code_segments->[0],
+                                       $tree, $level );
+    }
 
     _add_bytecode $self,
-         opcode_nm( OP_LEXICAL,
-                    lexical  => $tree,
-                    level    => $level,
+         opcode_nm( $lex_info->{in_pad} ? OP_LEXICAL_PAD : OP_LEXICAL,
+                    index => $lex_info->{index},
                     );
 
     if( $is_decl ) {
         $lex_info->{declaration} = 1;
 
         push @{$self->_current_block->{bytecode}},
-             [ opcode_nm( OP_LEXICAL_CLEAR,
-                          lexical => $tree,
-                          level   => $level,
+             [ opcode_nm( $lex_info->{in_pad} ? OP_LEXICAL_PAD_CLEAR : OP_LEXICAL_CLEAR,
+                          index => $lex_info->{index},
                           ),
                ];
     }
@@ -785,7 +896,8 @@ sub _foreach {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
-    my $is_lexical = $tree->variable->isa( 'Language::P::ParseTree::LexicalDeclaration' );
+    my $iter_var = $tree->variable;
+    my $is_lexical = $iter_var->isa( 'Language::P::ParseTree::LexicalDeclaration' );
 
     my( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop ) =
         _new_blocks( $self, 5 );
@@ -810,7 +922,7 @@ sub _foreach {
         $slot = $self->{_temporary_count}++;
 
         _add_bytecode $self,
-            opcode_nm( OP_GLOBAL, name => $tree->variable->name, slot => VALUE_GLOB ),
+            opcode_nm( OP_GLOBAL, name => $iter_var->name, slot => VALUE_GLOB ),
             opcode_n( OP_DUP ),
             opcode_nm( OP_GLOB_SLOT,   slot  => VALUE_SCALAR ),
             opcode_nm( OP_TEMPORARY_SET, index => $slot ),
@@ -848,13 +960,12 @@ sub _foreach {
             opcode_nm( OP_JUMP_IF_NULL, true => $exit_loop, false => $start_loop ), $exit_loop, $start_loop;
 
         _add_blocks $self, $start_loop;
+        _allocate_lexical( $self, $self->_code_segments->[0], $iter_var, 0 );
+        my $lex_info = $self->_code_segments->[0]->lexicals->{map}->{$iter_var};
         _add_bytecode $self,
-            opcode_nm( OP_LEXICAL_SET,  lexical => $tree->variable );
-
-        $self->_code_segments->[0]->lexicals->{$tree->variable}
-            = { level       => 0,
-                lexical     => $tree->variable,
-                };
+            opcode_nm( $iter_var->closed_over ? OP_LEXICAL_PAD_SET : OP_LEXICAL_SET,
+                       index => $lex_info->{index},
+                       );
     }
 
     $self->dispatch( $tree->block );

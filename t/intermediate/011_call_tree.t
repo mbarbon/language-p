@@ -20,6 +20,6 @@ L1:
   end
 # foo
 L1:
-  return (make_list (print (global name="STDOUT", slot=7), (make_list (concat_assign (concat_assign (concat_assign (fresh_string value=""), (constant_string value="ok ")), (array_element (constant_integer value=0), (lexical lexical=array(_), level=0))), (constant_string value="\x0a")))))
+  return (make_list (print (global name="STDOUT", slot=7), (make_list (concat_assign (concat_assign (concat_assign (fresh_string value=""), (constant_string value="ok ")), (array_element (constant_integer value=0), (lexical index=0))), (constant_string value="\x0a")))))
   end
 EOI
