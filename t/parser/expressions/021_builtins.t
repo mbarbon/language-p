@@ -47,7 +47,7 @@ shift foo;
 EOP
 --- !parsetree:LexicalDeclaration
 context: CXT_VOID
-flags: DECLARATION_MY
+flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
 name: foo
 sigil: VALUE_ARRAY
 --- !parsetree:Overridable

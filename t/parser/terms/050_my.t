@@ -12,7 +12,7 @@ my $foo;
 EOP
 --- !parsetree:LexicalDeclaration
 context: CXT_VOID
-flags: DECLARATION_MY
+flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
 name: foo
 sigil: VALUE_SCALAR
 EOE
@@ -24,7 +24,7 @@ EOP
 context: CXT_VOID
 left: !parsetree:LexicalDeclaration
   context: CXT_SCALAR|CXT_LVALUE
-  flags: DECLARATION_MY
+  flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
   name: foo
   sigil: VALUE_SCALAR
 op: OP_ASSIGN
@@ -44,12 +44,12 @@ left: !parsetree:List
   expressions:
     - !parsetree:LexicalDeclaration
       context: CXT_SCALAR|CXT_LVALUE
-      flags: DECLARATION_MY
+      flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
       name: foo
       sigil: VALUE_SCALAR
     - !parsetree:LexicalDeclaration
       context: CXT_LIST|CXT_LVALUE
-      flags: DECLARATION_MY
+      flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
       name: bar
       sigil: VALUE_ARRAY
 op: OP_ASSIGN
@@ -78,7 +78,7 @@ context: CXT_VOID
 expressions:
   - !parsetree:LexicalDeclaration
     context: CXT_VOID
-    flags: DECLARATION_MY
+    flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
     name: foo
     sigil: VALUE_SCALAR
 EOE
@@ -91,17 +91,17 @@ context: CXT_VOID
 expressions:
   - !parsetree:LexicalDeclaration
     context: CXT_VOID
-    flags: DECLARATION_MY
+    flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
     name: foo
     sigil: VALUE_SCALAR
   - !parsetree:LexicalDeclaration
     context: CXT_VOID
-    flags: DECLARATION_MY
+    flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
     name: b
     sigil: VALUE_ARRAY
   - !parsetree:LexicalDeclaration
     context: CXT_VOID
-    flags: DECLARATION_MY
+    flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
     name: x
     sigil: VALUE_SCALAR
 EOE
@@ -112,14 +112,14 @@ my $x = $x;
 EOP
 --- !parsetree:LexicalDeclaration
 context: CXT_VOID 
-flags: DECLARATION_MY
+flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
 name: x
 sigil: VALUE_SCALAR
 --- !parsetree:BinOp
 context: CXT_VOID
 left: !parsetree:LexicalDeclaration
   context: CXT_SCALAR|CXT_LVALUE
-  flags: DECLARATION_MY
+  flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
   name: x
   sigil: VALUE_SCALAR
 op: OP_ASSIGN

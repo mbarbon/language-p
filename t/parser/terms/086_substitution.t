@@ -105,7 +105,7 @@ right: !parsetree:Substitution
         context: CXT_VOID
         left: !parsetree:LexicalDeclaration
           context: CXT_SCALAR|CXT_LVALUE
-          flags: DECLARATION_MY
+          flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
           name: x
           sigil: VALUE_SCALAR
         op: OP_ASSIGN
