@@ -12,10 +12,10 @@ $x = $a + 2
 EOP
 # main
 L1:
-  global name=a, slot=1
-  constant_integer 2
+  global name="a", slot=1
+  constant_integer value=2
   add
-  global name=x, slot=1
+  global name="x", slot=1
   swap
   assign
   pop
@@ -27,8 +27,8 @@ print !$a
 EOP
 # main
 L1:
-  global name=STDOUT, slot=7
-  global name=a, slot=1
+  global name="STDOUT", slot=7
+  global name="a", slot=1
   not
   make_list count=1
   print
@@ -41,12 +41,12 @@ $x = "$a\n";
 EOP
 # main
 L1:
-  fresh_string ""
-  global name=a, slot=1
+  fresh_string value=""
+  global name="a", slot=1
   concat_assign
-  constant_string "\x0a"
+  constant_string value="\x0a"
   concat_assign
-  global name=x, slot=1
+  global name="x", slot=1
   swap
   assign
   pop

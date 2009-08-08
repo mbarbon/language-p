@@ -16,10 +16,10 @@ foo( 1 );
 EOP
 # main
 L1:
-  call context=2 (make_list (constant_integer 1)), (global name=foo, slot=4)
+  call context=2 (make_list (constant_integer value=1)), (global name="foo", slot=4)
   end
 # foo
 L1:
-  return (make_list (print (global name=STDOUT, slot=7), (make_list (concat_assign (concat_assign (concat_assign (fresh_string ""), (constant_string "ok ")), (array_element (constant_integer 0), (lexical lexical=array(_), level=0))), (constant_string "\x0a")))))
+  return (make_list (print (global name="STDOUT", slot=7), (make_list (concat_assign (concat_assign (concat_assign (fresh_string value=""), (constant_string value="ok ")), (array_element (constant_integer value=0), (lexical lexical=array(_), level=0))), (constant_string value="\x0a")))))
   end
 EOI

@@ -15,17 +15,17 @@ unless( $a < 2 ) {
 EOP
 # main
 L1:
-  constant_integer 0
+  constant_integer value=0
   pop
   jump to=L3
 L2:
   end
 L3:
-  global name=a, slot=1
-  constant_integer 2
+  global name="a", slot=1
+  constant_integer value=2
   jump_if_f_lt false=L4, true=L5
 L4:
-  constant_integer 1
+  constant_integer value=1
   pop
   jump to=L2
 L5:
@@ -45,31 +45,31 @@ if( $a < 11 ) {
 EOP
 # main
 L1:
-  constant_integer 0
+  constant_integer value=0
   pop
   jump to=L6
 L2:
-  constant_integer 4
+  constant_integer value=4
   pop
   end
 L3:
-  constant_integer 3
+  constant_integer value=3
   pop
   jump to=L2
 L4:
-  global name=a, slot=1
-  constant_integer 12
+  global name="a", slot=1
+  constant_integer value=12
   jump_if_f_lt false=L3, true=L5
 L5:
-  constant_integer 2
+  constant_integer value=2
   pop
   jump to=L2
 L6:
-  global name=a, slot=1
-  constant_integer 11
+  global name="a", slot=1
+  constant_integer value=11
   jump_if_f_lt false=L4, true=L7
 L7:
-  constant_integer 1
+  constant_integer value=1
   pop
   jump to=L2
 EOI
@@ -83,20 +83,20 @@ if( $a - 1 ) {
 EOP
 # main
 L1:
-  constant_integer 0
+  constant_integer value=0
   pop
   jump to=L3
 L2:
-  constant_integer 2
+  constant_integer value=2
   pop
   end
 L3:
-  global name=a, slot=1
-  constant_integer 1
+  global name="a", slot=1
+  constant_integer value=1
   subtract
   jump_if_true false=L5, true=L4
 L4:
-  constant_integer 1
+  constant_integer value=1
   pop
   jump to=L2
 L5:
@@ -112,22 +112,22 @@ if( $a && $b ) {
 EOP
 # main
 L1:
-  constant_integer 0
+  constant_integer value=0
   pop
   jump to=L3
 L2:
-  constant_integer 2
+  constant_integer value=2
   pop
   end
 L3:
-  global name=a, slot=1
+  global name="a", slot=1
   jump_if_true false=L7, true=L5
 L4:
-  constant_integer 1
+  constant_integer value=1
   pop
   jump to=L2
 L5:
-  global name=b, slot=1
+  global name="b", slot=1
   jump_if_true false=L6, true=L4
 L6:
   jump to=L2
@@ -146,14 +146,14 @@ L1:
 L2:
   end
 L3:
-  global name=y, slot=1
-  constant_string ""
+  global name="y", slot=1
+  constant_string value=""
   jump_if_s_eq false=L9, true=L6
 L6:
-  global name=z, slot=1
+  global name="z", slot=1
   jump_if_true false=L7, true=L8
 L7:
-  constant_integer 3
+  constant_integer value=3
   pop
   jump to=L2
 L8:

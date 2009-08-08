@@ -16,23 +16,23 @@ foo( 1 );
 EOP
 # main
 L1:
-  constant_integer 1
+  constant_integer value=1
   make_list count=1
-  global name=foo, slot=4
+  global name="foo", slot=4
   call context=2
   pop
   end
 # foo
 L1:
-  global name=STDOUT, slot=7
-  fresh_string ""
-  constant_string "ok "
+  global name="STDOUT", slot=7
+  fresh_string value=""
+  constant_string value="ok "
   concat_assign
-  constant_integer 0
+  constant_integer value=0
   lexical level=0, lexical=array(_)
   array_element
   concat_assign
-  constant_string "\x0a"
+  constant_string value="\x0a"
   concat_assign
   make_list count=1
   print

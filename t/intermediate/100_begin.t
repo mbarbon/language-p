@@ -16,11 +16,11 @@ BEGIN {
 EOP
 # main
 L1:
-  constant_integer 1
-  constant_integer 2
+  constant_integer value=1
+  constant_integer value=2
   end
 # BEGIN
 L1:
-  return (make_list (constant_integer 3))
+  return (make_list (constant_integer value=3))
   end
 EOI

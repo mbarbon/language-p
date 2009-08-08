@@ -14,10 +14,10 @@ eval "1";
 EOP
 # main
 L1:
-  constant_string "1"
+  constant_string value="1"
   eval warnings=undef, hints=0, globals={}, context=2, lexicals={}, package=main
   pop
-  constant_string "1"
+  constant_string value="1"
   eval warnings=undef, hints=0, globals={}, context=2, lexicals={}, package=x
   pop
   end

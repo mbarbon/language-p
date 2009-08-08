@@ -157,7 +157,7 @@ sub generate_use {
     # TODO require perl version
     ( my $file = $tree->package ) =~ s{::}{/}g;
     _add_bytecode $self,
-         opcode_n( OP_CONSTANT_STRING, "$file.pm" ),
+         opcode_nm( OP_CONSTANT_STRING, value => "$file.pm" ),
          opcode_nm( OP_REQUIRE_FILE, context => CXT_VOID ),
          opcode_n( OP_POP );
 
@@ -165,7 +165,7 @@ sub generate_use {
 
     # always evaluate arguments, even if no import/unimport is present
     _add_bytecode $self,
-        opcode_n( OP_CONSTANT_STRING, $tree->package );
+        opcode_nm( OP_CONSTANT_STRING, value => $tree->package );
     if( $tree->import ) {
         foreach my $arg ( @{$tree->import} ) {
             $self->dispatch( $arg );
@@ -178,7 +178,7 @@ sub generate_use {
     }
 
     _add_bytecode $self,
-        opcode_n( OP_CONSTANT_STRING, $tree->package ),
+        opcode_nm( OP_CONSTANT_STRING, value => $tree->package ),
         opcode_nm( OP_FIND_METHOD,
                    method => $tree->is_no ? 'unimport' : 'import' ),
         opcode_n( OP_DUP );
@@ -667,25 +667,28 @@ sub _constant {
     if( $tree->is_number ) {
         if( $tree->flags & NUM_INTEGER ) {
             _add_bytecode $self,
-                 opcode_n( OP_CONSTANT_INTEGER, $tree->value );
+                 opcode_nm( OP_CONSTANT_INTEGER, value => $tree->value );
         } elsif( $tree->flags & NUM_FLOAT ) {
             _add_bytecode $self,
-                 opcode_n( OP_CONSTANT_FLOAT, $tree->value );
+                 opcode_nm( OP_CONSTANT_FLOAT, value => $tree->value );
         } elsif( $tree->flags & NUM_OCTAL ) {
             _add_bytecode $self,
-                 opcode_n( OP_CONSTANT_INTEGER, oct '0' . $tree->value );
+                 opcode_nm( OP_CONSTANT_INTEGER,
+                            value => oct '0' . $tree->value );
         } elsif( $tree->flags & NUM_HEXADECIMAL ) {
             _add_bytecode $self,
-                 opcode_n( OP_CONSTANT_INTEGER, oct '0x' . $tree->value );
+                 opcode_nm( OP_CONSTANT_INTEGER,
+                            value => oct '0x' . $tree->value );
         } elsif( $tree->flags & NUM_BINARY ) {
             _add_bytecode $self,
-                 opcode_n( OP_CONSTANT_INTEGER, oct '0b' . $tree->value );
+                 opcode_nm( OP_CONSTANT_INTEGER,
+                            value => oct '0b' . $tree->value );
         } else {
             die "Unhandled flags value";
         }
     } elsif( $tree->is_string ) {
         _add_bytecode $self,
-             opcode_n( OP_CONSTANT_STRING, $tree->value );
+             opcode_nm( OP_CONSTANT_STRING, value => $tree->value );
     } else {
         die "Neither number nor string";
     }
@@ -1032,7 +1035,7 @@ sub _anon_subroutine {
     my $sub = _subroutine( $self, $tree );
 
     _add_bytecode $self,
-        opcode_n( OP_CONSTANT_SUB, $sub ),
+        opcode_nm( OP_CONSTANT_SUB, value => $sub ),
         opcode_n( OP_MAKE_CLOSURE );
 }
 
@@ -1066,7 +1069,7 @@ sub _quoted_string {
         return;
     }
 
-    _add_bytecode $self, opcode_n( OP_FRESH_STRING, '' );
+    _add_bytecode $self, opcode_nm( OP_FRESH_STRING, value => '' );
     for( my $i = 0; $i < @{$tree->components}; ++$i ) {
         $self->dispatch( $tree->components->[$i] );
 
@@ -1235,7 +1238,7 @@ sub _pattern {
                             } );
 
     my $re = $generator->_generate_regex( $tree, $self->_code_segments->[0] );
-    _add_bytecode $self, opcode_n( OP_CONSTANT_REGEX, $re->[0] );
+    _add_bytecode $self, opcode_nm( OP_CONSTANT_REGEX, value => $re->[0] );
 }
 
 sub _interpolated_pattern {

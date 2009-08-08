@@ -184,9 +184,9 @@ sub _ssa_to_tree {
                 # find the jump coming to this block
                 while( $op_from_off >= 0 ) {
                     my $op_from = $block_from->bytecode->[$op_from_off];
-                    last if    $op_from->{parameters}
-                            && @{$op_from->{parameters}}
-                            && $op_from->{parameters}[-1] eq $block;
+                    last if    $op_from->{attributes}
+                            && exists $op_from->{attributes}{to}
+                            && $op_from->{attributes}{to} eq $block;
                     --$op_from_off;
                 }
 
@@ -273,7 +273,7 @@ sub _jump_to {
     $converted->{depth} = @$stack;
     $converted->{block} ||= Language::P::Intermediate::BasicBlock
                                 ->new_from_label( $to->start_label );
-    push @{$op->{parameters}}, $converted->{block};
+    $op->{attributes}{to} = $converted->{block};
     push @{$self->_queue}, $to;
 
     return $out_names;
@@ -339,8 +339,8 @@ sub _generic {
 
 sub _const_sub {
     my( $self, $op ) = @_;
-    my $new_seg = $self->_converted_segments->{$op->{parameters}[0]};
-    my $new_op = opcode_n( OP_CONSTANT_SUB(), $new_seg );
+    my $new_seg = $self->_converted_segments->{$op->{attributes}{value}};
+    my $new_op = opcode_nm( OP_CONSTANT_SUB(), value => $new_seg );
 
     push @{$self->_stack}, $new_op;
     _created( $self, 1 );

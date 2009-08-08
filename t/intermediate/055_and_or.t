@@ -12,15 +12,15 @@ $x = $a && $b;
 EOP
 # main
 L1:
-  global name=a, slot=1
+  global name="a", slot=1
   dup
   jump_if_true false=L4, true=L2
 L2:
   pop
-  global name=b, slot=1
+  global name="b", slot=1
   jump to=L3
 L3:
-  global name=x, slot=1
+  global name="x", slot=1
   swap
   assign
   pop
@@ -34,15 +34,15 @@ $x = $a || $b;
 EOP
 # main
 L1:
-  global name=a, slot=1
+  global name="a", slot=1
   dup
   jump_if_true false=L2, true=L4
 L2:
   pop
-  global name=b, slot=1
+  global name="b", slot=1
   jump to=L3
 L3:
-  global name=x, slot=1
+  global name="x", slot=1
   swap
   assign
   pop
@@ -56,22 +56,22 @@ $x = $a && $b && $c;
 EOP
 # main
 L1:
-  global name=a, slot=1
+  global name="a", slot=1
   dup
   jump_if_true false=L6, true=L2
 L2:
   pop
-  global name=b, slot=1
+  global name="b", slot=1
   jump to=L3
 L3:
   dup
   jump_if_true false=L7, true=L4
 L4:
   pop
-  global name=c, slot=1
+  global name="c", slot=1
   jump to=L5
 L5:
-  global name=x, slot=1
+  global name="x", slot=1
   swap
   assign
   pop
@@ -87,22 +87,22 @@ $x = $a || $b || $c;
 EOP
 # main
 L1:
-  global name=a, slot=1
+  global name="a", slot=1
   dup
   jump_if_true false=L2, true=L6
 L2:
   pop
-  global name=b, slot=1
+  global name="b", slot=1
   jump to=L3
 L3:
   dup
   jump_if_true false=L4, true=L7
 L4:
   pop
-  global name=c, slot=1
+  global name="c", slot=1
   jump to=L5
 L5:
-  global name=x, slot=1
+  global name="x", slot=1
   swap
   assign
   pop
