@@ -1186,7 +1186,12 @@ sub o_eval {
     }
 
     $runtime->eval_string( $string->as_string( $runtime ),
-                           _context( $op, $runtime ), $parse_lex,
+                           _context( $op, $runtime ),
+                           { lexicals => $parse_lex,
+                             hints    => $op->{hints},
+                             warnings => $op->{warnings},
+                             package  => $op->{package},
+                             },
                            [ $op->{lexicals}, $runtime->{_code}, $parse_lex ] );
 
     return $pc + 1;

@@ -176,11 +176,11 @@ sub set_option {
 }
 
 sub parse_string {
-    my( $self, $string, $package, $flags, $lexicals ) = @_;
+    my( $self, $string, $flags, $lexical_state ) = @_;
 
     open my $fh, '<', \$string;
 
-    $self->parse_stream( $fh, '<string>', $flags, $lexicals, $package );
+    $self->parse_stream( $fh, '<string>', $flags, $lexical_state );
 }
 
 sub parse_file {
@@ -190,11 +190,11 @@ sub parse_file {
         throw Language::P::Exception
                   ( message => "Can't open perl script \"$file\": $!" );
 
-    $self->parse_stream( $fh, $file, $flags, undef, 'main' );
+    $self->parse_stream( $fh, $file, $flags );
 }
 
 sub parse_stream {
-    my( $self, $stream, $filename, $flags, $lexicals, $package ) = @_;
+    my( $self, $stream, $filename, $flags, $lexical_state ) = @_;
 
     $self->{lexer} = Language::P::Lexer->new
                          ( { stream       => $stream,
@@ -202,7 +202,7 @@ sub parse_stream {
                              runtime      => $self->runtime,
                              } );
     $self->{_lexical_state} = [];
-    $self->_parse( $flags, $lexicals, $package );
+    $self->_parse( $flags, $lexical_state );
 }
 
 sub set_hints {
@@ -230,8 +230,16 @@ sub _qualify {
     return $prefix . $name;
 }
 
+my %default_state =
+  ( package  => 'main',
+    hints    => 0,
+    warnings => undef,
+    lexicals => undef,
+    );
+
 sub _parse {
-    my( $self, $flags, $lexicals, $package ) = @_;
+    my( $self, $flags, $lexical_state ) = @_;
+    $lexical_state ||= \%default_state;
 
     my $dumper;
     if(    $self->_options->{'dump-parse-tree'}
@@ -246,9 +254,11 @@ sub _parse {
     }
 
     $self->_pending_lexicals( [] );
-    $self->_lexicals( $lexicals );
-    $self->_enter_scope( $lexicals ? 1 : 0, 1 );
-    $self->{_lexical_state}[-1]{package} = $package;
+    $self->_lexicals( $lexical_state->{lexicals} );
+    $self->_enter_scope( $lexical_state->{lexicals} ? 1 : 0, 1 );
+    $self->{_lexical_state}[-1]{package} = $lexical_state->{package};
+    $self->{_lexical_state}[-1]{hints} = $lexical_state->{hints};
+    $self->{_lexical_state}[-1]{warnings} = $lexical_state->{warnings};
 
     $self->generator->start_code_generation( { file_name => $self->lexer->file,
                                                } );
@@ -263,7 +273,7 @@ sub _parse {
         my $lex_state = _lexical_state_node( $self );
         push @lines, $lex_state if $lex_state;
     }
-    $package = $self->{_lexical_state}[-1]{package};
+    my $package = $self->{_lexical_state}[-1]{package};
     $self->_leave_scope;
     _lines_implicit_return( $self, \@lines ) if $flags & PARSE_ADD_RETURN;
     $self->generator->process( $_ ) foreach @lines;
@@ -907,6 +917,12 @@ sub _find_symbol {
     my $lex = _find_lexical( $self, $sigil, $name );
     return $lex if $lex;
 
+    if( $self->{_lexical_state}[-1]{hints} & 0x00000400 ) {
+        _parse_error( $self, $pos,
+                      "Global symbol %s requires explicit package name",
+                      $name );
+    }
+
     return Language::P::ParseTree::Symbol->new
                ( { name  => _qualify( $self, $name, $type ),
                    sigil => $sigil,
@@ -1302,10 +1318,16 @@ sub _parse_term_terminal {
 
         if( $token->[O_ID_TYPE] == KEY_EVAL ) {
             my( $lex, $glob ) = $self->_lexicals->all_visible_lexicals;
+            my $lex_state = $self->{_lexical_state}[-1];
             my $tree = _parse_listop( $self, $token );
             $_->set_closed_over foreach values %$lex;
             $tree->set_attribute( 'lexicals', $lex );
             $tree->set_attribute( 'globals', $glob );
+            $tree->set_attribute( 'environment',
+                                  { hints    => $lex_state->{hints},
+                                    warnings => $lex_state->{warnings},
+                                    package  => $lex_state->{package},
+                                    } );
 
             return $tree;
         } elsif( $token->[O_ID_TYPE] == KEY_REQUIRE_FILE ) {

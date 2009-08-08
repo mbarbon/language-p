@@ -887,7 +887,11 @@ sub _prepare_sublex_heredoc {
         }
 
         $$_ =~ s/^(\w*)//;
-        # warn "Deprecated" unless $1;
+        if( !$1 ) {
+            $self->runtime->warning_if
+              ( 'syntax', $self->file, $self->line,
+                'Use of bare << to mean <<"" is deprecated' );
+        }
         $end = $1;
     }
     $end .= "\n";

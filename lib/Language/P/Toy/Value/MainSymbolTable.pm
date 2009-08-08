@@ -10,7 +10,12 @@ use Language::P::Toy::Value::StringNumber;
 sub is_main { 1 }
 
 my %special_names =
-  ( "\017"   => 1,
+  ( # H
+    "\010"             => 1,
+    # O
+    "\017"             => 1,
+    # W
+    "\027ARNING_BITS"  => 1,
     );
 our %sigils; *sigils = \%Language::P::Toy::Value::SymbolTable::sigils;
 
@@ -21,11 +26,11 @@ sub new {
     my $out = Language::P::Toy::Value::Handle->new( $runtime, { handle => \*STDOUT } );
     $self->set_symbol( $runtime, 'STDOUT', 'I', $out );
 
-    my $interpreter = Language::P::Toy::Value::StringNumber->new( $runtime, { string => $^X } );
+    my $interpreter = Language::P::Toy::Value::Scalar->new_string( $runtime, $^X );
     $self->set_symbol( $runtime, "\030", '$', $interpreter );
 
     my $inc = Language::P::Toy::Value::Array->new( $runtime );
-    $inc->push_value( $runtime, Language::P::Toy::Value::StringNumber->new( $runtime, { string => '.' } ) );
+    $inc->push_value( $runtime, Language::P::Toy::Value::Scalar->new_string( $runtime, '.' ) );
     $self->set_symbol( $runtime, 'INC', '@', $inc );
 
     return $self;
@@ -37,13 +42,31 @@ sub _tied_to_rt_variable {
     my $get = sub {
         return Language::P::Toy::Value::StringNumber->new
                    ( $runtime,
-                     { string => $runtime->{_variables}->{osname},
+                     { string => $runtime->{_variables}->{$name},
                        } );
     };
 
     return Language::P::Toy::Value::ActiveScalarCallbacks->new
                ( $runtime,
                  { get_callback => $get,
+                   } )
+}
+
+sub _tied_to_rt_methods {
+    my( $runtime, $get_m, $set_m ) = @_;
+
+    my $get = sub {
+        return $runtime->$get_m;
+    };
+
+    my $set = sub {
+        $runtime->$set_m( $_[2] );
+    };
+
+    return Language::P::Toy::Value::ActiveScalarCallbacks->new
+               ( $runtime,
+                 { get_callback => $get,
+                   set_callback => $set,
                    } )
 }
 
@@ -61,6 +84,14 @@ sub get_symbol {
         if( $name eq "\017" ) {
             $symbol->set_slot( $runtime, 'scalar',
                                _tied_to_rt_variable( $runtime, 'osname' ) );
+        } elsif( $name eq "\010" ) {
+            $symbol->set_slot( $runtime, 'scalar',
+                               _tied_to_rt_methods( $runtime, 'get_hints',
+                                                    'set_hints' ) );
+        } elsif( $name eq "\027ARNING_BITS" ) {
+            $symbol->set_slot( $runtime, 'scalar',
+                               _tied_to_rt_methods( $runtime, 'get_warnings',
+                                                    'set_warnings' ) );
         }
     }
 

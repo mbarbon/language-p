@@ -89,7 +89,12 @@ sub parse_string {
     my( $expr, $package ) = @_;
 
     my $parser = fresh_parser();
-    $parser->parse_string( $expr, $package || 'main', 0 );
+    $parser->parse_string( $expr, 0,
+                           { package  => $package || 'main',
+                             lexicals => undef,
+                             hints    => 0,
+                             warnings => undef,
+                             } );
 
     return parsed_program();
 }

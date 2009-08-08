@@ -8,7 +8,7 @@ use Language::P::Toy::Value::MainSymbolTable;
 use Language::P::ParseTree qw(:all);
 use Language::P::Parser qw(:all);
 
-__PACKAGE__->mk_ro_accessors( qw(symbol_table _variables) );
+__PACKAGE__->mk_ro_accessors( qw(symbol_table _variables _parser) );
 __PACKAGE__->mk_accessors( qw(parser) );
 
 sub new {
@@ -17,6 +17,7 @@ sub new {
 
     $self->{symbol_table} ||= Language::P::Toy::Value::MainSymbolTable->new( $self );
     $self->{_variables} = { osname      => $^O,
+                            hints       => 0,
                             };
 
     return $self;
@@ -63,9 +64,12 @@ sub run_file {
 
     $context ||= CXT_VOID;
     my $parser = $self->parser->safe_instance;
-    my $flags =   ( $context != CXT_VOID ? PARSE_ADD_RETURN : 0 )
-                | ( $is_main             ? PARSE_MAIN : 0 );
-    my $code = $parser->parse_file( $program, $flags );
+    my $code = do {
+        local $self->{_parser} = $parser;
+        my $flags =   ( $context != CXT_VOID ? PARSE_ADD_RETURN : 0 )
+                    | ( $is_main             ? PARSE_MAIN : 0 );
+        $parser->parse_file( $program, $flags );
+    };
     $self->run_last_file( $code, $context );
 }
 
@@ -84,14 +88,16 @@ sub make_closure {
 }
 
 sub eval_string {
-    my( $self, $string, $context, $lexicals, $generator_context ) = @_;
+    my( $self, $string, $context, $lexical_state, $generator_context ) = @_;
     $context ||= CXT_VOID;
 
     my $parser = $self->parser->safe_instance;
-    $parser->generator->_eval_context( $generator_context );
-    # FIXME propagate runtime package and hints
-    my $flags = $context != CXT_VOID ? PARSE_ADD_RETURN : 0;
-    my $code = $parser->parse_string( $string, 'main', $flags, $lexicals );
+    my $code = do {
+        local $self->{_parser} = $parser;
+        $parser->generator->_eval_context( $generator_context );
+        my $flags = $context != CXT_VOID ? PARSE_ADD_RETURN : 0;
+        $parser->parse_string( $string, $flags, $lexical_state );
+    };
     $self->make_closure( $code );
     $self->run_last_file( $code, $context );
 }
@@ -213,6 +219,57 @@ sub get_package {
     my( $self, $name ) = @_;
 
     return $self->symbol_table->get_package( $self, $name );
+}
+
+sub set_hints {
+    my( $self, $value ) = @_;
+
+    $self->{_variables}{hints} = $value->as_integer;
+    $self->{_parser}->set_hints( $self->{_variables}{hints} )
+      if $self->{_parser};
+}
+
+sub get_hints {
+    my( $self ) = @_;
+
+    return Language::P::Toy::Value->new_integer
+               ( $self, $_[0]->{_variables}{hints} );
+}
+
+sub set_warnings {
+    my( $self, $value ) = @_;
+
+    $self->{_variables}{warnings} = $value->as_string;
+    $self->{_parser}->set_warnings( $self->{_variables}{warnings} )
+      if $self->{_parser};
+}
+
+sub get_warnings {
+    my( $self ) = @_;
+
+    return Language::P::Toy::Value->new_integer
+               ( $self, $_[0]->{_variables}{warnings} );
+}
+
+sub warning {
+    my( $self, $file, $line, $message ) = @_;
+
+    if( substr( $message, -1 ) eq "\n" ) {
+        print STDERR $message;
+    } else {
+        print STDERR $message, ' at ', $file, ' line ', $line, "\n";
+    }
+}
+
+sub warning_if {
+    my( $self, $category, $file, $line, $message ) = @_;
+
+    return unless defined $self->{_variables}{warnings};
+    my $offset = $warnings::Offsets{$category};
+    my $offset_all = $warnings::Offsets{$category};
+    return unless vec($self->{_variables}{warnings}, $offset, 1) ||
+                  vec($self->{_variables}{warnings}, $offset_all, 1) ;
+    $self->warning( $file, $line, $message );
 }
 
 1;

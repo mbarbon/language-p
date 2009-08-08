@@ -421,9 +421,13 @@ sub _builtin {
         }
 
         if( $tree->function == OP_EVAL ) {
+            my $env = $tree->get_attribute( 'environment' );
             _add_bytecode $self,
                 opcode_nm( $tree->function,
                            context  => _context( $tree ),
+                           hints    => $env->{hints},
+                           warnings => $env->{warnings},
+                           package  => $env->{package},
                            lexicals => $tree->get_attribute( 'lexicals' ),
                            globals  => $tree->get_attribute( 'globals' ) );
         } else {
