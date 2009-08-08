@@ -29,7 +29,7 @@ L1:
   constant_string value="ok "
   concat_assign
   constant_integer value=0
-  lexical index=0
+  lexical index=0, slot=2
   array_element
   concat_assign
   constant_string value="\x0a"

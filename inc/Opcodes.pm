@@ -270,11 +270,11 @@ jump_if_s_lt        0       to=b        same                 2   0
 jump_if_s_ne        0       to=b        same                 2   0
 jump_if_true        0       to=b        same                 1   0
 jump_if_null        0       to=b        same                 1   0
-lexical             0       index=i     same                 0   1
-lexical_clear       0       index=i     same                 0   0
+lexical             0       index=i,slot=i same              0   1
+lexical_clear       0       index=i,slot=i same              0   0
 lexical_set         0       index=i     same                 1   0
-lexical_pad         0       index=i     same                 0   1
-lexical_pad_clear   0       index=i     same                 0   0
+lexical_pad         0       index=i,slot=i same              0   1
+lexical_pad_clear   0       index=i,slot=i same              0   0
 lexical_pad_set     0       index=i     same                 1   0
 local               
 localize_glob_slot  0       noattr      same                 0   1
