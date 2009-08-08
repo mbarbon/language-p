@@ -115,6 +115,8 @@ my %sigil_to_name =
 sub _p {
     my( $self, $arg, $index, $number_to_name, $attributes ) = @_;
 
+    return 'undef' unless defined $arg;
+
     if( blessed( $arg ) ) {
         return $arg->start_label
             if $arg->isa( 'Language::P::Intermediate::BasicBlock' );
@@ -124,6 +126,9 @@ sub _p {
             if $arg->isa( 'Language::P::ParseTree::LexicalDeclaration' );
         return 'anoncode'
             if $arg->isa( 'Language::P::Intermediate::Code' );
+    }
+    if( ref( $arg ) eq 'HASH' ) {
+        return '{' . join( ', ', map "$_ => $arg->{$_}", keys %$arg ) . '}';
     }
     if(    $self->{opcode_n} && defined $index && $attributes
         && (my $positional = $attributes->{$self->{opcode_n}}{positional}) ) {
