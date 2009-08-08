@@ -35,7 +35,7 @@ my %op_map =
     OP_JUMP()             => '_jump',
     );
 
-sub _local_name { sprintf "t%d", ++$_[0]->{_temporary_count} }
+sub _local_name { ++$_[0]->{_temporary_count} }
 
 sub new {
     my( $class, $args ) = @_;
@@ -50,6 +50,13 @@ sub _add_bytecode {
     my( $self, @bytecode ) = @_;
 
     push @{$self->_current_basic_block->bytecode}, @bytecode;
+}
+
+sub _opcode_set {
+    my $op = opcode_n( OP_SET, $_[1] );
+    $op->{attributes}{index} = $_[0];
+
+    return $op;
 }
 
 sub all_to_tree {
@@ -132,10 +139,10 @@ sub to_ssa {
         foreach my $value ( @$stack ) {
             next unless $value->{opcode_n} == OP_PHI;
             my $t = $value->{parameters}[1];
-            if( !grep $value->{parameters}[$_] ne $t,
+            if( !grep $value->{parameters}[$_] != $t,
                 grep  $_ & 1,
                       1 .. $#{$value->{parameters}} ) {
-                $value = opcode_n( OP_GET, $t );
+                $value = opcode_nm( OP_GET, index => $t );
             }
         }
 
@@ -172,9 +179,9 @@ sub _ssa_to_tree {
             ++$op_off;
             next if    $op->{label}
                     || $op->{opcode_n} != OP_SET
-                    || $op->{parameters}[1]->{opcode_n} != OP_PHI;
+                    || $op->{parameters}[0]->{opcode_n} != OP_PHI;
 
-            my %block_variable = @{$op->{parameters}[1]->{parameters}};
+            my %block_variable = @{$op->{parameters}[0]->{parameters}};
 
             while( my( $label, $variable ) = each %block_variable ) {
                 my( $block_from ) = grep $_ eq $label,
@@ -196,8 +203,8 @@ sub _ssa_to_tree {
 
                 # add SET nodes to rename the variables
                 splice @{$block_from->bytecode}, $op_from_off, 0,
-                       opcode_n( OP_SET, $op->{parameters}[0],
-                                         opcode_n( OP_GET, $variable ) );
+                       _opcode_set( $op->{attributes}{index},
+                                    opcode_nm( OP_GET, index => $variable ) );
             }
 
             --$op_off;
@@ -217,8 +224,8 @@ sub _get_stack {
     foreach my $value ( @values ) {
         next if $value->{opcode_n} != OP_PHI && !$force_get;
         my $name = _local_name( $self );
-        _add_bytecode $self, opcode_n( OP_SET, $name, $value );
-        $value = opcode_n( OP_GET, $name );
+        _add_bytecode $self, _opcode_set( $name, $value );
+        $value = opcode_nm( OP_GET, index => $name );
     }
 
     return @values;
@@ -252,7 +259,7 @@ sub _jump_to {
             if( @{$to->predecessors} > 1 ) {
                 $converted->{in_stack} = [ map opcode_n( OP_PHI ), @$stack ];
             } else {
-                $converted->{in_stack} = [ map opcode_n( OP_GET, $_ ),
+                $converted->{in_stack} = [ map opcode_nm( OP_GET, index => $_ ),
                                                @$out_names ];
             }
         }
@@ -293,16 +300,16 @@ sub _emit_out_stack {
     # SET in the block and a GET in the out stack for all other
     # created ops
     @out_stack = @{$stack}[0 .. $i - 1];
-    @out_names = map $_->{parameters}[0], @out_stack;
+    @out_names = map $_->{attributes}{index}, @out_stack;
     for( my $j = $i; $i < @$stack; ++$i, ++$j ) {
         my $op = $stack->[$i];
         if( $op->{opcode_n} == OP_GET ) {
-            $out_names[$j] = $op->{parameters}[0];
+            $out_names[$j] = $op->{attributes}{index};
             $out_stack[$i] = $op;
         } else {
             $out_names[$j] = _local_name( $self );
-            $out_stack[$i] = opcode_n( OP_GET, $out_names[$j] );
-            _add_bytecode $self, opcode_n( OP_SET, $out_names[$j], $op );
+            $out_stack[$i] = opcode_nm( OP_GET, index => $out_names[$j] );
+            _add_bytecode $self, _opcode_set( $out_names[$j], $op );
         }
     }
     @$stack = @out_stack;

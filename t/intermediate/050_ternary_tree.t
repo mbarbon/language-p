@@ -15,15 +15,15 @@ L1:
   jump_if_f_gt to=L3 (global name="a", slot=1), (constant_integer value=2)
   jump to=L4
 L2:
-  assign (global name="x", slot=1), (get t3)
+  assign (global name="x", slot=1), (get index=3)
   end
 L3:
-  set t1, (global name="b", slot=1)
-  set t3, (get t1)
+  set index=1 (global name="b", slot=1)
+  set index=3 (get index=1)
   jump to=L2
 L4:
-  set t2, (add (global name="c", slot=1), (constant_integer value=3))
-  set t3, (get t2)
+  set index=2 (add (global name="c", slot=1), (constant_integer value=3))
+  set index=3 (get index=2)
   jump to=L2
 EOI
 
@@ -36,21 +36,21 @@ L1:
   jump_if_f_gt to=L3 (global name="a", slot=1), (constant_integer value=2)
   jump to=L4
 L2:
-  assign (global name="x", slot=1), (get t4)
+  assign (global name="x", slot=1), (get index=4)
   end
 L3:
-  set t1, (global name="b", slot=1)
-  set t4, (get t1)
+  set index=1 (global name="b", slot=1)
+  set index=4 (get index=1)
   jump to=L2
 L4:
   jump_if_f_lt to=L6 (global name="c", slot=1), (constant_integer value=3)
   jump to=L7
 L6:
-  set t2, (global name="d", slot=1)
-  set t4, (get t2)
+  set index=2 (global name="d", slot=1)
+  set index=4 (get index=2)
   jump to=L2
 L7:
-  set t3, (global name="e", slot=1)
-  set t4, (get t3)
+  set index=3 (global name="e", slot=1)
+  set index=4 (get index=3)
   jump to=L2
 EOI

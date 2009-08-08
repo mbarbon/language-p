@@ -245,7 +245,7 @@ ft_rwritable        u       noattr      same                 1   1
 ft_setgid           u       noattr      same                 1   1
 ft_setuid           u       noattr      same                 1   1
 ft_sticky           u       noattr      same                 1   1
-get
+get                 0       index=i     same                 0   1
 glob                
 glob_slot           0       noattr      same                 1   1
 glob_slot_set       0       noattr      same                 2   0
@@ -329,7 +329,7 @@ require_file        u       noattr      same                 1   1
 restore_glob_slot   0       noattr      same                 0   0
 return              0       noattr      same                 1   0
 rmdir               u       noattr      same                 1   1
-set                 0       noattr      same                 2   0
+set                 0       index=i     same                 1   0
 str_cmp
 str_eq              0       noattr      compare_s_eq_scalar
 str_ge              0       noattr      compare_s_ge_scalar

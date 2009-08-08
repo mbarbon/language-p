@@ -15,14 +15,14 @@ L1:
   jump_if_f_gt to=L3 (global name="a", slot=1), (constant_integer value=2)
   jump to=L4
 L2:
-  set t3, (phi L3, t1, L4, t2)
-  assign (global name="x", slot=1), (get t3)
+  set index=3 (phi L3, 1, L4, 2)
+  assign (global name="x", slot=1), (get index=3)
   end
 L3:
-  set t1, (global name="b", slot=1)
+  set index=1 (global name="b", slot=1)
   jump to=L2
 L4:
-  set t2, (add (global name="c", slot=1), (constant_integer value=3))
+  set index=2 (add (global name="c", slot=1), (constant_integer value=3))
   jump to=L2
 EOI
 
@@ -35,20 +35,20 @@ L1:
   jump_if_f_gt to=L3 (global name="a", slot=1), (constant_integer value=2)
   jump to=L4
 L2:
-  set t4, (phi L3, t1, L6, t2, L7, t3)
-  assign (global name="x", slot=1), (get t4)
+  set index=4 (phi L3, 1, L6, 2, L7, 3)
+  assign (global name="x", slot=1), (get index=4)
   end
 L3:
-  set t1, (global name="b", slot=1)
+  set index=1 (global name="b", slot=1)
   jump to=L2
 L4:
   jump_if_f_lt to=L6 (global name="c", slot=1), (constant_integer value=3)
   jump to=L7
 L6:
-  set t2, (global name="d", slot=1)
+  set index=2 (global name="d", slot=1)
   jump to=L2
 L7:
-  set t3, (global name="e", slot=1)
+  set index=3 (global name="e", slot=1)
   jump to=L2
 EOI
 
@@ -57,17 +57,17 @@ print $a > 2 ? $b : $c;
 EOP
 # main
 L1:
-  set t1, (global name="STDOUT", slot=7)
+  set index=1 (global name="STDOUT", slot=7)
   jump_if_f_gt to=L3 (global name="a", slot=1), (constant_integer value=2)
   jump to=L4
 L2:
-  set t4, (phi L3, t2, L4, t3)
-  print (get t1), (make_list (get t4))
+  set index=4 (phi L3, 2, L4, 3)
+  print (get index=1), (make_list (get index=4))
   end
 L3:
-  set t2, (global name="b", slot=1)
+  set index=2 (global name="b", slot=1)
   jump to=L2
 L4:
-  set t3, (global name="c", slot=1)
+  set index=3 (global name="c", slot=1)
   jump to=L2
 EOI
