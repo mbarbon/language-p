@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use base qw(Language::P::Toy::Value::SymbolTable);
 
+use Config;
+
 use Language::P::Toy::Value::ActiveScalar;
 use Language::P::Toy::Value::StringNumber;
 
@@ -30,7 +32,8 @@ sub new {
     $self->set_symbol( $runtime, "\030", '$', $interpreter );
 
     my $inc = Language::P::Toy::Value::Array->new( $runtime );
-    $inc->push_value( $runtime, Language::P::Toy::Value::Scalar->new_string( $runtime, '.' ) );
+    $inc->push_value( $runtime, Language::P::Toy::Value::Scalar->new_string( $runtime, $_ ) )
+        foreach grep !m{/$Config{archname}$}, @INC;
     $self->set_symbol( $runtime, 'INC', '@', $inc );
 
     return $self;
