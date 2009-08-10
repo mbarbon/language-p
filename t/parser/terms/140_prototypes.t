@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 13;
+use Test::More tests => 15;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -111,6 +111,52 @@ indirect: !parsetree:Symbol
   context: CXT_SCALAR
   name: FILE
   sigil: VALUE_GLOB
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print {FILE};
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: _
+    sigil: VALUE_SCALAR
+context: CXT_VOID
+function: OP_PRINT
+indirect: !parsetree:Block
+  lines:
+    - !parsetree:Constant
+      context: CXT_SCALAR
+      flags: CONST_STRING|STRING_BARE
+      value: FILE
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print {$file[0]};
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: _
+    sigil: VALUE_SCALAR
+context: CXT_VOID
+function: OP_PRINT
+indirect: !parsetree:Block
+  lines:
+    - !parsetree:Subscript
+      context: CXT_SCALAR
+      reference: 0
+      subscript: !parsetree:Constant
+        context: CXT_SCALAR
+        flags: CONST_NUMBER|NUM_INTEGER
+        value: 0
+      subscripted: !parsetree:Symbol
+        context: CXT_LIST
+        name: file
+        sigil: VALUE_ARRAY
+      type: VALUE_ARRAY
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
