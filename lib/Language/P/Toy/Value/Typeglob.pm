@@ -128,7 +128,7 @@ my %types =
   ( scalar     => 'Language::P::Toy::Value::Undef',
     array      => 'Language::P::Toy::Value::Array',
     hash       => 'Language::P::Toy::Value::Hash',
-    subroutine => 'Language::P::Toy::Value::Subroutine',
+    subroutine => 'Language::P::Toy::Value::Undef',
     io         => 'Language::P::Toy::Value::Handle',
     format     => 'Language::P::Toy::Value::Format',
     );
