@@ -265,7 +265,8 @@ sub _parse {
     my @lines;
     while( my $line = _parse_line( $self ) ) {
         $dumper->( $line ) if $dumper;
-        if( $line->isa( 'Language::P::ParseTree::NamedSubroutine' ) ) {
+        if(    $line->isa( 'Language::P::ParseTree::NamedSubroutine' )
+            || $line->isa( 'Language::P::ParseTree::Use' ) ) {
             $self->generator->process( $line );
         } elsif( !$line->is_empty ) {
             push @lines, $line;
@@ -1785,7 +1786,13 @@ sub _parse_block_rest {
             my $line = _parse_line( $self );
             my $lex_state = _lexical_state_node( $self );
 
-            push @lines, $line if $line && !$line->is_empty;
+            if(    $line
+                && (    $line->isa( 'Language::P::ParseTree::NamedSubroutine' )
+                     || $line->isa( 'Language::P::ParseTree::Use' ) ) ) {
+                $self->generator->process( $line );
+            } elsif( $line && !$line->is_empty ) {
+                push @lines, $line;
+            }
             push @lines, $lex_state if $lex_state;
         }
     }
