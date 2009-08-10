@@ -676,6 +676,17 @@ _make_boolean_unary( $_ ) foreach
       },
     );
 
+sub o_exists {
+    my( $op, $runtime, $pc ) = @_;
+    my $v = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::Scalar->new_boolean( $runtime,
+                                                       $v->is_subroutine );
+
+    return $pc + 1;
+}
+
 sub o_preinc {
     my( $op, $runtime, $pc ) = @_;
     my $v = pop @{$runtime->{_stack}};
@@ -881,12 +892,32 @@ sub o_array_element {
     return $pc + 1;
 }
 
+sub o_exists_array {
+    my( $op, $runtime, $pc ) = @_;
+    my $array = pop @{$runtime->{_stack}};
+    my $index = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $array->exists( $runtime, $index->as_integer( $runtime ) );
+
+    return $pc + 1;
+}
+
 sub o_hash_element {
     my( $op, $runtime, $pc ) = @_;
     my $hash = pop @{$runtime->{_stack}};
     my $key = pop @{$runtime->{_stack}};
 
     push @{$runtime->{_stack}}, $hash->get_item_or_undef( $runtime, $key->as_string( $runtime ) );
+
+    return $pc + 1;
+}
+
+sub o_exists_hash {
+    my( $op, $runtime, $pc ) = @_;
+    my $hash = pop @{$runtime->{_stack}};
+    my $key = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $hash->exists( $runtime, $key->as_string( $runtime ) );
 
     return $pc + 1;
 }

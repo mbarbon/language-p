@@ -85,6 +85,12 @@ sub has_item {
     return exists $self->{hash}{$key};
 }
 
+sub exists {
+    my( $self, $runtime, $key ) = @_;
+
+    return Language::P::Toy::Value::Scalar->new_boolean( $runtime, exists $self->{hash}{$key} );
+}
+
 sub iterator {
     my( $self, $runtime ) = @_;
 

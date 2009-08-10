@@ -129,6 +129,12 @@ sub get_item_or_undef {
     return $self->{array}->[$index];
 }
 
+sub exists {
+    my( $self, $runtime, $index ) = @_;
+
+    return Language::P::Toy::Value::Scalar->new_boolean( $runtime, $index > $#{$self->{array}} );
+}
+
 sub get_count {
     my( $self, $runtime ) = @_;
 
