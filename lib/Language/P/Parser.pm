@@ -1799,7 +1799,7 @@ sub _parse_indirobj {
         return $id;
     }
 
-    my $token = $self->lexer->lex( X_OPERATOR );
+    my $token = $self->lexer->lex( X_BLOCK );
 
     if( $token->[O_TYPE] == T_OPBRK ) {
         my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
@@ -1880,7 +1880,8 @@ sub _parse_listop {
 sub _parse_listop_like {
     my( $self, $op, $declared, $call ) = @_;
     my $proto = $call ? $call->parsing_prototype : undef;
-    my $expect = !$proto                                         ? X_TERM :
+    my $expect = !$declared                                      ? X_BLOCK :
+                 !$proto                                         ? X_TERM :
                  $proto->[2] & (PROTO_FILEHANDLE|PROTO_INDIROBJ) ? X_REF :
                  $proto->[2] & (PROTO_BLOCK|PROTO_SUB)           ? X_BLOCK :
                                                                    X_TERM;
