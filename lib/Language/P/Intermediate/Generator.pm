@@ -453,6 +453,22 @@ sub _builtin {
     if( $tree->function == OP_UNDEF && !$tree->arguments ) {
         _emit_label( $self, $tree );
         _add_bytecode $self, opcode_n( OP_CONSTANT_UNDEF );
+    } elsif(    $tree->function == OP_EXISTS
+             && $tree->arguments->[0]->isa( 'Language::P::ParseTree::Subscript' ) ) {
+        _emit_label( $self, $tree );
+
+        my $arg = $tree->arguments->[0];
+
+        $self->dispatch( $arg->subscript );
+        $self->dispatch( $arg->subscripted );
+
+        _add_bytecode $self,
+            opcode_n( $arg->type == VALUE_ARRAY ? OP_VIVIFY_ARRAY :
+                                                  OP_VIVIFY_HASH )
+              if $arg->reference;
+        _add_bytecode $self,
+            opcode_n( $arg->type == VALUE_ARRAY ? OP_EXISTS_ARRAY :
+                                                  OP_EXISTS_HASH );
     } elsif(   $OP_ATTRIBUTES{$tree->function}->{flags}
              & Language::P::Opcodes::FLAG_UNARY ) {
         _emit_label( $self, $tree );

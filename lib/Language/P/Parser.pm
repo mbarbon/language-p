@@ -1992,17 +1992,23 @@ sub _apply_prototype {
                       _function_name( $call->function ) );
     }
 
+    if(    !ref( $call->function )
+        && $call->function == OP_EXISTS
+        && !(    $args->[0]->isa( 'Language::P::ParseTree::SpecialFunctionCall' )
+              || $args->[0]->isa( 'Language::P::ParseTree::Subscript' ) ) ) {
+        _parse_error( $self, $pos, 'exists argument is not a HASH or ARRAY element or a subroutine' );
+    }
+
     foreach my $i ( 3 .. $#$proto ) {
         last if $i - 3 > $#$args;
         my $proto_char = $proto->[$i];
         my $term = $args->[$i - 3];
 
         # defined/exists &foo
-        if( $proto_char & PROTO_AMPER ) {
-            if(    $term->isa( 'Language::P::ParseTree::SpecialFunctionCall' )
-                && $term->flags & FLAG_IMPLICITARGUMENTS ) {
-                $args->[$i - 3] = $term->function;
-            }
+        if(    ( $proto_char & PROTO_AMPER )
+            && $term->isa( 'Language::P::ParseTree::SpecialFunctionCall' )
+            && ( $term->flags & FLAG_IMPLICITARGUMENTS ) ) {
+            $args->[$i - 3] = $term->function;
         }
         if(    ( $proto_char & PROTO_MAKE_GLOB ) == PROTO_MAKE_GLOB
             && $term->is_bareword ) {

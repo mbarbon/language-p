@@ -125,6 +125,7 @@ return              b
 undef               b       
 map                 b       
 grep                b       
+exists              b       
 unlink              o       
 glob                o       
 readline            o       

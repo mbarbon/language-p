@@ -216,6 +216,9 @@ dup
 end
 eval                u       noattr      same                 1   1
 eval_regex          u       noattr      same                 1   1
+exists              u       noattr      same                 1   1
+exists_array        u       noattr      same                 2   1
+exists_hash         u       noattr      same                 2   1
 find_method         u       noattr      same                 1   1
 fresh_string        0       value=s     same                 0   1
 ft_atime            u       noattr      same                 1   1
