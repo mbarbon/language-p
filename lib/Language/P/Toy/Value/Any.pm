@@ -9,6 +9,7 @@ __PACKAGE__->mk_ro_accessors( qw(stash) );
 use Carp;
 
 our @METHODS = qw(as_integer as_float as_string as_scalar as_boolean_int
+                  set_integer set_float set_string
                   localize pre_increment post_increment pre_decrement
                   post_decrement
 

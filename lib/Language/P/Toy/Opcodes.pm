@@ -151,7 +151,7 @@ sub %s_assign {
     my $vl = $runtime->{_stack}[-1];
     my $r = $vl->%s %s $vr->%s;
 
-    $vl->{%s} = $r;
+    $vl->set_%s( $runtime, $r );
 
     return $pc + 1;
 }

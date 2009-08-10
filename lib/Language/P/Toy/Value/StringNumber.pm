@@ -57,6 +57,10 @@ sub assign {
     $self->{float} = $other->{float};
 }
 
+sub set_string { $_[0]->{string} = $_[2] }
+sub set_integer { $_[0]->{integer} = $_[2] }
+sub set_float { $_[0]->{float} = $_[2] }
+
 sub as_boolean_int {
     my( $self, $runtime ) = @_;
 
