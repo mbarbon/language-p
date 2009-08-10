@@ -232,7 +232,7 @@ sub set_hints {
 sub get_hints {
     my( $self ) = @_;
 
-    return Language::P::Toy::Value->new_integer
+    return Language::P::Toy::Value::Scalar->new_integer
                ( $self, $_[0]->{_variables}{hints} );
 }
 

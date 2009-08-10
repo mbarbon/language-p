@@ -24,6 +24,22 @@ sub new_string {
                Language::P::Toy::Value::Undef->new( $runtime );
 }
 
+sub new_integer {
+    my( $class, $runtime, $value ) = @_;
+
+    return defined $value ?
+               Language::P::Toy::Value::StringNumber->new( $runtime, { integer => $value } ) :
+               Language::P::Toy::Value::Undef->new( $runtime );
+}
+
+sub new_float {
+    my( $class, $runtime, $value ) = @_;
+
+    return defined $value ?
+               Language::P::Toy::Value::StringNumber->new( $runtime, { float => $value } ) :
+               Language::P::Toy::Value::Undef->new( $runtime );
+}
+
 sub as_scalar { return $_[0] }
 
 sub assign {
