@@ -4,7 +4,8 @@ use strict;
 use warnings;
 use Exporter; *import = \&Exporter::import;
 
-our @EXPORT_OK = qw(label literal opcode opcode_n opcode_m opcode_nm);
+our @EXPORT_OK = qw(label literal opcode opcode_n opcode_m opcode_nm
+                    opcode_np opcode_npm);
 our %EXPORT_TAGS =
   ( all   => \@EXPORT_OK,
     );
@@ -78,6 +79,15 @@ sub opcode_n {
                };
 }
 
+sub opcode_np {
+    my( $number, $pos, @parameters ) = @_;
+
+    return i { opcode_n   => $number,
+               pos        => $pos,
+               parameters => @parameters ? \@parameters : undef,
+               };
+}
+
 sub opcode_m {
     my( $name, %attributes ) = @_;
 
@@ -90,6 +100,15 @@ sub opcode_nm {
     my( $number, %attributes ) = @_;
 
     return i { opcode_n   => $number,
+               attributes => %attributes ? \%attributes : undef,
+               };
+}
+
+sub opcode_npm {
+    my( $number, $pos, %attributes ) = @_;
+
+    return i { opcode_n   => $number,
+               pos        => $pos,
                attributes => %attributes ? \%attributes : undef,
                };
 }

@@ -201,6 +201,9 @@ sub can_implicit_return { 1 }
 sub is_declaration { 0 }
 sub lvalue_context { Language::P::ParseTree::CXT_SCALAR }
 sub parent { $_[0]->{parent} }
+sub pos   { $_[0]->{pos} || $_[0]->{pos_s} }
+sub pos_s { $_[0]->{pos_s} || $_[0]->{pos} }
+sub pos_e { $_[0]->{pos_e} || $_[0]->{pos} }
 
 sub set_parent {
     my( $self, $parent ) = @_;

@@ -398,7 +398,8 @@ sub _parse_line {
     } else {
         _lex_token( $self, T_LABEL );
         my $statement =    _parse_line_rest( $self, 0 )
-                        || Language::P::ParseTree::Empty->new;
+                        || Language::P::ParseTree::Empty->new
+                               ( { pos => $label->[O_POS] } );
 
         $statement->set_attribute( 'label', $label->[O_VALUE] );
         $self->_lexical_sub_state->{labels}{$label->[O_VALUE]} ||= $statement;
@@ -419,10 +420,11 @@ sub _parse_line_rest {
     } elsif( $token->[O_TYPE] == T_OPBRK ) {
         _lex_token( $self, T_OPBRK );
 
-        return _parse_block_rest( $self, BLOCK_OPEN_SCOPE|BLOCK_BARE );
+        return _parse_block_rest( $self, $token->[O_POS],
+                                  BLOCK_OPEN_SCOPE|BLOCK_BARE );
     } elsif( $token->[O_TYPE] == T_ID && is_keyword( $tokidt ) ) {
         if( $tokidt == KEY_SUB ) {
-            return _parse_sub( $self, 1 | 2 );
+            return _parse_sub( $self, 1 | 2, 0, $token->[O_POS] );
         } elsif( $tokidt == KEY_IF || $tokidt == KEY_UNLESS ) {
             return _parse_cond( $self );
         } elsif( $tokidt == KEY_WHILE || $tokidt == KEY_UNTIL ) {
@@ -437,7 +439,8 @@ sub _parse_line_rest {
             $self->{_lexical_state}[-1]{package} = $id->[O_VALUE];
             $self->{_lexical_state}[-1]{changed} |= CHANGED_PACKAGE;
 
-            return Language::P::ParseTree::Empty->new;
+            return Language::P::ParseTree::Empty->new
+                       ( { pos => $token->[O_POS] } );
         } elsif( $tokidt == KEY_USE || $tokidt == KEY_NO ) {
             _lex_token( $self );
 
@@ -456,6 +459,7 @@ sub _parse_line_rest {
                            version => $version,
                            import  => $args,
                            is_no   => $tokidt == KEY_NO ? 1 : 0,
+                           pos     => $token->[O_POS],
                            } );
         } elsif(    $tokidt == OP_MY
                  || $tokidt == OP_OUR
@@ -473,7 +477,7 @@ sub _parse_line_rest {
         _parse_error( $self, $token->[O_POS], "Unhandled keyword %s",
                       $token->[O_VALUE] );
     } elsif( $special_sub{$token->[O_VALUE]} ) {
-        return _parse_sub( $self, 1, 1 );
+        return _parse_sub( $self, 1, 1, $token->[O_POS] );
     } else {
         return _parse_sideff( $self );
     }
@@ -517,17 +521,17 @@ sub _lexical_state_node {
 }
 
 sub _parse_sub {
-    my( $self, $flags, $no_sub_token ) = @_;
+    my( $self, $flags, $no_sub_token, $pos ) = @_;
     _lex_token( $self, T_ID ) unless $no_sub_token;
     my $name = $self->lexer->lex_alphabetic_identifier( 0 );
     my $fqname = $name ? _qualify( $self, $name->[O_VALUE], $name->[O_ID_TYPE] ) : undef;
-    my $proto;
+    my( $proto, $next );
 
     if( $fqname ) {
         _parse_error( $self, $name->[O_POS], "Named sub not allowed" )
           unless $flags & 1;
 
-        my $next = $self->lexer->lex( X_BLOCK );
+        $next = $self->lexer->lex( X_BLOCK );
         if( $next->[O_TYPE] == T_OPPAR ) {
             $proto = _parse_sub_proto( $self );
             $next = $self->lexer->lex( X_BLOCK );
@@ -539,12 +543,13 @@ sub _parse_sub {
             return Language::P::ParseTree::SubroutineDeclaration->new
                        ( { name      => $fqname,
                            prototype => $proto,
+                           pos       => $name->[O_POS],
                            } );
         } elsif( $next->[O_TYPE] != T_OPBRK ) {
             _syntax_error( $self, $next );
         }
     } else {
-        _lex_token( $self, T_OPBRK, undef, X_BLOCK );
+        $next = _lex_token( $self, T_OPBRK, undef, X_BLOCK );
         _parse_error( "Anonymous sub not allowed" )
           unless $flags & 2;
     }
@@ -553,16 +558,20 @@ sub _parse_sub {
     my $sub = $fqname ? Language::P::ParseTree::NamedSubroutine->new
                             ( { name      => $fqname,
                                 prototype => $proto,
+                                pos_s     => $pos,
                                 } ) :
-                        Language::P::ParseTree::AnonymousSubroutine->new;
+                        Language::P::ParseTree::AnonymousSubroutine->new
+                            ( { pos_s     => $pos } );
     # add @_ to lexical scope
     $self->_lexicals->add_name( VALUE_ARRAY, '_' );
     my $lex_state = _lexical_state_node( $self, 1 );
 
-    my $block = _parse_block_rest( $self, BLOCK_IMPLICIT_RETURN );
+    my $block = _parse_block_rest( $self, $next->[O_POS],
+                                   BLOCK_IMPLICIT_RETURN );
     my $lines = $block->lines;
     # FIXME encapsulation
     $sub->{lines} = @$lines ? [ $lex_state, @$lines ] : $lines;
+    $sub->{pos_e} = $block->pos_e;
     $sub->set_parent_for_all_childs;
     $self->_leave_scope;
 
@@ -644,17 +653,20 @@ sub _parse_cond {
     $self->_add_pending_lexicals;
 
     _lex_token( $self, T_CLPAR );
-    _lex_token( $self, T_OPBRK, undef, X_BLOCK );
+    my $brack = _lex_token( $self, T_OPBRK, undef, X_BLOCK );
 
-    my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
+    my $block = _parse_block_rest( $self, $brack->[O_POS], BLOCK_OPEN_SCOPE );
 
     my $if = Language::P::ParseTree::Conditional->new
                  ( { iftrues => [ Language::P::ParseTree::ConditionalBlock->new
                                       ( { block_type => $cond->[O_VALUE],
                                           condition  => $expr,
                                           block      => $block,
+                                          pos_s      => $cond->[O_POS],
+                                          pos_e      => $block->pos_e,
                                           } )
                                   ],
+                     pos_s   => $cond->[O_POS],
                      } );
 
     for(;;) {
@@ -669,22 +681,30 @@ sub _parse_cond {
             $expr = _parse_expr( $self );
             _lex_token( $self, T_CLPAR );
         }
-        _lex_token( $self, T_OPBRK, undef, X_BLOCK );
-        my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
+        my $brack = _lex_token( $self, T_OPBRK, undef, X_BLOCK );
+        my $block = _parse_block_rest( $self, $brack->[O_POS],
+                                       BLOCK_OPEN_SCOPE );
 
         if( $expr ) {
+            # FIXME encapsulation
             push @{$if->iftrues}, Language::P::ParseTree::ConditionalBlock->new
                                       ( { block_type => 'if',
                                           condition  => $expr,
                                           block      => $block,
-                                          } )
+                                          pos_s      => $else->[O_POS],
+                                          pos_e      => $block->pos_e,
+                                          } );
+            $if->{pos_e} = $block->pos_e;
         } else {
             # FIXME encapsulation
             $if->{iffalse} = Language::P::ParseTree::ConditionalBlock->new
                                       ( { block_type => 'else',
                                           condition  => undef,
                                           block      => $block,
+                                          pos_s      => $else->[O_POS],
+                                          pos_e      => $block->pos_e,
                                           } );
+            $if->{pos_e} = $block->pos_e;
         }
     }
 
@@ -722,8 +742,9 @@ sub _parse_for {
             _lex_token( $self, T_CLPAR );
             $self->_add_pending_lexicals;
 
-            _lex_token( $self, T_OPBRK, undef, X_BLOCK );
-            my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
+            my $brack = _lex_token( $self, T_OPBRK, undef, X_BLOCK );
+            my $block = _parse_block_rest( $self, $brack->[O_POS],
+                                           BLOCK_OPEN_SCOPE );
 
             my $for = Language::P::ParseTree::For->new
                           ( { block_type  => 'for',
@@ -731,6 +752,8 @@ sub _parse_for {
                               condition   => $cond,
                               step        => $incr,
                               block       => $block,
+                              pos_s       => $keyword->[O_POS],
+                              pos_e       => $block->pos_e,
                               } );
 
             $self->_leave_scope;
@@ -752,6 +775,7 @@ sub _parse_for {
         $foreach_var = Language::P::ParseTree::Symbol->new
                            ( { name    => $name->[O_VALUE],
                                sigil   => VALUE_SCALAR,
+                               pos     => $name->[O_POS],
                                } );
         $foreach_var = _process_declaration( $self, $foreach_var,
                                              $token->[O_ID_TYPE] );
@@ -771,15 +795,17 @@ sub _parse_for {
     }
 
     $self->_add_pending_lexicals;
-    _lex_token( $self, T_OPBRK, undef, X_BLOCK );
+    my $brack = _lex_token( $self, T_OPBRK, undef, X_BLOCK );
 
-    my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
+    my $block = _parse_block_rest( $self, $brack->[O_POS], BLOCK_OPEN_SCOPE );
     my $continue = _parse_continue( $self );
     my $for = Language::P::ParseTree::Foreach->new
                   ( { expression => $foreach_expr,
                       block      => $block,
                       variable   => $foreach_var,
                       continue   => $continue,
+                      pos_s      => $keyword->[O_POS],
+                      pos_e      => $block->pos_e,
                       } );
 
     $self->_leave_scope;
@@ -798,15 +824,17 @@ sub _parse_while {
     $self->_add_pending_lexicals;
 
     _lex_token( $self, T_CLPAR );
-    _lex_token( $self, T_OPBRK, undef, X_BLOCK );
+    my $brack = _lex_token( $self, T_OPBRK, undef, X_BLOCK );
 
-    my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
+    my $block = _parse_block_rest( $self, $brack->[O_POS], BLOCK_OPEN_SCOPE );
     my $continue = _parse_continue( $self );
     my $while = Language::P::ParseTree::ConditionalLoop
                     ->new( { condition  => $expr,
                              block      => $block,
                              block_type => $keyword->[O_VALUE],
                              continue   => $continue,
+                             pos_s      => $keyword->[O_POS],
+                             pos_e      => $block->pos_e,
                              } );
 
     $self->_leave_scope;
@@ -820,9 +848,9 @@ sub _parse_continue {
     return unless $token->[O_TYPE] == T_ID && $token->[O_ID_TYPE] == KEY_CONTINUE;
 
     _lex_token( $self, T_ID );
-    _lex_token( $self, T_OPBRK, undef, X_BLOCK );
+    my $brack = _lex_token( $self, T_OPBRK, undef, X_BLOCK );
 
-    return _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
+    return _parse_block_rest( $self, $brack->[O_POS], BLOCK_OPEN_SCOPE );
 }
 
 sub _parse_sideff {
@@ -842,6 +870,8 @@ sub _parse_sideff {
                                              ( { block_type => $keyword->[O_VALUE],
                                                  condition  => $cond,
                                                  block      => $expr,
+                                                 pos_s      => $keyword->[O_POS],
+                                                 pos_e      => $expr->pos_e,
                                                  } )
                                          ],
                             } );
@@ -853,6 +883,8 @@ sub _parse_sideff {
                         ( { condition  => $cond,
                             block      => $expr,
                             block_type => $keyword->[O_VALUE],
+                            pos_s      => $keyword->[O_POS],
+                            pos_e      => $expr->pos_e,
                             } );
         } elsif( $keyidt == KEY_FOR || $keyidt == KEY_FOREACH ) {
             _lex_token( $self, T_ID );
@@ -862,6 +894,8 @@ sub _parse_sideff {
                         ( { expression => $cond,
                             block      => $expr,
                             variable   => _find_symbol( $self, undef, VALUE_SCALAR, '_', T_FQ_ID ),
+                            pos_s      => $keyword->[O_POS],
+                            pos_e      => $expr->pos_e,
                             } );
         }
     }
@@ -887,6 +921,7 @@ sub _find_lexical {
             return Language::P::ParseTree::Symbol->new
                        ( { name  => $lex->name,
                            sigil => $lex->sigil,
+                           pos   => $lex->pos,
                            } );
         }
 
@@ -895,6 +930,7 @@ sub _find_lexical {
         return Language::P::ParseTree::LexicalSymbol->new
                    ( { declaration => $lex,
                        level       => $level,
+                       pos         => $lex->pos,
                        } );
     }
 
@@ -908,11 +944,13 @@ sub _find_symbol {
         return Language::P::ParseTree::Symbol->new
                    ( { name  => $name,
                        sigil => $sigil,
+                       pos   => $pos,
                        } );
     } elsif( $type == T_FQ_ID ) {
         return Language::P::ParseTree::Symbol->new
                    ( { name  => _qualify( $self, $name, $type ),
                        sigil => $sigil,
+                       pos   => $pos,
                        } );
     }
     my $lex = _find_lexical( $self, $sigil, $name );
@@ -927,6 +965,7 @@ sub _find_symbol {
     return Language::P::ParseTree::Symbol->new
                ( { name  => _qualify( $self, $name, $type ),
                    sigil => $sigil,
+                   pos   => $pos,
                    } );
 }
 
@@ -973,6 +1012,7 @@ sub _parse_indirect_function_call {
         $subscripted = Language::P::ParseTree::Dereference->new
                            ( { left => $subscripted,
                                op   => OP_DEREFERENCE_SUB,
+                               pos  => $subscripted->pos,
                                } );
     }
 
@@ -981,11 +1021,13 @@ sub _parse_indirect_function_call {
         return Language::P::ParseTree::SpecialFunctionCall->new
                    ( { function    => $subscripted,
                        flags       => FLAG_IMPLICITARGUMENTS,
+                       pos         => $subscripted->pos,
                        } );
     } else {
         return Language::P::ParseTree::FunctionCall->new
                    ( { function    => $subscripted,
                        arguments   => $args,
+                       pos         => $subscripted->pos,
                        } );
     }
 }
@@ -1004,6 +1046,7 @@ sub _parse_dereference_rest {
                         type        => $bracket->[O_TYPE] == T_OPBRK ?
                                            VALUE_HASH : VALUE_ARRAY,
                         reference   => 1,
+                        pos         => $subscripted->pos,
                         } );
     }
 
@@ -1059,6 +1102,7 @@ sub _parse_maybe_indirect_method_call {
         $indir = Language::P::ParseTree::Constant->new
                      ( { flags => CONST_STRING,
                          value => $indir->[O_VALUE],
+                         pos   => $indir->[O_POS],
                          } )
             if ref( $indir ) eq 'ARRAY';
         my $term = Language::P::ParseTree::MethodCall->new
@@ -1066,6 +1110,7 @@ sub _parse_maybe_indirect_method_call {
                            method    => $op->[O_VALUE],
                            arguments => $args,
                            indirect  => 0,
+                           pos       => $op->[O_POS],
                            } );
 
         return _parse_maybe_subscript_rest( $self, $term );
@@ -1073,7 +1118,8 @@ sub _parse_maybe_indirect_method_call {
 
     return Language::P::ParseTree::Constant->new
                ( { value => $op->[O_VALUE],
-                   flags => CONST_STRING|STRING_BARE
+                   flags => CONST_STRING|STRING_BARE,
+                   pos   => $op->[O_POS],
                    } );
 }
 
@@ -1106,6 +1152,7 @@ sub _parse_maybe_direct_method_call {
                        method    => $method,
                        arguments => $args,
                        indirect  => $indirect,
+                       pos       => $invocant->pos,
                        } );
 
     return _parse_maybe_subscript_rest( $self, $term );
@@ -1120,6 +1167,7 @@ sub _parse_match {
                         ( { string     => $string,
                             op         => $token->[O_VALUE],
                             flags      => $token->[O_RX_FLAGS],
+                            pos        => $token->[O_POS],
                             } );
 
         return $match;
@@ -1133,6 +1181,7 @@ sub _parse_match {
                         ( { components => $parts,
                             op         => $token->[O_VALUE],
                             flags      => $token->[O_RX_FLAGS],
+                            pos        => $token->[O_POS],
                             } );
 
         return $match;
@@ -1150,7 +1199,7 @@ sub _parse_substitution {
                                        runtime      => $self->runtime,
                                        _heredoc_lexer => $self->lexer,
                                        } );
-        $replace = _parse_block_rest( $self, BLOCK_OPEN_SCOPE, T_EOF );
+        $replace = _parse_block_rest( $self, undef, BLOCK_OPEN_SCOPE, T_EOF );
     } else {
         $replace = _parse_string_rest( $self, $token->[O_RX_SECOND_HALF], 0 );
     }
@@ -1158,6 +1207,7 @@ sub _parse_substitution {
     my $sub = Language::P::ParseTree::Substitution->new
                   ( { pattern     => $match,
                       replacement => $replace,
+                      pos         => $match->pos,
                       } );
 
     return $sub;
@@ -1182,6 +1232,7 @@ sub _parse_string_rest {
             push @values, Language::P::ParseTree::Constant->new
                               ( { flags => CONST_STRING,
                                   value => $value->[O_VALUE],
+                                  pos   => $value->[O_POS],
                                   } );
         } elsif( $value->[O_TYPE] == T_EOF ) {
             last;
@@ -1203,11 +1254,13 @@ sub _parse_string_rest {
         $string = Language::P::ParseTree::Constant->new
                       ( { value => "",
                           flags => CONST_STRING,
+                          pos   => $token->[O_POS],
                           } );
     } else {
         $string = Language::P::ParseTree::QuotedString->new
                       ( { components => \@values,
-                           } );
+                          pos        => $token->[O_POS],
+                          } );
     }
 
     my $quote = $token->[O_VALUE];
@@ -1215,6 +1268,7 @@ sub _parse_string_rest {
         $string = Language::P::ParseTree::UnOp->new
                       ( { op   => OP_BACKTICK,
                           left => $string,
+                          pos  => $token->[O_POS],
                           } );
     } elsif( $quote == OP_QL_QW ) {
         my @words = map Language::P::ParseTree::Constant->new
@@ -1225,6 +1279,7 @@ sub _parse_string_rest {
 
         $string = Language::P::ParseTree::List->new
                       ( { expressions => \@words,
+                          pos         => $string->pos,
                           } );
     }
 
@@ -1244,7 +1299,9 @@ sub _parse_term_terminal {
                 && $qstring->components->[0]->is_symbol ) {
                 return Language::P::ParseTree::Overridable
                            ->new( { function  => OP_READLINE,
-                                    arguments => [ $qstring->components->[0] ] } );
+                                    arguments => [ $qstring->components->[0] ],
+                                    pos       => $token->[O_POS],
+                                    } );
             } elsif( $qstring->is_constant ) {
                 if( $qstring->value =~ /^[a-zA-Z_]/ ) {
                     # FIXME simpler method, make lex_identifier static
@@ -1260,14 +1317,19 @@ sub _parse_term_terminal {
                         return Language::P::ParseTree::Overridable
                                    ->new( { function  => OP_READLINE,
                                             arguments => [ $glob ],
+                                            pos       => $token->[O_POS],
                                             } );
                     }
                 }
                 return Language::P::ParseTree::Glob
-                           ->new( { arguments => [ $qstring ] } );
+                           ->new( { arguments => [ $qstring ],
+                                    pos       => $token->[O_POS],
+                                    } );
             } else {
                 return Language::P::ParseTree::Glob
-                           ->new( { arguments => [ $qstring ] } );
+                           ->new( { arguments => [ $qstring ],
+                                    pos       => $token->[O_POS],
+                                    } );
             }
         }
 
@@ -1288,6 +1350,7 @@ sub _parse_term_terminal {
                                left  => _find_symbol( $self, $token->[O_POS],
                                                       VALUE_SCALAR, '_', T_FQ_ID ),
                                right => $pattern,
+                               pos   => $token->[O_POS],
                                } );
         }
 
@@ -1296,16 +1359,19 @@ sub _parse_term_terminal {
         return Language::P::ParseTree::Constant->new
                    ( { value => $token->[O_VALUE],
                        flags => $token->[O_NUM_FLAGS]|CONST_NUMBER,
+                       pos   => $token->[O_POS],
                        } );
     } elsif( $token->[O_TYPE] == T_PACKAGE ) {
         return Language::P::ParseTree::Constant->new
                    ( { value => $self->{_lexical_state}[-1]{package},
                        flags => CONST_STRING,
+                       pos   => $token->[O_POS],
                        } );
     } elsif( $token->[O_TYPE] == T_STRING ) {
         return Language::P::ParseTree::Constant->new
                    ( { value => $token->[O_VALUE],
                        flags => CONST_STRING,
+                       pos   => $token->[O_POS],
                        } );
     } elsif(    $token->[O_TYPE] == T_DOLLAR
              || $token->[O_TYPE] == T_AT
@@ -1347,6 +1413,7 @@ sub _parse_term_terminal {
                                          ( { value => $file . ".pm",
                                              flags => CONST_STRING,
                                              } ) ],
+                               pos       => $token->[O_POS],
                                } );
             }
 
@@ -1358,7 +1425,7 @@ sub _parse_term_terminal {
                  || $tokidt == OP_STATE ) {
             return _parse_lexical( $self, $token->[O_ID_TYPE] );
         } elsif( $tokidt == KEY_SUB ) {
-            return _parse_sub( $self, 2, 1 );
+            return _parse_sub( $self, 2, 1, $token->[O_POS] );
         } elsif(    $tokidt == OP_GOTO
                  || $tokidt == OP_LAST
                  || $tokidt == OP_NEXT
@@ -1380,6 +1447,7 @@ sub _parse_term_terminal {
             my $jump = Language::P::ParseTree::Jump->new
                            ( { op   => $tokidt,
                                left => $dest,
+                               pos  => $token->[O_POS],
                                } );
             push @{$self->_lexical_state->[-1]{sub}{jumps}}, $jump
               if $tokidt == OP_GOTO && !ref( $dest );
@@ -1388,6 +1456,7 @@ sub _parse_term_terminal {
         } elsif( $tokidt == KEY_LOCAL ) {
             return Language::P::ParseTree::Local->new
                        ( { left => _parse_term_list_if_parens( $self, PREC_NAMED_UNOP ),
+                           pos  => $token->[O_POS],
                            } );
         } elsif( $tokidt == KEY_DO ) {
             return _parse_do( $self, $token );
@@ -1398,6 +1467,7 @@ sub _parse_term_terminal {
         return Language::P::ParseTree::ReferenceConstructor->new
                    ( { expression => $expr,
                        type       => VALUE_HASH,
+                       pos        => $token->[O_POS],
                        } );
     } elsif( $token->[O_TYPE] == T_OPSQ ) {
         my $expr = _parse_bracketed_expr( $self, T_OPSQ, 1, 1 );
@@ -1405,6 +1475,7 @@ sub _parse_term_terminal {
         return Language::P::ParseTree::ReferenceConstructor->new
                    ( { expression => $expr,
                        type       => VALUE_ARRAY,
+                       pos        => $token->[O_POS],
                        } );
     }
 
@@ -1429,10 +1500,11 @@ sub _parse_indirobj_maybe_subscripts {
     if( $sigil == VALUE_HASH ) {
         return $is_id ? _find_symbol( $self, $token->[O_POS],
                                       $sigil, $indir->[O_VALUE], $indir->[O_ID_TYPE] ) :
-                         Language::P::ParseTree::Dereference->new
-                             ( { left  => $indir,
-                                 op    => OP_DEREFERENCE_HASH,
-                                 } );
+                        Language::P::ParseTree::Dereference->new
+                            ( { left  => $indir,
+                                op    => OP_DEREFERENCE_HASH,
+                                pos   => $token->[O_POS],
+                                } );
     }
 
     my $next = $self->lexer->peek( X_OPERATOR );
@@ -1453,6 +1525,7 @@ sub _parse_indirobj_maybe_subscripts {
                           Language::P::ParseTree::Dereference->new
                               ( { left  => $indir,
                                   op    => OP_DEREFERENCE_ARRAY,
+                                  pos   => $token->[O_POS],
                                   } );
         $is_id = 0;
     }
@@ -1462,6 +1535,7 @@ sub _parse_indirobj_maybe_subscripts {
                              Language::P::ParseTree::Dereference->new
                                  ( { left  => $indir,
                                      op    => $dereference_type{$sigil},
+                                     pos   => $token->[O_POS],
                                      } );
 
         return _parse_maybe_subscript_rest( $self, $deref );
@@ -1479,6 +1553,7 @@ sub _parse_indirobj_maybe_subscripts {
                          Language::P::ParseTree::Dereference->new
                              ( { left  => $indir,
                                  op    => $dereference_type{$sigil},
+                                 pos   => $token->[O_POS],
                                  } );
     }
 
@@ -1493,6 +1568,7 @@ sub _parse_indirobj_maybe_subscripts {
                        subscript   => $subscript,
                        type        => $subscript_type,
                        reference   => $is_id ? 0 : 1,
+                       pos         => $token->[O_POS],
                        } );
     } else {
         my $term = Language::P::ParseTree::Subscript->new
@@ -1500,6 +1576,7 @@ sub _parse_indirobj_maybe_subscripts {
                            subscript   => $subscript,
                            type        => $subscript_type,
                            reference   => $is_id ? 0 : 1,
+                           pos         => $token->[O_POS],
                            } );
 
         return _parse_maybe_subscript_rest( $self, $term );
@@ -1533,13 +1610,15 @@ sub _process_declaration {
             $sym = Language::P::ParseTree::Symbol->new
                        ( { name        => _qualify( $self, $decl->name, T_ID ),
                            sigil       => $decl->sigil,
-                           symbol_name => $decl->sigil . "\0" . $decl->name
+                           symbol_name => $decl->sigil . "\0" . $decl->name,
+                           pos         => $decl->pos,
                            } );
         } else {
             $sym = Language::P::ParseTree::LexicalDeclaration->new
                        ( { name    => $decl->name,
                            sigil   => $decl->sigil,
                            flags   => $declaration_to_flags{$keyword},
+                           pos     => $decl->pos,
                            } );
             # TODO maybe use a separate flag value, to decouple from
             #      current implementation
@@ -1578,6 +1657,7 @@ sub _parse_term_p {
         return _parse_listop_like( $self, $token, 1,
                                    Language::P::ParseTree::Builtin->new
                                        ( { function => $token->[O_FT_OP],
+                                           pos      => $token->[O_POS],
                                            } ) );
     } elsif( my $p = $prec_assoc_un{$token->[O_TYPE]} ) {
         my $rest = _parse_term_n( $self, $p->[0] );
@@ -1585,6 +1665,7 @@ sub _parse_term_p {
         return Language::P::ParseTree::UnOp->new
                    ( { op    => $p->[2],
                        left  => $rest,
+                       pos   => $token->[O_POS],
                        } );
     } elsif( $token->[O_TYPE] == T_OPPAR ) {
         my $term = _parse_expr( $self );
@@ -1594,11 +1675,13 @@ sub _parse_term_p {
             # empty list
             return Language::P::ParseTree::List->new
                        ( { expressions => [],
+                           pos         => $token->[O_POS],
                            } );
         } elsif( !$term->isa( 'Language::P::ParseTree::List' ) ) {
             # record that there were prentheses, unless it is a list
             return Language::P::ParseTree::Parentheses->new
                        ( { left => $term,
+                           pos  => $token->[O_POS],
                            } );
         } else {
             return $term;
@@ -1619,6 +1702,8 @@ sub _parse_ternary {
                ( { condition => $terminal,
                    iftrue    => $iftrue,
                    iffalse   => $iffalse,
+                   pos_s     => $terminal->pos_s,
+                   pos_e     => $iffalse->pos_e,
                    } );
 }
 
@@ -1644,6 +1729,7 @@ sub _parse_term_n {
             $terminal = Language::P::ParseTree::UnOp->new
                             ( { op    => $op,
                                 left  => $terminal,
+                                pos   => $token->[O_POS],
                                 } );
             $token = $self->lexer->lex( X_OPERATOR );
         }
@@ -1673,6 +1759,7 @@ sub _parse_term_n {
                 } else {
                     $terminal = Language::P::ParseTree::List->new
                         ( { expressions => [ $terminal, $rterm ? $rterm : () ],
+                            pos         => $terminal->pos,
                             } );
                 }
             } else {
@@ -1680,6 +1767,7 @@ sub _parse_term_n {
                                 ( { op    => $bin->[2],
                                     left  => $terminal,
                                     right => $rterm,
+                                    pos   => $token->[O_POS],
                                     } );
             }
         }
@@ -1711,6 +1799,7 @@ sub _parse_term_list_if_parens {
     if( $term->isa( 'Language::P::ParseTree::Parentheses' ) ) {
         return Language::P::ParseTree::List->new
                    ( { expressions => [ $term->left ],
+                       pos         => $term->pos,
                        } );
     }
 
@@ -1735,6 +1824,7 @@ sub _add_implicit_return {
         return Language::P::ParseTree::Builtin->new
                    ( { arguments => [ $line ],
                        function  => OP_RETURN,
+                       pos       => $line->pos,
                        } );
     }
 
@@ -1754,7 +1844,7 @@ sub _add_implicit_return {
 }
 
 sub _parse_block_rest {
-    my( $self, $flags, $end_token ) = @_;
+    my( $self, $pos, $flags, $end_token ) = @_;
 
     $end_token ||= T_CLBRK;
     $self->_enter_scope if $flags & BLOCK_OPEN_SCOPE;
@@ -1771,14 +1861,20 @@ sub _parse_block_rest {
                 return Language::P::ParseTree::BareBlock->new
                            ( { lines    => \@lines,
                                continue => $continue,
+                               pos_s    => $pos,
+                               pos_e    => $token->[O_POS],
                                } );
             } elsif( $flags & BLOCK_DO ) {
                 return Language::P::ParseTree::DoBlock->new
                            ( { lines    => \@lines,
+                               pos_s    => $pos,
+                               pos_e    => $token->[O_POS],
                                } );
             } else {
                 return Language::P::ParseTree::Block->new
                            ( { lines => \@lines,
+                               pos_s => $pos,
+                               pos_e => $token->[O_POS],
                                } );
             }
         } else {
@@ -1809,7 +1905,8 @@ sub _parse_indirobj {
     my $token = $self->lexer->lex( X_BLOCK );
 
     if( $token->[O_TYPE] == T_OPBRK ) {
-        my $block = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
+        my $block = _parse_block_rest( $self, $token->[O_POS],
+                                       BLOCK_OPEN_SCOPE );
 
         return $block;
     } elsif( $token->[O_TYPE] == T_DOLLAR ) {
@@ -1821,6 +1918,7 @@ sub _parse_indirobj {
             return Language::P::ParseTree::Dereference->new
                        ( { left  => $indir,
                            op    => OP_DEREFERENCE_SCALAR,
+                           pos   => $token->[O_POS],
                            } );
         }
     } elsif( $allow_fail ) {
@@ -1845,12 +1943,14 @@ sub _declared_id {
         }
         $call = Language::P::ParseTree::Overridable->new
                     ( { function  => $KEYWORD_TO_OP{$opidt},
+                        pos       => $op->[O_POS],
                         } );
 
         return ( $call, 1 );
     } elsif( is_builtin( $opidt ) ) {
         $call = Language::P::ParseTree::Builtin->new
                     ( { function  => $KEYWORD_TO_OP{$opidt},
+                        pos       => $op->[O_POS],
                         } );
 
         return ( $call, 1 );
@@ -1861,10 +1961,12 @@ sub _declared_id {
         my $symbol = Language::P::ParseTree::Symbol->new
                          ( { name  => $fqname,
                              sigil => VALUE_SUB,
+                             pos   => $op->[O_POS],
                              } );
         $call = Language::P::ParseTree::FunctionCall->new
                     ( { function  => $symbol,
                         arguments => undef,
+                        pos       => $op->[O_POS],
                         } );
 
         if( my $decl = $rt->get_symbol( $fqname, '&' ) ) {
@@ -1905,6 +2007,7 @@ sub _parse_listop_like {
                 my $invocant = Language::P::ParseTree::Constant->new
                                    ( { value => $op->[O_VALUE],
                                        flags => CONST_STRING,
+                                       pos   => $op->[O_POS],
                                        } );
 
                 return _parse_maybe_direct_method_call( $self, $invocant );
@@ -1947,6 +2050,7 @@ sub _parse_listop_like {
                     ( { function  => $KEYWORD_TO_OP{$op->[O_ID_TYPE]},
                         arguments => $args,
                         indirect  => $fh,
+                        pos       => $op->[O_POS],
                         } );
     } elsif( $args ) {
         # FIXME encapsulation
@@ -2022,6 +2126,7 @@ sub _apply_prototype {
             $args->[$i - 3] = Language::P::ParseTree::Symbol->new
                                   ( { name  => $term->value,
                                       sigil => VALUE_GLOB,
+                                      pos   => $term->pos,
                                       } );
         }
         if(    ( $proto_char & PROTO_MAKE_ARRAY ) == PROTO_MAKE_ARRAY
@@ -2029,6 +2134,7 @@ sub _apply_prototype {
             $args->[$i - 3] = Language::P::ParseTree::Symbol->new
                                   ( { name  => $term->value,
                                       sigil => VALUE_ARRAY,
+                                      pos   => $term->pos,
                                       } );
         }
         if( $proto_char & PROTO_REFERENCE ) {
@@ -2096,6 +2202,7 @@ sub _parse_arglist {
                 $term = Language::P::ParseTree::Symbol->new
                             ( { name  => $la->[O_VALUE],
                                 sigil => VALUE_GLOB,
+                                pos   => $la->[O_POS],
                                 } );
             }
         } else {
@@ -2112,9 +2219,9 @@ sub _parse_arglist {
              && $la->[O_TYPE] == T_OPBRK ) {
         if( $proto_char & PROTO_BLOCK ) {
             _lex_token( $self );
-            $term = _parse_block_rest( $self, BLOCK_OPEN_SCOPE );
+            $term = _parse_block_rest( $self, $la->[O_POS], BLOCK_OPEN_SCOPE );
         } else {
-            $term = _parse_sub( $self, 2, 1 );
+            $term = _parse_sub( $self, 2, 1, $la->[O_POS] );
             # a very evil hack to make map-like sub parse as Perl does
             my $next = $self->lexer->peek( X_TERM );
             return [$term] if $next->[O_TYPE] == T_COMMA;
@@ -2153,11 +2260,13 @@ sub _parse_do {
     my $next = $self->lexer->peek( X_BLOCK );
     if( $next->[O_TYPE] == T_OPBRK ) {
         _lex_token( $self );
-        return _parse_block_rest( $self, BLOCK_OPEN_SCOPE|BLOCK_DO );
+        return _parse_block_rest( $self, $next->[O_POS],
+                                  BLOCK_OPEN_SCOPE|BLOCK_DO );
     }
 
     my $call = Language::P::ParseTree::Builtin->new
                    ( { function => OP_DO_FILE,
+                       pos      => $token->[O_POS],
                        } );
     my $do = _parse_listop_like( $self, $token, 1, $call );
     my $first = $do->arguments->[0];

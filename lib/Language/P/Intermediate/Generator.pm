@@ -70,12 +70,13 @@ sub _new_block {
 sub _context { $_[0]->get_attribute( 'context' ) & CXT_CALL_MASK }
 
 sub push_block {
-    my( $self, $is_sub ) = @_;
+    my( $self, $is_sub, $exit_pos ) = @_;
 
     $self->_current_block
       ( { outer    => $self->_current_block,
           is_sub   => $is_sub || 0,
           bytecode => [],
+          pos      => $exit_pos,
           } );
 
     return $self->_current_block;
@@ -187,13 +188,13 @@ sub generate_use {
                  } );
 
     _add_blocks $self, $head;
-    $self->push_block( 1 );
+    $self->push_block( 1, $tree->pos_e );
 
     # TODO require perl version
     ( my $file = $tree->package ) =~ s{::}{/}g;
     _add_bytecode $self,
          opcode_nm( OP_CONSTANT_STRING, value => "$file.pm" ),
-         opcode_nm( OP_REQUIRE_FILE, context => CXT_VOID ),
+         opcode_npm( OP_REQUIRE_FILE, $tree->pos, context => CXT_VOID ),
          opcode_n( OP_POP );
 
     # TODO check version
@@ -214,8 +215,8 @@ sub generate_use {
 
     _add_bytecode $self,
         opcode_nm( OP_CONSTANT_STRING, value => $tree->package ),
-        opcode_nm( OP_FIND_METHOD,
-                   method => $tree->is_no ? 'unimport' : 'import' ),
+        opcode_npm( OP_FIND_METHOD, $tree->pos,
+                    method => $tree->is_no ? 'unimport' : 'import' ),
         opcode_n( OP_DUP );
     _add_jump $self,
         opcode_nm( OP_JUMP_IF_TRUE,
@@ -236,7 +237,7 @@ sub generate_use {
     _add_blocks $self, $call_import;
 
     _add_bytecode $self,
-        opcode_nm( OP_CALL, context => CXT_VOID ),
+        opcode_npm( OP_CALL, $tree->pos, context => CXT_VOID ),
         opcode_n( OP_POP );
     _add_jump $self,
         opcode_nm( OP_JUMP, to => $return ),
@@ -245,7 +246,7 @@ sub generate_use {
     # return
     _add_blocks $self, $return;
     $self->pop_block;
-    _add_bytecode $self, opcode_n( OP_RETURN );
+    _add_bytecode $self, opcode_np( OP_RETURN, $tree->pos );
     _add_bytecode $self, opcode_n( OP_END );
 
     return $self->_code_segments;
@@ -258,7 +259,7 @@ sub generate_subroutine {
     $context->visit( $tree, CXT_VOID );
 
     _generate_bytecode( $self, 1, $tree->name, $tree->prototype,
-                        $outer || $self->_main, $tree->lines );
+                        $outer || $self->_main, $tree->lines, $tree->pos_e );
 }
 
 sub generate_bytecode {
@@ -268,12 +269,13 @@ sub generate_bytecode {
     foreach my $tree ( @$statements ) {
         $context->visit( $tree, CXT_VOID );
     }
+    my $pos_e = @$statements ? $statements->[-1]->pos_e : undef;
 
-    _generate_bytecode( $self, 0, undef, undef, $outer, $statements );
+    _generate_bytecode( $self, 0, undef, undef, $outer, $statements, $pos_e );
 }
 
 sub _generate_bytecode {
-    my( $self, $is_sub, $name, $prototype, $outer, $statements ) = @_;
+    my( $self, $is_sub, $name, $prototype, $outer, $statements, $pos_e ) = @_;
 
     $self->_code_segments( [] );
 
@@ -297,7 +299,7 @@ sub _generate_bytecode {
     }
 
     _add_blocks $self, _new_block( $self );
-    $self->push_block( $is_sub );
+    $self->push_block( $is_sub, $pos_e );
 
     foreach my $tree ( @$statements ) {
         $self->dispatch( $tree );
@@ -435,7 +437,9 @@ sub _indirect {
         $self->dispatch( $tree->indirect );
     } else {
         _add_bytecode $self,
-             opcode_nm( OP_GLOBAL, name => 'STDOUT', slot => VALUE_HANDLE );
+             opcode_npm( OP_GLOBAL, $tree->pos,
+                         name => 'STDOUT',
+                         slot => VALUE_HANDLE );
     }
 
     foreach my $arg ( @{$tree->arguments} ) {
@@ -444,7 +448,7 @@ sub _indirect {
 
     _add_bytecode $self,
          opcode_nm( OP_MAKE_LIST, count => scalar @{$tree->arguments} ),
-         opcode_n( $tree->function );
+         opcode_np( $tree->function, $tree->pos );
 }
 
 sub _builtin {
@@ -463,12 +467,14 @@ sub _builtin {
         $self->dispatch( $arg->subscripted );
 
         _add_bytecode $self,
-            opcode_n( $arg->type == VALUE_ARRAY ? OP_VIVIFY_ARRAY :
-                                                  OP_VIVIFY_HASH )
+            opcode_np( $arg->type == VALUE_ARRAY ? OP_VIVIFY_ARRAY :
+                                                   OP_VIVIFY_HASH,
+                       $tree->pos )
               if $arg->reference;
         _add_bytecode $self,
-            opcode_n( $arg->type == VALUE_ARRAY ? OP_EXISTS_ARRAY :
-                                                  OP_EXISTS_HASH );
+            opcode_np( $arg->type == VALUE_ARRAY ? OP_EXISTS_ARRAY :
+                                                   OP_EXISTS_HASH,
+                       $tree->pos );
     } elsif(   $OP_ATTRIBUTES{$tree->function}->{flags}
              & Language::P::Opcodes::FLAG_UNARY ) {
         _emit_label( $self, $tree );
@@ -485,16 +491,17 @@ sub _builtin {
             }
             my $env = $tree->get_attribute( 'environment' );
             _add_bytecode $self,
-                opcode_nm( $tree->function,
-                           context  => _context( $tree ),
-                           hints    => $env->{hints},
-                           warnings => $env->{warnings},
-                           package  => $env->{package},
-                           lexicals => \%lex,
-                           globals  => $tree->get_attribute( 'globals' ) );
+                opcode_npm( $tree->function, $tree->pos,
+                            context  => _context( $tree ),
+                            hints    => $env->{hints},
+                            warnings => $env->{warnings},
+                            package  => $env->{package},
+                            lexicals => \%lex,
+                            globals  => $tree->get_attribute( 'globals' ) );
         } else {
             _add_bytecode $self,
-                opcode_nm( $tree->function, context => _context( $tree ) );
+                opcode_npm( $tree->function, $tree->pos,
+                            context => _context( $tree ) );
         }
     } else {
         return _function_call( $self, $tree );
@@ -514,7 +521,7 @@ sub _function_call {
         if(    $i + 3 <= $#$proto
             && ( $proto->[$i + 3] & PROTO_REFERENCE ) ) {
             if( $is_func ) {
-                _add_bytecode $self, opcode_n( OP_REFERENCE );
+                _add_bytecode $self, opcode_np( OP_REFERENCE, $arg->pos );
             } else {
                 --$argcount;
             }
@@ -529,7 +536,7 @@ sub _function_call {
     if( $is_func ) {
         $self->dispatch( $tree->function );
         _add_bytecode $self,
-             opcode_nm( OP_CALL, context => _context( $tree ) );
+             opcode_npm( OP_CALL, $tree->pos, context => _context( $tree ) );
     } else {
         if( $tree->function == OP_RETURN ) {
             my $block = $self->_current_block;
@@ -540,7 +547,7 @@ sub _function_call {
             }
         }
 
-        _add_bytecode $self, opcode_n( $tree->function );
+        _add_bytecode $self, opcode_np( $tree->function, $tree->pos );
     }
 }
 
@@ -562,12 +569,13 @@ sub _method_call {
 
     if( $tree->indirect ) {
         _add_bytecode $self,
-            opcode_nm( OP_CALL_METHOD_INDIRECT, context  => _context( $tree ) );
+            opcode_npm( OP_CALL_METHOD_INDIRECT, $tree->pos,
+                        context  => _context( $tree ) );
     } else {
         _add_bytecode $self,
-            opcode_nm( OP_CALL_METHOD,
-                       context  => _context( $tree ),
-                       method   => $tree->method );
+            opcode_npm( OP_CALL_METHOD, $tree->pos,
+                        context  => _context( $tree ),
+                        method   => $tree->method );
     }
 }
 
@@ -600,7 +608,7 @@ sub _unary_op {
         }
     }
 
-    _add_bytecode $self, opcode_n( $op );
+    _add_bytecode $self, opcode_np( $op, $tree->pos );
 }
 
 sub _local {
@@ -612,18 +620,18 @@ sub _local {
 
     my $index = $self->{_temporary_count}++;
     _add_bytecode $self,
-         opcode_nm( OP_LOCALIZE_GLOB_SLOT,
-                   name  => $tree->left->name,
-                   slot  => $tree->left->sigil,
-                   index => $index,
-                   );
-
-    push @{$self->_current_block->{bytecode}},
-         [ opcode_nm( OP_RESTORE_GLOB_SLOT,
+         opcode_npm( OP_LOCALIZE_GLOB_SLOT, $tree->pos,
                      name  => $tree->left->name,
                      slot  => $tree->left->sigil,
                      index => $index,
-                     ),
+                     );
+
+    push @{$self->_current_block->{bytecode}},
+         [ opcode_npm( OP_RESTORE_GLOB_SLOT, $self->_current_block->{pos},
+                       name  => $tree->left->name,
+                       slot  => $tree->left->sigil,
+                       index => $index,
+                       ),
            ];
 }
 
@@ -646,10 +654,10 @@ sub _binary_op {
         _add_bytecode $self,
              opcode_n( OP_DUP );
         _add_jump $self,
-             opcode_nm( OP_JUMP_IF_TRUE,
-                        $tree->op == OP_LOG_AND ?
-                            ( true => $right, false => $end ) :
-                            ( true => $end,   false => $right ) ),
+             opcode_npm( OP_JUMP_IF_TRUE, $tree->pos,
+                         $tree->op == OP_LOG_AND ?
+                             ( true => $right, false => $end ) :
+                             ( true => $end,   false => $right ) ),
              $right, $end;
 
         _add_blocks $self, $right;
@@ -665,20 +673,20 @@ sub _binary_op {
 
         _add_bytecode $self,
                       opcode_n( OP_SWAP ),
-                      opcode_n( $tree->op );
+                      opcode_np( $tree->op, $tree->pos );
     } elsif( $tree->op == OP_NOT_MATCH ) {
         $self->dispatch( $tree->left );
         $self->dispatch( $tree->right );
 
         # maybe perform the transformation during parsing, but remeber
         # to correctly propagate context
-        _add_bytecode $self, opcode_n( OP_MATCH );
-        _add_bytecode $self, opcode_n( OP_LOG_NOT );
+        _add_bytecode $self, opcode_np( OP_MATCH, $tree->pos );
+        _add_bytecode $self, opcode_np( OP_LOG_NOT, $tree->pos );
     } else {
         $self->dispatch( $tree->left );
         $self->dispatch( $tree->right );
 
-        _add_bytecode $self, opcode_n( $tree->op );
+        _add_bytecode $self, opcode_np( $tree->op, $tree->pos );
     }
 }
 
@@ -709,8 +717,9 @@ sub _binary_op_cond {
     $self->dispatch( $tree->left );
     $self->dispatch( $tree->right );
 
-    _add_jump $self, opcode_nm( $conditionals{$tree->op},
-                                true => $true, false => $false ), $true, $false;
+    _add_jump $self,
+        opcode_npm( $conditionals{$tree->op}, $tree->pos,
+                    true => $true, false => $false ), $true, $false;
 }
 
 sub _anything_cond {
@@ -718,7 +727,9 @@ sub _anything_cond {
 
     $self->dispatch( $tree );
 
-    _add_jump $self, opcode_nm( OP_JUMP_IF_TRUE, true => $true, false => $false ), $true, $false;
+    _add_jump $self,
+        opcode_npm( OP_JUMP_IF_TRUE, $tree->pos,
+                    true => $true, false => $false ), $true, $false;
 }
 
 sub _constant {
@@ -761,7 +772,8 @@ sub _symbol {
     _emit_label( $self, $tree );
 
     _add_bytecode $self,
-         opcode_nm( OP_GLOBAL, name => $tree->name, slot => $tree->sigil );
+         opcode_npm( OP_GLOBAL, $tree->pos,
+                     name => $tree->name, slot => $tree->sigil );
 }
 
 sub _lexical_symbol {
@@ -862,10 +874,11 @@ sub _do_lexical_access {
         $lex_info->{declaration} = 1;
 
         push @{$self->_current_block->{bytecode}},
-             [ opcode_nm( $lex_info->{in_pad} ? OP_LEXICAL_PAD_CLEAR : OP_LEXICAL_CLEAR,
-                          index => $lex_info->{index},
-                          slot  => $tree->sigil,
-                          ),
+             [ opcode_npm( $lex_info->{in_pad} ? OP_LEXICAL_PAD_CLEAR : OP_LEXICAL_CLEAR,
+                           $self->_current_block->{pos},
+                           index => $lex_info->{index},
+                           slot  => $tree->sigil,
+                           ),
                ];
     }
 }
@@ -884,7 +897,7 @@ sub _cond_loop {
     _add_jump $self,
          opcode_nm( OP_JUMP, to => $start_cond ), $start_cond;
 
-    $self->push_block;
+    $self->push_block( 0, $tree->pos_e );
 
     _add_blocks $self, $start_cond;
     $self->dispatch_cond( $tree->condition,
@@ -924,7 +937,7 @@ sub _foreach {
     $tree->set_attribute( 'lbl_last', $end_loop );
     $tree->set_attribute( 'lbl_redo', $start_loop );
 
-    $self->push_block;
+    $self->push_block( 0, $tree->pos_e );
 
     $self->dispatch( $tree->expression );
     _add_bytecode $self, opcode_nm( OP_MAKE_LIST, count => 1 );
@@ -932,7 +945,7 @@ sub _foreach {
     my $iterator = $self->{_temporary_count}++;
     my( $glob, $slot );
     _add_bytecode $self,
-        opcode_nm( OP_ITERATOR ),
+        opcode_npm( OP_ITERATOR, $tree->pos ),
         opcode_nm( OP_TEMPORARY_SET, index => $iterator );
 
     if( !$is_lexical ) {
@@ -947,9 +960,12 @@ sub _foreach {
             opcode_nm( OP_TEMPORARY_SET, index => $glob );
 
         push @{$self->_current_block->{bytecode}},
-             [ opcode_nm( OP_TEMPORARY,     index => $glob ),
-               opcode_nm( OP_TEMPORARY,     index => $slot ),
-               opcode_nm( OP_GLOB_SLOT_SET, slot  => VALUE_SCALAR ),
+             [ opcode_npm( OP_TEMPORARY, $self->_current_block->{pos},
+                           index => $glob ),
+               opcode_npm( OP_TEMPORARY, $self->_current_block->{pos},
+                           index => $slot ),
+               opcode_npm( OP_GLOB_SLOT_SET, $self->_current_block->{pos},
+                           slot  => VALUE_SCALAR ),
                ];
     }
 
@@ -959,10 +975,12 @@ sub _foreach {
     if( !$is_lexical ) {
         _add_bytecode $self,
             opcode_nm( OP_TEMPORARY,     index => $iterator ),
-            opcode_nm( OP_ITERATOR_NEXT ),
+            opcode_npm( OP_ITERATOR_NEXT, $tree->pos ),
             opcode_n( OP_DUP );
         _add_jump $self,
-            opcode_nm( OP_JUMP_IF_NULL, true => $exit_loop, false => $start_loop ), $exit_loop, $start_loop;
+            opcode_npm( OP_JUMP_IF_NULL, $tree->pos,
+                        true => $exit_loop, false => $start_loop ),
+            $exit_loop, $start_loop;
 
         _add_blocks $self, $start_loop;
         _add_bytecode $self,
@@ -972,10 +990,12 @@ sub _foreach {
     } else {
         _add_bytecode $self,
             opcode_nm( OP_TEMPORARY,      index => $iterator ),
-            opcode_n( OP_ITERATOR_NEXT ),
+            opcode_np( OP_ITERATOR_NEXT, $tree->pos ),
             opcode_n( OP_DUP );
         _add_jump $self,
-            opcode_nm( OP_JUMP_IF_NULL, true => $exit_loop, false => $start_loop ), $exit_loop, $start_loop;
+            opcode_npm( OP_JUMP_IF_NULL, $tree->pos,
+                        true => $exit_loop, false => $start_loop ),
+            $exit_loop, $start_loop;
 
         _add_blocks $self, $start_loop;
         _allocate_lexical( $self, $self->_code_segments->[0], $iter_var, 0 );
@@ -1017,7 +1037,7 @@ sub _for {
     $tree->set_attribute( 'lbl_last', $end_loop );
     $tree->set_attribute( 'lbl_redo', $start_loop );
 
-    $self->push_block;
+    $self->push_block( 0, $tree->pos_e );
 
     $self->dispatch( $tree->initializer );
     _discard_if_void( $self, $tree->initializer );
@@ -1050,7 +1070,7 @@ sub _cond {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
-    $self->push_block;
+    $self->push_block( 0, $tree->pos_e );
 
     my @blocks;
     my $current = $self->_current_basic_block;
@@ -1107,7 +1127,7 @@ sub _block {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
-    $self->push_block;
+    $self->push_block( 0, $tree->pos_e );
 
     foreach my $line ( @{$tree->lines} ) {
         $self->dispatch( $line );
@@ -1131,7 +1151,7 @@ sub _bare_block {
          opcode_nm( OP_JUMP, to => $start_loop ), $start_loop;
     _add_blocks $self, $start_loop;
 
-    $self->push_block;
+    $self->push_block( 0, $tree->pos_e );
 
     foreach my $line ( @{$tree->lines} ) {
         $self->dispatch( $line );
@@ -1193,7 +1213,7 @@ sub _quoted_string {
     if( @{$tree->components} == 1 ) {
         $self->dispatch( $tree->components->[0] );
 
-        _add_bytecode $self, opcode_n( OP_STRINGIFY );
+        _add_bytecode $self, opcode_np( OP_STRINGIFY, $tree->pos );
 
         return;
     }
@@ -1202,7 +1222,7 @@ sub _quoted_string {
     for( my $i = 0; $i < @{$tree->components}; ++$i ) {
         $self->dispatch( $tree->components->[$i] );
 
-        _add_bytecode $self, opcode_n( OP_CONCATENATE_ASSIGN );
+        _add_bytecode $self, opcode_np( OP_CONCATENATE_ASSIGN, $tree->pos );
     }
 }
 
@@ -1214,13 +1234,13 @@ sub _subscript {
     $self->dispatch( $tree->subscripted );
 
     if( $tree->type == VALUE_ARRAY ) {
-        _add_bytecode $self, opcode_n( OP_VIVIFY_ARRAY )
+        _add_bytecode $self, opcode_np( OP_VIVIFY_ARRAY, $tree->pos )
           if $tree->reference;
-        _add_bytecode $self, opcode_n( OP_ARRAY_ELEMENT );
+        _add_bytecode $self, opcode_np( OP_ARRAY_ELEMENT, $tree->pos );
     } elsif( $tree->type == VALUE_HASH ) {
-        _add_bytecode $self, opcode_n( OP_VIVIFY_HASH )
+        _add_bytecode $self, opcode_np( OP_VIVIFY_HASH, $tree->pos )
           if $tree->reference;
-        _add_bytecode $self, opcode_n( OP_HASH_ELEMENT );
+        _add_bytecode $self, opcode_np( OP_HASH_ELEMENT, $tree->pos );
     } else {
         die $tree->type;
     }
@@ -1238,9 +1258,9 @@ sub _ref_constructor {
     }
 
     if( $tree->type == VALUE_ARRAY ) {
-        _add_bytecode $self, opcode_n( OP_ANONYMOUS_ARRAY );
+        _add_bytecode $self, opcode_np( OP_ANONYMOUS_ARRAY, $tree->pos );
     } elsif( $tree->type == VALUE_HASH ) {
-        _add_bytecode $self, opcode_n( OP_ANONYMOUS_HASH );
+        _add_bytecode $self, opcode_np( OP_ANONYMOUS_HASH, $tree->pos );
     } else {
         die $tree->type;
     }
@@ -1375,7 +1395,7 @@ sub _interpolated_pattern {
 
     $self->dispatch( $tree->string );
 
-    _add_bytecode $self, opcode_n( OP_EVAL_REGEX );
+    _add_bytecode $self, opcode_np( OP_EVAL_REGEX, $tree->pos );
 }
 
 sub _exit_scope {
