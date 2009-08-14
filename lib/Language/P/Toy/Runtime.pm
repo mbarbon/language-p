@@ -176,6 +176,30 @@ sub stack_copy {
     return @{$self->{_stack}};
 }
 
+sub current_frame_info {
+    my( $self ) = @_;
+    my $op = $self->{_bytecode}[$self->{_pc}];
+
+    return { file => $op->{pos}[0],
+             line => $op->{pos}[1],
+             };
+}
+
+sub frame_info {
+    my( $self, $level ) = @_;
+    my $frame = $self->{_frame};
+    my $stack = $self->{_stack};
+
+    for( ; $level; --$level ) {
+        $frame = $stack->[$frame]->[1];
+    }
+    my $op = $stack->[$frame - 2][1][$stack->[$frame - 2][0]];
+
+    return { file => $op->{pos}[0],
+             line => $op->{pos}[1],
+             };
+}
+
 sub push_frame {
     my( $self, $size ) = @_;
     my $last_frame = $self->{_frame};
