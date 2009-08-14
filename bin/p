@@ -20,7 +20,7 @@ eval {
 };
 my $e = $@;
 if( $e && ref( $e ) && $e->isa( 'Language::P::Exception' ) ) {
-    print STDERR $e->full_message, "\n";
+    print STDERR $e->full_message;
 } elsif( $e ) {
     print STDERR $e, "\n";
 }
