@@ -8,6 +8,7 @@ use Language::P::Toy::Value::StringNumber;
 use Language::P::Toy::Value::Reference;
 use Language::P::Toy::Value::Array;
 use Language::P::Toy::Value::List;
+use Language::P::Toy::Exception;
 use Language::P::ParseTree qw(:all);
 
 use Language::P::Toy::Opcodes::Regex qw(:opcodes);
@@ -838,8 +839,18 @@ sub o_close {
 
 sub o_die {
     my( $op, $runtime, $pc ) = @_;
+    my $args = pop @{$runtime->{_stack}};
+    my $info = $runtime->current_frame_info;
 
-    die "Real die() not implemented yet";
+    my $message = '';
+    for( my $iter = $args->iterator( $runtime ); $iter->next( $runtime ); ) {
+        $message .= $iter->item->as_string;
+    }
+
+    Language::P::Toy::Exception->throw
+        ( message  => $message,
+          position => [ $info->{file}, $info->{line} ],
+          );
 }
 
 sub o_backtick {
