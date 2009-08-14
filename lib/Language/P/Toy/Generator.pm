@@ -204,6 +204,7 @@ sub _generate_segment {
             } else {
                 my %p = $ins->{attributes} ? %{$ins->{attributes}} : ();
                 $p{slot} = $sigil_to_slot{$p{slot}} if $p{slot};
+                $p{pos} = $ins->{pos} if $ins->{pos};
                 push @bytecode, o( $name, %p );
             }
         }
@@ -309,7 +310,10 @@ sub _global {
 
     if( $op->{attributes}{slot} == VALUE_GLOB ) {
         push @$bytecode,
-             o( 'glob', name => $op->{attributes}{name}, create => 1 );
+             o( 'glob',
+                pos    => $op->{pos},
+                name   => $op->{attributes}{name},
+                create => 1 );
         return;
     }
 
@@ -317,8 +321,13 @@ sub _global {
     die $op->{attributes}{slot} unless $slot;
 
     push @$bytecode,
-         o( 'glob',             name => $op->{attributes}{name}, create => 1 ),
-         o( 'glob_slot_create', slot => $slot );
+         o( 'glob',
+            pos    => $op->{pos},
+            name   => $op->{attributes}{name},
+            create => 1 ),
+         o( 'glob_slot_create',
+            pos    => $op->{pos},
+            slot   => $slot );
 }
 
 sub _const_string {
@@ -417,7 +426,7 @@ sub _cond_jump_simple {
     my( $self, $bytecode, $op ) = @_;
 
     push @$bytecode,
-         o( $NUMBER_TO_NAME{$op->{opcode_n}} ),
+         o( $NUMBER_TO_NAME{$op->{opcode_n}}, pos => $op->{pos} ),
          o( 'jump' );
     push @{$self->_block_map->{$op->{attributes}{true}}}, $bytecode->[-2];
     push @{$self->_block_map->{$op->{attributes}{false}}}, $bytecode->[-1];
