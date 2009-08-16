@@ -70,7 +70,7 @@ sub _new_block {
 sub _context { $_[0]->get_attribute( 'context' ) & CXT_CALL_MASK }
 
 sub push_block {
-    my( $self, $flags, $exit_pos ) = @_;
+    my( $self, $flags, $exit_pos, $context ) = @_;
     my $id = @{$self->_code_segments->[0]->scopes};
     my $bytecode = [];
 
@@ -82,6 +82,7 @@ sub push_block {
            bytecode => $bytecode,
            id       => $id,
            flags    => $flags,
+           context  => $context || 0, # for eval BLOCK only
            };
 
     $self->_current_block
@@ -204,7 +205,7 @@ sub generate_use {
                  } );
 
     _add_blocks $self, $head;
-    $self->push_block( 1, $tree->pos_e );
+    $self->push_block( 1|4, $tree->pos_e );
 
     # TODO require perl version
     ( my $file = $tree->package ) =~ s{::}{/}g;
@@ -316,7 +317,8 @@ sub _generate_bytecode {
 
     _add_blocks $self, _new_block( $self );
     my $block_flags =   ( $is_sub                              ? 1 : 0 )
-                      | ( $self->_code_segments->[-1]->is_eval ? 2 : 0 );
+                      | ( $self->_code_segments->[-1]->is_eval ? 2 : 0 )
+                      | 4;
     $self->push_block( $block_flags, $pos_e );
 
     foreach my $tree ( @$statements ) {
@@ -1157,7 +1159,9 @@ sub _block {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
-    $self->push_block( 0, $tree->pos_e );
+    my $is_eval = $tree->isa( 'Language::P::ParseTree::EvalBlock' );
+    $self->push_block( $is_eval ? 2 : 0, $tree->pos_e,
+                       $is_eval ? _context( $tree ) : 0 );
 
     foreach my $line ( @{$tree->lines} ) {
         $self->dispatch( $line );
