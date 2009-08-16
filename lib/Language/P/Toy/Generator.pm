@@ -217,15 +217,15 @@ sub _generate_segment {
     my @converted;
     foreach my $block ( @{$segment->basic_blocks} ) {
         my $bytecode = _convert_bytecode( $self, $block->bytecode );
-        push @converted, [ $block, $bytecode ];
+        my $start = @{$self->_code->bytecode};
+        push @{$self->_code->bytecode}, @$bytecode;
+
+        push @converted, [ $block, $start ];
     }
 
     foreach my $block ( @converted ) {
-        my $start = @{$self->_code->bytecode};
-        push @{$self->_code->bytecode}, @{$block->[1]};
-
         foreach my $op ( @{$self->_block_map->{$block->[0]}} ) {
-            $op->{to} = $start;
+            $op->{to} = $block->[1];
         }
     }
     $self->_segment( undef );
@@ -313,12 +313,12 @@ sub _scope_enter {
         push @exit_bytecode, @{$self->_convert_bytecode( $chunk )};
     }
     push @exit_bytecode, o( 'end' );
-
     $self->_code->scopes->[$id] =
-        { start    => scalar @$bytecode,
+        { start    => @{$self->_code->bytecode} + @$bytecode,
           end      => -1,
           flags    => $scope->{flags},
           outer    => $scope->{outer},
+          context  => $scope->{context},
           bytecode => \@exit_bytecode,
           };
 }
@@ -327,7 +327,7 @@ sub _scope_leave {
     my( $self, $bytecode, $op ) = @_;
     my $id = $op->{attributes}{scope};
 
-    $self->_code->scopes->[$id]{end} = scalar @$bytecode;
+    $self->_code->scopes->[$id]{end} = @{$self->_code->bytecode} + @$bytecode;
 }
 
 sub _end {
