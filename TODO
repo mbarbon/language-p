@@ -1,29 +1,30 @@
 Parsing:
 - context handling
-  - prototypes
   - splice/substr/lvalue subroutines
+  - non-lvaluable expressions
 - filetest
   - after filetest, foo and _ are not barewords
 - stash access through hash syntax
 - glob access through hash syntax
-- global variables/symbols (STDOUT!)
+- global variables/symbols (STDOUT, punctuation)
 - scoping (check if/while conditions, for loop headers, etc.)
 - attributes
 - formats
 - add operator descriptor and do parse tree modifications based on that
   - like: defined &foo; pipe X, Y; etc.
+  - implicit $_
+  - implict package in bless
 - indirect method calls
   - find more corner cases
 - list slices ( ... )[ ... ]
 - test all unary/binary operator
 - local()/my()
   - check invalid declarations
-  - check non-lvaluable expressions
-- implicit $_ in various builtins
-  - implicit package in bless()
 - handling of parse errors with recovery
 - lexical pragmas/hints
   - strictures
+    - variables declared with Exporter/vars
+  - warnings
 - proper lexing of ${  id # comment\n } vs. ${ id # comment \n expr }
 - more tests for ${foo[.......} crazy cases
 - proper check for overridable builtins (only if imported)
@@ -31,7 +32,6 @@ Parsing:
 - CORE::builtin to always call builtin
 - special treatment for glob()
 - simplify detection of <foo> vs. <foo >, avoid constructing a lexer
-- parsing of nullary/unary vs. list operators
 - => auto-quoting
   - => quoting of -foo => 1
 - quoted strings
@@ -44,6 +44,7 @@ Parsing:
     - [a-] is not a range
     - [[] is a "["
     - ^ negation
+    - euristic for $foo[...] (intuit_more)
   - other metacharacters
   - backreferences, also in substitution; backref vs. octal escaper
   - magic variables
@@ -60,6 +61,8 @@ IR:
 - split 2-arg and 3-arg open to separate opcodes
 - check that do BLOCK does not count as loop for loop-control
 - add code generation for do {} while, do {} until 
+- uniform representation for n-ary opcodes (pipe, chdir, ...)
+  taking into account variable argument count
 
 Runtime:
 - coerce values according to prototype (esp. \[...])
@@ -79,7 +82,6 @@ Runtime:
   - check module return value in require
   - handle %INC correctly on parse error
 - stack unwinding
-  - eval/die
   - nonlocal redo/last/next/goto
 - computed goto/next/last/redo
 - local()
@@ -112,6 +114,7 @@ Runtime:
   are only overloads on top of the others
 - pass a runtime instance into all methods
 - symbolic references
+- die $obj
 
 Refactoring:
 - check offsets for call sequence, refactor stack handling
