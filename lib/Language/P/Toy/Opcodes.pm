@@ -1135,7 +1135,7 @@ sub o_make_closure {
 sub o_localize_glob_slot {
     my( $op, $runtime, $pc ) = @_;
     my $glob = $runtime->symbol_table->get_symbol( $runtime, $op->{name}, '*', 1 );
-    my $to_save = $glob->get_slot( $runtime, $op->{slot} );
+    my $to_save = $glob->get_or_create_slot( $runtime, $op->{slot} );
     my $saved = $to_save->localize( $runtime );
 
     $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = $to_save;
