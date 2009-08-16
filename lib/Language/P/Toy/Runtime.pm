@@ -161,12 +161,22 @@ sub run {
 
     return if $self->{_pc} < 0;
 
-    for(;;) {
-        my $op = $self->{_bytecode}->[$self->{_pc}];
-        my $pc = $op->{function}->( $op, $self, $self->{_pc} );
+    eval {
+        for(;;) {
+            my $op = $self->{_bytecode}->[$self->{_pc}];
+            my $pc = $op->{function}->( $op, $self, $self->{_pc} );
 
-        last if $pc < 0;
-        $self->{_pc} = $pc;
+            last if $pc < 0;
+            $self->{_pc} = $pc;
+        }
+    };
+    if( my $e = $@ ) {
+        if( $e->isa( 'Language::P::Exception' ) ) {
+            $self->{_pc} = $self->throw_exception( $e );
+            goto &run;
+        } else {
+            die;
+        }
     }
 }
 
