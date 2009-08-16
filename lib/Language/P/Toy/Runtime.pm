@@ -92,12 +92,21 @@ sub eval_string {
     $context ||= CXT_VOID;
 
     my $parser = $self->parser->safe_instance;
-    my $code = do {
+    my $code = eval {
         local $self->{_parser} = $parser;
         $parser->generator->_eval_context( $generator_context );
         my $flags = $context != CXT_VOID ? PARSE_ADD_RETURN : 0;
         $parser->parse_string( $string, $flags, $lexical_state );
     };
+    if( my $e = $@ ) {
+        if( $e->isa( 'Language::P::Exception' ) ) {
+            $self->set_exception( $e );
+            $self->return_undef( $context );
+            return;
+        } else {
+            die;
+        }
+    }
     $self->make_closure( $code );
     $self->run_last_file( $code, $context );
 }
@@ -251,6 +260,27 @@ sub call_return {
     return $rpc;
 }
 
+sub return_undef {
+    my( $self, $context ) = @_;
+    my $undef = Language::P::Toy::Value::Undef->new( $self );
+
+    if ( $context == CXT_SCALAR ) {
+        push @{$self->{_stack}}, $undef;
+    } else {
+        push @{$self->{_stack}},
+          Language::P::Toy::Value::List->new
+              ( $self, { array => [ $undef ] } );
+    }
+}
+
+sub set_exception {
+    my( $self, $exc ) = @_;
+
+    my $scalar = Language::P::Toy::Value::Scalar->new_string
+                     ( $self, $exc->full_message );
+    $self->symbol_table->set_symbol( $self, '@', '$', $scalar );
+}
+
 sub throw_exception {
     my( $self, $exc ) = @_;
 
@@ -275,9 +305,7 @@ sub throw_exception {
             die "Exception during stack unwind: $@" if $@;
 
             if( $scope->{flags} & 2 ) {
-                my $scalar = Language::P::Toy::Value::Scalar->new_string
-                                 ( $self, $exc->full_message );
-                $self->symbol_table->set_symbol( $self, '@', '$', $scalar );
+                $self->set_exception( $exc );
                 return $scope->{end};
             }
 
