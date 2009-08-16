@@ -131,7 +131,13 @@ sub search_file {
         }
     }
 
-    die "Can't find '$file_str'";
+    my $info = $self->current_frame_info;
+    my $message = sprintf 'Can\'t locate %s in @INC', $file_str;
+
+    Language::P::Toy::Exception->throw
+        ( message  => $message,
+          position => [ $info->{file}, $info->{line} ],
+          );
 }
 
 sub call_subroutine {
