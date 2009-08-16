@@ -442,6 +442,14 @@ use base qw(Language::P::ParseTree::Block);
 
 sub is_compound { 0 }
 
+package Language::P::ParseTree::EvalBlock;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Block);
+
+sub is_compound { 0 }
+
 package Language::P::ParseTree::BareBlock;
 
 use strict;

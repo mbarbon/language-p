@@ -40,6 +40,7 @@ use constant
     BLOCK_IMPLICIT_RETURN => 2,
     BLOCK_BARE            => 4,
     BLOCK_DO              => 8,
+    BLOCK_EVAL            => 16,
 
     ASSOC_LEFT         => 1,
     ASSOC_RIGHT        => 2,
@@ -1384,19 +1385,7 @@ sub _parse_term_terminal {
         my $tokidt = $token->[O_ID_TYPE];
 
         if( $token->[O_ID_TYPE] == KEY_EVAL ) {
-            my( $lex, $glob ) = $self->_lexicals->all_visible_lexicals;
-            my $lex_state = $self->{_lexical_state}[-1];
-            my $tree = _parse_listop( $self, $token );
-            $_->set_closed_over foreach values %$lex;
-            $tree->set_attribute( 'lexicals', $lex );
-            $tree->set_attribute( 'globals', $glob );
-            $tree->set_attribute( 'environment',
-                                  { hints    => $lex_state->{hints},
-                                    warnings => $lex_state->{warnings},
-                                    package  => $lex_state->{package},
-                                    } );
-
-            return $tree;
+            return _parse_eval( $self, $token );
         } elsif( $token->[O_ID_TYPE] == KEY_REQUIRE_FILE ) {
             my $tree = _parse_listop( $self, $token );
 
@@ -1870,6 +1859,12 @@ sub _parse_block_rest {
                                pos_s    => $pos,
                                pos_e    => $token->[O_POS],
                                } );
+            } elsif( $flags & BLOCK_EVAL ) {
+                return Language::P::ParseTree::EvalBlock->new
+                           ( { lines    => \@lines,
+                               pos_s    => $pos,
+                               pos_e    => $token->[O_POS],
+                               } );
             } else {
                 return Language::P::ParseTree::Block->new
                            ( { lines => \@lines,
@@ -2282,6 +2277,31 @@ sub _parse_do {
     }
 
     return $do;
+}
+
+sub _parse_eval {
+    my( $self, $token ) = @_;
+
+    my $next = $self->lexer->peek( X_BLOCK );
+    if( $next->[O_TYPE] == T_OPBRK ) {
+        _lex_token( $self );
+        return _parse_block_rest( $self, $next->[O_POS],
+                                  BLOCK_OPEN_SCOPE|BLOCK_EVAL );
+    }
+
+    my( $lex, $glob ) = $self->_lexicals->all_visible_lexicals;
+    my $lex_state = $self->{_lexical_state}[-1];
+    my $tree = _parse_listop( $self, $token );
+    $_->set_closed_over foreach values %$lex;
+    $tree->set_attribute( 'lexicals', $lex );
+    $tree->set_attribute( 'globals', $glob );
+    $tree->set_attribute( 'environment',
+                          { hints    => $lex_state->{hints},
+                            warnings => $lex_state->{warnings},
+                            package  => $lex_state->{package},
+                            } );
+
+    return $tree;
 }
 
 1;

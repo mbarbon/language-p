@@ -27,6 +27,8 @@ my %dispatch =
     'Language::P::ParseTree::ConditionalLoop'        => '_cond_loop',
     'Language::P::ParseTree::Ternary'                => '_ternary',
     'Language::P::ParseTree::Block'                  => '_block',
+    'Language::P::ParseTree::EvalBlock'              => '_expression_block',
+    'Language::P::ParseTree::DoBlock'                => '_expression_block',
     'Language::P::ParseTree::BareBlock'              => '_bare_block',
     'Language::P::ParseTree::Subroutine'             => '_subroutine',
     'Language::P::ParseTree::AnonymousSubroutine'    => '_subroutine',
@@ -137,6 +139,13 @@ sub _bare_block {
 
     _block( $self, $tree, $cxt );
     $self->visit( $tree->continue, CXT_VOID ) if $tree->continue;
+}
+
+sub _expression_block {
+    my( $self, $tree, $cxt ) = @_;
+
+    _block( $self, $tree, $cxt );
+    $tree->set_attribute( 'context', $cxt );
 }
 
 sub _function_call {
