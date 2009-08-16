@@ -205,9 +205,10 @@ sub current_frame_info {
     my( $self ) = @_;
     my $op = $self->{_bytecode}[$self->{_pc}];
 
-    return { file => $op->{pos}[0],
-             line => $op->{pos}[1],
-             code => $self->{_code},
+    return { file       => $op->{pos}[0],
+             line       => $op->{pos}[1],
+             code       => $self->{_code},
+             context    => $self->{_stack}[$self->{_frame} - 2][2],
              };
 }
 
@@ -221,9 +222,10 @@ sub frame_info {
     }
     my $op = $stack->[$frame - 2][1][$stack->[$frame - 2][0]];
 
-    return { file => $op->{pos}[0],
-             line => $op->{pos}[1],
-             code => $stack->[$frame - 2][3],
+    return { file       => $op->{pos}[0],
+             line       => $op->{pos}[1],
+             code       => $stack->[$frame - 2][3],
+             context    => $stack->[$frame - 2][2],
              };
 }
 
