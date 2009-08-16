@@ -18,7 +18,7 @@ sub format_message {
     my( $self ) = @_;
 
     return $self->{message} if $self->{message} =~ /\n$/;
-    return sprintf "%s at %s line %d\n", $self->{message},
+    return sprintf "%s at %s line %d.\n", $self->{message},
                    $self->{position}[0], $self->{position}[1];
 
 }
