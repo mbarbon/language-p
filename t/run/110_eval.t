@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    eval 'print "1..6\n"';
+    eval 'print "1..8\n"';
 }
 
 my $y = 2;
@@ -32,3 +32,10 @@ package main;
 $p::x = 6;
 
 eval 'print "ok $x\n"';
+
+$ok = eval {
+    print "ok 7\n";
+    8;
+};
+print "ok $ok\n";
+

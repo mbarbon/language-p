@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..9\n";
+print "1..11\n";
 
 sub foo {
     local $x = 2;
@@ -26,3 +26,9 @@ print $@ =~ m'Can\'t locate file_not_there.pm in @INC ' ? "ok 8\n" : "not ok 8\n
 
 $ok = eval 'sub a 1';
 print $ok ? "not ok 9\n" : "ok 9\n";
+
+$ok = eval {
+    die 'block';
+};
+print $ok ? "not ok 10\n" : "ok 10\n";
+print $@ eq "block at t/run/120_stack_unwind.t line 31.\n" ? "ok 11\n" : "not ok 11\n";

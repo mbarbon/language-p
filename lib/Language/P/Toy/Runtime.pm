@@ -308,8 +308,12 @@ sub throw_exception {
 
             if( $scope->{flags} & 2 ) {
                 $self->set_exception( $exc );
-                # no need to add an undef return value: exception code
-                # lands on the return at the end of the scope
+                # no need to add an undef return value for eval EXPR:
+                # exception code lands on the dummy return at the end
+                # of the generated segment
+                $self->return_undef( $scope->{context} )
+                    if $scope->{flags} == 2;
+
                 return $scope->{end};
             }
 
