@@ -334,7 +334,9 @@ sub _end {
     my( $self, $bytecode, $op ) = @_;
 
     if( !$self->_code->isa( 'Language::P::Toy::Value::Regex' ) ) {
-        # could be avoided in most cases, but simplifies code generation
+        # could be avoided in most cases, but simplifies code
+        # generation and automatically handles the 'return undef on
+        # failure' behaviour of eval
         push @$bytecode,
             o( 'make_list', count => 0 ),
             o( 'return' );

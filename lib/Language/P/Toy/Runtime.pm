@@ -306,6 +306,8 @@ sub throw_exception {
 
             if( $scope->{flags} & 2 ) {
                 $self->set_exception( $exc );
+                # no need to add an undef return value: exception code
+                # lands on the return at the end of the scope
                 return $scope->{end};
             }
 
