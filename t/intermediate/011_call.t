@@ -16,14 +16,17 @@ foo( 1 );
 EOP
 # main
 L1:
+  scope_enter scope=0
   constant_integer value=1
   make_list count=1
   global name="foo", slot=4
   call context=2
   pop
+  scope_leave scope=0
   end
 # foo
 L1:
+  scope_enter scope=0
   global name="STDOUT", slot=7
   fresh_string value=""
   constant_string value="ok "
@@ -38,5 +41,6 @@ L1:
   print
   make_list count=1
   return
+  scope_leave scope=0
   end
 EOI

@@ -7,7 +7,7 @@ use base qw(Language::P::ParseTree::Visitor);
 __PACKAGE__->mk_ro_accessors( qw(runtime) );
 __PACKAGE__->mk_accessors( qw(_code _pending _block_map _temporary_map
                               _options _generated _intermediate _processing
-                              _eval_context) );
+                              _eval_context _segment) );
 
 use Language::P::Intermediate::Generator;
 use Language::P::Opcodes qw(:all);
@@ -134,12 +134,37 @@ my %opcode_map =
     OP_TEMPORARY_SET()               => \&_temporary_set,
     OP_LOCALIZE_GLOB_SLOT()          => \&_map_slot_index,
     OP_RESTORE_GLOB_SLOT()           => \&_map_slot_index,
+    OP_SCOPE_ENTER()                 => \&_scope_enter,
+    OP_SCOPE_LEAVE()                 => \&_scope_leave,
     OP_END()                         => \&_end,
 
     OP_RX_QUANTIFIER()               => \&_rx_quantifier,
     OP_RX_START_GROUP()              => \&_direct_jump,
     OP_RX_TRY()                      => \&_direct_jump,
     );
+
+sub _convert_bytecode {
+    my( $self, $bytecode ) = @_;
+    my @bytecode;
+
+    foreach my $ins ( @$bytecode ) {
+        next if $ins->{label};
+        my $name = $NUMBER_TO_NAME{$ins->{opcode_n}};
+
+        die "Invalid $ins->{opcode}/$ins->{opcode_n}" unless $name;
+
+        if( my $sub = $opcode_map{$ins->{opcode_n}} ) {
+            $sub->( $self, \@bytecode, $ins );
+        } else {
+            my %p = $ins->{attributes} ? %{$ins->{attributes}} : ();
+            $p{slot} = $sigil_to_slot{$p{slot}} if $p{slot};
+            $p{pos} = $ins->{pos} if $ins->{pos};
+            push @bytecode, o( $name, %p );
+        }
+    }
+
+    return \@bytecode;
+}
 
 sub _generate_segment {
     my( $self, $segment, $target ) = @_;
@@ -187,27 +212,12 @@ sub _generate_segment {
     $self->_code( $code );
     $self->_block_map( {} );
     $self->_temporary_map( {} );
+    $self->_segment( $segment );
 
     my @converted;
     foreach my $block ( @{$segment->basic_blocks} ) {
-        my @bytecode;
-        push @converted, [ $block, \@bytecode ];
-
-        foreach my $ins ( @{$block->bytecode} ) {
-            next if $ins->{label};
-            my $name = $NUMBER_TO_NAME{$ins->{opcode_n}};
-
-            die "Invalid $ins->{opcode}/$ins->{opcode_n}" unless $name;
-
-            if( my $sub = $opcode_map{$ins->{opcode_n}} ) {
-                $sub->( $self, \@bytecode, $ins );
-            } else {
-                my %p = $ins->{attributes} ? %{$ins->{attributes}} : ();
-                $p{slot} = $sigil_to_slot{$p{slot}} if $p{slot};
-                $p{pos} = $ins->{pos} if $ins->{pos};
-                push @bytecode, o( $name, %p );
-            }
-        }
+        my $bytecode = _convert_bytecode( $self, $block->bytecode );
+        push @converted, [ $block, $bytecode ];
     }
 
     foreach my $block ( @converted ) {
@@ -218,6 +228,7 @@ sub _generate_segment {
             $op->{to} = $start;
         }
     }
+    $self->_segment( undef );
 
     $self->_allocate_lexicals( $segment, $code )
       if $segment->lexicals;
@@ -279,7 +290,7 @@ sub start_code_generation {
     $self->_generated( {} );
     $self->_intermediate->file_name( $args->{file_name} )
       if $args && $args->{file_name};
-    $self->_intermediate->create_main( $outer_int );
+    $self->_intermediate->create_main( $outer_int, $outer_int ? 1 : 0 );
     $self->_pending( [] );
 }
 
@@ -291,6 +302,33 @@ sub end_code_generation {
 }
 
 sub is_generating { return $_[0]->_processing ? 1 : 0 }
+
+sub _scope_enter {
+    my( $self, $bytecode, $op ) = @_;
+    my $id = $op->{attributes}{scope};
+    my $scope = $self->_segment->scopes->[$id];
+
+    my @exit_bytecode;
+    foreach my $chunk ( reverse @{$scope->{bytecode}} ) {
+        push @exit_bytecode, @{$self->_convert_bytecode( $chunk )};
+    }
+    push @exit_bytecode, o( 'end' );
+
+    $self->_code->scopes->[$id] =
+        { start    => scalar @$bytecode,
+          end      => -1,
+          flags    => $scope->{flags},
+          outer    => $scope->{outer},
+          bytecode => \@exit_bytecode,
+          };
+}
+
+sub _scope_leave {
+    my( $self, $bytecode, $op ) = @_;
+    my $id = $op->{attributes}{scope};
+
+    $self->_code->scopes->[$id]{end} = scalar @$bytecode;
+}
 
 sub _end {
     my( $self, $bytecode, $op ) = @_;

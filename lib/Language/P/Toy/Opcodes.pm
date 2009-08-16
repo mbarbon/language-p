@@ -847,10 +847,12 @@ sub o_die {
         $message .= $iter->item->as_string;
     }
 
-    Language::P::Toy::Exception->throw
-        ( message  => $message,
-          position => [ $info->{file}, $info->{line} ],
-          );
+    my $exc = Language::P::Toy::Exception->new
+                  ( { message  => $message,
+                      position => [ $info->{file}, $info->{line} ],
+                      } );
+
+    return $runtime->throw_exception( $exc );
 }
 
 sub o_backtick {
@@ -1180,7 +1182,11 @@ sub o_do_file {
     my $real_path = $runtime->search_file( $file_str );
     my $real_path_str = $real_path->as_string( $runtime );
 
-    $runtime->run_file( $real_path_str, 0, _context( $op, $runtime ) );
+    my $ok = eval {
+        $runtime->run_file( $real_path_str, 0, _context( $op, $runtime ) );
+        1;
+    };
+    $runtime->throw_exception( $@ ) unless $ok;
 
     my $inc = $runtime->symbol_table->get_symbol( $runtime, 'INC', '%', 1 );
     $inc->set_item( $runtime, $file_str, $real_path );
@@ -1204,7 +1210,11 @@ sub o_require_file {
     my $real_path = $runtime->search_file( $file_str );
     my $real_path_str = $real_path->as_string( $runtime );
 
-    $runtime->run_file( $real_path_str, 0, _context( $op, $runtime ) );
+    my $ok = eval {
+        $runtime->run_file( $real_path_str, 0, _context( $op, $runtime ) );
+        1;
+    };
+    $runtime->throw_exception( $@ ) unless $ok;
 
     # FIXME check return value
 

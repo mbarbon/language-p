@@ -7,7 +7,7 @@ use base qw(Language::P::Toy::Value::Any);
 use Language::P::ParseTree qw(VALUE_SCALAR VALUE_ARRAY VALUE_HASH);
 
 __PACKAGE__->mk_ro_accessors( qw(bytecode stack_size lexicals closed
-                                 lexical_init) );
+                                 lexical_init scopes) );
 
 sub type { 9 }
 sub is_subroutine { 0 }
@@ -19,6 +19,7 @@ sub new {
     $self->{stack_size} ||= 0;
     $self->{closed} ||= [];
     $self->{lexical_init} ||= [];
+    $self->{scopes} ||= [];
 
     return $self;
 }

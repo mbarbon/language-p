@@ -182,6 +182,7 @@ sub current_frame_info {
 
     return { file => $op->{pos}[0],
              line => $op->{pos}[1],
+             code => $self->{_code},
              };
 }
 
@@ -197,6 +198,7 @@ sub frame_info {
 
     return { file => $op->{pos}[0],
              line => $op->{pos}[1],
+             code => $stack->[$frame - 2][3],
              };
 }
 
@@ -231,6 +233,48 @@ sub call_return {
     $self->pop_frame;
 
     return $rpc;
+}
+
+sub throw_exception {
+    my( $self, $exc ) = @_;
+
+    for(;;) {
+        my $info = $self->current_frame_info;
+        my $scope;
+
+        foreach my $s ( @{$info->{code}->scopes} ) {
+            if( $s->{start} <= $self->{_pc} && $s->{end} > $self->{_pc} ) {
+                $scope = $s;
+            }
+        }
+
+        while( $scope ) {
+            eval {
+                # TODO catch exceptions during stack unwinding
+                local $self->{_pc};
+                local $self->{_bytecode};
+
+                $self->run_bytecode( $scope->{bytecode} );
+            };
+            die "Exception during stack unwind: $@" if $@;
+
+            if( $scope->{flags} & 2 ) {
+                my $scalar = Language::P::Toy::Value::Scalar->new_string
+                                 ( $self, $exc->full_message );
+                $self->symbol_table->set_symbol( $self, '@', '$', $scalar );
+                return $scope->{end};
+            }
+
+            last if $scope->{outer} < 0;
+            $scope = $info->{code}->scopes->[$scope->{outer}];
+        }
+
+        my $rpc = $self->call_return;
+        last if $rpc < 0; # main scope of script/required module
+        $self->{_pc} = $rpc + 1;
+    }
+
+   die $exc;
 }
 
 sub get_symbol {

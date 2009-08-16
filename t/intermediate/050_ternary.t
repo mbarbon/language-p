@@ -12,6 +12,7 @@ $x = $a > 2 ? $b : $c + 3;
 EOP
 # main
 L1:
+  scope_enter scope=0
   global name="a", slot=1
   constant_integer value=2
   jump_if_f_gt false=L4, true=L3
@@ -20,6 +21,7 @@ L2:
   swap
   assign
   pop
+  scope_leave scope=0
   end
 L3:
   global name="b", slot=1
@@ -37,6 +39,7 @@ $x = $a > 2 ? $b :
 EOP
 # main
 L1:
+  scope_enter scope=0
   global name="a", slot=1
   constant_integer value=2
   jump_if_f_gt false=L4, true=L3
@@ -45,6 +48,7 @@ L2:
   swap
   assign
   pop
+  scope_leave scope=0
   end
 L3:
   global name="b", slot=1

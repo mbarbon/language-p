@@ -12,6 +12,7 @@ $x = $a && $b;
 EOP
 # main
 L1:
+  scope_enter scope=0
   global name="a", slot=1
   dup
   jump_if_true false=L4, true=L2
@@ -24,6 +25,7 @@ L3:
   swap
   assign
   pop
+  scope_leave scope=0
   end
 L4:
   jump to=L3
@@ -34,6 +36,7 @@ $x = $a || $b;
 EOP
 # main
 L1:
+  scope_enter scope=0
   global name="a", slot=1
   dup
   jump_if_true false=L2, true=L4
@@ -46,6 +49,7 @@ L3:
   swap
   assign
   pop
+  scope_leave scope=0
   end
 L4:
   jump to=L3
@@ -56,6 +60,7 @@ $x = $a && $b && $c;
 EOP
 # main
 L1:
+  scope_enter scope=0
   global name="a", slot=1
   dup
   jump_if_true false=L6, true=L2
@@ -75,6 +80,7 @@ L5:
   swap
   assign
   pop
+  scope_leave scope=0
   end
 L6:
   jump to=L3
@@ -87,6 +93,7 @@ $x = $a || $b || $c;
 EOP
 # main
 L1:
+  scope_enter scope=0
   global name="a", slot=1
   dup
   jump_if_true false=L2, true=L6
@@ -106,6 +113,7 @@ L5:
   swap
   assign
   pop
+  scope_leave scope=0
   end
 L6:
   jump to=L3

@@ -12,10 +12,12 @@ $x = $a > 2 ? $b : $c + 3;
 EOP
 # main
 L1:
+  scope_enter scope=0
   jump_if_f_gt to=L3 (global name="a", slot=1), (constant_integer value=2)
   jump to=L4
 L2:
   assign (global name="x", slot=1), (get index=3)
+  scope_leave scope=0
   end
 L3:
   set index=1 (global name="b", slot=1)
@@ -33,10 +35,12 @@ $x = $a > 2 ? $b :
 EOP
 # main
 L1:
+  scope_enter scope=0
   jump_if_f_gt to=L3 (global name="a", slot=1), (constant_integer value=2)
   jump to=L4
 L2:
   assign (global name="x", slot=1), (get index=4)
+  scope_leave scope=0
   end
 L3:
   set index=1 (global name="b", slot=1)

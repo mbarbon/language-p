@@ -70,13 +70,26 @@ sub _new_block {
 sub _context { $_[0]->get_attribute( 'context' ) & CXT_CALL_MASK }
 
 sub push_block {
-    my( $self, $is_sub, $exit_pos ) = @_;
+    my( $self, $flags, $exit_pos ) = @_;
+    my $id = @{$self->_code_segments->[0]->scopes};
+    my $bytecode = [];
+
+    _add_bytecode $self,
+        opcode_nm( OP_SCOPE_ENTER, scope => $id );
+
+    push @{$self->_code_segments->[0]->scopes},
+         { outer    => $self->_current_block ? $self->_current_block->{id} : -1,
+           bytecode => $bytecode,
+           id       => $id,
+           flags    => $flags,
+           };
 
     $self->_current_block
       ( { outer    => $self->_current_block,
-          is_sub   => $is_sub || 0,
-          bytecode => [],
+          flags    => $flags,
+          bytecode => $bytecode,
           pos      => $exit_pos,
+          id       => $id,
           } );
 
     return $self->_current_block;
@@ -88,13 +101,16 @@ sub pop_block {
 
     $self->_current_block( $to_ret->{outer} );
 
+    _add_bytecode $self,
+        opcode_nm( OP_SCOPE_LEAVE, scope => $to_ret->{id} );
+
     return $to_ret;
 }
 
 sub create_main {
-    my( $self, $outer ) = @_;
+    my( $self, $outer, $is_eval ) = @_;
     my $main = Language::P::Intermediate::Code->new
-                   ( { type         => 1,
+                   ( { type         => $is_eval ? 4 : 1,
                        name         => undef,
                        basic_blocks => [],
                        outer        => $outer,
@@ -299,7 +315,9 @@ sub _generate_bytecode {
     }
 
     _add_blocks $self, _new_block( $self );
-    $self->push_block( $is_sub, $pos_e );
+    my $block_flags =   ( $is_sub                              ? 1 : 0 )
+                      | ( $self->_code_segments->[-1]->is_eval ? 2 : 0 );
+    $self->push_block( $block_flags, $pos_e );
 
     foreach my $tree ( @$statements ) {
         $self->dispatch( $tree );
@@ -542,7 +560,7 @@ sub _function_call {
             my $block = $self->_current_block;
             while( $block ) {
                 _exit_scope( $self, $block );
-                last if $block->{is_sub};
+                last if $block->{flags} & 1;
                 $block = $block->{outer};
             }
         }
@@ -896,10 +914,11 @@ sub _cond_loop {
 
     _add_jump $self,
          opcode_nm( OP_JUMP, to => $start_cond ), $start_cond;
-
-    $self->push_block( 0, $tree->pos_e );
-
     _add_blocks $self, $start_cond;
+
+    $self->push_block( 0, $tree->pos_e )
+      if $tree->block->isa( 'Language::P::ParseTree::Block' );
+
     $self->dispatch_cond( $tree->condition,
                           $is_until ? ( $end_loop, $start_loop ) :
                                       ( $start_loop, $end_loop ) );
@@ -919,8 +938,10 @@ sub _cond_loop {
     _add_jump $self, opcode_nm( OP_JUMP, to => $start_cond ), $start_cond;
 
     _add_blocks $self, $end_loop;
-    _exit_scope( $self, $self->_current_block );
-    $self->pop_block;
+    if( $tree->block->isa( 'Language::P::ParseTree::Block' ) ) {
+        _exit_scope( $self, $self->_current_block );
+        $self->pop_block;
+    }
 }
 
 sub _foreach {
@@ -937,7 +958,8 @@ sub _foreach {
     $tree->set_attribute( 'lbl_last', $end_loop );
     $tree->set_attribute( 'lbl_redo', $start_loop );
 
-    $self->push_block( 0, $tree->pos_e );
+    $self->push_block( 0, $tree->pos_e )
+      if $tree->block->isa( 'Language::P::ParseTree::Block' );
 
     $self->dispatch( $tree->expression );
     _add_bytecode $self, opcode_nm( OP_MAKE_LIST, count => 1 );
@@ -1024,8 +1046,10 @@ sub _foreach {
     _add_jump $self, opcode_nm( OP_JUMP, to => $end_loop ), $end_loop;
     _add_blocks $self, $end_loop;
 
-    _exit_scope( $self, $self->_current_block );
-    $self->pop_block;
+    if( $tree->block->isa( 'Language::P::ParseTree::Block' ) ) {
+        _exit_scope( $self, $self->_current_block );
+        $self->pop_block;
+    }
 }
 
 sub _for {
@@ -1070,7 +1094,11 @@ sub _cond {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
-    $self->push_block( 0, $tree->pos_e );
+    my $with_scope =    $tree->iffalse
+                     || $tree->iftrues->[0]->block->isa( 'Language::P::ParseTree::Block' );
+
+    $self->push_block( 0, $tree->pos_e )
+      if $with_scope;
 
     my @blocks;
     my $current = $self->_current_basic_block;
@@ -1101,8 +1129,10 @@ sub _cond {
     $current->add_jump( opcode_nm( OP_JUMP, to => $blocks[-1] ), $blocks[-1] );
     _add_blocks $self, reverse @blocks;
 
-    _exit_scope( $self, $self->_current_block );
-    $self->pop_block;
+    if( $with_scope ) {
+        _exit_scope( $self, $self->_current_block );
+        $self->pop_block;
+    }
 }
 
 sub _ternary {

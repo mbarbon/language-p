@@ -336,6 +336,8 @@ restore_glob_slot   0       noattr      same                 0   0
 return              0       noattr      same                 1   0
 rmdir               u       noattr      same                 1   1
 set                 0       index=i     same                 1   0
+scope_enter         0       scope=i     same                 0   0
+scope_leave         0       scope=i     same                 0   0
 str_cmp
 str_eq              0       noattr      compare_s_eq_scalar
 str_ge              0       noattr      compare_s_ge_scalar
