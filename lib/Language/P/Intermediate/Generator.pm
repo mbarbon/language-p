@@ -1102,34 +1102,30 @@ sub _cond {
     $self->push_block( 0, $tree->pos_e )
       if $with_scope;
 
-    my @blocks;
-    my $current = $self->_current_basic_block;
-    push @blocks, _new_block( $self );
-    if( $tree->iffalse ) {
-        push @blocks, _new_block( $self );
-        _current_basic_block( $self, $blocks[-1] );
-        $self->dispatch( $tree->iffalse->block );
-        _add_jump $self, opcode_nm( OP_JUMP, to => $blocks[0] ), $blocks[0];
-    }
-    foreach my $elsif ( reverse @{$tree->iftrues} ) {
-        my $next = $blocks[-1];
+    my( $next, $last ) = _new_blocks( $self, 2 );
+    _add_jump $self, opcode_nm( OP_JUMP, to => $next ), $next;
+
+    foreach my $elsif ( @{$tree->iftrues} ) {
         my $is_unless = $elsif->block_type eq 'unless';
-        my( $cond_block, $then_block ) = _new_blocks( $self, 2 );
-        _current_basic_block( $self, $cond_block );
+        my( $then_block, $next_next ) = _new_blocks( $self, 2 );
+        _add_blocks $self, $next;
         $self->dispatch_cond( $elsif->condition,
-                              $is_unless ? ( $next, $then_block ) :
-                                           ( $then_block, $next ) );
-        push @blocks, $then_block, $cond_block;
-        _current_basic_block( $self, $then_block );
+                              $is_unless ? ( $next_next, $then_block ) :
+                                           ( $then_block, $next_next ) );
+        _add_blocks $self, $then_block;
         $self->dispatch( $elsif->block );
         _discard_if_void( $self, $elsif->block )
             unless $elsif->block->isa( 'Language::P::ParseTree::Block' );
 
-        _add_jump $self, opcode_nm( OP_JUMP, to => $blocks[0] ), $blocks[0];
+        _add_jump $self, opcode_nm( OP_JUMP, to => $last ), $last;
+        $next = $next_next;
     }
 
-    $current->add_jump( opcode_nm( OP_JUMP, to => $blocks[-1] ), $blocks[-1] );
-    _add_blocks $self, reverse @blocks;
+    _add_blocks $self, $next;
+    $self->dispatch( $tree->iffalse->block ) if $tree->iffalse;
+    _add_jump $self, opcode_nm( OP_JUMP, to => $last ), $last;
+
+    _add_blocks $self, $last;
 
     if( $with_scope ) {
         _exit_scope( $self, $self->_current_block );

@@ -62,21 +62,21 @@ L1:
   scope_enter scope=0
   constant_integer value=1
   jump to=L2
-L11:
+L13:
   jump to=L4
-L12:
+L14:
   constant_integer value=7
   scope_leave scope=1
   jump to=L3
-L13:
-  jump to=L9
-L14:
-  jump to=L2
 L15:
+  jump to=L9
+L16:
+  jump to=L2
+L17:
   jump to=L4
 L2:
   scope_enter scope=1
-  jump to=L6
+  jump to=L5
 L3:
   scope_enter scope=2
   constant_integer value=5
@@ -86,13 +86,13 @@ L4:
   constant_integer value=6
   scope_leave scope=0
   end
-L6:
+L5:
   jump_if_true to=L7 (constant_integer value=3)
-  jump to=L13
+  jump to=L15
 L7:
   constant_integer value=2
   jump to=L9
 L9:
-  jump_if_true to=L14 (constant_integer value=4)
-  jump to=L15
+  jump_if_true to=L16 (constant_integer value=4)
+  jump to=L17
 EOI
