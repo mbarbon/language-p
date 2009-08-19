@@ -1541,7 +1541,7 @@ sub _parse_indirobj_maybe_subscripts {
     if( $is_slice ) {
         return Language::P::ParseTree::Slice->new
                    ( { subscripted => $subscripted,
-                       subscript   => $subscript,
+                       subscript   => _make_list( $self, $subscript ),
                        type        => $subscript_type,
                        reference   => $is_id ? 0 : 1,
                        pos         => $token->[O_POS],
@@ -1766,6 +1766,29 @@ sub _parse_term {
     $self->lexer->unlex( $token );
 
     return undef;
+}
+
+sub _make_list {
+    my( $self, $term, $pos ) = @_;
+
+    if( !$term ) {
+        return Language::P::ParseTree::List->new
+                   ( { expressions => [],
+                       pos         => $pos,
+                       } );
+    } elsif( $term->isa( 'Language::P::ParseTree::List' ) ) {
+        return $term;
+    } elsif( $term->isa( 'Language::P::ParseTree::Parentheses' ) ) {
+        return Language::P::ParseTree::List->new
+                   ( { expressions => [ $term->left ],
+                       pos         => $term->pos,
+                       } );
+    } else {
+        return Language::P::ParseTree::List->new
+                   ( { expressions => [ $term ],
+                       pos         => $term->pos,
+                       } );
+    }
 }
 
 sub _parse_term_list_if_parens {
