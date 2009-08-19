@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
-__PACKAGE__->mk_ro_accessors( qw(bytecode start_label
+__PACKAGE__->mk_ro_accessors( qw(bytecode start_label lexical_state
                                  predecessors successors) );
 
 use Scalar::Util qw();
@@ -24,7 +24,11 @@ sub new {
     return $self;
 }
 
-sub new_from_label { $_[0]->new( { start_label => $_[1] } ) }
+sub new_from_label {
+    return $_[0]->new( { start_label   => $_[1],
+                         lexical_state => $_[2],
+                         } );
+}
 
 sub _change_successor {
     my( $self, $from, $to ) = @_;

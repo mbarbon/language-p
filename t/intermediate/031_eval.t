@@ -18,6 +18,8 @@ L1:
   constant_string value="1"
   eval warnings=undef, hints=0, globals={}, context=2, lexicals={}, package=main
   pop
+  jump to=L2
+L2:
   constant_string value="1"
   eval warnings=undef, hints=0, globals={}, context=2, lexicals={}, package=x
   pop

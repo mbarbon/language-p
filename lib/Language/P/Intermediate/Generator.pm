@@ -62,9 +62,11 @@ sub _add_blocks {
 sub _new_blocks { map _new_block( $_[0] ), 1 .. $_[1] }
 sub _new_block {
     my( $self ) = @_;
+    my $block = $self->_current_block;
 
-    return Language::P::Intermediate::BasicBlock
-               ->new_from_label( 'L' . ++$self->{_label_count} );
+    return Language::P::Intermediate::BasicBlock->new_from_label
+               ( 'L' . ++$self->{_label_count},
+                 $block ? $block->{lexical_state} : 0 );
 }
 
 sub _context { $_[0]->get_attribute( 'context' ) & CXT_CALL_MASK }
@@ -72,13 +74,14 @@ sub _context { $_[0]->get_attribute( 'context' ) & CXT_CALL_MASK }
 sub push_block {
     my( $self, $flags, $exit_pos, $context ) = @_;
     my $id = @{$self->_code_segments->[0]->scopes};
+    my $outer = $self->_current_block;
     my $bytecode = [];
 
     _add_bytecode $self,
         opcode_nm( OP_SCOPE_ENTER, scope => $id );
 
     push @{$self->_code_segments->[0]->scopes},
-         { outer    => $self->_current_block ? $self->_current_block->{id} : -1,
+         { outer    => $outer ? $outer->{id} : -1,
            bytecode => $bytecode,
            id       => $id,
            flags    => $flags,
@@ -86,11 +89,12 @@ sub push_block {
            };
 
     $self->_current_block
-      ( { outer    => $self->_current_block,
-          flags    => $flags,
-          bytecode => $bytecode,
-          pos      => $exit_pos,
-          id       => $id,
+      ( { outer         => $outer,
+          flags         => $flags,
+          bytecode      => $bytecode,
+          pos           => $exit_pos,
+          id            => $id,
+          lexical_state => $outer ? $outer->{lexical_state} : 0,
           } );
 
     return $self->_current_block;
@@ -446,8 +450,31 @@ my %conditionals =
 
 sub _lexical_state {
     my( $self, $tree ) = @_;
+    my $scope_id = $self->_current_block->{id};
+    my $state_id = @{$self->_code_segments->[0]->lexical_states};
 
-    # do nothing for now
+    push @{$self->_code_segments->[0]->lexical_states},
+         { scope    => $scope_id,
+           package  => $tree->package,
+           hints    => $tree->hints,
+           warnings => $tree->warnings,
+           };
+    $self->_code_segments->[0]->scopes->[$scope_id]->{flags} |= SCOPE_LEX_STATE;
+    $self->_current_block->{lexical_state} = $state_id;
+
+    # avoid generating a new basic block if the current basic block only
+    # contains a label or a label and a scope enter opcode
+    my $bb = $self->_current_basic_block;
+    if(    @{$bb->bytecode} == 1
+        || (    @{$bb->bytecode} == 2
+             && $bb->bytecode->[-1]->opcode_n == OP_SCOPE_ENTER ) ) {
+        $bb->{lexical_state} = $state_id;
+        return;
+    }
+
+    my $block = _new_block( $self );
+    _add_jump $self, opcode_nm( OP_JUMP, to => $block ), $block;
+    _add_blocks $self, $block;
 }
 
 sub _indirect {
