@@ -191,6 +191,7 @@ bless               u       noattr      same                 2   1
 call                0       noattr      same                 2   1
 call_method         0       noattr      same                 2   1
 call_method_indirect 0      noattr      same                 2   1
+caller              v       noattr      same                 1   1
 chdir               u       noattr      same                 1   1
 chr                 u       noattr      same                 1   1
 close               u       noattr      same                 1   1
