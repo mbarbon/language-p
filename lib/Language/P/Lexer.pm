@@ -70,7 +70,7 @@ use constant
     map { $TOKENS[$_] => $_ + 1 } 0 .. $#TOKENS,
     };
 
-use Exporter qw(import);
+use Exporter 'import';
 
 our @EXPORT_OK =
   ( qw(X_NOTHING X_STATE X_TERM X_OPERATOR X_BLOCK X_REF

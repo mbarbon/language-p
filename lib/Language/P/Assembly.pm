@@ -2,7 +2,7 @@ package Language::P::Assembly;
 
 use strict;
 use warnings;
-use Exporter; *import = \&Exporter::import;
+use Exporter 'import';
 
 our @EXPORT_OK = qw(label literal opcode opcode_n opcode_m opcode_nm
                     opcode_np opcode_npm);
