@@ -563,7 +563,7 @@ sub _function_call {
             my $block = $self->_current_block;
             while( $block ) {
                 _exit_scope( $self, $block );
-                last if $block->{flags} & CODE_SUB;
+                last if $block->{flags} & CODE_MAIN;
                 $block = $block->{outer};
             }
         }
