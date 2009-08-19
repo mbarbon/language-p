@@ -91,6 +91,7 @@ sub to_ssa {
                            name         => $code_segment->name,
                            basic_blocks => [],
                            lexicals     => $code_segment->lexicals,
+                           scopes       => $code_segment->scopes,
                            } );
     $self->_converted_segments->{$code_segment} = $new_code;
 
