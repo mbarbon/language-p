@@ -10,7 +10,7 @@ __PACKAGE__->mk_accessors( qw(_code_segments _current_basic_block _options
 
 use Scalar::Util qw();
 
-use Language::P::Intermediate::Code;
+use Language::P::Intermediate::Code qw(:all);
 use Language::P::Intermediate::BasicBlock;
 use Language::P::Opcodes qw(:all);
 use Language::P::ParseTree::PropagateContext;
@@ -111,7 +111,7 @@ sub pop_block {
 sub create_main {
     my( $self, $outer, $is_eval ) = @_;
     my $main = Language::P::Intermediate::Code->new
-                   ( { type         => $is_eval ? 4 : 1,
+                   ( { type         => $is_eval ? CODE_EVAL : CODE_MAIN,
                        name         => undef,
                        basic_blocks => [],
                        outer        => $outer,
@@ -125,7 +125,7 @@ sub create_eval_context {
     my( $self, $indices, $lexicals ) = @_;
     my $lex = {};
     my $cxt = Language::P::Intermediate::Code->new
-                  ( { type     => 1,
+                  ( { type     => CODE_MAIN,
                       name     => undef,
                       outer    => undef,
                       lexicals => { map => $lex },
@@ -158,7 +158,7 @@ sub _generate_regex {
 
     push @{$self->_code_segments},
          Language::P::Intermediate::Code->new
-             ( { type         => 3,
+             ( { type         => CODE_REGEX,
                  basic_blocks => [],
                  } );
     if( $outer ) {
@@ -196,7 +196,7 @@ sub generate_use {
 
     push @{$self->_code_segments},
          Language::P::Intermediate::Code->new
-             ( { type         => 1,
+             ( { type         => CODE_MAIN,
                  name         => undef,
                  basic_blocks => [],
                  outer        => undef,
@@ -205,7 +205,7 @@ sub generate_use {
                  } );
 
     _add_blocks $self, $head;
-    $self->push_block( 1|4, $tree->pos_e );
+    $self->push_block( SCOPE_SUB|SCOPE_MAIN, $tree->pos_e );
 
     # TODO require perl version
     ( my $file = $tree->package ) =~ s{::}{/}g;
@@ -302,7 +302,7 @@ sub _generate_bytecode {
     } else {
         push @{$self->_code_segments},
              Language::P::Intermediate::Code->new
-                 ( { type         => $is_sub ? 2 : 1,
+                 ( { type         => $is_sub ? CODE_SUB : CODE_MAIN,
                      name         => $name,
                      basic_blocks => [],
                      outer        => $outer,
@@ -316,9 +316,10 @@ sub _generate_bytecode {
     }
 
     _add_blocks $self, _new_block( $self );
-    my $block_flags =   ( $is_sub                              ? 1 : 0 )
-                      | ( $self->_code_segments->[-1]->is_eval ? 2 : 0 )
-                      | 4;
+    my $is_eval = $self->_code_segments->[-1]->is_eval;
+    my $block_flags =   ( $is_sub  ? SCOPE_SUB : 0 )
+                      | ( $is_eval ? SCOPE_EVAL : 0 )
+                      |              SCOPE_MAIN;
     $self->push_block( $block_flags, $pos_e );
 
     foreach my $tree ( @$statements ) {
@@ -562,7 +563,7 @@ sub _function_call {
             my $block = $self->_current_block;
             while( $block ) {
                 _exit_scope( $self, $block );
-                last if $block->{flags} & 1;
+                last if $block->{flags} & CODE_SUB;
                 $block = $block->{outer};
             }
         }
@@ -1156,7 +1157,7 @@ sub _block {
     _emit_label( $self, $tree );
 
     my $is_eval = $tree->isa( 'Language::P::ParseTree::EvalBlock' );
-    $self->push_block( $is_eval ? 2 : 0, $tree->pos_e,
+    $self->push_block( $is_eval ? SCOPE_EVAL : 0, $tree->pos_e,
                        $is_eval ? _context( $tree ) : 0 );
 
     foreach my $line ( @{$tree->lines} ) {
