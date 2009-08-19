@@ -12,6 +12,7 @@ use Data::Dumper;
 my %flag_map =
   ( 0 => 0,
     u => 1,
+    v => 3, # variadic implies unary
     );
 
 sub write_opcodes {
@@ -85,7 +86,8 @@ our %%EXPORT_TAGS =
     );
 
 use constant +
-  { FLAG_UNARY => 1,
+  { FLAG_UNARY    => 1,
+    FLAG_VARIADIC => 2,
 EOT
 
     my $index = 1;

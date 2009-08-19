@@ -501,6 +501,7 @@ sub _indirect {
 
 sub _builtin {
     my( $self, $tree ) = @_;
+    my $op_flags = $OP_ATTRIBUTES{$tree->function}->{flags};
 
     if( $tree->function == OP_UNDEF && !$tree->arguments ) {
         _emit_label( $self, $tree );
@@ -523,8 +524,7 @@ sub _builtin {
             opcode_np( $arg->type == VALUE_ARRAY ? OP_EXISTS_ARRAY :
                                                    OP_EXISTS_HASH,
                        $tree->pos );
-    } elsif(   $OP_ATTRIBUTES{$tree->function}->{flags}
-             & Language::P::Opcodes::FLAG_UNARY ) {
+    } elsif( $op_flags & Language::P::Opcodes::FLAG_UNARY ) {
         _emit_label( $self, $tree );
         foreach my $arg ( @{$tree->arguments || []} ) {
             $self->dispatch( $arg );
@@ -546,6 +546,11 @@ sub _builtin {
                             package  => $env->{package},
                             lexicals => \%lex,
                             globals  => $tree->get_attribute( 'globals' ) );
+        } elsif( $op_flags & Language::P::Opcodes::FLAG_VARIADIC ) {
+            _add_bytecode $self,
+                opcode_npm( $tree->function, $tree->pos,
+                            arg_count => scalar @{$tree->arguments || []},
+                            context   => _context( $tree ) );
         } else {
             _add_bytecode $self,
                 opcode_npm( $tree->function, $tree->pos,
