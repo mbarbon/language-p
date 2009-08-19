@@ -24,6 +24,7 @@ package main;
 $foo = 1;
 EOP
 --- !parsetree:LexicalState
+changed: CHANGED_PACKAGE
 hints: 0
 package: x
 warnings: ~
@@ -37,6 +38,7 @@ context: CXT_VOID
 name: x::foo
 sigil: VALUE_SCALAR
 --- !parsetree:LexicalState
+changed: CHANGED_PACKAGE
 hints: 0
 package: main
 warnings: ~

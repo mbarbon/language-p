@@ -56,6 +56,7 @@ package main;
 __PACKAGE__;
 EOP
 --- !parsetree:LexicalState
+changed: CHANGED_PACKAGE
 hints: 0
 package: foo::moo::boo
 warnings: ~
@@ -64,6 +65,7 @@ context: CXT_VOID
 flags: CONST_STRING
 value: foo::moo::boo
 --- !parsetree:LexicalState
+changed: CHANGED_PACKAGE
 hints: 0
 package: main
 warnings: ~

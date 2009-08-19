@@ -105,6 +105,7 @@ EOP
 --- !parsetree:NamedSubroutine
 lines:
   - !parsetree:LexicalState
+    changed: CHANGED_ALL
     hints: 0
     package: main
     warnings: ~
@@ -131,6 +132,7 @@ EOP
 --- !parsetree:AnonymousSubroutine
 lines:
   - !parsetree:LexicalState
+    changed: CHANGED_ALL
     hints: 0
     package: main
     warnings: ~

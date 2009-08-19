@@ -28,6 +28,8 @@ our @EXPORT_OK =
 
        DECLARATION_MY DECLARATION_OUR DECLARATION_STATE
        DECLARATION_CLOSED_OVER
+
+       CHANGED_HINTS CHANGED_WARNINGS CHANGED_PACKAGE CHANGED_ALL
        %KEYWORD_TO_OP), @OPERATIONS );
 our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,
@@ -104,6 +106,12 @@ use constant
     DECLARATION_STATE        => 4,
     DECLARATION_CLOSED_OVER  => 8,
     DECLARATION_TYPE_MASK    => 7,
+
+    # lexical state
+    CHANGED_HINTS      => 1,
+    CHANGED_WARNINGS   => 2,
+    CHANGED_PACKAGE    => 4,
+    CHANGED_ALL        => 7,
     };
 
 our %PROTOTYPE =
@@ -259,7 +267,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(package hints warnings);
+our @FIELDS = qw(changed package hints warnings);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 

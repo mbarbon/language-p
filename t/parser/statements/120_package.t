@@ -11,6 +11,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 package x;
 EOP
 --- !parsetree:LexicalState
+changed: CHANGED_PACKAGE
 hints: 0
 package: x
 warnings: ~
@@ -21,6 +22,7 @@ package x;
 $!;
 EOP
 --- !parsetree:LexicalState
+changed: CHANGED_PACKAGE
 hints: 0
 package: x
 warnings: ~
@@ -50,6 +52,7 @@ sigil: VALUE_SCALAR
 continue: ~
 lines:
   - !parsetree:LexicalState
+    changed: CHANGED_PACKAGE
     hints: 0
     package: x
     warnings: ~
@@ -62,6 +65,7 @@ lines:
     name: w
     sigil: VALUE_SCALAR
   - !parsetree:LexicalState
+    changed: CHANGED_PACKAGE
     hints: 0
     package: z
     warnings: ~
@@ -70,6 +74,7 @@ context: CXT_VOID
 name: x
 sigil: VALUE_SCALAR
 --- !parsetree:LexicalState
+changed: CHANGED_PACKAGE
 hints: 0
 package: y
 warnings: ~
@@ -88,6 +93,7 @@ EOP
 name: y
 prototype: ~
 --- !parsetree:LexicalState
+changed: CHANGED_PACKAGE
 hints: 0
 package: x
 warnings: ~
@@ -106,6 +112,7 @@ EOP
 name: x
 prototype: ~
 --- !parsetree:LexicalState
+changed: CHANGED_PACKAGE
 hints: 0
 package: y
 warnings: ~
@@ -153,6 +160,7 @@ main::xm 1;
 w::xw 1;
 EOP
 --- !parsetree:LexicalState
+changed: CHANGED_PACKAGE
 hints: 0
 package: main
 warnings: ~
@@ -160,6 +168,7 @@ warnings: ~
 name: xm
 prototype: ~
 --- !parsetree:LexicalState
+changed: CHANGED_PACKAGE
 hints: 0
 package: w
 warnings: ~
@@ -211,6 +220,7 @@ function: !parsetree:Symbol
   name: w::xw
   sigil: VALUE_SUB
 --- !parsetree:LexicalState
+changed: CHANGED_PACKAGE
 hints: 0
 package: main
 warnings: ~
@@ -272,6 +282,7 @@ EOP
 name: y::x
 prototype: ~
 --- !parsetree:LexicalState
+changed: CHANGED_PACKAGE
 hints: 0
 package: y
 warnings: ~
@@ -290,6 +301,7 @@ function: !parsetree:Symbol
 name: w
 prototype: ~
 --- !parsetree:LexicalState
+changed: CHANGED_PACKAGE
 hints: 0
 package: main
 warnings: ~

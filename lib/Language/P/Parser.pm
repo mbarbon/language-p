@@ -48,11 +48,6 @@ use constant
 
     PARSE_ADD_RETURN   => 1,
     PARSE_MAIN         => 2,
-
-    CHANGED_HINTS      => 1,
-    CHANGED_WARNINGS   => 2,
-    CHANGED_PACKAGE    => 4,
-    CHANGED_ALL        => 7,
     };
 
 my %token_to_sigil =
@@ -502,19 +497,11 @@ sub _lexical_state_node {
     return unless $changed;
 
     my $node = Language::P::ParseTree::LexicalState->new
-                   ( { hints    => 0,
-                       warnings => undef,
-                       package  => undef,
+                   ( { hints    => $self->{_lexical_state}[-1]{hints},
+                       warnings => $self->{_lexical_state}[-1]{warnings},
+                       package  => $self->{_lexical_state}[-1]{package},
+                       changed  => $changed,
                        } );
-    if( $changed & CHANGED_WARNINGS ) {
-        $node->{warnings} = $self->{_lexical_state}[-1]{warnings};
-    }
-    if( $changed & CHANGED_HINTS ) {
-        $node->{hints} = $self->{_lexical_state}[-1]{hints};
-    }
-    if( $changed & CHANGED_PACKAGE ) {
-        $node->{package} = $self->{_lexical_state}[-1]{package};
-    }
 
     $self->{_lexical_state}[-1]{changed} = 0;
 

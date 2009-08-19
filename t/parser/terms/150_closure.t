@@ -22,6 +22,7 @@ op: OP_ASSIGN
 right: !parsetree:AnonymousSubroutine
   lines:
     - !parsetree:LexicalState
+      changed: CHANGED_ALL
       hints: 0
       package: main
       warnings: ~
@@ -63,6 +64,7 @@ op: OP_ASSIGN
 right: !parsetree:AnonymousSubroutine
   lines:
     - !parsetree:LexicalState
+      changed: CHANGED_ALL
       hints: 0
       package: main
       warnings: ~
@@ -95,6 +97,7 @@ EOP
 --- !parsetree:NamedSubroutine
 lines:
   - !parsetree:LexicalState
+    changed: CHANGED_ALL
     hints: 0
     package: main
     warnings: ~
@@ -119,6 +122,7 @@ lines:
       - !parsetree:AnonymousSubroutine
         lines:
           - !parsetree:LexicalState
+            changed: CHANGED_ALL
             hints: 0
             package: main
             warnings: ~
@@ -143,6 +147,7 @@ lines:
               - !parsetree:AnonymousSubroutine
                 lines:
                   - !parsetree:LexicalState
+                    changed: CHANGED_ALL
                     hints: 0
                     package: main
                     warnings: ~

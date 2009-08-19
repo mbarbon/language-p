@@ -102,7 +102,7 @@ sub parse_string {
 sub parse_and_diff_yaml {
     my( $expr, $expected ) = @_;
 
-    $expected =~ s{ ((?:NUM|CXT|FLAG|CONST|STRING|VALUE|OP|DECLARATION|PROTO)_[A-Z_ \|]+)}
+    $expected =~ s{ ((?:NUM|CXT|FLAG|CONST|STRING|VALUE|OP|DECLARATION|PROTO|CHANGED)_[A-Z_ \|]+)}
                   {" " . eval $1 or die $@}eg;
 
     require Language::P::ParseTree::DumpYAML;

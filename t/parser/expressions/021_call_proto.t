@@ -50,6 +50,7 @@ arguments:
   - !parsetree:AnonymousSubroutine
     lines:
       - !parsetree:LexicalState
+        changed: CHANGED_ALL
         hints: 0
         package: main
         warnings: ~
@@ -93,6 +94,7 @@ arguments:
   - !parsetree:AnonymousSubroutine
     lines:
       - !parsetree:LexicalState
+        changed: CHANGED_ALL
         hints: 0
         package: main
         warnings: ~
@@ -139,6 +141,7 @@ expressions:
       - !parsetree:AnonymousSubroutine
         lines:
           - !parsetree:LexicalState
+            changed: CHANGED_ALL
             hints: 0
             package: main
             warnings: ~

@@ -30,6 +30,7 @@ package x;
 @'foo
 EOP
 --- !parsetree:LexicalState
+changed: CHANGED_PACKAGE
 hints: 0
 package: x
 warnings: ~
