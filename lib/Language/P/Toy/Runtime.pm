@@ -217,9 +217,13 @@ sub frame_info {
     my $frame = $self->{_frame};
     my $stack = $self->{_stack};
 
-    for( ; $level; --$level ) {
+    for( ; $frame >= 0 && $level; --$level ) {
         $frame = $stack->[$frame]->[1];
     }
+    if( $frame < 0 ) {
+        return undef;
+    }
+
     my $op = $stack->[$frame - 2][1][$stack->[$frame - 2][0]];
 
     return { file       => $op->{pos}[0],
