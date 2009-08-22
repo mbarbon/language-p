@@ -33,7 +33,7 @@ L1:
   concat_assign
   constant_integer value=0
   lexical index=0, slot=2
-  array_element
+  array_element create=0
   concat_assign
   constant_string value="\x0a"
   concat_assign

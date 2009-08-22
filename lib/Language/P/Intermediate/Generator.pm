@@ -1297,14 +1297,17 @@ sub _subscript {
     $self->dispatch( $tree->subscript );
     $self->dispatch( $tree->subscripted );
 
+    my $lvalue = $tree->get_attribute( 'context' ) & (CXT_LVALUE|CXT_VIVIFY);
     if( $tree->type == VALUE_ARRAY ) {
         _add_bytecode $self, opcode_np( OP_VIVIFY_ARRAY, $tree->pos )
           if $tree->reference;
-        _add_bytecode $self, opcode_np( OP_ARRAY_ELEMENT, $tree->pos );
+        _add_bytecode $self, opcode_npm( OP_ARRAY_ELEMENT, $tree->pos,
+                                         create => $lvalue ? 1 : 0 );
     } elsif( $tree->type == VALUE_HASH ) {
         _add_bytecode $self, opcode_np( OP_VIVIFY_HASH, $tree->pos )
           if $tree->reference;
-        _add_bytecode $self, opcode_np( OP_HASH_ELEMENT, $tree->pos );
+        _add_bytecode $self, opcode_npm( OP_HASH_ELEMENT, $tree->pos,
+                                         create => $lvalue ? 1 : 0 );
     } else {
         die $tree->type;
     }
