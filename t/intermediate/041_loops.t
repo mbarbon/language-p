@@ -31,14 +31,14 @@ L3:
   global name="STDOUT", slot=7
   global name="i", slot=1
   make_list count=1
-  print
+  print context=2
   pop
   scope_leave scope=2
   jump to=L4
 L4:
   global name="i", slot=1
   constant_integer value=1
-  add
+  add context=4
   global name="i", slot=1
   swap
   assign

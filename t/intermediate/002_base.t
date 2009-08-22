@@ -15,7 +15,7 @@ L1:
   scope_enter scope=0
   global name="a", slot=1
   constant_integer value=2
-  add
+  add context=4
   global name="x", slot=1
   swap
   assign
@@ -32,9 +32,9 @@ L1:
   scope_enter scope=0
   global name="STDOUT", slot=7
   global name="a", slot=1
-  not
+  not context=8
   make_list count=1
-  print
+  print context=2
   pop
   scope_leave scope=0
   end

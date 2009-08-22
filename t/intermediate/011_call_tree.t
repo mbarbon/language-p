@@ -23,7 +23,7 @@ L1:
 # foo
 L1:
   scope_enter scope=0
-  return (make_list (print (global name="STDOUT", slot=7), (make_list (concat_assign (concat_assign (concat_assign (fresh_string value=""), (constant_string value="ok ")), (array_element create=0 (constant_integer value=0), (lexical index=0, slot=2))), (constant_string value="\x0a")))))
+  return (make_list (print context=0 (global name="STDOUT", slot=7), (make_list (concat_assign (concat_assign (concat_assign (fresh_string value=""), (constant_string value="ok ")), (array_element create=0, context=4 (constant_integer value=0), (lexical index=0, slot=2))), (constant_string value="\x0a")))))
   scope_leave scope=0
   end
 EOI

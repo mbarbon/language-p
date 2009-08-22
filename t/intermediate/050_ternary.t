@@ -29,7 +29,7 @@ L3:
 L4:
   global name="c", slot=1
   constant_integer value=3
-  add
+  add context=4
   jump to=L2
 EOI
 

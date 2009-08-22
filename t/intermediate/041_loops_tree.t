@@ -23,11 +23,11 @@ L2:
   jump to=L5
 L3:
   scope_enter scope=2
-  print (global name="STDOUT", slot=7), (make_list (global name="i", slot=1))
+  print context=2 (global name="STDOUT", slot=7), (make_list (global name="i", slot=1))
   scope_leave scope=2
   jump to=L4
 L4:
-  assign (global name="i", slot=1), (add (global name="i", slot=1), (constant_integer value=1))
+  assign (global name="i", slot=1), (add context=4 (global name="i", slot=1), (constant_integer value=1))
   jump to=L2
 L5:
   scope_leave scope=1
@@ -56,7 +56,7 @@ L2:
 L3:
   glob_slot_set slot=1 (temporary index=1), (get index=2)
   scope_enter scope=2
-  print (global name="STDOUT", slot=7), (make_list (global name="i", slot=1))
+  print context=2 (global name="STDOUT", slot=7), (make_list (global name="i", slot=1))
   scope_leave scope=2
   jump to=L2
 L5:

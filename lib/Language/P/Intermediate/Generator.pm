@@ -497,7 +497,8 @@ sub _indirect {
 
     _add_bytecode $self,
          opcode_nm( OP_MAKE_LIST, count => scalar @{$tree->arguments} ),
-         opcode_np( $tree->function, $tree->pos );
+         opcode_npm( $tree->function, $tree->pos,
+                     context   => _context( $tree ) );
 }
 
 sub _builtin {
@@ -662,7 +663,9 @@ sub _unary_op {
         }
     }
 
-    _add_bytecode $self, opcode_np( $op, $tree->pos );
+    _add_bytecode $self,
+        opcode_npm( $op, $tree->pos,
+                    context   => _context( $tree ) );
 }
 
 sub _local {
@@ -734,13 +737,17 @@ sub _binary_op {
 
         # maybe perform the transformation during parsing, but remeber
         # to correctly propagate context
-        _add_bytecode $self, opcode_np( OP_MATCH, $tree->pos );
+        _add_bytecode $self,
+            opcode_npm( OP_MATCH, $tree->pos,
+                        context   => _context( $tree ) );
         _add_bytecode $self, opcode_np( OP_LOG_NOT, $tree->pos );
     } else {
         $self->dispatch( $tree->left );
         $self->dispatch( $tree->right );
 
-        _add_bytecode $self, opcode_np( $tree->op, $tree->pos );
+        _add_bytecode $self,
+            opcode_npm( $tree->op, $tree->pos,
+                        context   => _context( $tree ) );
     }
 }
 
@@ -1277,7 +1284,9 @@ sub _quoted_string {
     if( @{$tree->components} == 1 ) {
         $self->dispatch( $tree->components->[0] );
 
-        _add_bytecode $self, opcode_np( OP_STRINGIFY, $tree->pos );
+        _add_bytecode $self,
+            opcode_npm( OP_STRINGIFY, $tree->pos,
+                        context   => _context( $tree ) );
 
         return;
     }
@@ -1302,12 +1311,14 @@ sub _subscript {
         _add_bytecode $self, opcode_np( OP_VIVIFY_ARRAY, $tree->pos )
           if $tree->reference;
         _add_bytecode $self, opcode_npm( OP_ARRAY_ELEMENT, $tree->pos,
-                                         create => $lvalue ? 1 : 0 );
+                                         create    => $lvalue ? 1 : 0,
+                                         context   => _context( $tree ) );
     } elsif( $tree->type == VALUE_HASH ) {
         _add_bytecode $self, opcode_np( OP_VIVIFY_HASH, $tree->pos )
           if $tree->reference;
         _add_bytecode $self, opcode_npm( OP_HASH_ELEMENT, $tree->pos,
-                                         create => $lvalue ? 1 : 0 );
+                                         create    => $lvalue ? 1 : 0,
+                                         context   => _context( $tree ) );
     } else {
         die $tree->type;
     }
@@ -1323,12 +1334,15 @@ sub _slice {
     my $lvalue = $tree->get_attribute( 'context' ) & (CXT_LVALUE|CXT_VIVIFY);
     if( $tree->type == VALUE_ARRAY ) {
         _add_bytecode $self, opcode_npm( OP_ARRAY_SLICE, $tree->pos,
-                                         create => $lvalue ? 1 : 0 );
+                                         create    => $lvalue ? 1 : 0,
+                                         context   => _context( $tree ) );
     } elsif( $tree->type == VALUE_HASH ) {
         _add_bytecode $self, opcode_npm( OP_HASH_SLICE, $tree->pos,
-                                         create => $lvalue ? 1 : 0 );
+                                         create    => $lvalue ? 1 : 0,
+                                         context   => _context( $tree ) );
     } elsif( $tree->type == VALUE_LIST ) {
-        _add_bytecode $self, opcode_np( OP_LIST_SLICE, $tree->pos );
+        _add_bytecode $self, opcode_npm( OP_LIST_SLICE, $tree->pos,
+                                         context   => _context( $tree ) );
     } else {
         die $tree->type;
     }

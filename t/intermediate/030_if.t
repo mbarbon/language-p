@@ -107,7 +107,7 @@ L1:
 L2:
   global name="a", slot=1
   constant_integer value=1
-  subtract
+  subtract context=4
   jump_if_true false=L6, true=L4
 L3:
   scope_leave scope=1

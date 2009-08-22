@@ -24,7 +24,7 @@ L3:
   set index=1 (global name="b", slot=1)
   jump to=L2
 L4:
-  set index=2 (add (global name="c", slot=1), (constant_integer value=3))
+  set index=2 (add context=4 (global name="c", slot=1), (constant_integer value=3))
   jump to=L2
 EOI
 
@@ -67,7 +67,7 @@ L1:
   jump to=L4
 L2:
   set index=4 (phi L3, 2, L4, 3)
-  print (get index=1), (make_list (get index=4))
+  print context=2 (get index=1), (make_list (get index=4))
   scope_leave scope=0
   end
 L3:

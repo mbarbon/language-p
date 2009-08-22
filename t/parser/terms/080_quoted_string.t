@@ -109,6 +109,7 @@ components:
     context: CXT_SCALAR
     name: b
     sigil: VALUE_SCALAR
+context: CXT_VOID
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -128,6 +129,7 @@ components:
     context: CXT_SCALAR
     flags: CONST_STRING
     value: cd
+context: CXT_VOID
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -147,6 +149,7 @@ components:
     context: CXT_SCALAR
     flags: CONST_STRING
     value: ' b'
+context: CXT_VOID
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -166,6 +169,7 @@ components:
     context: CXT_SCALAR
     flags: CONST_STRING
     value: ' b'
+context: CXT_VOID
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -215,6 +219,7 @@ left: !parsetree:QuotedString
       context: CXT_SCALAR
       flags: CONST_STRING
       value: cd
+  context: CXT_SCALAR
 op: OP_BACKTICK
 EOE
 
@@ -237,6 +242,7 @@ arguments:
         context: CXT_SCALAR
         name: y
         sigil: VALUE_SCALAR
+    context: CXT_LIST
 context: CXT_VOID
 function: OP_GLOB
 EOE
@@ -346,6 +352,7 @@ arguments:
         context: CXT_SCALAR
         flags: CONST_STRING
         value: "'"
+    context: CXT_LIST
 context: CXT_VOID
 function: OP_GLOB
 EOE
@@ -362,6 +369,7 @@ components:
       name: x
       sigil: VALUE_ARRAY
     op: OP_ARRAY_LENGTH
+context: CXT_VOID
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -376,6 +384,7 @@ components:
       name: 2
       sigil: VALUE_ARRAY
     op: OP_ARRAY_LENGTH
+context: CXT_VOID
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -391,6 +400,7 @@ components:
     context: CXT_SCALAR
     flags: CONST_STRING
     value: ' {2}'
+context: CXT_VOID
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -406,6 +416,7 @@ components:
     context: CXT_SCALAR
     flags: CONST_STRING
     value: ' '
+context: CXT_VOID
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -417,6 +428,7 @@ components:
     context: CXT_SCALAR
     name: x
     sigil: VALUE_SCALAR
+context: CXT_VOID
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -432,6 +444,7 @@ components:
     context: CXT_SCALAR
     name: '@'
     sigil: VALUE_SCALAR
+context: CXT_VOID
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -447,4 +460,5 @@ components:
     context: CXT_SCALAR
     name: '@'
     sigil: VALUE_SCALAR
+context: CXT_VOID
 EOE

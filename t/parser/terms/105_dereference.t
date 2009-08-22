@@ -297,4 +297,5 @@ components:
       name: foo
       sigil: VALUE_HASH
     type: VALUE_HASH
+context: CXT_VOID
 EOE

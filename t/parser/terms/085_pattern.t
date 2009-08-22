@@ -92,6 +92,7 @@ left: !parsetree:Symbol
   sigil: VALUE_SCALAR
 op: OP_MATCH
 right: !parsetree:InterpolatedPattern
+  context: CXT_SCALAR
   flags: 0
   op: OP_QL_M
   string: !parsetree:QuotedString
@@ -108,6 +109,7 @@ right: !parsetree:InterpolatedPattern
         context: CXT_SCALAR
         flags: CONST_STRING
         value: aaa
+    context: CXT_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -144,6 +146,7 @@ left: !parsetree:Symbol
   sigil: VALUE_SCALAR
 op: OP_MATCH
 right: !parsetree:InterpolatedPattern
+  context: CXT_SCALAR
   flags: 0
   op: OP_QL_M
   string: !parsetree:QuotedString
@@ -156,6 +159,7 @@ right: !parsetree:InterpolatedPattern
         context: CXT_SCALAR
         flags: CONST_STRING
         value: $
+    context: CXT_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -169,6 +173,7 @@ left: !parsetree:Symbol
   sigil: VALUE_SCALAR
 op: OP_MATCH
 right: !parsetree:InterpolatedPattern
+  context: CXT_SCALAR
   flags: 0
   op: OP_QL_M
   string: !parsetree:QuotedString
@@ -181,4 +186,5 @@ right: !parsetree:InterpolatedPattern
         context: CXT_SCALAR
         flags: CONST_STRING
         value: \w
+    context: CXT_SCALAR
 EOE

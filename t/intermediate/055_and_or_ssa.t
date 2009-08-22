@@ -124,7 +124,7 @@ L2:
   jump to=L3
 L3:
   set index=4 (phi L4, 1, L2, 3)
-  print (get index=2), (make_list (get index=4))
+  print context=2 (get index=2), (make_list (get index=4))
   scope_leave scope=0
   end
 L4:

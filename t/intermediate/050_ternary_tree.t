@@ -24,7 +24,7 @@ L3:
   set index=3 (get index=1)
   jump to=L2
 L4:
-  set index=2 (add (global name="c", slot=1), (constant_integer value=3))
+  set index=2 (add context=4 (global name="c", slot=1), (constant_integer value=3))
   set index=3 (get index=2)
   jump to=L2
 EOI

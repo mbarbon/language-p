@@ -14,8 +14,8 @@ EOP
 # main
 L1:
   scope_enter scope=0
-  assign (global name="x", slot=1), (add (global name="a", slot=1), (constant_integer value=2))
-  print (global name="STDOUT", slot=7), (make_list (not (global name="a", slot=1)))
+  assign (global name="x", slot=1), (add context=4 (global name="a", slot=1), (constant_integer value=2))
+  print context=2 (global name="STDOUT", slot=7), (make_list (not context=8 (global name="a", slot=1)))
   scope_leave scope=0
   end
 EOI

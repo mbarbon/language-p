@@ -26,7 +26,7 @@ L1:
   jump to=L6
 L2:
   set index=4 (phi L3, 2, L4, 3)
-  print (get index=1), (make_list (get index=4))
+  print context=2 (get index=1), (make_list (get index=4))
   return (make_list)
   scope_leave scope=0
   end
@@ -37,7 +37,7 @@ L4:
   set index=3 (constant_string value="not ok\x0a")
   jump to=L2
 L5:
-  jump_if_true to=L3 (not (want context=4))
+  jump_if_true to=L3 (not context=4 (want context=4))
   jump to=L7
 L6:
   jump to=L4

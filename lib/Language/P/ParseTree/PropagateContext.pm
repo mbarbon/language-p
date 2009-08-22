@@ -83,6 +83,7 @@ sub _symbol {
 sub _quoted_string {
     my( $self, $tree, $cxt ) = @_;
 
+    $tree->set_attribute( 'context', $cxt );
     foreach my $component ( @{$tree->components} ) {
         $self->visit( $component, CXT_SCALAR );
     }
@@ -256,6 +257,7 @@ sub _binary_op {
 sub _pattern {
     my( $self, $tree, $cxt ) = @_;
 
+    $tree->set_attribute( 'context', $cxt );
     $self->visit( $tree->string, CXT_SCALAR );
 }
 
