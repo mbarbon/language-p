@@ -75,17 +75,13 @@ sub get_item_or_undef {
 }
 
 sub slice {
-    my( $self, $runtime, $keys ) = @_;
+    my( $self, $runtime, $keys, $create ) = @_;
     my @res;
 
     for( my $iter = $keys->iterator; $iter->next; ) {
         my $key = $iter->item->as_string;
 
-        if( !exists $self->{hash}{$key} ) {
-            push @res, Language::P::Toy::Value::Undef->new( $runtime );
-        } else {
-            push @res, $self->{hash}{$key};
-        }
+        push @res, $self->get_item_or_undef( $runtime, $key, $create );
     }
 
     return Language::P::Toy::Value::List->new( $runtime, { array => \@res } );

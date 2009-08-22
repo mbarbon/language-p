@@ -910,7 +910,7 @@ sub o_array_slice {
     my $array = pop @{$runtime->{_stack}};
     my $indices = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $array->slice( $runtime, $indices );
+    push @{$runtime->{_stack}}, $array->slice( $runtime, $indices, $op->{create} );
 
     return $pc + 1;
 }
@@ -950,7 +950,7 @@ sub o_hash_slice {
     my $hash = pop @{$runtime->{_stack}};
     my $keys = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $hash->slice( $runtime, $keys );
+    push @{$runtime->{_stack}}, $hash->slice( $runtime, $keys, $op->{create} );
 
     return $pc + 1;
 }
