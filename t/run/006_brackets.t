@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..20\n";
+print "1..21\n";
 
 # elements
 @x = ( 1, 2, 3 );
@@ -43,6 +43,10 @@ print "$x{2} $x{c} $x{a} $x{z}" eq "w q 1 e" ? "ok\n" : "not ok\n";
 @sx = ()[1, 2, 3];
 
 print $#sx == -1 ? "ok \n" : "not ok\n";
+
+@sx = ( 1 )[2, 1, 0, 2];
+
+print $#sx == 3 ? "ok \n" : "not ok\n";
 
 @sx = ( 7, 6, 5, 4, 3, 2, 1, 0 )[3, 2, 1];
 

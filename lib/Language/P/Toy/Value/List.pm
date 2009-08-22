@@ -46,13 +46,14 @@ sub slice {
     my( $self, $runtime, $indices ) = @_;
     my @res;
 
+    my $found = 0;
     for( my $iter = $indices->iterator; $iter->next; ) {
         my $index = $iter->item->as_integer;
 
-        next if $index > $#{$self->{array}};
-
-        push @res, $self->{array}[$index];
+        $found ||= $index <= $#{$self->{array}};
+        push @res, $self->get_item_or_undef( $runtime, $index );
     }
+    @res = () unless $found;
 
     return Language::P::Toy::Value::List->new( $runtime, { array => \@res } );
 }
