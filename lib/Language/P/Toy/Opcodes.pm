@@ -913,20 +913,24 @@ sub o_array_element {
 
 sub o_array_slice {
     my( $op, $runtime, $pc ) = @_;
+    my $cxt = _context( $op, $runtime );
     my $array = pop @{$runtime->{_stack}};
     my $indices = pop @{$runtime->{_stack}};
+    my $rv = $array->slice( $runtime, $indices, $op->{create} );
 
-    push @{$runtime->{_stack}}, $array->slice( $runtime, $indices, $op->{create} );
+    push @{$runtime->{_stack}}, _return_value( $runtime, $cxt, $rv );
 
     return $pc + 1;
 }
 
 sub o_list_slice {
     my( $op, $runtime, $pc ) = @_;
+    my $cxt = _context( $op, $runtime );
     my $list = pop @{$runtime->{_stack}};
     my $indices = pop @{$runtime->{_stack}};
+    my $rv = $list->slice( $runtime, $indices );
 
-    push @{$runtime->{_stack}}, $list->slice( $runtime, $indices );
+    push @{$runtime->{_stack}}, _return_value( $runtime, $cxt, $rv );
 
     return $pc + 1;
 }
@@ -953,10 +957,12 @@ sub o_hash_element {
 
 sub o_hash_slice {
     my( $op, $runtime, $pc ) = @_;
+    my $cxt = _context( $op, $runtime );
     my $hash = pop @{$runtime->{_stack}};
     my $keys = pop @{$runtime->{_stack}};
+    my $rv = $hash->slice( $runtime, $keys, $op->{create} );
 
-    push @{$runtime->{_stack}}, $hash->slice( $runtime, $keys, $op->{create} );
+    push @{$runtime->{_stack}}, _return_value( $runtime, $cxt, $rv );
 
     return $pc + 1;
 }
