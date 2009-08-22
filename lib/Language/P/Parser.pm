@@ -2051,7 +2051,9 @@ sub _parse_listop_like {
         }
     }
 
-    if( $next->[O_TYPE] == T_OPPAR ) {
+    if( !ref( $call->function ) && $call->function == OP_RETURN ) {
+        ( $args, $fh ) = _parse_arglist( $self, PREC_LOWEST, 0, $proto->[2] );
+    } elsif( $next->[O_TYPE] == T_OPPAR ) {
         _lex_token( $self, T_OPPAR );
         ( $args, $fh ) = _parse_arglist( $self, PREC_LOWEST, 0, $proto->[2] );
         _lex_token( $self, T_CLPAR );
