@@ -36,7 +36,8 @@ sub call {
         $stack->[$frame - 1] = 'no_pad';
     }
     if( $self->stack_size ) {
-        for( my $i = 0; $i <= $#{$self->lexical_init}; ++$i ) {
+        my $st = $self->is_subroutine ? 1 : 0; # skip @_
+        for( my $i = $st; $i <= $#{$self->lexical_init}; ++$i ) {
             if( $self->lexical_init->[$i] == VALUE_SCALAR ) {
                 $stack->[$frame - 3 - $i] = Language::P::Toy::Value::Undef->new;
             } elsif( $self->lexical_init->[$i] == VALUE_ARRAY ) {
