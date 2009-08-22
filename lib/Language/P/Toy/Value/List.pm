@@ -42,4 +42,19 @@ sub as_scalar {
                                Language::P::Toy::Value::Undef->new( $runtime );
 }
 
+sub slice {
+    my( $self, $runtime, $indices ) = @_;
+    my @res;
+
+    for( my $iter = $indices->iterator; $iter->next; ) {
+        my $index = $iter->item->as_integer;
+
+        next if $index > $#{$self->{array}};
+
+        push @res, $self->{array}[$index];
+    }
+
+    return Language::P::Toy::Value::List->new( $runtime, { array => \@res } );
+}
+
 1;

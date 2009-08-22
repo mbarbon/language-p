@@ -905,6 +905,26 @@ sub o_array_element {
     return $pc + 1;
 }
 
+sub o_array_slice {
+    my( $op, $runtime, $pc ) = @_;
+    my $array = pop @{$runtime->{_stack}};
+    my $indices = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $array->slice( $runtime, $indices );
+
+    return $pc + 1;
+}
+
+sub o_list_slice {
+    my( $op, $runtime, $pc ) = @_;
+    my $list = pop @{$runtime->{_stack}};
+    my $indices = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $list->slice( $runtime, $indices );
+
+    return $pc + 1;
+}
+
 sub o_exists_array {
     my( $op, $runtime, $pc ) = @_;
     my $array = pop @{$runtime->{_stack}};
@@ -921,6 +941,16 @@ sub o_hash_element {
     my $key = pop @{$runtime->{_stack}};
 
     push @{$runtime->{_stack}}, $hash->get_item_or_undef( $runtime, $key->as_string( $runtime ) );
+
+    return $pc + 1;
+}
+
+sub o_hash_slice {
+    my( $op, $runtime, $pc ) = @_;
+    my $hash = pop @{$runtime->{_stack}};
+    my $keys = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $hash->slice( $runtime, $keys );
 
     return $pc + 1;
 }

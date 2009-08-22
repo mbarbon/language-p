@@ -176,6 +176,7 @@ array_length        0       noattr      array_size           1   1
 array_pop           u       noattr      same                 1   1
 array_push          0       noattr      same                 2   1
 array_shift         u       noattr      same                 1   1
+array_slice         0       noattr      same                 2   1
 array_unshift       0       noattr      same                 2   1
 assign              0       noattr      same                 2   1
 backtick
@@ -258,6 +259,7 @@ glob_slot_set       0       noattr      same                 2   0
 global              0       name=s,slot=i same               0   1
 grep                
 hash_element        0       noattr      same                 2   1
+hash_slice          0       noattr      same                 2   1
 iterator            0       noattr      same                 1   1
 iterator_next       0       noattr      same                 1   1
 jump                0       to=b        same                 0   0
@@ -282,6 +284,7 @@ lexical_set         0       index=i     same                 1   0
 lexical_pad         0       index=i,slot=i same              0   1
 lexical_pad_clear   0       index=i,slot=i same              0   0
 lexical_pad_set     0       index=i     same                 1   0
+list_slice          0       noattr      same                 2   1
 local               
 localize_glob_slot  0       noattr      same                 0   1
 log_and             0       noattr      same                 2   1

@@ -129,6 +129,23 @@ sub get_item_or_undef {
     return $self->{array}->[$index];
 }
 
+sub slice {
+    my( $self, $runtime, $indices ) = @_;
+    my @res;
+
+    for( my $iter = $indices->iterator; $iter->next; ) {
+        my $index = $iter->item->as_integer;
+
+        if( $index > $#{$self->{array}} ) {
+            push @res, Language::P::Toy::Value::Undef->new( $runtime );
+        } else {
+            push @res, $self->{array}[$index];
+        }
+    }
+
+    return Language::P::Toy::Value::List->new( $runtime, { array => \@res } );
+}
+
 sub exists {
     my( $self, $runtime, $index ) = @_;
 

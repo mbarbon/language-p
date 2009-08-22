@@ -14,7 +14,7 @@ our @METHODS = qw(as_integer as_float as_string as_scalar as_boolean_int
                   post_decrement
 
                   get_item iterator iterator_from push_value get_count
-                  push_list pop_value unshift_list shift_value
+                  push_list pop_value unshift_list shift_value slice
 
                   call find_method
 

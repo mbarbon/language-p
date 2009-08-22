@@ -394,6 +394,7 @@ my %dispatch =
     'Language::P::ParseTree::AnonymousSubroutine'    => '_anon_subroutine',
     'Language::P::ParseTree::QuotedString'           => '_quoted_string',
     'Language::P::ParseTree::Subscript'              => '_subscript',
+    'Language::P::ParseTree::Slice'                  => '_slice',
     'Language::P::ParseTree::Jump'                   => '_jump',
     'Language::P::ParseTree::Pattern'                => '_pattern',
     'Language::P::ParseTree::InterpolatedPattern'    => '_interpolated_pattern',
@@ -1304,6 +1305,24 @@ sub _subscript {
         _add_bytecode $self, opcode_np( OP_VIVIFY_HASH, $tree->pos )
           if $tree->reference;
         _add_bytecode $self, opcode_np( OP_HASH_ELEMENT, $tree->pos );
+    } else {
+        die $tree->type;
+    }
+}
+
+sub _slice {
+    my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
+
+    $self->dispatch( $tree->subscript );
+    $self->dispatch( $tree->subscripted );
+
+    if( $tree->type == VALUE_ARRAY ) {
+        _add_bytecode $self, opcode_np( OP_ARRAY_SLICE, $tree->pos );
+    } elsif( $tree->type == VALUE_HASH ) {
+        _add_bytecode $self, opcode_np( OP_HASH_SLICE, $tree->pos );
+    } elsif( $tree->type == VALUE_LIST ) {
+        _add_bytecode $self, opcode_np( OP_LIST_SLICE, $tree->pos );
     } else {
         die $tree->type;
     }
