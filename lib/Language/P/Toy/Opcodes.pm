@@ -38,6 +38,27 @@ sub _context {
     return $runtime->{_stack}[$runtime->{_frame} - 2][2];
 }
 
+my $empty_list = Language::P::Toy::Value::List->new( undef );
+
+sub _return_value {
+    my( $runtime, $cxt, $rv ) = @_;
+
+    if( $cxt == CXT_SCALAR ) {
+        if( $rv->get_count( $runtime ) > 0 ) {
+            return $rv->get_item( $runtime, $rv->get_count( $runtime ) - 1 )
+                      ->as_scalar( $runtime );
+        } else {
+            return Language::P::Toy::Value::Undef->new( $runtime );
+        }
+    } elsif( $cxt == CXT_LIST ) {
+        return $rv;
+    } elsif( $cxt == CXT_VOID ) {
+        # it is easier to generate code if a subroutine
+        # always returns a value (even if a dummy one)
+        return $empty_list;
+    }
+}
+
 sub o_noop {
     my( $op, $runtime, $pc ) = @_;
 
@@ -283,28 +304,13 @@ sub o_find_method {
     return $pc + 1;
 }
 
-my $empty_list = Language::P::Toy::Value::List->new( undef );
-
 sub o_return {
     my( $op, $runtime, $pc ) = @_;
     my $cxt = _context( undef, $runtime );
     my $rv = $runtime->{_stack}->[-1];
     my $rpc = $runtime->call_return;
 
-    if( $cxt == CXT_SCALAR ) {
-        if( $rv->get_count( $runtime ) > 0 ) {
-            push @{$runtime->{_stack}}, $rv->get_item( $runtime, $rv->get_count( $runtime ) - 1 )
-                                           ->as_scalar( $runtime );
-        } else {
-            push @{$runtime->{_stack}}, Language::P::Toy::Value::Undef->new( $runtime );
-        }
-    } elsif( $cxt == CXT_LIST ) {
-        push @{$runtime->{_stack}}, $rv;
-    } elsif( $cxt == CXT_VOID ) {
-        # it is easier to generate code if a subroutine
-        # always returns a value (even if a dummy one)
-        push @{$runtime->{_stack}}, $empty_list;
-    }
+    push @{$runtime->{_stack}}, _return_value( $runtime, $cxt, $rv );
 
     return $rpc + 1;
 }
