@@ -48,7 +48,7 @@ left: !parsetree:Symbol
   context: CXT_SCALAR|CXT_LVALUE
   name: x::foo
   sigil: VALUE_SCALAR
-op: 12
+op: OP_ASSIGN
 right: !parsetree:Constant
   context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
