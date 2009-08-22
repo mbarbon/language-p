@@ -1647,6 +1647,20 @@ sub _parse_term_p {
         my $term = _parse_expr( $self );
         _lex_token( $self, T_CLPAR );
 
+        # maybe list slice
+        my $next = $self->lexer->peek( X_OPERATOR );
+        if( $next->[O_TYPE] == T_OPSQ ) {
+            my $subscript = _parse_bracketed_expr( $self, T_OPSQ, 0, 0 );
+
+            return Language::P::ParseTree::Slice->new
+                       ( { subscripted => _make_list( $self, $term ),
+                           subscript   => _make_list( $self, $subscript ),
+                           type        => VALUE_LIST,
+                           reference   => 0,
+                           pos         => $next->[O_POS],
+                           } );
+        }
+
         if( !$term ) {
             # empty list
             return Language::P::ParseTree::List->new

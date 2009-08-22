@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 20;
+use Test::More tests => 23;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -499,3 +499,82 @@ subscripted: !parsetree:Dereference
   op: OP_DEREFERENCE_GLOB
 type: VALUE_HASH
 EOE
+
+# list slices
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+( 1, 2, 3 )[1];
+EOP
+--- !parsetree:Slice
+context: CXT_VOID
+reference: 0
+subscript: !parsetree:List
+  context: CXT_LIST
+  expressions:
+    - !parsetree:Constant
+      context: CXT_LIST
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 1
+subscripted: !parsetree:List
+  context: CXT_LIST
+  expressions:
+    - !parsetree:Constant
+      context: CXT_LIST
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 1
+    - !parsetree:Constant
+      context: CXT_LIST
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 2
+    - !parsetree:Constant
+      context: CXT_LIST
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 3
+type: VALUE_LIST
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+( @x )[1, 2];
+EOP
+--- !parsetree:Slice
+context: CXT_VOID
+reference: 0
+subscript: !parsetree:List
+  context: CXT_LIST
+  expressions:
+    - !parsetree:Constant
+      context: CXT_LIST
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 1
+    - !parsetree:Constant
+      context: CXT_LIST
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 2
+subscripted: !parsetree:List
+  context: CXT_LIST
+  expressions:
+    - !parsetree:Symbol
+      context: CXT_LIST
+      name: x
+      sigil: VALUE_ARRAY
+type: VALUE_LIST
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+()[1];
+EOP
+--- !parsetree:Slice
+context: CXT_VOID
+reference: 0
+subscript: !parsetree:List
+  context: CXT_LIST
+  expressions:
+    - !parsetree:Constant
+      context: CXT_LIST
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 1
+subscripted: !parsetree:List
+  context: CXT_LIST
+  expressions: []
+type: VALUE_LIST
+EOE
+
