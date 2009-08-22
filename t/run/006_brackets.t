@@ -1,19 +1,25 @@
 #!/usr/bin/perl -w
 
-print "1..14\n";
+print "1..18\n";
 
+# elements
 @x = ( 1, 2, 3 );
 
-print $x[0] == 1 ? "ok 1\n" : "not ok 1\n";
-print $x[2] == 3 ? "ok 2\n" : "not ok 2\n";
-print $x[1] == 2 ? "ok 3\n" : "not ok 3\n";
+print $x[0] == 1 ? "ok\n" : "not ok\n";
+print $x[2] == 3 ? "ok\n" : "not ok\n";
+print $x[1] == 2 ? "ok\n" : "not ok\n";
+print !defined $x[4] ? "ok\n" : "not ok\n";
+print $#x == 2 ? "ok\n" : "not ok\n";
 
 %x = ( 'a', 1, 2, 'b', 'c', 3 );
 
-print $x{a}   == 1   ? "ok 4\n" : "not ok 4\n";
-print $x{2}   eq 'b' ? "ok 5\n" : "not ok 5\n";
-print $x{'2'} eq 'b' ? "ok 6\n" : "not ok 6\n";
+print $x{a}   == 1   ? "ok\n" : "not ok\n";
+print $x{2}   eq 'b' ? "ok\n" : "not ok\n";
+print $x{'2'} eq 'b' ? "ok\n" : "not ok\n";
+print !defined $x{w} ? "ok\n" : "not ok\n";
+print !exists $x{w} ? "ok\n" : "not ok\n";
 
+# slices
 @sx = @x[5, 2, 1, 0];
 
 print "$sx[1] $sx[2] $sx[3]" eq "3 2 1" ? "ok\n" : "not ok\n";

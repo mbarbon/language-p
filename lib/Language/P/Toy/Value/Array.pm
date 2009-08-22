@@ -119,11 +119,15 @@ sub get_item {
 }
 
 sub get_item_or_undef {
-    my( $self, $runtime, $index ) = @_;
+    my( $self, $runtime, $index, $create ) = @_;
 
     if( $index > $#{$self->{array}} ) {
-        push @{$self->{array}}, Language::P::Toy::Value::Undef->new( $runtime )
-          foreach 1 .. $index - $#{$self->{array}};
+        if( $create ) {
+            push @{$self->{array}}, Language::P::Toy::Value::Undef->new( $runtime )
+              foreach 1 .. $index - $#{$self->{array}};
+        } else {
+            return Language::P::Toy::Value::Undef->new( $runtime );
+        }
     }
 
     return $self->{array}->[$index];

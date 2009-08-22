@@ -60,10 +60,15 @@ sub assign_iterator {
 }
 
 sub get_item_or_undef {
-    my( $self, $runtime, $key ) = @_;
+    my( $self, $runtime, $key, $create ) = @_;
 
     if( !exists $self->{hash}{$key} ) {
-        return $self->{hash}{$key} = Language::P::Toy::Value::Undef->new( $runtime );
+        if( $create ) {
+            return $self->{hash}{$key} =
+                       Language::P::Toy::Value::Undef->new( $runtime );
+        } else {
+            return Language::P::Toy::Value::Undef->new( $runtime );
+        }
     }
 
     return $self->{hash}{$key};

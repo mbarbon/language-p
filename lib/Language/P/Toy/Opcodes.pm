@@ -900,7 +900,7 @@ sub o_array_element {
     my $array = pop @{$runtime->{_stack}};
     my $index = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $array->get_item_or_undef( $runtime, $index->as_integer( $runtime ) );
+    push @{$runtime->{_stack}}, $array->get_item_or_undef( $runtime, $index->as_integer( $runtime ), $op->{create} );
 
     return $pc + 1;
 }
@@ -940,7 +940,7 @@ sub o_hash_element {
     my $hash = pop @{$runtime->{_stack}};
     my $key = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $hash->get_item_or_undef( $runtime, $key->as_string( $runtime ) );
+    push @{$runtime->{_stack}}, $hash->get_item_or_undef( $runtime, $key->as_string( $runtime ), $op->{create} );
 
     return $pc + 1;
 }
