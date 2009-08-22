@@ -16,7 +16,6 @@ Parsing:
   - implict package in bless
 - indirect method calls
   - find more corner cases
-- list slices ( ... )[ ... ]
 - test all unary/binary operator
 - local()/my()
   - check invalid declarations

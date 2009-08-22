@@ -10,6 +10,7 @@ Revision history for Perl extension Language::P.
 	    - Octal and hexadecimal string escapes.
 	    - our() declarations.
 	    - Subroutine prototypes (parsing and context).
+	    - List slices.
 	    - Skip POD while parsing, stop at __DATA__/__END__.
 	    - Implicit $_ for builtins, implicit @_/@ARGV for shift/pop.
 	    - Lexically-scoped hints and warnings.
@@ -37,6 +38,7 @@ Revision history for Perl extension Language::P.
 	    - Basic object and method call implementation.
 	    - DATA filehandle.
 	    - Stack unwinding, catch exception with eval.
+	    - Array/hash/list slices.
 
 0.01_03  Sun Mar  1 17:52:48 CET 2009
 	- Parsing:
