@@ -99,7 +99,7 @@ sub add_declaration {
 
     my $sub = Language::P::Toy::Value::Subroutine::Stub->new
                   ( $self->runtime,
-                    { name      => $name,
+                    { name      => _qualify( $name ),
                       prototype => $prototype,
                       } );
     $self->runtime->symbol_table->set_symbol( $self->runtime, $name, '&', $sub );
@@ -143,6 +143,12 @@ my %opcode_map =
     OP_RX_TRY()                      => \&_direct_jump,
     );
 
+sub _qualify {
+    return !defined $_[0] ? undef :
+           $_[0] =~ /::/  ? $_[0] :
+                            "main::$_[0]";
+}
+
 sub _convert_bytecode {
     my( $self, $bytecode ) = @_;
     my @bytecode;
@@ -177,7 +183,7 @@ sub _generate_segment {
         $code = Language::P::Toy::Value::Subroutine->new
                     ( $self->runtime,
                       { bytecode => [],
-                        name     => $segment->name,
+                        name     => _qualify( $segment->name ),
                         lexicals => $pad,
                         prototype=> $segment->prototype,
                         } );
