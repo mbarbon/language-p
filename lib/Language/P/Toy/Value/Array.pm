@@ -121,6 +121,19 @@ sub get_item {
 sub get_item_or_undef {
     my( $self, $runtime, $index, $create ) = @_;
 
+    if( $index < 0 && -$index > $self->get_count ) {
+        if( $create ) {
+            my $message = sprintf "Modification of non-creatable array value attempted, subscript %d", $index;
+            my $exc = Language::P::Toy::Exception->new
+                          ( { message  => $message,
+                              } );
+
+            $runtime->throw_exception( $exc, 1 );
+        } else {
+            return Language::P::Toy::Value::Undef->new( $runtime );
+        }
+    }
+
     if( $index > $#{$self->{array}} ) {
         if( $create ) {
             push @{$self->{array}}, Language::P::Toy::Value::Undef->new( $runtime )
