@@ -4,6 +4,12 @@ use strict;
 use warnings;
 use base qw(Language::P::Exception);
 
-sub full_message { $_[0]->format_message }
+__PACKAGE__->mk_accessors( qw(object) );
+
+sub full_message {
+    my( $self ) = @_;
+
+    return $self->object ? $self->object->as_string : $self->format_message;
+}
 
 1;

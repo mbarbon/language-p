@@ -847,6 +847,14 @@ sub o_die {
     my( $op, $runtime, $pc ) = @_;
     my $args = pop @{$runtime->{_stack}};
 
+    if( $args->get_count == 1 && $args->get_item( $runtime, 0 )->type == 10 ) {
+        my $exc = Language::P::Toy::Exception->new
+                      ( { object  => $args->get_item( $runtime, 0 ),
+                          } );
+
+        return $runtime->throw_exception( $exc, 1 );
+    }
+
     my $message = '';
     for( my $iter = $args->iterator( $runtime ); $iter->next( $runtime ); ) {
         $message .= $iter->item->as_string;

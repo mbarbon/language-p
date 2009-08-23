@@ -113,7 +113,7 @@ Runtime:
   are only overloads on top of the others
 - pass a runtime instance into all methods
 - symbolic references
-- die $obj
+- die without arguments, exception propagation, $SIG{__DIE__}
 
 Refactoring:
 - check offsets for call sequence, refactor stack handling
