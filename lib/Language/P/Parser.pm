@@ -1899,7 +1899,6 @@ sub _parse_block_rest {
         } else {
             $self->lexer->unlex( $token );
             my $line = _parse_line( $self );
-            my $lex_state = _lexical_state_node( $self );
 
             if(    $line
                 && (    $line->isa( 'Language::P::ParseTree::NamedSubroutine' )
@@ -1908,6 +1907,7 @@ sub _parse_block_rest {
             } elsif( $line && !$line->is_empty ) {
                 push @lines, $line;
             }
+            my $lex_state = _lexical_state_node( $self );
             push @lines, $lex_state if $lex_state;
         }
     }
