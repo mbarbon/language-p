@@ -39,6 +39,8 @@ Revision history for Perl extension Language::P.
 	    - DATA filehandle.
 	    - Stack unwinding, catch exception with eval.
 	    - Array/hash/list slices.
+	- Misc
+	    - Implemented the '-e' command line switch.
 
 0.01_03  Sun Mar  1 17:52:48 CET 2009
 	- Parsing:

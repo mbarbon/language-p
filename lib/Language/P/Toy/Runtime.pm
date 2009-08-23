@@ -76,6 +76,20 @@ sub run_file {
     $self->run_last_file( $code, $context );
 }
 
+sub run_string {
+    my( $self, $program, $program_name, $is_main, $context ) = @_;
+
+    $context ||= CXT_VOID;
+    my $parser = $self->parser->safe_instance;
+    my $code = do {
+        local $self->{_parser} = $parser;
+        my $flags =   ( $context != CXT_VOID ? PARSE_ADD_RETURN : 0 )
+                    | ( $is_main             ? PARSE_MAIN : 0 );
+        $parser->parse_string( $program, $flags, $program_name );
+    };
+    $self->run_last_file( $code, $context );
+}
+
 # maybe put in teh code object
 sub make_closure {
     my( $self, $code ) = @_;
