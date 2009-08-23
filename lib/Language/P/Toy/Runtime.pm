@@ -35,7 +35,7 @@ sub set_option {
 sub reset {
     my( $self ) = @_;
 
-    $self->{_stack} = [ [ -2, undef, CXT_VOID ], undef ];
+    $self->{_stack} = [ [ -2, undef, CXT_VOID, undef, {} ], undef ];
     $self->{_frame} = @{$self->{_stack}};
 }
 
@@ -53,11 +53,16 @@ sub run_last_file {
     # FIXME duplicates Language::P::Toy::Value::Code::call
     my $frame = $self->push_frame( $code->stack_size + 2 );
     my $stack = $self->{_stack};
-    $stack->[$frame - 2] = [ -2, $self->{_bytecode}, $context, $self->{_code} ];
+    $stack->[$frame - 2] = [ -2, $self->{_bytecode}, $context, $self->{_code}, $self->{_lex} ];
     $stack->[$frame - 1] = $code->lexicals || 'no_pad';
     $self->set_bytecode( $code->bytecode );
     $self->{_pc} = 0;
     $self->{_code} = $code;
+    $self->{_lex} =
+        { package  => 'main',
+          hints    => 0,
+          warnings => undef,
+          };
 
     $self->run;
 }
@@ -227,6 +232,9 @@ sub current_frame_info {
              line       => $op->{pos}[1],
              code       => $self->{_code},
              context    => $self->{_stack}[$self->{_frame} - 2][2],
+             package    => $self->{_lex}{package},
+             hints      => $self->{_lex}{hints},
+             warnings   => $self->{_lex}{warnings},
              };
 }
 
@@ -243,11 +251,15 @@ sub frame_info {
     }
 
     my $op = $stack->[$frame - 2][1][$stack->[$frame - 2][0]];
+    my $lex = $stack->[$frame - 2][4];
 
     return { file       => $op->{pos}[0],
              line       => $op->{pos}[1],
              code       => $stack->[$frame - 2][3],
              context    => $stack->[$frame - 2][2],
+             package    => $lex->{package},
+             hints      => $lex->{hints},
+             warnings   => $lex->{warnings},
              };
 }
 
@@ -263,10 +275,8 @@ sub push_frame {
 }
 
 sub pop_frame {
-    my( $self, $size ) = @_;
+    my( $self ) = @_;
     my $last_frame = $self->{_stack}->[$self->{_frame}];
-
-    # TODO unwind
 
     $#{$self->{_stack}} = $last_frame->[0];
     $self->{_frame} = $last_frame->[1];
@@ -279,6 +289,7 @@ sub call_return {
 
     $self->set_bytecode( $bytecode );
     $self->{_code} = $self->{_stack}->[$self->{_frame} - 2][3];
+    $self->{_lex} = $self->{_stack}->[$self->{_frame} - 2][4];
     $self->pop_frame;
 
     return $rpc;

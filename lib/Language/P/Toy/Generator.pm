@@ -9,6 +9,7 @@ __PACKAGE__->mk_accessors( qw(_code _pending _block_map _temporary_map
                               _options _generated _intermediate _processing
                               _eval_context _segment) );
 
+use Language::P::Intermediate::Code qw(:all);
 use Language::P::Intermediate::Generator;
 use Language::P::Opcodes qw(:all);
 use Language::P::Toy::Opcodes qw(o);
@@ -222,8 +223,22 @@ sub _generate_segment {
 
     my @converted;
     foreach my $block ( @{$segment->basic_blocks} ) {
-        my $bytecode = _convert_bytecode( $self, $block->bytecode );
         my $start = @{$self->_code->bytecode};
+        my $change =    !@{$block->predecessors}
+                     || grep $_->lexical_state != $block->lexical_state,
+                             @{$block->predecessors};
+        if( $change ) {
+            my $state = $segment->lexical_states->[$block->lexical_state];
+
+            push @{$self->_code->bytecode},
+                 o( 'lexical_state_set',
+                    package  => $state->{package},
+                    hints    => $state->{hints} & 0xff,
+                    warnings => $state->{warnings},
+                    );
+        }
+
+        my $bytecode = _convert_bytecode( $self, $block->bytecode );
         push @{$self->_code->bytecode}, @$bytecode;
 
         push @converted, [ $block, $start ];
@@ -318,6 +333,12 @@ sub _scope_enter {
     foreach my $chunk ( reverse @{$scope->{bytecode}} ) {
         push @exit_bytecode, @{$self->_convert_bytecode( $chunk )};
     }
+    if( ($scope->{flags} & SCOPE_LEX_STATE) && !($scope->{flags} & SCOPE_MAIN) ) {
+        my $idx = _temporary_index( $self, -$op->{attributes}{scope} );
+        push @$bytecode,
+             o( 'lexical_state_save', index => $idx );
+        push @exit_bytecode, o( 'lexical_state_restore', index => $idx );
+    }
     push @exit_bytecode, o( 'end' );
     $self->_code->scopes->[$id] =
         { start    => @{$self->_code->bytecode} + @$bytecode,
@@ -332,8 +353,14 @@ sub _scope_enter {
 sub _scope_leave {
     my( $self, $bytecode, $op ) = @_;
     my $id = $op->{attributes}{scope};
+    my $scope = $self->_code->scopes->[$id];
 
-    $self->_code->scopes->[$id]{end} = @{$self->_code->bytecode} + @$bytecode;
+    $scope->{end} = @{$self->_code->bytecode} + @$bytecode;
+    if( ($scope->{flags} & SCOPE_LEX_STATE) && !($scope->{flags} & SCOPE_MAIN) ) {
+        my $idx = _temporary_index( $self, -$op->{attributes}{scope} );
+        push @$bytecode,
+             o( 'lexical_state_restore', index => $idx );
+    }
 }
 
 sub _end {

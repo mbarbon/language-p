@@ -48,7 +48,7 @@ sub call {
         }
     }
     $stack->[$frame - 2] = [ $pc, $runtime->{_bytecode}, $context,
-                             $runtime->{_code} ];
+                             $runtime->{_code}, $runtime->{_lex} ];
 
     $runtime->set_bytecode( $self->bytecode );
     # FIXME encapsulation

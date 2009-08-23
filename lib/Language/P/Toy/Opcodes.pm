@@ -325,6 +325,39 @@ sub o_glob {
     return $pc + 1;
 }
 
+sub o_lexical_state_save {
+    my( $op, $runtime, $pc ) = @_;
+
+    $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] =
+        { package  => $runtime->{_lex}{package},
+          hints    => $runtime->{_lex}{hints},
+          warnings => $runtime->{_lex}{warnings},
+          };
+
+    return $pc + 1;
+}
+
+sub o_lexical_state_restore {
+    my( $op, $runtime, $pc ) = @_;
+
+    $runtime->{_lex} = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
+    $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = undef;
+
+    return $pc + 1;
+}
+
+sub o_lexical_state_set {
+    my( $op, $runtime, $pc ) = @_;
+
+    $runtime->{_lex} =
+        { package  => $op->{package},
+          hints    => $op->{hints},
+          warnings => $op->{warnings},
+          };
+
+    return $pc + 1;
+}
+
 sub o_lexical {
     my( $op, $runtime, $pc ) = @_;
     my $value = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}]
