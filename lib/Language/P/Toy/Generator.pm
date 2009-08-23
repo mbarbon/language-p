@@ -328,26 +328,29 @@ sub _scope_enter {
     my( $self, $bytecode, $op ) = @_;
     my $id = $op->{attributes}{scope};
     my $scope = $self->_segment->scopes->[$id];
-
     my @exit_bytecode;
+
+    $self->_code->scopes->[$id] =
+        { start         => @{$self->_code->bytecode} + @$bytecode,
+          end           => -1,
+          flags         => $scope->{flags},
+          outer         => $scope->{outer},
+          context       => $scope->{context},
+          bytecode      => \@exit_bytecode,
+          lexical_index => -1,
+          };
+
     foreach my $chunk ( reverse @{$scope->{bytecode}} ) {
         push @exit_bytecode, @{$self->_convert_bytecode( $chunk )};
     }
     if( ($scope->{flags} & SCOPE_LEX_STATE) && !($scope->{flags} & SCOPE_MAIN) ) {
-        my $idx = _temporary_index( $self, -$op->{attributes}{scope} );
+        my $idx = $self->_code->scopes->[$id]{lexical_index} =
+                  _temporary_index( $self, -$op->{attributes}{scope} );
         push @$bytecode,
              o( 'lexical_state_save', index => $idx );
         push @exit_bytecode, o( 'lexical_state_restore', index => $idx );
     }
     push @exit_bytecode, o( 'end' );
-    $self->_code->scopes->[$id] =
-        { start    => @{$self->_code->bytecode} + @$bytecode,
-          end      => -1,
-          flags    => $scope->{flags},
-          outer    => $scope->{outer},
-          context  => $scope->{context},
-          bytecode => \@exit_bytecode,
-          };
 }
 
 sub _scope_leave {

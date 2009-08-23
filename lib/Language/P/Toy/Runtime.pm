@@ -343,6 +343,16 @@ sub frame_info_caller {
         $info->{flags} = $eval_scope->{flags};
         $info->{context} = $eval_cxt if $eval_cxt && $eval_cxt != CXT_CALLER;
         $info->{code_name} = '(eval)';
+
+        # account for the fact that eval blocks do not have a call stack entry:
+        # retrieve the lexical state saved by lexical_state_save
+        if( $eval_scope->{lexical_index} > 0 ) {
+            my $lex = $self->{_stack}->[$frame - 3 - $eval_scope->{lexical_index}];
+
+            $info->{hints} = $lex->{hints};
+            $info->{warnings} = $lex->{warnings};
+            $info->{package} = $lex->{package};
+        }
     }
 
     return $info;

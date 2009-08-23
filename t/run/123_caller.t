@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..15\n";
+print "1..16\n";
 
 sub c1 {
     package p1;
@@ -67,6 +67,8 @@ print hints() == 0 ? "ok\n" : "not ok\n";;;
 # eval scopes
 eval {
     print subname() eq '(eval)' ? "ok\n" : "not ok\n";
+    package x;
+    print caller eq 'main' ? "ok\n" : "not ok\n";
 };
 
 eval q{
