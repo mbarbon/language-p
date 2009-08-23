@@ -208,6 +208,7 @@ sub is_loop { 0 }
 sub is_plain_function { 0 }
 sub is_empty { 0 }
 sub can_implicit_return { 1 }
+sub always_void { 0 }
 sub is_declaration { 0 }
 sub lvalue_context { Language::P::ParseTree::CXT_SCALAR }
 sub parent { $_[0]->{parent} }
@@ -443,6 +444,7 @@ our @FIELDS = qw(lines);
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub is_compound { 1 }
+sub always_void { 1 }
 
 package Language::P::ParseTree::DoBlock;
 
@@ -451,6 +453,7 @@ use warnings;
 use base qw(Language::P::ParseTree::Block);
 
 sub is_compound { 0 }
+sub always_void { 0 }
 
 package Language::P::ParseTree::EvalBlock;
 
@@ -565,6 +568,8 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::UnOp);
 
+sub always_void { 1 }
+
 package Language::P::ParseTree::Dereference;
 
 use strict;
@@ -616,6 +621,7 @@ our @FIELDS = qw(iftrues iffalse);
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub is_compound { 1 }
+sub always_void { 1 }
 
 package Language::P::ParseTree::ConditionalBlock;
 
@@ -628,6 +634,7 @@ our @FIELDS = qw(condition block block_type);
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub is_compound { 1 }
+sub always_void { 1 }
 
 package Language::P::ParseTree::ConditionalLoop;
 
@@ -642,6 +649,7 @@ __PACKAGE__->mk_ro_accessors( @FIELDS );
 sub can_implicit_return { 0 }
 sub is_compound { 1 }
 sub is_loop { 1 }
+sub always_void { 1 }
 
 package Language::P::ParseTree::For;
 
@@ -655,6 +663,7 @@ __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub is_compound { 1 }
 sub is_loop { 1 }
+sub always_void { 1 }
 
 package Language::P::ParseTree::Foreach;
 
@@ -669,6 +678,7 @@ __PACKAGE__->mk_ro_accessors( @FIELDS );
 sub can_implicit_return { 0 }
 sub is_compound { 1 }
 sub is_loop { 1 }
+sub always_void { 1 }
 
 package Language::P::ParseTree::Ternary;
 

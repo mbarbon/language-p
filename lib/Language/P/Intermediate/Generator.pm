@@ -968,8 +968,7 @@ sub _cond_loop {
 
     _add_blocks $self, $start_loop;
     $self->dispatch( $tree->block );
-    _discard_if_void( $self, $tree->block )
-        unless $tree->block->isa( 'Language::P::ParseTree::Block' );
+    _discard_if_void( $self, $tree->block );
 
     if( $tree->continue ) {
         _add_jump $self, opcode_nm( OP_JUMP, to => $start_continue ), $start_continue;
@@ -1072,8 +1071,7 @@ sub _foreach {
     }
 
     $self->dispatch( $tree->block );
-    _discard_if_void( $self, $tree->block )
-        unless $tree->block->isa( 'Language::P::ParseTree::Block' );
+    _discard_if_void( $self, $tree->block );
 
     if( $tree->continue ) {
         _add_jump $self, opcode_nm( OP_JUMP, to => $start_continue ), $start_continue;
@@ -1117,8 +1115,7 @@ sub _for {
 
     _add_blocks $self, $start_loop;
     $self->dispatch( $tree->block );
-    _discard_if_void( $self, $tree->block )
-        unless $tree->block->isa( 'Language::P::ParseTree::Block' );
+    _discard_if_void( $self, $tree->block );
 
     _add_jump $self,
          opcode_nm( OP_JUMP, to => $start_step ), $start_step;
@@ -1155,8 +1152,7 @@ sub _cond {
                                            ( $then_block, $next_next ) );
         _add_blocks $self, $then_block;
         $self->dispatch( $elsif->block );
-        _discard_if_void( $self, $elsif->block )
-            unless $elsif->block->isa( 'Language::P::ParseTree::Block' );
+        _discard_if_void( $self, $elsif->block );
 
         _add_jump $self, opcode_nm( OP_JUMP, to => $last ), $last;
         $next = $next_next;
@@ -1476,6 +1472,7 @@ sub _emit_label {
 
 sub _discard_if_void {
     my( $self, $tree ) = @_;
+    return if $tree->always_void;
     my $context = ( $tree->get_attribute( 'context' ) || 0 ) & CXT_CALL_MASK;
     return if $context != CXT_VOID;
 
