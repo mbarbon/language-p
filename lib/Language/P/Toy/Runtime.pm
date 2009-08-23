@@ -19,6 +19,8 @@ sub new {
     $self->{_variables} = { osname      => $^O,
                             hints       => 0,
                             };
+    $self->{_frame} = -1;
+    $self->{_stack} = [];
 
     return $self;
 }
@@ -290,7 +292,7 @@ sub set_exception {
 sub throw_exception {
     my( $self, $exc, $fill_position ) = @_;
 
-    for(;;) {
+    for(; $self->{_frame} > 0;) {
         my $info = $self->current_frame_info;
         my $scope;
 
