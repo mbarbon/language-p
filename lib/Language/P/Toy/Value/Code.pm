@@ -11,6 +11,7 @@ __PACKAGE__->mk_ro_accessors( qw(bytecode stack_size lexicals closed
 
 sub type { 9 }
 sub is_subroutine { 0 }
+sub name { undef }
 
 sub new {
     my( $class, $runtime, $args ) = @_;

@@ -253,21 +253,81 @@ sub o_end {
     return -1;
 }
 
-sub o_want {
-    my( $op, $runtime, $pc ) = @_;
-    my $cxt = _context( undef, $runtime );
-    my $v;
+sub _want_value {
+    my( $runtime, $cxt ) = @_;
 
     if( $cxt == CXT_VOID ) {
-        $v = Language::P::Toy::Value::Undef->new( $runtime );
+        return Language::P::Toy::Value::Undef->new( $runtime );
     } elsif( $cxt == CXT_SCALAR ) {
-        $v = Language::P::Toy::Value::StringNumber->new( $runtime, { string => '' } );
+        return Language::P::Toy::Value::StringNumber->new( $runtime, { string => '' } );
     } elsif( $cxt == CXT_LIST ) {
-        $v = Language::P::Toy::Value::StringNumber->new( $runtime, { integer => 1 } );
+        return Language::P::Toy::Value::StringNumber->new( $runtime, { integer => 1 } );
     } else {
         die "Unknow context $cxt";
     }
-    push @{$runtime->{_stack}}, $v;
+}
+
+sub o_want {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = _context( undef, $runtime );
+
+    push @{$runtime->{_stack}}, _want_value( $runtime, $cxt );
+
+    return $pc + 1;
+}
+
+sub o_caller {
+    my( $op, $runtime, $pc ) = @_;
+    my $level = $op->{arg_count} ?
+                    pop( @{$runtime->{_stack}} )->as_integer( $runtime ) : 0;
+    my $info = $runtime->frame_info_caller( $level );
+
+    if( !$info ) {
+        if( _context( $op, $runtime ) == CXT_SCALAR ) {
+            push @{$runtime->{_stack}},
+                 Language::P::Toy::Value::Undef->new( $runtime );
+        } else {
+            push @{$runtime->{_stack}}, $empty_list;
+        }
+
+        return $pc + 1;
+    }
+
+    my $package = Language::P::Toy::Value::Scalar->new_string
+                      ( $runtime, $info->{package} );
+
+    if( _context( $op, $runtime ) == CXT_LIST ) {
+        my $file = Language::P::Toy::Value::Scalar->new_string
+                       ( $runtime, $info->{file} );
+        my $line = Language::P::Toy::Value::Scalar->new_integer
+                       ( $runtime, $info->{line} );
+
+        if( !$op->{arg_count} ) {
+            push @{$runtime->{_stack}},
+                 Language::P::Toy::Value::List->new
+                     ( $runtime, { array => [ $package, $file, $line ] } );
+        } else {
+            my $subname = Language::P::Toy::Value::Scalar->new_string
+                              ( $runtime, $info->{code_name} );
+            my $hasargs = undef;
+            my $want = _want_value( $runtime, $info->{context} );
+            my $evaltext = undef;
+            my $is_require = undef;
+            my $warnings = Language::P::Toy::Value::Scalar->new_string
+                               ( $runtime, $info->{warnings} );
+            my $hints = Language::P::Toy::Value::Scalar->new_integer
+                            ( $runtime, $info->{hints} );
+
+            push @{$runtime->{_stack}},
+                 Language::P::Toy::Value::List->new
+                     ( $runtime,
+                       { array => [ $package, $file, $line, $subname,
+                                    $hasargs, $want, $evaltext,
+                                    $is_require, $hints, $warnings ] } );
+        }
+    } else {
+        push @{$runtime->{_stack}}, $package;
+    }
 
     return $pc + 1;
 }

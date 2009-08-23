@@ -231,10 +231,32 @@ sub current_frame_info {
     return { file       => $op->{pos}[0],
              line       => $op->{pos}[1],
              code       => $self->{_code},
+             code_name  => $self->{_code}->name,
              context    => $self->{_stack}[$self->{_frame} - 2][2],
              package    => $self->{_lex}{package},
              hints      => $self->{_lex}{hints},
              warnings   => $self->{_lex}{warnings},
+             flags      => $self->{_code}->scopes->[0]->{flags},
+             };
+}
+
+sub _frame_info {
+    my( $self, $frame ) = @_;
+    my $stack = $self->{_stack};
+
+    my $op = $stack->[$frame - 2][1][$stack->[$frame - 2][0]];
+    my $lex = $stack->[$frame - 2][4];
+    my $code = $stack->[$frame - 2][3];
+
+    return { file       => $op->{pos}[0],
+             line       => $op->{pos}[1],
+             code       => $code,
+             code_name  => $code && $code->name,
+             context    => $stack->[$frame - 2][2],
+             package    => $lex->{package},
+             hints      => $lex->{hints},
+             warnings   => $lex->{warnings},
+             flags      => $code && $code->scopes->[0]->{flags},
              };
 }
 
@@ -250,17 +272,80 @@ sub frame_info {
         return undef;
     }
 
-    my $op = $stack->[$frame - 2][1][$stack->[$frame - 2][0]];
-    my $lex = $stack->[$frame - 2][4];
+    return _frame_info( $self, $frame );
+}
 
-    return { file       => $op->{pos}[0],
-             line       => $op->{pos}[1],
-             code       => $stack->[$frame - 2][3],
-             context    => $stack->[$frame - 2][2],
-             package    => $lex->{package},
-             hints      => $lex->{hints},
-             warnings   => $lex->{warnings},
-             };
+sub _find_eval_scope {
+    my( $code, $pc, $level ) = @_;
+    my $scope;
+
+    foreach my $s ( @{$code->scopes} ) {
+        if( $s->{start} <= $pc && $s->{end} > $pc ) {
+            $scope = $s;
+        }
+    }
+
+    while( $scope ) {
+        if( $scope->{flags} & 2 ) {
+            if( $level == 0 ) {
+                return ( $scope, 0 );
+            }
+            --$level;
+        }
+
+        last if $scope->{outer} < 0;
+        $scope = $code->scopes->[$scope->{outer}];
+    }
+
+    return ( undef, $level );
+}
+
+sub frame_info_caller {
+    my( $self, $level ) = @_;
+    my $frame = $self->{_frame};
+    my $code = $self->{_code};
+    my $pc = $self->{_pc};
+    my( $eval_scope, $outer );
+
+    UNWIND: for( ; $frame >= 0; --$level) {
+        ( $eval_scope, $level ) = _find_eval_scope( $code, $pc, $level );
+
+        last if $eval_scope;
+
+        $outer = 1;
+        $pc = $self->{_stack}->[$frame - 2][0];
+        last if $level == 0;
+        $code = $self->{_stack}->[$frame - 2][3];
+        $frame = $self->{_stack}->[$frame][1];
+    }
+
+    my $info;
+    if( $outer ) {
+        $info = _frame_info( $self, $frame );
+        $info->{code_name} = $code->name;
+
+        ( $eval_scope ) = _find_eval_scope( $code, $pc, 0 );
+    } else {
+        $info = $self->current_frame_info;
+    }
+
+    return undef if $frame <= 2 && !$eval_scope;
+
+    if( $eval_scope ) {
+        my $eval_cxt = CXT_CALLER;
+        my $scope = $eval_scope;
+        while( $eval_cxt == CXT_CALLER ) {
+            $eval_cxt = $scope->{context} if $scope->{flags} & 2;
+            last if $scope->{outer} < 0;
+            $scope = $code->scopes->[$scope->{outer}];
+        }
+
+        $info->{flags} = $eval_scope->{flags};
+        $info->{context} = $eval_cxt if $eval_cxt && $eval_cxt != CXT_CALLER;
+        $info->{code_name} = '(eval)';
+    }
+
+    return $info;
 }
 
 sub push_frame {

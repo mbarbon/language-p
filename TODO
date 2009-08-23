@@ -114,6 +114,7 @@ Runtime:
 - pass a runtime instance into all methods
 - symbolic references
 - die without arguments, exception propagation, $SIG{__DIE__}
+- hasargs, evaltext and is_require values in caller
 
 Refactoring:
 - check offsets for call sequence, refactor stack handling
