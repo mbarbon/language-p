@@ -8,7 +8,7 @@ use lib 't/lib';
 use TestParser qw(:all);
 
 my $parser = fresh_parser();
-$parser->parse_string( <<EOE, 0 );
+$parser->parse_string( <<EOE, 0, '<string>' );
 if( 1 ) {
     return 1;
 }

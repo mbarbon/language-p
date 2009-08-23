@@ -172,11 +172,11 @@ sub set_option {
 }
 
 sub parse_string {
-    my( $self, $string, $flags, $lexical_state ) = @_;
+    my( $self, $string, $flags, $program_name, $lexical_state ) = @_;
 
     open my $fh, '<', \$string;
 
-    $self->parse_stream( $fh, '<string>', $flags, $lexical_state );
+    $self->parse_stream( $fh, $program_name, $flags, $lexical_state );
 }
 
 sub parse_file {

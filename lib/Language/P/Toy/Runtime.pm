@@ -21,6 +21,7 @@ sub new {
                             };
     $self->{_frame} = -1;
     $self->{_stack} = [];
+    $self->{_eval_count} = 0;
 
     return $self;
 }
@@ -94,11 +95,12 @@ sub eval_string {
     $context ||= CXT_VOID;
 
     my $parser = $self->parser->safe_instance;
+    my $eval_name = sprintf "(eval %d)", ++$self->{_eval_count};
     my $code = eval {
         local $self->{_parser} = $parser;
         $parser->generator->_eval_context( $generator_context );
         my $flags = $context != CXT_VOID ? PARSE_ADD_RETURN : 0;
-        $parser->parse_string( $string, $flags, $lexical_state );
+        $parser->parse_string( $string, $flags, $eval_name, $lexical_state );
     };
     if( my $e = $@ ) {
         if( $e->isa( 'Language::P::Exception' ) ) {

@@ -12,7 +12,7 @@ $x = 1;
 
 $ok = eval 'local $x = 2; die "die() in eval"';
 print $ok ? "not ok 1\n" : "ok 1\n";
-print $@ eq "die() in eval at <string> line 1.\n" ? "ok 2\n" : "not ok 2\n";
+print $@ eq "die() in eval at (eval 1) line 1.\n" ? "ok 2\n" : "not ok 2\n";
 print $x == 1 ? "ok 3\n" : "not ok 3\n";
 
 $ok = eval 'foo()';
