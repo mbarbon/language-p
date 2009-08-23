@@ -288,11 +288,16 @@ sub set_exception {
 }
 
 sub throw_exception {
-    my( $self, $exc ) = @_;
+    my( $self, $exc, $fill_position ) = @_;
 
     for(;;) {
         my $info = $self->current_frame_info;
         my $scope;
+
+        if( $fill_position ) {
+            $exc->position( [ $info->{file}, $info->{line} ] );
+            $fill_position = 0;
+        }
 
         foreach my $s ( @{$info->{code}->scopes} ) {
             if( $s->{start} <= $self->{_pc} && $s->{end} > $self->{_pc} ) {

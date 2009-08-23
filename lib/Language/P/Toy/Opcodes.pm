@@ -846,7 +846,6 @@ sub o_close {
 sub o_die {
     my( $op, $runtime, $pc ) = @_;
     my $args = pop @{$runtime->{_stack}};
-    my $info = $runtime->current_frame_info;
 
     my $message = '';
     for( my $iter = $args->iterator( $runtime ); $iter->next( $runtime ); ) {
@@ -855,10 +854,9 @@ sub o_die {
 
     my $exc = Language::P::Toy::Exception->new
                   ( { message  => $message,
-                      position => [ $info->{file}, $info->{line} ],
                       } );
 
-    return $runtime->throw_exception( $exc );
+    return $runtime->throw_exception( $exc, 1 );
 }
 
 sub o_backtick {
