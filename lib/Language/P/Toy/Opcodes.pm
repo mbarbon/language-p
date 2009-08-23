@@ -309,10 +309,10 @@ sub o_caller {
         } else {
             my $subname = Language::P::Toy::Value::Scalar->new_string
                               ( $runtime, $info->{code_name} );
-            my $hasargs = undef;
+            my $hasargs = Language::P::Toy::Value::Undef->new( $runtime );
             my $want = _want_value( $runtime, $info->{context} );
-            my $evaltext = undef;
-            my $is_require = undef;
+            my $evaltext = Language::P::Toy::Value::Undef->new( $runtime );
+            my $is_require = Language::P::Toy::Value::Undef->new( $runtime );
             my $warnings = Language::P::Toy::Value::Scalar->new_string
                                ( $runtime, $info->{warnings} );
             my $hints = Language::P::Toy::Value::Scalar->new_integer
