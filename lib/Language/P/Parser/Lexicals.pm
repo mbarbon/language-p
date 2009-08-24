@@ -42,6 +42,16 @@ sub add_name {
                                 } ) );
 }
 
+sub add_name_our {
+    my( $self, $sigil, $name, $full_name ) = @_;
+
+    $self->add_lexical( Language::P::ParseTree::Symbol->new
+                            ( { name        => $full_name,
+                                sigil       => $sigil,
+                                symbol_name => $sigil . "\0" . $name,
+                                } ) );
+}
+
 sub add_lexical {
     my( $self, $lexical ) = @_;
 
@@ -50,15 +60,21 @@ sub add_lexical {
 
 sub all_visible_lexicals {
     my( $self ) = @_;
-    my %lex;
+    my( %seen, %lex, %glob );
 
     for( my $lexicals = $self; $lexicals; $lexicals = $lexicals->outer ) {
         while( my( $k, $v ) = each %{$lexicals->{names}} ) {
-            $lex{$k} ||= $v;
+            next if $seen{$k};
+            $seen{$k} = 1;
+            if( $v->isa( 'Language::P::ParseTree::Symbol' ) ) {
+                $glob{$k} = $v->name;
+            } else {
+                $lex{$k} = $v;
+            }
         }
     }
 
-    return \%lex;
+    return ( \%lex, \%glob );
 }
 
 1;

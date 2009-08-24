@@ -21,25 +21,29 @@ function: OP_EVAL
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
-eval { 1 => 1 };
+$x = eval { 1 => 1 };
 EOP
---- !parsetree:Builtin
-arguments:
-  - !parsetree:Block
-    lines:
-      - !parsetree:List
-        context: CXT_LIST
-        expressions:
-          - !parsetree:Constant
-            context: CXT_LIST
-            flags: CONST_NUMBER|NUM_INTEGER
-            value: 1
-          - !parsetree:Constant
-            context: CXT_LIST
-            flags: CONST_NUMBER|NUM_INTEGER
-            value: 1
+--- !parsetree:BinOp
 context: CXT_VOID
-function: OP_EVAL
+left: !parsetree:Symbol
+  context: CXT_SCALAR|CXT_LVALUE
+  name: x
+  sigil: VALUE_SCALAR
+op: OP_ASSIGN
+right: !parsetree:EvalBlock
+  context: CXT_SCALAR
+  lines:
+    - !parsetree:List
+      context: CXT_SCALAR
+      expressions:
+        - !parsetree:Constant
+          context: CXT_VOID
+          flags: CONST_NUMBER|NUM_INTEGER
+          value: 1
+        - !parsetree:Constant
+          context: CXT_SCALAR
+          flags: CONST_NUMBER|NUM_INTEGER
+          value: 1
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 5;
+use Test::More tests => 6;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -49,6 +49,11 @@ prototype:
 arguments:
   - !parsetree:AnonymousSubroutine
     lines:
+      - !parsetree:LexicalState
+        changed: CHANGED_ALL
+        hints: 0
+        package: main
+        warnings: ~
       - !parsetree:Builtin
         arguments:
           - !parsetree:Constant
@@ -88,6 +93,11 @@ prototype:
 arguments:
   - !parsetree:AnonymousSubroutine
     lines:
+      - !parsetree:LexicalState
+        changed: CHANGED_ALL
+        hints: 0
+        package: main
+        warnings: ~
       - !parsetree:Builtin
         arguments:
           - !parsetree:Constant
@@ -130,6 +140,11 @@ expressions:
     arguments:
       - !parsetree:AnonymousSubroutine
         lines:
+          - !parsetree:LexicalState
+            changed: CHANGED_ALL
+            hints: 0
+            package: main
+            warnings: ~
           - !parsetree:Builtin
             arguments:
               - !parsetree:Constant
@@ -174,4 +189,33 @@ function: !parsetree:Dereference
       name: foo
       sigil: VALUE_SUB
   op: OP_DEREFERENCE_SUB
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+sub foo($$);
+foo(@x, $y);
+EOP
+--- !parsetree:SubroutineDeclaration
+name: foo
+prototype:
+  - 2
+  - 2
+  - 0
+  - PROTO_SCALAR
+  - PROTO_SCALAR
+--- !parsetree:FunctionCall
+arguments:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: x
+    sigil: VALUE_ARRAY
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: y
+    sigil: VALUE_SCALAR
+context: CXT_VOID
+function: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: foo
+  sigil: VALUE_SUB
 EOE

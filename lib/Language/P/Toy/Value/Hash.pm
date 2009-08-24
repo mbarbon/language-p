@@ -9,8 +9,8 @@ __PACKAGE__->mk_ro_accessors( qw(hash) );
 sub type { 13 }
 
 sub new {
-    my( $class, $args ) = @_;
-    my $self = $class->SUPER::new( $args );
+    my( $class, $runtime, $args ) = @_;
+    my $self = $class->SUPER::new( $runtime, $args );
 
     $self->{hash} ||= {};
 
@@ -18,14 +18,15 @@ sub new {
 }
 
 sub clone {
-    my( $self, $level ) = @_;
+    my( $self, $runtime, $level ) = @_;
 
-    my $clone = ref( $self )->new( { array  => { @{$self->{hash}} },
+    my $clone = ref( $self )->new( $runtime,
+                                   { hash  => { %{$self->{hash}} },
                                      } );
 
     if( $level > 0 ) {
         foreach my $entry ( values %{$clone->{hash}} ) {
-            $entry = $entry->clone( $level - 1 );
+            $entry = $entry->clone( $runtime, $level - 1 );
         }
     }
 
@@ -33,55 +34,91 @@ sub clone {
 }
 
 sub localize {
-    my( $self ) = @_;
+    my( $self, $runtime ) = @_;
 
-    return __PACKAGE__->new;
+    return __PACKAGE__->new( $runtime );
 }
 
 sub assign {
-    my( $self, $other ) = @_;
+    my( $self, $runtime, $other ) = @_;
 
     # FIXME optimize: don't do it unless necessary
-    my $oiter = $other->clone( 1 )->iterator;
-    $self->assign_iterator( $oiter );
+    my $oiter = $other->clone( $runtime, 1 )->iterator( $runtime );
+    $self->assign_iterator( $runtime, $oiter );
 }
 
 sub assign_iterator {
-    my( $self, $iter ) = @_;
+    my( $self, $runtime, $iter ) = @_;
 
     $self->{hash} = {};
     while( $iter->next ) {
         my $k = $iter->item;
         $iter->next;
         my $v = $iter->item;
-        $self->{hash}{$k->as_string} = $v;
+        $self->{hash}{$k->as_string( $runtime )} = $v;
     }
 }
 
 sub get_item_or_undef {
-    my( $self, $key ) = @_;
+    my( $self, $runtime, $key, $create ) = @_;
 
     if( !exists $self->{hash}{$key} ) {
-        return Language::P::Toy::Value::Undef->new;
+        if( $create ) {
+            return $self->{hash}{$key} =
+                       Language::P::Toy::Value::Undef->new( $runtime );
+        } else {
+            return Language::P::Toy::Value::Undef->new( $runtime );
+        }
     }
 
     return $self->{hash}{$key};
 }
 
-sub set_item {
-    my( $self, $key, $value ) = @_;
+sub slice {
+    my( $self, $runtime, $keys, $create ) = @_;
+    my @res;
 
-    if( !exists $self->{hash}{$key} ) {
-        $self->{hash}{$key} = Language::P::Toy::Value::Undef->new;
+    for( my $iter = $keys->iterator; $iter->next; ) {
+        my $key = $iter->item->as_string;
+
+        push @res, $self->get_item_or_undef( $runtime, $key, $create );
     }
 
-    $self->{hash}{$key}->assign( $value );
+    return Language::P::Toy::Value::List->new( $runtime, { array => \@res } );
+}
+
+sub set_item {
+    my( $self, $runtime, $key, $value ) = @_;
+
+    if( !exists $self->{hash}{$key} ) {
+        $self->{hash}{$key} = Language::P::Toy::Value::Undef->new( $runtime );
+    }
+
+    $self->{hash}{$key}->assign( $runtime, $value );
 }
 
 sub has_item {
-    my( $self, $key ) = @_;
+    my( $self, $runtime, $key ) = @_;
 
     return exists $self->{hash}{$key};
+}
+
+sub exists {
+    my( $self, $runtime, $key ) = @_;
+
+    return Language::P::Toy::Value::Scalar->new_boolean( $runtime, exists $self->{hash}{$key} );
+}
+
+sub iterator {
+    my( $self, $runtime ) = @_;
+
+    return Language::P::Toy::Value::Array->new
+               ( $runtime,
+                 { array => [ map { Language::P::Toy::Value::Scalar
+                                        ->new_string( $runtime, $_ ),
+                                    $self->{hash}->{$_} }
+                                  keys %{$self->hash} ] } )
+               ->iterator( $runtime );
 }
 
 1;

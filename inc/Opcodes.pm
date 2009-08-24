@@ -12,6 +12,7 @@ use Data::Dumper;
 my %flag_map =
   ( 0 => 0,
     u => 1,
+    v => 3, # variadic implies unary
     );
 
 sub write_opcodes {
@@ -78,14 +79,15 @@ EOT
     ) );
 }
 
-our @EXPORT = ( qw(%%KEYWORD_TO_OP %%NUMBER_TO_NAME @OPERATIONS
+our @EXPORT = ( qw(%%KEYWORD_TO_OP %%OP_TO_KEYWORD %%NUMBER_TO_NAME @OPERATIONS
                    %%OP_ATTRIBUTES), @OPERATIONS );
 our %%EXPORT_TAGS =
   ( all => \@EXPORT,
     );
 
 use constant +
-  { FLAG_UNARY => 1,
+  { FLAG_UNARY    => 1,
+    FLAG_VARIADIC => 2,
 EOT
 
     my $index = 1;
@@ -118,6 +120,7 @@ EOT
 
     foreach my $k ( sort @OVERRIDABLES, @BUILTINS ) {
         ( my $o = $k ) =~ s/KEY_/OP_/;
+        $o =~ s/^OP_(PUSH|POP|SHIFT|UNSHIFT)/OP_ARRAY_$1/;
         printf $out <<'EOT', $k, $o;
     %s() => %s(),
 EOT
@@ -125,6 +128,8 @@ EOT
 
     printf $out <<'EOT';
     );
+
+our %%OP_TO_KEYWORD = reverse %%KEYWORD_TO_OP;
 
 our %%OP_ATTRIBUTES =
   (
@@ -164,20 +169,34 @@ __DATA__
 abs                 u       noattr      same                 1   1
 add                 0       noattr      same                 2   1
 add_assign
+anonymous_array     0       noattr      same                 1   1
+anonymous_hash      0       noattr      same                 1   1
 array_element       0       noattr      same                 2   1
 array_length        0       noattr      array_size           1   1
+array_pop           u       noattr      same                 1   1
+array_push          0       noattr      same                 2   1
+array_shift         u       noattr      same                 1   1
+array_slice         0       noattr      same                 2   1
+array_unshift       0       noattr      same                 2   1
 assign              0       noattr      same                 2   1
 backtick
-binmode             
+binmode             u       noattr      same                 1   1
 bit_and
+bit_and_assign
 bit_or
+bit_or_assign
 bit_not
 bit_xor
+bit_xor_assign
+bless               u       noattr      same                 2   1
 call                0       noattr      same                 2   1
+call_method         0       noattr      same                 2   1
+call_method_indirect 0      noattr      same                 2   1
+caller              v       noattr      same                 1   1
 chdir               u       noattr      same                 1   1
 chr                 u       noattr      same                 1   1
-close               
-concat_assign       0       noattr      same                 2   1
+close               u       noattr      same                 1   1
+concatenate_assign  0       noattr      concat_assign        2   1
 concatenate         0       noattr      concat               2   1
 constant_float      0       value=f     same                 0   1
 constant_integer    0       value=i     same                 0   1
@@ -200,6 +219,11 @@ dot_dot_dot
 dup
 end
 eval                u       noattr      same                 1   1
+eval_regex          u       noattr      same                 1   1
+exists              u       noattr      same                 1   1
+exists_array        u       noattr      same                 2   1
+exists_hash         u       noattr      same                 2   1
+find_method         u       noattr      same                 1   1
 fresh_string        0       value=s     same                 0   1
 ft_atime            u       noattr      same                 1   1
 ft_ctime            u       noattr      same                 1   1
@@ -235,6 +259,7 @@ glob_slot_set       0       noattr      same                 2   0
 global              0       name=s,slot=i same               0   1
 grep                
 hash_element        0       noattr      same                 2   1
+hash_slice          0       noattr      same                 2   1
 iterator            0       noattr      same                 1   1
 iterator_next       0       noattr      same                 1   1
 jump                0       to=b        same                 0   0
@@ -259,11 +284,14 @@ lexical_set         0       index=i     same                 1   0
 lexical_pad         0       index=i,slot=i same              0   1
 lexical_pad_clear   0       index=i,slot=i same              0   0
 lexical_pad_set     0       index=i     same                 1   0
+list_slice          0       noattr      same                 2   1
 local               
 localize_glob_slot  0       noattr      same                 0   1
 log_and             0       noattr      same                 2   1
+log_and_assign      0       noattr      same                 2   1
 log_not             0       noattr      not                  1   1
 log_or              0       noattr      same                 2   1
+log_or_assign       0       noattr      same                 2   1
 log_xor             0       noattr      same                 2   1
 make_closure        0       noattr      same                 1   1
 make_list           0       noattr      same                -1   1
@@ -271,11 +299,12 @@ map
 match               0       noattr      rx_match
 minus               0       noattr      negate
 modulus
+modulus_assign
 multiply            0       noattr      same                 2   1
 multiply_assign
 negate
 noop
-not_match
+not_match           0       noattr      rx_not_match
 num_cmp
 num_eq              0       noattr      compare_f_eq_scalar
 num_ge              0       noattr      compare_f_ge_scalar
@@ -292,9 +321,10 @@ pop                 0       noattr      same                 1   0
 postdec             0       noattr      same                 1   1
 postinc             0       noattr      same                 1   1
 power
+power_assign
 predec              0       noattr      same                 1   1
 preinc              0       noattr      same                 1   1
-print               0       noattr      same                 1   1
+print               0       noattr      same                 2   1
 ql_lt
 ql_m
 ql_qr
@@ -303,13 +333,17 @@ ql_qx
 ql_s
 ql_tr
 readline            u       noattr      same                 1   1
-reference
+reference           u       noattr      same                 1   1
+reftype             u       noattr      same                 1   1
 repeat
+repeat_assign
 require_file        u       noattr      same                 1   1
 restore_glob_slot   0       noattr      same                 0   0
 return              0       noattr      same                 1   0
-rmdir               
+rmdir               u       noattr      same                 1   1
 set                 0       index=i     same                 1   0
+scope_enter         0       scope=i     same                 0   0
+scope_leave         0       scope=i     same                 0   0
 str_cmp
 str_eq              0       noattr      compare_s_eq_scalar
 str_ge              0       noattr      compare_s_ge_scalar
@@ -325,6 +359,9 @@ temporary           0       index=i     same                 0   1
 temporary_set       0       noattr      same                 1   0
 undef               u       noattr      same                 -1  1
 unlink              
+vivify_array        0       noattr      same                 1   1
+vivify_hash         0       noattr      same                 1   1
+vivify_scalar       0       noattr      same                 1   1
 wantarray           u       noattr      want                 0   1
 
 rx_accept

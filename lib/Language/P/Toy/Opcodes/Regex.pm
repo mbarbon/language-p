@@ -128,10 +128,10 @@ sub o_rx_match {
     my $pattern = pop @{$runtime->{_stack}};
     my $scalar = pop @{$runtime->{_stack}};
 
-    my $match = $pattern->match( $runtime, $scalar->as_string );
+    my $match = $pattern->match( $runtime, $scalar->as_string( $runtime ) );
 
     push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new
-                                    ( { integer => $match->{matched} } );
+                                    ( $runtime, { integer => $match->{matched} } );
 
     return $pc + 1;
 }

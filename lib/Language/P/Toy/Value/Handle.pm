@@ -9,10 +9,10 @@ __PACKAGE__->mk_ro_accessors( qw(handle) );
 sub type { 4 }
 
 sub write {
-    my( $self, $scalar, $offset, $length ) = @_;
+    my( $self, $runtime, $scalar, $offset, $length ) = @_;
     local $\;
 
-    my $buffer = $scalar->as_string;
+    my $buffer = $scalar->as_string( $runtime );
     if( defined $offset ) {
         print { $self->handle } defined( $length ) ?
                                     substr( $buffer, $offset, $length ) :
@@ -24,10 +24,30 @@ sub write {
     }
 }
 
-sub readline {
-    my( $self ) = @_;
+sub close {
+    my( $self, $runtime ) = @_;
+    my $ret = close $self->handle;
+
+    return Language::P::Toy::Value::Scalar->new_boolean( $runtime, $ret );
+}
+
+sub read_line {
+    my( $self, $runtime ) = @_;
 
     return scalar readline $self->handle;
+}
+
+sub read_lines {
+    my( $self, $runtime ) = @_;
+
+    return [ readline $self->handle ];
+}
+
+sub set_layer {
+    my( $self, $runtime, $layer ) = @_;
+    my $ret = binmode $self->handle, $layer;
+
+    return Language::P::Toy::Scalar->new_string( $runtime, $ret );
 }
 
 1;

@@ -16,11 +16,15 @@ BEGIN {
 EOP
 # main
 L1:
+  scope_enter scope=0
   constant_integer value=1
   constant_integer value=2
+  scope_leave scope=0
   end
 # BEGIN
 L1:
+  scope_enter scope=0
   return (make_list (constant_integer value=3))
+  scope_leave scope=0
   end
 EOI

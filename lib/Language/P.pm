@@ -31,7 +31,7 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_ro_accessors( qw(runtime generator) );
-__PACKAGE__->mk_accessors( qw(program program_arguments) );
+__PACKAGE__->mk_accessors( qw(program program_arguments program_code) );
 
 our $VERSION = '0.01_04';
 
@@ -62,8 +62,12 @@ sub new_from_argv {
             $argv = $self->process_command_line( $argv );
         }
 
-        $self->program( $argv->[0] );
-        $self->program_arguments( [ @$argv[1 .. $#$argv] ] );
+        if( $self->program_code ) {
+            $self->program_arguments( $argv );
+        } else {
+            $self->program( $argv->[0] );
+            $self->program_arguments( [ @$argv[1 .. $#$argv] ] );
+        }
     }
 
     return $self;
@@ -97,6 +101,12 @@ sub process_command_line {
             $self->runtime->set_option( $1 );
             next;
         };
+        $arg =~ /^-e/ and do {
+            ++$i;
+            my $code = $self->program_code( $argv->[$i] );
+
+            die "No code specified for -e.\n" unless defined $code;
+        };
 
         # pass through
         push @remaining, $arg;
@@ -108,7 +118,11 @@ sub process_command_line {
 sub run {
     my( $self ) = @_;
 
-    $self->runtime->run_file( $self->program );
+    if( $self->program_code ) {
+        $self->runtime->run_string( $self->program_code, '-e', 1 );
+    } else {
+        $self->runtime->run_file( $self->program, 1 );
+    }
 }
 
 =head1 AUTHOR

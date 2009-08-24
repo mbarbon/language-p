@@ -47,7 +47,7 @@ BEGIN {
 };
 
 our @EXPORT = ( @KEYWORDS, @BUILTINS, @OVERRIDABLES,
-                qw(@KEYWORDS @BUILTINS @OVERRIDABLES),
+                qw(@KEYWORDS @BUILTINS @OVERRIDABLES %ID_TO_KEYWORD),
                 qw(is_keyword is_builtin is_overridable is_id)
                 );
 our %%EXPORT_TAGS =
@@ -86,6 +86,8 @@ EOT
     print $out <<'EOT';
     );
 
+our %ID_TO_KEYWORD = reverse %KEYWORDS;
+
 1;
 EOT
 
@@ -103,6 +105,8 @@ while               k
 until               k       
 continue            k       
 do                  k       
+use                 k       
+no                  k       
 last                k       OP_LAST
 next                k       OP_NEXT
 redo                k       OP_REDO
@@ -121,6 +125,7 @@ return              b
 undef               b       
 map                 b       
 grep                b       
+exists              b       
 unlink              o       
 glob                o       
 readline            o       
@@ -135,3 +140,10 @@ binmode             o
 abs                 o       
 wantarray           o       
 chr                 o       
+ref                 o       KEY_REFTYPE
+bless               o       
+push                o       
+pop                 o       
+shift               o       
+unshift             o       
+caller              o       

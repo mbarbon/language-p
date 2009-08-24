@@ -2,9 +2,10 @@ package Language::P::Assembly;
 
 use strict;
 use warnings;
-use Exporter; *import = \&Exporter::import;
+use Exporter 'import';
 
-our @EXPORT_OK = qw(label literal opcode opcode_n opcode_m opcode_nm);
+our @EXPORT_OK = qw(label literal opcode opcode_n opcode_m opcode_nm
+                    opcode_np opcode_npm);
 our %EXPORT_TAGS =
   ( all   => \@EXPORT_OK,
     );
@@ -78,6 +79,15 @@ sub opcode_n {
                };
 }
 
+sub opcode_np {
+    my( $number, $pos, @parameters ) = @_;
+
+    return i { opcode_n   => $number,
+               pos        => $pos,
+               parameters => @parameters ? \@parameters : undef,
+               };
+}
+
 sub opcode_m {
     my( $name, %attributes ) = @_;
 
@@ -90,6 +100,15 @@ sub opcode_nm {
     my( $number, %attributes ) = @_;
 
     return i { opcode_n   => $number,
+               attributes => %attributes ? \%attributes : undef,
+               };
+}
+
+sub opcode_npm {
+    my( $number, $pos, %attributes ) = @_;
+
+    return i { opcode_n   => $number,
+               pos        => $pos,
                attributes => %attributes ? \%attributes : undef,
                };
 }
@@ -115,6 +134,8 @@ my %sigil_to_name =
 sub _p {
     my( $self, $arg, $name, $number_to_name, $attributes ) = @_;
 
+    return 'undef' unless defined $arg;
+
     if( blessed( $arg ) ) {
         return $arg->start_label
             if $arg->isa( 'Language::P::Intermediate::BasicBlock' );
@@ -124,6 +145,9 @@ sub _p {
             if $arg->isa( 'Language::P::ParseTree::LexicalDeclaration' );
         return 'anoncode'
             if $arg->isa( 'Language::P::Intermediate::Code' );
+    }
+    if( ref( $arg ) eq 'HASH' ) {
+        return '{' . join( ', ', map "$_ => $arg->{$_}", keys %$arg ) . '}';
     }
     if(    $self->{opcode_n} && defined $name && $attributes
         && (my $named = $attributes->{$self->{opcode_n}}{named}) ) {

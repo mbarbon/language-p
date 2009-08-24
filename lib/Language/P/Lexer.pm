@@ -4,10 +4,19 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
-__PACKAGE__->mk_ro_accessors( qw(stream buffer tokens symbol_table
+__PACKAGE__->mk_ro_accessors( qw(stream buffer tokens runtime
                                  file line _start_of_line _heredoc_lexer
                                  ) );
 __PACKAGE__->mk_accessors( qw(quote) );
+
+sub data_handle {
+    my( $self ) = @_;
+    my $data = $self->{data_handle};
+
+    $self->{data_handle} = undef;
+
+    return $data;
+}
 
 use Language::P::ParseTree qw(:all);
 use Language::P::Keywords;
@@ -26,6 +35,9 @@ BEGIN {
        T_MINUSMINUS T_ANDAND T_OROR T_ARYLEN T_ARROW T_MATCH T_NOTMATCH
        T_ANDANDLOW T_ORORLOW T_NOTLOW T_XORLOW T_CMP T_SCMP T_SSTAR T_POWER
        T_PLUSEQUAL T_MINUSEQUAL T_STAREQUAL T_SLASHEQUAL T_LABEL T_TILDE
+       T_VSTRING T_VERSION T_DOTEQUAL T_SSTAREQUAL T_PERCENTEQUAL
+       T_POWEREQUAL T_AMPERSANDEQUAL T_OREQUAL T_XOREQUAL
+       T_ANDANDEQUAL T_OROREQUAL
 
        T_CLASS_START T_CLASS_END T_CLASS T_QUANTIFIER T_ASSERTION T_ALTERNATE
        T_CLGROUP
@@ -58,7 +70,7 @@ use constant
     map { $TOKENS[$_] => $_ + 1 } 0 .. $#TOKENS,
     };
 
-use Exporter qw(import);
+use Exporter 'import';
 
 our @EXPORT_OK =
   ( qw(X_NOTHING X_STATE X_TERM X_OPERATOR X_BLOCK X_REF
@@ -130,26 +142,39 @@ my %ops =
     '<=>' => T_CMP,
     'cmp' => T_SCMP,
     '/'   => T_SLASH,
+    '/='  => T_SLASHEQUAL,
     '\\'  => T_BACKSLASH,
     '.'   => T_DOT,
+    '.='  => T_DOTEQUAL,
     '..'  => T_DOTDOT,
     '...' => T_DOTDOTDOT,
     '~'   => T_TILDE,
     '+'   => T_PLUS,
+    '+='  => T_PLUSEQUAL,
     '-'   => T_MINUS,
+    '-='  => T_MINUSEQUAL,
     '*'   => T_STAR,
+    '*='  => T_STAREQUAL,
     'x'   => T_SSTAR,
+    'x='  => T_SSTAREQUAL,
     '$'   => T_DOLLAR,
     '%'   => T_PERCENT,
+    '%='  => T_PERCENTEQUAL,
     '**'  => T_POWER,
+    '**=' => T_POWEREQUAL,
     '@'   => T_AT,
     '&'   => T_AMPERSAND,
+    '&='  => T_AMPERSANDEQUAL,
     '|'   => T_OR,
+    '|='  => T_OREQUAL,
     '^'   => T_XOR,
+    '^='  => T_XOREQUAL,
     '++'  => T_PLUSPLUS,
     '--'  => T_MINUSMINUS,
     '&&'  => T_ANDAND,
+    '&&=' => T_ANDANDEQUAL,
     '||'  => T_OROR,
+    '||=' => T_OROREQUAL,
     '$#'  => T_ARYLEN,
     '->'  => T_ARROW,
     '=~'  => T_MATCH,
@@ -246,6 +271,23 @@ sub _skip_space {
             $self->{file} = $2 if $2;
             $reset_pos = 1;
             next;
+        } elsif(    $self->{_start_of_line}
+                 && $$buffer =~ /^=[a-zA-Z]/ ) {
+            $reset_pos = 1;
+            do {
+                ++$self->{line};
+                $$buffer = '';
+                $self->_fill_buffer;
+            } while( $$buffer && $$buffer !~ /^=cut\b/ );
+            ++$self->{line};
+            $$buffer = '';
+            next;
+        } elsif(    $self->{_start_of_line}
+                 && $$buffer =~ /^__(END|DATA)__\b/ ) {
+            $$buffer = ''; # assumes the buffer contains at most one line
+            $self->{data_handle} = [ $1, $self->{stream} ];
+            $self->{stream} = undef;
+            return;
         }
 
         $$buffer =~ s/^([ \t]+)// && defined wantarray and $retval .= $1;
@@ -459,15 +501,40 @@ sub lex_quote {
                     } elsif( $qc eq 'c' ) {
                         my $next = uc substr $$buffer, 0, 1, '';
                         $v .= chr( ord( $next ) ^ 0x40 );
+                    } elsif( $qc eq 'x' ) {
+                        if( $$buffer =~ s/^([0-9a-fA-F]{1,2})// ) {
+                            $v .= chr( oct '0x' . $1 );
+                        } else {
+                            $v .= "\0";
+                        }
                     } else {
                         die "Invalid escape '$qc'";
                     }
-                } elsif( $qc =~ /^[0-9]$/ ) {
-                    die "Unsupported numeric escape";
+                } elsif( $qc =~ /^[0-7]$/ ) {
+                    if( $$buffer =~ s/^([0-7]{1,2})// ) {
+                        $qc .= $1;
+                    }
+
+                    $v .= chr( oct '0' . $qc );
                 } else {
                     $v .= $qc;
                 }
             } elsif( $c =~ /^[\$\@]$/ && $self->quote->{interpolate} ) {
+                if(    $c eq '$'
+                    && (    substr( $$buffer, 0, 2 ) eq '#{'
+                         || substr( $$buffer, 0, 2 ) eq '#$' ) ) {
+                    $c .= substr $$buffer, 0, 1, '';
+                } elsif( $c eq '$' && substr( $$buffer, 0, 1 ) eq '#' ) {
+                    # same code as in 'lex' below, handle $# as variable
+                    my $id = $self->lex_identifier( 0 );
+
+                    if( $id ) {
+                        $self->unlex( $id );
+                    } else {
+                        $c .= substr $$buffer, 0, 1, '';
+                    }
+                }
+
                 if(    $interpolated_pattern
                     && (    !length( $$buffer )
                          || index( "()| \r\n\t",
@@ -487,6 +554,26 @@ sub lex_quote {
     }
 
     die "Can't get there";
+}
+
+sub lex_version {
+    my( $self ) = @_;
+
+    local $_ = $self->buffer;
+
+    _skip_space( $self )
+      if defined( $$_ ) && $$_ =~ /^[ \t\r\n]/;
+
+    return [ $self->{pos}, T_EOF, '' ] unless length $$_;
+
+    # TODO review version comparing in 5.10
+    if( $$_ =~ s/^v((?:\d+\.)*\d+)// ) {
+        return [ $self->{pos}, T_VSTRING, $1 ]
+    } elsif( $$_ =~ s/^((?:\d+\.)*\d+)// ) {
+        return [ $self->{pos}, T_VERSION, $1 ]
+    }
+
+    return undef;
 }
 
 sub lex_alphabetic_identifier {
@@ -574,7 +661,7 @@ sub lex_identifier {
     $id or $$_ =~ /^\$[\${:]/ and do {
         return;
     };
-    $id or $$_ =~ s/^(\W)(?=\W)// and do {
+    $id or $$_ =~ s/^(\W)(?=\W|$)// and do {
         $id = [ $self->{pos}, T_ID, $1, T_FQ_ID ];
     };
 
@@ -800,7 +887,11 @@ sub _prepare_sublex_heredoc {
         }
 
         $$_ =~ s/^(\w*)//;
-        warn "Deprecated" unless $1;
+        if( !$1 ) {
+            $self->runtime->warning_if
+              ( 'syntax', $self->file, $self->line,
+                'Use of bare << to mean <<"" is deprecated' );
+        }
         $end = $1;
     }
     $end .= "\n";
@@ -891,7 +982,7 @@ sub lex {
         if( $$_ =~ /^=>/ ) {
             # fully qualified name (foo::moo) is quoted only if not declared
             if(    $type == T_FQ_ID
-                && $self->symbol_table->get_symbol( $ids, '*' ) ) {
+                && $self->runtime->get_symbol( $ids, '*' ) ) {
                 return [ $pos, T_ID, $ids, $type ];
             } else {
                 return [ $pos, T_STRING, $ids ];
@@ -937,10 +1028,12 @@ sub lex {
                 |=~|!~
                 |\.\.|\.\.\.
                 |\+\+|\-\-
-                |\+=|\-=|\*=|\/=
+                |\+=|\-=|\*=|\/=|\.=|x=|%=|\*\*=|&=|\|=|\^=|&&=|\|\|=
                 |\&\&|\|\|)//x and return [ $self->{pos}, $ops{$1}, $1 ];
     $$_ =~ s/^\$//x and do {
-        if( $$_ =~ /^\#/ ) {
+        if( $$_ =~ s/^\#(?=[{\$])//x ) {
+            return [ $self->{pos}, $ops{'$#'}, '$#' ];
+        } elsif( $$_ =~ /^\#/ ) {
             my $id = $self->lex_identifier( 0 );
 
             if( $id ) {

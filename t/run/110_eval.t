@@ -1,6 +1,8 @@
 #!/usr/bin/perl -w
 
-print "1..5\n";
+BEGIN {
+    eval 'print "1..8\n"';
+}
 
 my $y = 2;
 my $x = 7;
@@ -21,3 +23,19 @@ eval '$y = $y + 1';
 
 print "ok $x\n";
 print "ok $y\n";
+
+$main::x = $main::x = 66; # avoid warning
+
+package p;
+our $x;
+package main;
+$p::x = 6;
+
+eval 'print "ok $x\n"';
+
+$ok = eval {
+    print "ok 7\n";
+    8;
+};
+print "ok $ok\n";
+

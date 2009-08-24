@@ -27,6 +27,8 @@ my %dispatch =
     'Language::P::ParseTree::ConditionalLoop'        => '_cond_loop',
     'Language::P::ParseTree::Ternary'                => '_ternary',
     'Language::P::ParseTree::Block'                  => '_block',
+    'Language::P::ParseTree::EvalBlock'              => '_expression_block',
+    'Language::P::ParseTree::DoBlock'                => '_expression_block',
     'Language::P::ParseTree::BareBlock'              => '_bare_block',
     'Language::P::ParseTree::Subroutine'             => '_subroutine',
     'Language::P::ParseTree::AnonymousSubroutine'    => '_subroutine',
@@ -40,8 +42,9 @@ my %dispatch =
     'Language::P::ParseTree::Substitution'           => '_substitution',
     'Language::P::ParseTree::Foreach'                => '_foreach',
     'Language::P::ParseTree::For'                    => '_for',
-    'Language::P::ParseTree::Package'                => '_noop',
+    'Language::P::ParseTree::LexicalState'           => '_noop',
     'Language::P::ParseTree::Empty'                  => '_noop',
+    'Language::P::ParseTree::Use'                    => '_use',
     'DEFAULT'                                        => '_noisy_noop',
     );
 
@@ -80,6 +83,7 @@ sub _symbol {
 sub _quoted_string {
     my( $self, $tree, $cxt ) = @_;
 
+    $tree->set_attribute( 'context', $cxt );
     foreach my $component ( @{$tree->components} ) {
         $self->visit( $component, CXT_SCALAR );
     }
@@ -136,6 +140,13 @@ sub _bare_block {
 
     _block( $self, $tree, $cxt );
     $self->visit( $tree->continue, CXT_VOID ) if $tree->continue;
+}
+
+sub _expression_block {
+    my( $self, $tree, $cxt ) = @_;
+
+    _block( $self, $tree, $cxt );
+    $tree->set_attribute( 'context', $cxt );
 }
 
 sub _function_call {
@@ -246,6 +257,7 @@ sub _binary_op {
 sub _pattern {
     my( $self, $tree, $cxt ) = @_;
 
+    $tree->set_attribute( 'context', $cxt );
     $self->visit( $tree->string, CXT_SCALAR );
 }
 
@@ -289,6 +301,15 @@ sub _cond {
     foreach my $iftrue ( @{$tree->iftrues} ) {
         $self->visit( $iftrue->condition, CXT_SCALAR );
         $self->visit( $iftrue->block, $cxt );
+    }
+}
+
+sub _use {
+    my( $self, $tree, $cxt ) = @_;
+
+    return unless $tree->import;
+    foreach my $arg ( @{$tree->import} ) {
+        $self->visit( $arg, CXT_LIST );
     }
 }
 

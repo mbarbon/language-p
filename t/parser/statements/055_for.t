@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 6;
+use Test::More tests => 7;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -92,6 +92,29 @@ EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 foreach $x ( @a ) {
+    1;
+}
+EOP
+--- !parsetree:Foreach
+block: !parsetree:Block
+  lines:
+    - !parsetree:Constant
+      context: CXT_VOID
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 1
+continue: ~
+expression: !parsetree:Symbol
+  context: CXT_LIST
+  name: a
+  sigil: VALUE_ARRAY
+variable: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: x
+  sigil: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+foreach our $x ( @a ) {
     1;
 }
 EOP

@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 7;
+use Test::More tests => 8;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -18,12 +18,39 @@ prototype: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
+sub name { a }
+EOP
+--- !parsetree:NamedSubroutine
+lines:
+  - !parsetree:LexicalState
+    changed: CHANGED_ALL
+    hints: 0
+    package: main
+    warnings: ~
+  - !parsetree:Builtin
+    arguments:
+      - !parsetree:Constant
+        context: CXT_CALLER
+        flags: CONST_STRING|STRING_BARE
+        value: a
+    context: CXT_CALLER
+    function: OP_RETURN
+name: name
+prototype: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 sub name {
   $x
 }
 EOP
 --- !parsetree:NamedSubroutine
 lines:
+  - !parsetree:LexicalState
+    changed: CHANGED_ALL
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:Builtin
     arguments:
       - !parsetree:Symbol
@@ -44,6 +71,11 @@ sub name {
 EOP
 --- !parsetree:NamedSubroutine
 lines:
+  - !parsetree:LexicalState
+    changed: CHANGED_ALL
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:Builtin
     arguments:
       - !parsetree:LexicalSymbol
@@ -70,6 +102,11 @@ sub name {
 EOP
 --- !parsetree:NamedSubroutine
 lines:
+  - !parsetree:LexicalState
+    changed: CHANGED_ALL
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:LexicalDeclaration
     context: CXT_VOID
     flags: DECLARATION_MY
@@ -98,19 +135,24 @@ sub name {
 EOP
 --- !parsetree:NamedSubroutine
 lines:
-  - !parsetree:NamedSubroutine
-    lines:
-      - !parsetree:Builtin
-        arguments:
-          - !parsetree:LexicalSymbol
-            context: CXT_CALLER
-            level: 2
-            name: x
-            sigil: VALUE_SCALAR
+  - !parsetree:LexicalState
+    changed: CHANGED_ALL
+    hints: 0
+    package: main
+    warnings: ~
+  - !parsetree:Builtin
+    arguments:
+      - !parsetree:LexicalSymbol
         context: CXT_CALLER
-        function: OP_RETURN
-    name: name2
-    prototype: ~
+        level: 2
+        name: x
+        sigil: VALUE_SCALAR
+    context: CXT_CALLER
+    function: OP_RETURN
+name: name2
+prototype: ~
+--- !parsetree:NamedSubroutine
+lines: []
 name: name
 prototype: ~
 --- !parsetree:LexicalDeclaration
@@ -128,6 +170,24 @@ my $x;
   }
 }
 EOP
+--- !parsetree:NamedSubroutine
+lines:
+  - !parsetree:LexicalState
+    changed: CHANGED_ALL
+    hints: 0
+    package: main
+    warnings: ~
+  - !parsetree:Builtin
+    arguments:
+      - !parsetree:LexicalSymbol
+        context: CXT_CALLER
+        level: 1
+        name: x
+        sigil: VALUE_SCALAR
+    context: CXT_CALLER
+    function: OP_RETURN
+name: name
+prototype: ~
 --- !parsetree:LexicalDeclaration
 context: CXT_VOID
 flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
@@ -135,20 +195,7 @@ name: x
 sigil: VALUE_SCALAR
 --- !parsetree:BareBlock
 continue: ~
-lines:
-  - !parsetree:NamedSubroutine
-    lines:
-      - !parsetree:Builtin
-        arguments:
-          - !parsetree:LexicalSymbol
-            context: CXT_CALLER
-            level: 1
-            name: x
-            sigil: VALUE_SCALAR
-        context: CXT_CALLER
-        function: OP_RETURN
-    name: name
-    prototype: ~
+lines: []
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -159,6 +206,24 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
   }
 }
 EOP
+--- !parsetree:NamedSubroutine
+lines:
+  - !parsetree:LexicalState
+    changed: CHANGED_ALL
+    hints: 0
+    package: main
+    warnings: ~
+  - !parsetree:Builtin
+    arguments:
+      - !parsetree:LexicalSymbol
+        context: CXT_CALLER
+        level: 1
+        name: x
+        sigil: VALUE_SCALAR
+    context: CXT_CALLER
+    function: OP_RETURN
+name: name
+prototype: ~
 --- !parsetree:BareBlock
 continue: ~
 lines:
@@ -167,17 +232,4 @@ lines:
     flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
     name: x
     sigil: VALUE_SCALAR
-  - !parsetree:NamedSubroutine
-    lines:
-      - !parsetree:Builtin
-        arguments:
-          - !parsetree:LexicalSymbol
-            context: CXT_CALLER
-            level: 1
-            name: x
-            sigil: VALUE_SCALAR
-        context: CXT_CALLER
-        function: OP_RETURN
-    name: name
-    prototype: ~
 EOE

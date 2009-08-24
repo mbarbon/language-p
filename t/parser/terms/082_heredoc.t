@@ -40,6 +40,7 @@ arguments:
         context: CXT_SCALAR
         flags: CONST_STRING
         value: "\n"
+    context: CXT_LIST
 context: CXT_VOID
 function: OP_PRINT
 indirect: ~
@@ -62,6 +63,7 @@ arguments:
         context: CXT_SCALAR
         flags: CONST_STRING
         value: "\n"
+    context: CXT_LIST
 context: CXT_VOID
 function: OP_PRINT
 indirect: ~

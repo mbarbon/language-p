@@ -55,6 +55,7 @@ right: !parsetree:Substitution
         context: CXT_SCALAR
         name: 1
         sigil: VALUE_SCALAR
+    context: CXT_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -132,6 +133,7 @@ left: !parsetree:Symbol
 op: OP_MATCH
 right: !parsetree:Substitution
   pattern: !parsetree:InterpolatedPattern
+    context: CXT_SCALAR
     flags: FLAG_RX_GLOBAL
     op: OP_QL_S
     string: !parsetree:QuotedString
@@ -140,6 +142,7 @@ right: !parsetree:Substitution
           context: CXT_SCALAR
           name: foo
           sigil: VALUE_SCALAR
+      context: CXT_SCALAR
   replacement: !parsetree:Constant
     context: CXT_SCALAR
     flags: CONST_STRING

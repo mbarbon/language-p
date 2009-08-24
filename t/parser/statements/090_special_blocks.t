@@ -14,6 +14,11 @@ BEGIN {
 EOP
 --- !parsetree:NamedSubroutine
 lines:
+  - !parsetree:LexicalState
+    changed: CHANGED_ALL
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:Builtin
     arguments:
       - !parsetree:Constant
@@ -33,6 +38,11 @@ sub END {
 EOP
 --- !parsetree:NamedSubroutine
 lines:
+  - !parsetree:LexicalState
+    changed: CHANGED_ALL
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:Builtin
     arguments:
       - !parsetree:Constant
@@ -52,6 +62,11 @@ END {
 EOP
 --- !parsetree:NamedSubroutine
 lines:
+  - !parsetree:LexicalState
+    changed: CHANGED_ALL
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:Builtin
     arguments:
       - !parsetree:Constant

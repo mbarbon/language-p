@@ -32,7 +32,8 @@ my @re1 =
     o( 'rx_accept',      groups   => 0 ),
     );
 my $re1 = Language::P::Toy::Value::Regex->new
-              ( { bytecode   => \@re1,
+              ( $runtime,
+                { bytecode   => \@re1,
                   stack_size => 0,
                   } );
 

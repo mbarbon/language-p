@@ -123,6 +123,7 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 do { 1; 2 };
 EOP
 --- !parsetree:DoBlock
+context: CXT_VOID
 lines:
   - !parsetree:Constant
     context: CXT_VOID
@@ -145,6 +146,7 @@ left: !parsetree:Symbol
   sigil: VALUE_SCALAR
 op: OP_ASSIGN
 right: !parsetree:DoBlock
+  context: CXT_SCALAR
   lines:
     - !parsetree:Constant
       context: CXT_VOID
@@ -161,9 +163,15 @@ sub foo { do { 1; 2 } }
 EOP
 --- !parsetree:NamedSubroutine
 lines:
+  - !parsetree:LexicalState
+    changed: CHANGED_ALL
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:Builtin
     arguments:
       - !parsetree:DoBlock
+        context: CXT_CALLER
         lines:
           - !parsetree:Constant
             context: CXT_VOID

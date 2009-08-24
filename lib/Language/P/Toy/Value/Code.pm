@@ -6,19 +6,21 @@ use base qw(Language::P::Toy::Value::Any);
 
 use Language::P::ParseTree qw(VALUE_SCALAR VALUE_ARRAY VALUE_HASH);
 
-__PACKAGE__->mk_ro_accessors( qw(bytecode stack_size lexicals outer closed
-                                 lexical_init) );
+__PACKAGE__->mk_ro_accessors( qw(bytecode stack_size lexicals closed
+                                 lexical_init scopes) );
 
 sub type { 9 }
 sub is_subroutine { 0 }
+sub name { undef }
 
 sub new {
-    my( $class, $args ) = @_;
-    my $self = $class->SUPER::new( $args );
+    my( $class, $runtime, $args ) = @_;
+    my $self = $class->SUPER::new( $runtime, $args );
 
     $self->{stack_size} ||= 0;
     $self->{closed} ||= [];
     $self->{lexical_init} ||= [];
+    $self->{scopes} ||= [];
 
     return $self;
 }
@@ -29,13 +31,14 @@ sub call {
 
     my $stack = $runtime->{_stack};
     if( $self->lexicals ) {
-        my $pad = $self->lexicals->new_scope( undef );
+        my $pad = $self->lexicals->new_scope( $runtime, undef );
         $stack->[$frame - 1] = $pad;
     } else {
         $stack->[$frame - 1] = 'no_pad';
     }
     if( $self->stack_size ) {
-        for( my $i = 0; $i <= $#{$self->lexical_init}; ++$i ) {
+        my $st = $self->is_subroutine ? 1 : 0; # skip @_
+        for( my $i = $st; $i <= $#{$self->lexical_init}; ++$i ) {
             if( $self->lexical_init->[$i] == VALUE_SCALAR ) {
                 $stack->[$frame - 3 - $i] = Language::P::Toy::Value::Undef->new;
             } elsif( $self->lexical_init->[$i] == VALUE_ARRAY ) {
@@ -46,11 +49,13 @@ sub call {
         }
     }
     $stack->[$frame - 2] = [ $pc, $runtime->{_bytecode}, $context,
-                             $runtime->{_code} ];
+                             $runtime->{_code}, $runtime->{_lex} ];
 
     $runtime->set_bytecode( $self->bytecode );
     # FIXME encapsulation
     $runtime->{_code} = $self;
 }
+
+sub as_boolean_int { return 1 }
 
 1;

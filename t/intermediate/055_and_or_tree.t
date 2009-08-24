@@ -12,6 +12,7 @@ $x = $a && $b;
 EOP
 # main
 L1:
+  scope_enter scope=0
   set index=1 (global name="a", slot=1)
   jump_if_true to=L2 (get index=1)
   jump to=L4
@@ -21,6 +22,7 @@ L2:
   jump to=L3
 L3:
   assign (global name="x", slot=1), (get index=3)
+  scope_leave scope=0
   end
 L4:
   set index=3 (get index=1)
@@ -32,6 +34,7 @@ $x = $a || $b;
 EOP
 # main
 L1:
+  scope_enter scope=0
   set index=1 (global name="a", slot=1)
   jump_if_true to=L4 (get index=1)
   jump to=L2
@@ -41,6 +44,7 @@ L2:
   jump to=L3
 L3:
   assign (global name="x", slot=1), (get index=3)
+  scope_leave scope=0
   end
 L4:
   set index=3 (get index=1)
@@ -52,6 +56,7 @@ $x = $a && $b && $c;
 EOP
 # main
 L1:
+  scope_enter scope=0
   set index=1 (global name="a", slot=1)
   jump_if_true to=L2 (get index=1)
   jump to=L6
@@ -68,6 +73,7 @@ L4:
   jump to=L5
 L5:
   assign (global name="x", slot=1), (get index=5)
+  scope_leave scope=0
   end
 L6:
   set index=3 (get index=1)
@@ -82,6 +88,7 @@ $x = $a || $b || $c;
 EOP
 # main
 L1:
+  scope_enter scope=0
   set index=1 (global name="a", slot=1)
   jump_if_true to=L6 (get index=1)
   jump to=L2
@@ -98,6 +105,7 @@ L4:
   jump to=L5
 L5:
   assign (global name="x", slot=1), (get index=5)
+  scope_leave scope=0
   end
 L6:
   set index=3 (get index=1)

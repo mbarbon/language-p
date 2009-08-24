@@ -10,8 +10,8 @@ use Language::P::Toy::Value::Undef;
 __PACKAGE__->mk_ro_accessors( qw(outer names values clear) );
 
 sub new {
-    my( $class, $args ) = @_;
-    my $self = $class->SUPER::new( $args );
+    my( $class, $runtime, $args ) = @_;
+    my $self = $class->SUPER::new( $runtime, $args );
 
     $self->{values} ||= [];
     $self->{names} ||= {};
@@ -24,15 +24,22 @@ sub new {
 }
 
 sub new_scope {
-    my( $self, $outer_scope ) = @_;
+    my( $self, $runtime, $outer_scope ) = @_;
 
-    my $new = ref( $self )->new( { outer  => $outer_scope,
+    my $new = ref( $self )->new( $runtime,
+                                 { outer  => $outer_scope,
                                    values => [ @{$self->values} ],
                                    clear  => $self->clear,
                                    } );
     my $values = $new->values;
     foreach my $clear ( @{$new->{clear}{scalar}} ) {
-        $values->[$clear] = Language::P::Toy::Value::Undef->new;
+        $values->[$clear] = Language::P::Toy::Value::Undef->new( $runtime );
+    }
+    foreach my $clear ( @{$new->{clear}{array}} ) {
+        $values->[$clear] = Language::P::Toy::Value::Array->new( $runtime );
+    }
+    foreach my $clear ( @{$new->{clear}{hash}} ) {
+        $values->[$clear] = Language::P::Toy::Value::Hash->new( $runtime );
     }
     foreach my $clear ( @{$new->{clear}{array}} ) {
         $values->[$clear] = Language::P::Toy::Value::Array->new;
@@ -44,26 +51,20 @@ sub new_scope {
     return $new;
 }
 
-sub add_value {
-    my( $self, $lexical, $value ) = @_;
-
-    return add_value_index( $self, $lexical, $#{$self->{values}}, $value );
-}
-
 sub add_value_index {
-    my( $self, $lexical, $index, $value ) = @_;
+    my( $self, $runtime, $lexical, $index, $value ) = @_;
 
     # make repeated add a no-op
     return if defined $self->values->[$index];
 
-    if( @_ > 3 ) {
+    if( @_ == 5 ) {
         $self->values->[$index] = $value;
     } elsif( $lexical->sigil == VALUE_SCALAR ) {
-        $self->values->[$index] = Language::P::Toy::Value::Undef->new;
+        $self->values->[$index] = Language::P::Toy::Value::Undef->new( $runtime );
     } elsif( $lexical->sigil == VALUE_ARRAY ) {
-        $self->values->[$index] = Language::P::Toy::Value::Array->new;
+        $self->values->[$index] = Language::P::Toy::Value::Array->new( $runtime );
     } elsif( $lexical->sigil == VALUE_HASH ) {
-        $self->values->[$index] = Language::P::Toy::Value::Hash->new;
+        $self->values->[$index] = Language::P::Toy::Value::Hash->new( $runtime );
     }
     $self->{names}{$lexical->symbol_name} ||= [];
     push @{$self->{names}{$lexical->symbol_name}}, $index;

@@ -14,6 +14,8 @@ foreach $y ( 1, 2 ) {
 EOP
 # main
 L1:
+  scope_enter scope=0
+  scope_enter scope=1
   constant_integer value=1
   constant_integer value=2
   make_list count=2
@@ -35,8 +37,10 @@ L3:
   temporary index=1
   swap
   glob_slot_set slot=1
+  scope_enter scope=2
   constant_integer value=3
   pop
+  scope_leave scope=2
   jump to=L2
 L5:
   pop
@@ -45,6 +49,8 @@ L6:
   temporary index=1
   temporary index=2
   glob_slot_set slot=1
+  scope_leave scope=1
+  scope_leave scope=0
   end
 EOI
 

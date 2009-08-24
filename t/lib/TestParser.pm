@@ -11,6 +11,8 @@ use Language::P::ParseTree qw(:all);
 use Language::P::ParseTree::PropagateContext;
 use Language::P::Toy::Value::MainSymbolTable;
 
+use YAML qw(Bless Dump);
+
 our @EXPORT_OK = qw(fresh_parser parsed_program
                     parse_and_diff_yaml parse_string);
 our %EXPORT_TAGS =
@@ -42,22 +44,30 @@ my @lines;
         my( $self, $name, $prototype ) = @_;
 
         my $sub = Language::P::Toy::Value::Subroutine::Stub->new
-                      ( { name     => $name,
+                      ( $self->runtime,
+                        { name     => $name,
                           prototype=> $prototype,
                           } );
-        $self->runtime->symbol_table->set_symbol( $name, '&', $sub );
+        $self->runtime->_symbol_table->set_symbol( $self->runtime,
+                                                   $name, '&', $sub );
     }
 
     package TestParserRuntime;
 
     sub new {
-        my $st = Language::P::Toy::Value::MainSymbolTable->new;
+        my $self = bless {}, __PACKAGE__;
+        my $st = Language::P::Toy::Value::MainSymbolTable->new( $self );
 
-        return bless { symbol_table => $st }, __PACKAGE__;
+        $self->{symbol_table} = $st;
+
+        return $self;
     }
 
-    sub symbol_table { $_[0]->{symbol_table} }
+    sub get_symbol { $_[0]->_symbol_table->get_symbol( $_[0], $_[1], $_[2] ) }
+    sub get_package { $_[0]->_symbol_table->get_package( $_[0], $_[1] ) }
+    sub _symbol_table { $_[0]->{symbol_table} }
     sub set_bytecode { }
+    sub set_data_handle { }
 }
 
 sub fresh_parser {
@@ -79,7 +89,12 @@ sub parse_string {
     my( $expr, $package ) = @_;
 
     my $parser = fresh_parser();
-    $parser->parse_string( $expr, $package || 'main' );
+    $parser->parse_string( $expr, 0, '<string>',
+                           { package  => $package || 'main',
+                             lexicals => undef,
+                             hints    => 0,
+                             warnings => undef,
+                             } );
 
     return parsed_program();
 }
@@ -87,15 +102,29 @@ sub parse_string {
 sub parse_and_diff_yaml {
     my( $expr, $expected ) = @_;
 
-    $expected =~ s{ ((?:NUM|CXT|FLAG|CONST|STRING|VALUE|OP|DECLARATION|PROTO)_[A-Z_ \|]+)}
+    $expected =~ s{ ((?:NUM|CXT|FLAG|CONST|STRING|VALUE|OP|DECLARATION|PROTO|CHANGED)_[A-Z_ \|]+)}
                   {" " . eval $1 or die $@}eg;
 
     require Language::P::ParseTree::DumpYAML;
 
     my $got = '';
     my $dumper = Language::P::ParseTree::DumpYAML->new;
-    foreach my $line ( @{parse_string( $expr )} ) {
-        $got .= $dumper->dump( $line );
+    eval {
+        foreach my $line ( @{parse_string( $expr )} ) {
+            $got .= $dumper->dump( $line );
+        }
+    };
+    my $e = $@;
+    if( $e && ref( $e ) && $e->isa( 'Language::P::Exception' ) ) {
+        my $v = { message => $e->message,
+                  file    => $e->position->[0],
+                  line    => $e->position->[1],
+                  };
+        Bless( $v )->tag( 'p:Exception' );
+
+        $got .= Dump( $v );
+    } elsif( $e ) {
+        $got .= $e;
     }
 
     require Test::Differences;

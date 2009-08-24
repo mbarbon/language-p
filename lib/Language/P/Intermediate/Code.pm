@@ -7,20 +7,48 @@ use base qw(Class::Accessor::Fast);
 use Scalar::Util;
 
 __PACKAGE__->mk_ro_accessors( qw(type name basic_blocks outer inner
-                                 lexicals prototype) );
+                                 lexicals prototype scopes lexical_states) );
+
+use Exporter 'import';
+
+our @EXPORT_OK = qw(SCOPE_SUB SCOPE_EVAL SCOPE_MAIN SCOPE_LEX_STATE
+                    CODE_MAIN CODE_SUB CODE_REGEX CODE_EVAL);
+our %EXPORT_TAGS =
+  ( all => \@EXPORT_OK,
+    );
+
+use constant +
+  { SCOPE_SUB        => 1, # top subroutine scope
+    SCOPE_EVAL       => 2, # eval block/eval string
+    SCOPE_MAIN       => 4, # eval string, file or subroutine top scope
+    SCOPE_LEX_STATE  => 8, # there is a lexical state change inside the scope
+
+    CODE_MAIN        => 1,
+    CODE_SUB         => 2,
+    CODE_REGEX       => 3,
+    CODE_EVAL        => 4,
+    };
 
 sub new {
     my( $class, $args ) = @_;
     my $self = $class->SUPER::new( $args );
 
     $self->{inner} = [];
+    $self->{scopes} = [];
+    $self->{lexical_states} =
+        [ { scope    => 0,
+            package  => 'main',
+            hints    => 0,
+            warnings => undef,
+            } ];
 
     return $self;
 }
 
-sub is_main  { $_[0]->{type} == 1 }
-sub is_sub   { $_[0]->{type} == 2 }
-sub is_regex { $_[0]->{type} == 3 }
+sub is_main  { $_[0]->{type} == CODE_MAIN || $_[0]->{type} == CODE_EVAL }
+sub is_sub   { $_[0]->{type} == CODE_SUB }
+sub is_regex { $_[0]->{type} == CODE_REGEX }
+sub is_eval  { $_[0]->{type} == CODE_EVAL }
 
 sub weaken   { $_->weaken, Scalar::Util::weaken( $_ ) foreach @{$_[0]->inner} }
 

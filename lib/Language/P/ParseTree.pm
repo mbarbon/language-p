@@ -15,7 +15,8 @@ our @EXPORT_OK =
 
        PROTO_DEFAULT PROTO_SCALAR PROTO_ARRAY PROTO_HASH PROTO_SUB
        PROTO_GLOB PROTO_REFERENCE PROTO_BLOCK PROTO_AMPER PROTO_ANY
-       PROTO_INDIROBJ PROTO_FILEHANDLE PROTO_MAKE_GLOB
+       PROTO_INDIROBJ PROTO_FILEHANDLE PROTO_MAKE_GLOB PROTO_MAKE_ARRAY
+       PROTO_MAKE_HASH PROTO_DEFAULT_ARG
 
        FLAG_IMPLICITARGUMENTS FLAG_ERASEFRAME
        FLAG_RX_MULTI_LINE FLAG_RX_SINGLE_LINE FLAG_RX_CASE_INSENSITIVE
@@ -23,10 +24,12 @@ our @EXPORT_OK =
        FLAG_RX_EVAL FLAG_RX_COMPLEMENT FLAG_RX_DELETE FLAG_RX_SQUEEZE
 
        VALUE_SCALAR VALUE_ARRAY VALUE_HASH VALUE_SUB VALUE_GLOB VALUE_HANDLE
-       VALUE_ARRAY_LENGTH
+       VALUE_ARRAY_LENGTH VALUE_LIST
 
        DECLARATION_MY DECLARATION_OUR DECLARATION_STATE
        DECLARATION_CLOSED_OVER
+
+       CHANGED_HINTS CHANGED_WARNINGS CHANGED_PACKAGE CHANGED_ALL
        %KEYWORD_TO_OP), @OPERATIONS );
 our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,
@@ -65,7 +68,10 @@ use constant
     PROTO_AMPER        => 128,
     PROTO_INDIROBJ     => 256,
     PROTO_FILEHANDLE   => 512,
+    PROTO_MAKE_ARRAY   => 1024|2,
+    PROTO_MAKE_HASH    => 1024|4,
     PROTO_MAKE_GLOB    => 1024|16,
+    PROTO_DEFAULT_ARG  => 2048,
     PROTO_DEFAULT      => [ -1, -1, 0, 2 ],
 
     # sigils, anonymous array/hash constructors, dereferences
@@ -76,6 +82,7 @@ use constant
     VALUE_GLOB         => 5,
     VALUE_ARRAY_LENGTH => 6,
     VALUE_HANDLE       => 7,
+    VALUE_LIST         => 8, # for list slices only
 
     # function calls
     FLAG_IMPLICITARGUMENTS => 1,
@@ -100,18 +107,24 @@ use constant
     DECLARATION_STATE        => 4,
     DECLARATION_CLOSED_OVER  => 8,
     DECLARATION_TYPE_MASK    => 7,
+
+    # lexical state
+    CHANGED_HINTS      => 1,
+    CHANGED_WARNINGS   => 2,
+    CHANGED_PACKAGE    => 4,
+    CHANGED_ALL        => 7,
     };
 
 our %PROTOTYPE =
-  ( OP_PRINT()       => [  0, -1, PROTO_FILEHANDLE, PROTO_ARRAY ],
-    OP_DEFINED()     => [  0,  1, PROTO_AMPER, PROTO_AMPER|PROTO_ANY ],
+  ( OP_PRINT()       => [  0, -1, PROTO_FILEHANDLE|PROTO_DEFAULT_ARG, PROTO_ARRAY ],
+    OP_DEFINED()     => [  1,  1, PROTO_AMPER|PROTO_DEFAULT_ARG, PROTO_AMPER|PROTO_ANY ],
     OP_RETURN()      => [  0, -1, 0, PROTO_ARRAY ],
     OP_UNDEF()       => [  0,  1, 0, PROTO_ANY ],
-    OP_EVAL()        => [  0,  1, PROTO_BLOCK, PROTO_ANY ],
+    OP_EVAL()        => [  1,  1, PROTO_BLOCK|PROTO_DEFAULT_ARG, PROTO_ANY ],
     OP_DO_FILE()     => [  1,  1, 0, PROTO_ANY ],
     OP_REQUIRE_FILE()=> [  1,  1, 0, PROTO_ANY ],
     OP_MAP()         => [  2, -1, PROTO_INDIROBJ, PROTO_ARRAY ],
-    ( map { $_ => [ 0, 1, 0, PROTO_MAKE_GLOB ] }
+    ( map { $_ => [ 1, 1, PROTO_DEFAULT_ARG, PROTO_MAKE_GLOB ] }
           ( OP_FT_EREADABLE,
             OP_FT_EWRITABLE,
             OP_FT_EEXECUTABLE,
@@ -140,19 +153,27 @@ our %PROTOTYPE =
             OP_FT_ATIME,
             OP_FT_CTIME,
             ) ),
-    OP_UNLINK()      => [  0, -1, 0, PROTO_ARRAY ],
+    OP_UNLINK()      => [  1, -1, PROTO_DEFAULT_ARG, PROTO_ARRAY ],
     OP_DIE()         => [  0, -1, 0, PROTO_ARRAY ],
     OP_OPEN()        => [  1, -1, 0, PROTO_MAKE_GLOB, PROTO_SCALAR, PROTO_ARRAY ],
     OP_PIPE()        => [  2,  2, 0, PROTO_MAKE_GLOB, PROTO_MAKE_GLOB ],
     OP_CHDIR()       => [  0,  1, 0, PROTO_SCALAR ],
-    OP_RMDIR()       => [  0,  1, 0, PROTO_SCALAR ],
+    OP_RMDIR()       => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
     OP_READLINE()    => [  0,  1, 0, PROTO_MAKE_GLOB ],
-    OP_GLOB()        => [  0, -1, 0, PROTO_ARRAY ],
+    OP_GLOB()        => [  1, -1, PROTO_DEFAULT_ARG, PROTO_ARRAY ],
     OP_CLOSE()       => [  0,  1, 0, PROTO_MAKE_GLOB ],
     OP_BINMODE()     => [  0,  2, 0, PROTO_MAKE_GLOB, PROTO_SCALAR ],
-    OP_ABS()         => [  0,  1, 0, PROTO_SCALAR ],
-    OP_CHR()         => [  0,  1, 0, PROTO_SCALAR ],
+    OP_ABS()         => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
+    OP_CHR()         => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
     OP_WANTARRAY()   => [  0,  0, 0 ],
+    OP_REFTYPE()     => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
+    OP_BLESS()       => [  1,  2, 0, PROTO_SCALAR, PROTO_SCALAR ],
+    OP_ARRAY_PUSH()  => [  1, -1, 0, PROTO_MAKE_ARRAY|PROTO_REFERENCE, PROTO_ARRAY ],
+    OP_ARRAY_UNSHIFT()=>[  1, -1, 0, PROTO_MAKE_ARRAY|PROTO_REFERENCE, PROTO_ARRAY ],
+    OP_ARRAY_POP()   => [  1,  1, PROTO_DEFAULT_ARG, PROTO_MAKE_ARRAY|PROTO_REFERENCE ],
+    OP_ARRAY_SHIFT() => [  1,  1, PROTO_DEFAULT_ARG, PROTO_MAKE_ARRAY|PROTO_REFERENCE ],
+    OP_EXISTS()      => [  1,  1, PROTO_AMPER, PROTO_AMPER ],
+    OP_CALLER()      => [  0,  1, 0, PROTO_SCALAR ],
     );
 
 our %CONTEXT =
@@ -185,10 +206,15 @@ sub is_symbol { 0 }
 sub is_compound { 0 }
 sub is_loop { 0 }
 sub is_plain_function { 0 }
+sub is_empty { 0 }
 sub can_implicit_return { 1 }
+sub always_void { 0 }
 sub is_declaration { 0 }
 sub lvalue_context { Language::P::ParseTree::CXT_SCALAR }
 sub parent { $_[0]->{parent} }
+sub pos   { $_[0]->{pos} || $_[0]->{pos_s} }
+sub pos_s { $_[0]->{pos_s} || $_[0]->{pos} }
+sub pos_e { $_[0]->{pos_e} || $_[0]->{pos} }
 
 sub set_parent {
     my( $self, $parent ) = @_;
@@ -238,13 +264,23 @@ sub set_attribute  {
     Scalar::Util::weaken( $self->{attributes}->{$name} ) if $weak;
 }
 
-package Language::P::ParseTree::Package;
+package Language::P::ParseTree::LexicalState;
 
 use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(name);
+our @FIELDS = qw(changed package hints warnings);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
+package Language::P::ParseTree::Use;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(package version import is_no);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -255,6 +291,7 @@ use warnings;
 use base qw(Language::P::ParseTree::Node);
 
 sub can_implicit_return { 0 }
+sub is_empty { return !$_[0]->has_attribute( 'label' ) }
 
 package Language::P::ParseTree::Constant;
 
@@ -301,8 +338,18 @@ our @FIELDS = qw(function arguments);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+# quick and dirty mapping from parsing prototype to runtime context
+sub _make_rtproto {
+    my( $proto ) = @_;
+
+    return [ map { $_ == Language::P::ParseTree::PROTO_SCALAR ?
+                       Language::P::ParseTree::CXT_SCALAR :
+                       Language::P::ParseTree::CXT_LIST }
+                 @{$proto}[ 3 .. $#$proto ] ];
+}
+
 sub parsing_prototype { return $_[0]->{prototype} || Language::P::ParseTree::PROTO_DEFAULT }
-sub runtime_context   { return undef }
+sub runtime_context   { return $_[0]->{prototype} ? _make_rtproto( $_[0]->{prototype} ) : undef }
 sub is_plain_function { 1 }
 
 package Language::P::ParseTree::SpecialFunctionCall;
@@ -353,6 +400,10 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Identifier);
 
+sub symbol_name { return $_[0]->{symbol_name} }
+sub set_closed_over {}
+sub closed_over { 0 }
+
 package Language::P::ParseTree::LexicalSymbol;
 
 use strict;
@@ -393,8 +444,18 @@ our @FIELDS = qw(lines);
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub is_compound { 1 }
+sub always_void { 1 }
 
 package Language::P::ParseTree::DoBlock;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Block);
+
+sub is_compound { 0 }
+sub always_void { 0 }
+
+package Language::P::ParseTree::EvalBlock;
 
 use strict;
 use warnings;
@@ -507,6 +568,8 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::UnOp);
 
+sub always_void { 1 }
+
 package Language::P::ParseTree::Dereference;
 
 use strict;
@@ -558,6 +621,7 @@ our @FIELDS = qw(iftrues iffalse);
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub is_compound { 1 }
+sub always_void { 1 }
 
 package Language::P::ParseTree::ConditionalBlock;
 
@@ -570,6 +634,7 @@ our @FIELDS = qw(condition block block_type);
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub is_compound { 1 }
+sub always_void { 1 }
 
 package Language::P::ParseTree::ConditionalLoop;
 
@@ -584,6 +649,7 @@ __PACKAGE__->mk_ro_accessors( @FIELDS );
 sub can_implicit_return { 0 }
 sub is_compound { 1 }
 sub is_loop { 1 }
+sub always_void { 1 }
 
 package Language::P::ParseTree::For;
 
@@ -597,6 +663,7 @@ __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub is_compound { 1 }
 sub is_loop { 1 }
+sub always_void { 1 }
 
 package Language::P::ParseTree::Foreach;
 
@@ -611,6 +678,7 @@ __PACKAGE__->mk_ro_accessors( @FIELDS );
 sub can_implicit_return { 0 }
 sub is_compound { 1 }
 sub is_loop { 1 }
+sub always_void { 1 }
 
 package Language::P::ParseTree::Ternary;
 

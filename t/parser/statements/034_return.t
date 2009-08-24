@@ -14,6 +14,11 @@ sub x {
 EOP
 --- !parsetree:NamedSubroutine
 lines:
+  - !parsetree:LexicalState
+    changed: CHANGED_ALL
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:Builtin
     arguments:
       - !parsetree:Symbol
@@ -34,6 +39,11 @@ sub x {
 EOP
 --- !parsetree:NamedSubroutine
 lines:
+  - !parsetree:LexicalState
+    changed: CHANGED_ALL
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:Symbol
     context: CXT_VOID
     name: x
@@ -59,6 +69,11 @@ sub x {
 EOP
 --- !parsetree:NamedSubroutine
 lines:
+  - !parsetree:LexicalState
+    changed: CHANGED_ALL
+    hints: 0
+    package: main
+    warnings: ~
   - !parsetree:Conditional
     iffalse: ~
     iftrues:

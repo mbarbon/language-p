@@ -87,10 +87,12 @@ sub to_ssa {
     $self->_converted( {} );
 
     my $new_code = Language::P::Intermediate::Code->new
-                       ( { type         => $code_segment->type,
-                           name         => $code_segment->name,
-                           basic_blocks => [],
-                           lexicals     => $code_segment->lexicals,
+                       ( { type           => $code_segment->type,
+                           name           => $code_segment->name,
+                           basic_blocks   => [],
+                           lexicals       => $code_segment->lexicals,
+                           scopes         => $code_segment->scopes,
+                           lexical_states => $code_segment->lexical_states,
                            } );
     $self->_converted_segments->{$code_segment} = $new_code;
 
@@ -131,7 +133,7 @@ sub to_ssa {
         $self->_converting( $self->_converted->{$block} );
         my $cblock = $self->_converting->{block} ||=
             Language::P::Intermediate::BasicBlock
-                ->new_from_label( $block->start_label );
+                ->new_from_label( $block->start_label, $block->lexical_state );
 
         push @{$new_code->basic_blocks}, $cblock;
         $self->_current_basic_block( $cblock );
@@ -281,7 +283,8 @@ sub _jump_to {
 
     $converted->{depth} = @$stack;
     $converted->{block} ||= Language::P::Intermediate::BasicBlock
-                                ->new_from_label( $to->start_label );
+                                ->new_from_label( $to->start_label,
+                                                  $to->lexical_state );
     $op->{attributes}{to} = $converted->{block};
     push @{$self->_queue}, $to;
 
