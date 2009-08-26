@@ -7,7 +7,7 @@ use base qw(Language::P::ParseTree::Visitor);
 __PACKAGE__->mk_ro_accessors( qw(runtime) );
 __PACKAGE__->mk_accessors( qw(_code _pending _block_map _temporary_map
                               _options _generated _intermediate _processing
-                              _eval_context _segment) );
+                              _eval_context _segment _saved_subs) );
 
 use Language::P::Intermediate::Code qw(:all);
 use Language::P::Intermediate::Generator;
