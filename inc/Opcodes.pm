@@ -168,7 +168,7 @@ __DATA__
 # opcode            flags   attrs       name                in out
 abs                 u       noattr      same                 1   1
 add                 0       noattr      same                 2   1
-add_assign
+add_assign          0       noattr      same                 2   1
 anonymous_array     0       noattr      same                 1   1
 anonymous_hash      0       noattr      same                 1   1
 array_element       0       noattr      same                 2   1
@@ -179,20 +179,20 @@ array_shift         u       noattr      same                 1   1
 array_slice         0       noattr      same                 2   1
 array_unshift       0       noattr      same                 2   1
 assign              0       noattr      same                 2   1
-backtick
+backtick            0       noattr      same                 1   1
 binmode             u       noattr      same                 1   1
-bit_and
-bit_and_assign
-bit_or
-bit_or_assign
-bit_not
-bit_xor
-bit_xor_assign
+bit_and             0       noattr      same                 2   1
+bit_and_assign      0       noattr      same                 2   1
+bit_or              0       noattr      same                 2   1
+bit_or_assign       0       noattr      same                 2   1
+bit_not             0       noattr      same                 1   1
+bit_xor             0       noattr      same                 2   1
+bit_xor_assign      0       noattr      same                 2   1
 bless               u       noattr      same                 2   1
 call                0       noattr      same                 2   1
-call_method         0       noattr      same                 2   1
+call_method         0       noattr      same                 1   1
 call_method_indirect 0      noattr      same                 2   1
-caller              v       noattr      same                 1   1
+caller              v       noattr      same                -1   1
 chdir               u       noattr      same                 1   1
 chr                 u       noattr      same                 1   1
 close               u       noattr      same                 1   1
@@ -210,14 +210,14 @@ dereference_glob    0       noattr      same                 1   1
 dereference_hash    0       noattr      same                 1   1
 dereference_scalar  0       noattr      same                 1   1
 dereference_sub     0       noattr      dereference_subroutine 1 1
-die                 
-divide
-divide_assign
+die                 0       noattr      same                 1   1
+divide              0       noattr      same                 2   1
+divide_assign       0       noattr      same                 2   1
 do_file             u       noattr      same                 1   1
-dot_dot
-dot_dot_dot
-dup
-end
+dot_dot             0       noattr      same                 2   1
+dot_dot_dot         0       noattr      same                 2   1
+dup                 0       noattr      same                 1   2
+end                 0       noattr      same                 0   0
 eval                u       noattr      same                 1   1
 eval_regex          u       noattr      same                 1   1
 exists              u       noattr      same                 1   1
@@ -253,11 +253,11 @@ ft_setgid           u       noattr      same                 1   1
 ft_setuid           u       noattr      same                 1   1
 ft_sticky           u       noattr      same                 1   1
 get                 0       index=i     same                 0   1
-glob                
+glob                0       noattr      same                 1   1
 glob_slot           0       noattr      same                 1   1
 glob_slot_set       0       noattr      same                 2   0
 global              0       name=s,slot=i same               0   1
-grep                
+grep                0       noattr      same                 1   1
 hash_element        0       noattr      same                 2   1
 hash_slice          0       noattr      same                 2   1
 iterator            0       noattr      same                 1   1
@@ -285,7 +285,7 @@ lexical_pad         0       index=i,slot=i same              0   1
 lexical_pad_clear   0       index=i,slot=i same              0   0
 lexical_pad_set     0       index=i     same                 1   0
 list_slice          0       noattr      same                 2   1
-local               
+local               0       noattr      same                 1   1
 localize_glob_slot  0       noattr      same                 0   1
 log_and             0       noattr      same                 2   1
 log_and_assign      0       noattr      same                 2   1
@@ -295,48 +295,48 @@ log_or_assign       0       noattr      same                 2   1
 log_xor             0       noattr      same                 2   1
 make_closure        0       noattr      same                 1   1
 make_list           0       noattr      same                -1   1
-map                 
-match               0       noattr      rx_match
-minus               0       noattr      negate
-modulus
-modulus_assign
+map                 0       noattr      same                 1   1
+match               0       noattr      rx_match             2   1
+minus               0       noattr      negate               1   1
+modulus             0       noattr      same                 2   1
+modulus_assign      0       noattr      same                 2   1
 multiply            0       noattr      same                 2   1
-multiply_assign
-negate
-noop
-not_match           0       noattr      rx_not_match
-num_cmp
-num_eq              0       noattr      compare_f_eq_scalar
-num_ge              0       noattr      compare_f_ge_scalar
-num_gt              0       noattr      compare_f_gt_scalar
-num_le              0       noattr      compare_f_le_scalar
-num_lt              0       noattr      compare_f_lt_scalar
-num_ne              0       noattr      compare_f_ne_scalar
-open                
-parentheses
-phi
-pipe                
+multiply_assign     0       noattr      same                 2   1
+negate              0       noattr      same                 1   1
+noop                0       noattr      same                 0   0
+not_match           0       noattr      rx_not_match         2   1
+num_cmp             0       noattr      same                 2   1
+num_eq              0       noattr      compare_f_eq_scalar  2   1
+num_ge              0       noattr      compare_f_ge_scalar  2   1
+num_gt              0       noattr      compare_f_gt_scalar  2   1
+num_le              0       noattr      compare_f_le_scalar  2   1
+num_lt              0       noattr      compare_f_lt_scalar  2   1
+num_ne              0       noattr      compare_f_ne_scalar  2   1
+open                0       noattr      same                 1   1
+parentheses         0       noattr      same                -1  -1
+phi                 0       noattr      same                -1  -1
+pipe                0       noattr      same                 2   1
 plus                0       noattr      same                 1   1
 pop                 0       noattr      same                 1   0
 postdec             0       noattr      same                 1   1
 postinc             0       noattr      same                 1   1
-power
-power_assign
+power               0       noattr      same                 2   1
+power_assign        0       noattr      same                 2   1
 predec              0       noattr      same                 1   1
 preinc              0       noattr      same                 1   1
 print               0       noattr      same                 2   1
-ql_lt
-ql_m
-ql_qr
-ql_qw
-ql_qx
-ql_s
-ql_tr
+ql_lt               0       noattr      same                -1  -1
+ql_m                0       noattr      same                -1  -1
+ql_qr               0       noattr      same                -1  -1
+ql_qw               0       noattr      same                -1  -1
+ql_qx               0       noattr      same                -1  -1
+ql_s                0       noattr      same                -1  -1
+ql_tr               0       noattr      same                -1  -1
 readline            u       noattr      same                 1   1
 reference           u       noattr      same                 1   1
 reftype             u       noattr      same                 1   1
-repeat
-repeat_assign
+repeat              0       noattr      same                 2   1
+repeat_assign       0       noattr      same                 2   1
 require_file        u       noattr      same                 1   1
 restore_glob_slot   0       noattr      same                 0   0
 return              0       noattr      same                 1   0
@@ -344,21 +344,21 @@ rmdir               u       noattr      same                 1   1
 set                 0       index=i     same                 1   0
 scope_enter         0       scope=i     same                 0   0
 scope_leave         0       scope=i     same                 0   0
-str_cmp
-str_eq              0       noattr      compare_s_eq_scalar
-str_ge              0       noattr      compare_s_ge_scalar
-str_gt              0       noattr      compare_s_gt_scalar
-str_le              0       noattr      compare_s_le_scalar
-str_lt              0       noattr      compare_s_lt_scalar
-str_ne              0       noattr      compare_s_ne_scalar
-stringify
+str_cmp             0       noattr      same                 2   1
+str_eq              0       noattr      compare_s_eq_scalar  2   1
+str_ge              0       noattr      compare_s_ge_scalar  2   1
+str_gt              0       noattr      compare_s_gt_scalar  2   1
+str_le              0       noattr      compare_s_le_scalar  2   1
+str_lt              0       noattr      compare_s_lt_scalar  2   1
+str_ne              0       noattr      compare_s_ne_scalar  2   1
+stringify           0       noattr      same                 1   1
 subtract            0       noattr      same                 2   1
-subtract_assign
+subtract_assign     0       noattr      same                 2   1
 swap                0       noattr      same                 2   2
 temporary           0       index=i     same                 0   1
 temporary_set       0       noattr      same                 1   0
-undef               u       noattr      same                 -1  1
-unlink              
+undef               u       noattr      same                -1   1
+unlink              0       noattr      same                 1   1
 vivify_array        0       noattr      same                 1   1
 vivify_hash         0       noattr      same                 1   1
 vivify_scalar       0       noattr      same                 1   1
