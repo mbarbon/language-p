@@ -59,9 +59,13 @@ sub _write_op {
         _write_string( $out, $op->{attributes}{value} );
     } elsif( $opn == OP_CONSTANT_INTEGER ) {
         print $out pack 'V', $op->{attributes}{value};
-    } elsif( $opn == OP_GET ) {
-        print $out pack 'V', $op->{attributes}{index};
-    } elsif( $opn == OP_SET ) {
+    } elsif(    $opn == OP_GET || $opn == OP_SET
+             || $opn == OP_LEXICAL
+             || $opn == OP_LEXICAL_SET
+             || $opn == OP_LEXICAL_CLEAR
+             || $opn == OP_LEXICAL_PAD
+             || $opn == OP_LEXICAL_PAD_SET
+             || $opn == OP_LEXICAL_PAD_CLEAR ) {
         print $out pack 'V', $op->{attributes}{index};
     } elsif( $opn == OP_GLOBAL ) {
         _write_string( $out, $op->{attributes}{name} );
