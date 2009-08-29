@@ -456,6 +456,9 @@ namespace org.mbarbon.p.runtime
                         Runtime,
                         Expression.Convert(
                             Generate(op.Childs[0]),
+                            typeof(P5Handle)),
+                        Expression.Convert(
+                            Generate(op.Childs[1]),
                             typeof(P5List)));
             }
             case Opcode.OpNumber.OP_END:
