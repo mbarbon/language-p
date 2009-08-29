@@ -551,27 +551,27 @@ sub _allocate_lexicals {
     foreach my $lex_info ( values %{$ir_code->lexicals->{map}} ) {
         unless( $lex_info->{in_pad} ) {
             $toy_code->lexical_init->[$lex_info->{index}] =
-              $lex_info->{lexical}->sigil;
+              $lex_info->{sigil};
             next;
         }
         $needs_pad ||= 1;
         if( $lex_info->{from_main} ) {
             my $main_pad = $self->_processing->[-$lex_info->{level} - 1]->lexicals;
-            $main_pad->add_value_index( $self->runtime, $lex_info->{lexical}, $lex_info->{outer_index} );
-            $pad->add_value_index( $self->runtime, $lex_info->{lexical}, $lex_info->{index},
+            $main_pad->add_value_index( $self->runtime, $lex_info, $lex_info->{outer_index} );
+            $pad->add_value_index( $self->runtime, $lex_info, $lex_info->{index},
                                    $main_pad->values->[$lex_info->{outer_index}] );
         } else {
-            $pad->add_value_index( $self->runtime, $lex_info->{lexical}, $lex_info->{index} );
+            $pad->add_value_index( $self->runtime, $lex_info, $lex_info->{index} );
             push @{$toy_code->{closed}},
                  [$lex_info->{outer_index}, $lex_info->{index}]
                    if $lex_info->{outer_index} >= 0;
             if( $lex_info->{declaration} ) {
                 push @{$pad->{clear}{indices}}, $lex_info->{index};
-                if( $lex_info->{lexical}->sigil == VALUE_SCALAR ) {
+                if( $lex_info->{sigil} == VALUE_SCALAR ) {
                     push @{$pad->{clear}{scalar}}, $lex_info->{index};
-                } elsif( $lex_info->{lexical}->sigil == VALUE_ARRAY ) {
+                } elsif( $lex_info->{sigil} == VALUE_ARRAY ) {
                     push @{$pad->{clear}{array}}, $lex_info->{index};
-                } elsif( $lex_info->{lexical}->sigil == VALUE_HASH ) {
+                } elsif( $lex_info->{sigil} == VALUE_HASH ) {
                     push @{$pad->{clear}{hash}}, $lex_info->{index};
                 }
             }

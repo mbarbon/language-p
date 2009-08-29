@@ -55,8 +55,8 @@ sub _write_lex_info {
     print $out pack 'V', $lex_info->{level};
     print $out pack 'V', $lex_info->{index};
     print $out pack 'V', $lex_info->{outer_index};
-    _write_string( $out, $lex_info->{lexical}->name );
-    print $out pack 'C', $lex_info->{lexical}->sigil;
+    _write_string( $out, $lex_info->{name} );
+    print $out pack 'C', $lex_info->{sigil};
     print $out pack 'C', $lex_info->{in_pad};
     print $out pack 'C', $lex_info->{from_main};
 }

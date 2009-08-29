@@ -139,7 +139,9 @@ sub create_eval_context {
         $lex->{$lexical} =
           { index       => $index,
             outer_index => -1,
-            lexical     => $lexical,
+            name        => $lexical->name,
+            sigil       => $lexical->sigil,
+            symbol_name => $lexical->symbol_name,
             level       => 0,
             in_pad      => 1,
             };
@@ -872,7 +874,9 @@ sub _allocate_lexical {
     my( $self, $code, $lexical, $level ) = @_;
     my $lex_info = $code->lexicals->{map}->{$lexical} ||=
         { level       => $level,
-          lexical     => $lexical,
+          name        => $lexical->name,
+          sigil       => $lexical->sigil,
+          symbol_name => $lexical->symbol_name,
           index       => -1,
           outer_index => -1,
           in_pad      => $lexical->closed_over ? 1 : 0,
