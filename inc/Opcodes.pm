@@ -262,6 +262,8 @@ my %dotnet_classes =
     'OP_CONSTANT_INTEGER'  => 'ConstantInt',
     'OP_CONSTANT_SUB'      => 'ConstantSub',
     'OP_GLOBAL'            => 'Global',
+    'OP_GLOB_SLOT'         => 'GlobSlot',
+    'OP_GLOB_SLOT_SET'     => 'GlobSlot',
     'OP_GET'               => 'GetSet',
     'OP_SET'               => 'GetSet',
     'OP_JUMP'              => 'Jump',
@@ -288,6 +290,8 @@ my %dotnet_classes =
     'OP_LEXICAL_CLEAR'     => 'Lexical',
     'OP_SCOPE_ENTER'       => 'ScopeInOut',
     'OP_SCOPE_LEAVE'       => 'ScopeInOut',
+    'OP_TEMPORARY'         => 'Temporary',
+    'OP_TEMPORARY_SET'     => 'Temporary',
     );
 
 sub write_dotnet_deserializer {

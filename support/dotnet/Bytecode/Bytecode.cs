@@ -100,6 +100,11 @@ namespace org.mbarbon.p.runtime
         public Opcode.Sigil Slot;
     }
 
+    public class GlobSlot : Opcode
+    {
+        public Opcode.Sigil Slot;
+    }
+
     public class ConstantInt : Opcode
     {
         public int Value;
@@ -128,6 +133,11 @@ namespace org.mbarbon.p.runtime
     public class ScopeInOut : Opcode
     {
         public int Scope;
+    }
+
+    public class Temporary : Opcode
+    {
+        public int Index;
     }
 
     public class Lexical : Opcode

@@ -5,6 +5,7 @@ using System.Reflection;
 using Microsoft.Linq.Expressions;
 using System.Collections.Generic;
 using Type = System.Type;
+using IEnumerator = System.Collections.IEnumerator;
 
 namespace org.mbarbon.p.runtime
 {
@@ -262,6 +263,7 @@ namespace org.mbarbon.p.runtime
             Pad = Expression.Parameter(typeof(P5ScratchPad), "pad");
             Variables = new List<ParameterExpression>();
             Lexicals = new List<ParameterExpression>();
+            Temporaries = new List<ParameterExpression>();
             BlockLabels = new List<LabelTarget>();
             Blocks = new List<Expression>();
             ModuleGenerator = module_generator;
@@ -282,6 +284,61 @@ namespace org.mbarbon.p.runtime
                    slot == Opcode.Sigil.ARRAY  ? typeof(P5Array) :
                    slot == Opcode.Sigil.HASH   ? typeof(P5Hash) :
                                                  typeof(void);
+        }
+
+        private string MethodForSlot(Opcode.Sigil slot)
+        {
+            switch (slot)
+            {
+            case Opcode.Sigil.SCALAR:
+                return "GetOrCreateScalar";
+            case Opcode.Sigil.ARRAY:
+                return "GetOrCreateArray";
+            case Opcode.Sigil.HASH:
+                return "GetOrCreateHash";
+            case Opcode.Sigil.SUB:
+                return "GetCode";
+            case Opcode.Sigil.GLOB:
+                return "GetOrCreateGlob";
+            case Opcode.Sigil.HANDLE:
+                return "GetOrCreateHandle";
+            default:
+                throw new System.Exception(string.Format("Unhandled slot {0:D}", slot));
+            }
+        }
+
+        private string PropertyForSlot(Opcode.Sigil slot)
+        {
+            switch (slot)
+            {
+            case Opcode.Sigil.SCALAR:
+                return "Scalar";
+            case Opcode.Sigil.ARRAY:
+                return "Array";
+            case Opcode.Sigil.HASH:
+                return "Hash";
+            case Opcode.Sigil.SUB:
+                return "Code";
+            case Opcode.Sigil.HANDLE:
+                return "Handle";
+            default:
+                throw new System.Exception(string.Format("Unhandled slot {0:D}", slot));
+            }
+        }
+
+        private ParameterExpression GetTemporary(int index, System.Type type)
+        {
+            while (Temporaries.Count <= index)
+                Temporaries.Add(null);
+            if (Temporaries[index] == null)
+            {
+                if (type == null)
+                    throw new System.Exception("Untyped temporary");
+                Temporaries[index] =
+                    Expression.Variable(type);
+            }
+
+            return Temporaries[index];
         }
 
         private ParameterExpression GetLexical(int index, Opcode.Sigil slot)
@@ -346,6 +403,7 @@ namespace org.mbarbon.p.runtime
             }
 
             Variables.InsertRange(0, Lexicals);
+            Variables.InsertRange(0, Temporaries);
 
             var block = Expression.Block(typeof(IP5Any), Variables, Blocks);
             var args = new ParameterExpression[] { Runtime, Context, Pad, Arguments };
@@ -405,36 +463,42 @@ namespace org.mbarbon.p.runtime
             {
                 Global gop = (Global)op;
                 var st = typeof(Runtime).GetField("SymbolTable");
-                string name = null;
-                switch (gop.Slot)
-                {
-                case Opcode.Sigil.SCALAR:
-                    name = "GetOrCreateScalar";
-                    break;
-                case Opcode.Sigil.ARRAY:
-                    name = "GetOrCreateArray";
-                    break;
-                case Opcode.Sigil.HASH:
-                    name = "GetOrCreateHash";
-                    break;
-                case Opcode.Sigil.SUB:
-                    name = "GetCode";
-                    break;
-                case Opcode.Sigil.GLOB:
-                    name = "GetOrCreateGlob";
-                    break;
-                case Opcode.Sigil.HANDLE:
-                    name = "GetOrCreateHandle";
-                    break;
-                default:
-                    throw new System.Exception(string.Format("Unhandled slot {0:D}", gop.Slot));
-                }
+                string name = MethodForSlot(gop.Slot);
                 return
                     Expression.Call(
                         Expression.Field(Runtime, st),
                         typeof(P5SymbolTable).GetMethod(name),
                         Runtime,
                         Expression.Constant(gop.Name));
+            }
+            case Opcode.OpNumber.OP_GLOB_SLOT:
+            {
+                GlobSlot gop = (GlobSlot)op;
+                string name = PropertyForSlot(gop.Slot);
+                return
+                    Expression.Property(
+                        Expression.Convert(
+                            Generate(op.Childs[0]),
+                            typeof(P5Typeglob)),
+                        name);
+            }
+            case Opcode.OpNumber.OP_GLOB_SLOT_SET:
+            {
+                GlobSlot gop = (GlobSlot)op;
+                string name = PropertyForSlot(gop.Slot);
+                var property =
+                    Expression.Property(
+                        Expression.Convert(
+                            Generate(op.Childs[0]),
+                            typeof(P5Typeglob)),
+                        name);
+
+                return
+                    Expression.Assign(
+                        property,
+                        Expression.Convert(
+                            Generate(op.Childs[1]),
+                            property.Type));
             }
             case Opcode.OpNumber.OP_MAKE_LIST:
             {
@@ -530,6 +594,14 @@ namespace org.mbarbon.p.runtime
             {
                 return Expression.Goto(BlockLabels[((Jump)op).To], typeof(IP5Any));
             }
+            case Opcode.OpNumber.OP_JUMP_IF_NULL:
+            {
+                Expression cmp = Expression.Equal(Generate(op.Childs[0]),
+                                                  Expression.Constant(null, typeof(object)));
+                Expression jump = Expression.Goto(BlockLabels[((Jump)op).To], typeof(IP5Any));
+
+                return Expression.IfThen(cmp, jump);
+            }
             case Opcode.OpNumber.OP_JUMP_IF_S_EQ:
             {
                 Expression cmp = Expression.Equal(Expression.Call(Generate(op.Childs[0]), typeof(IP5Any).GetMethod("AsString"), Runtime),
@@ -550,6 +622,14 @@ namespace org.mbarbon.p.runtime
             {
                 Expression cmp = Expression.GreaterThanOrEqual(Expression.Call(Generate(op.Childs[0]), typeof(IP5Any).GetMethod("AsFloat"), Runtime),
                                                            Expression.Call(Generate(op.Childs[1]), typeof(IP5Any).GetMethod("AsFloat"), Runtime));
+                Expression jump = Expression.Goto(BlockLabels[((Jump)op).To], typeof(IP5Any));
+
+                return Expression.IfThen(cmp, jump);
+            }
+            case Opcode.OpNumber.OP_JUMP_IF_F_LT:
+            {
+                Expression cmp = Expression.LessThan(Expression.Call(Generate(op.Childs[0]), typeof(IP5Any).GetMethod("AsFloat"), Runtime),
+                                                     Expression.Call(Generate(op.Childs[1]), typeof(IP5Any).GetMethod("AsFloat"), Runtime));
                 Expression jump = Expression.Goto(BlockLabels[((Jump)op).To], typeof(IP5Any));
 
                 return Expression.IfThen(cmp, jump);
@@ -631,6 +711,36 @@ namespace org.mbarbon.p.runtime
                 return Expression.Call(Generate(op.Childs[1]), typeof(P5Hash).GetMethod("GetItemOrUndef"),
                                      Runtime, Generate(op.Childs[0]));
             }
+            case Opcode.OpNumber.OP_ITERATOR:
+            {
+                return Expression.Call(Generate(op.Childs[0]),
+                                       typeof(P5Array).GetMethod("GetEnumerator"));
+            }
+            case Opcode.OpNumber.OP_ITERATOR_NEXT:
+            {
+                Expression iter = Generate(op.Childs[0]);
+                Expression has_next =
+                    Expression.Call(
+                        iter, typeof(IEnumerator).GetMethod("MoveNext"));
+
+                return Expression.Condition(
+                    has_next,
+                    Expression.Property(iter, "Current"),
+                    Expression.Constant(null, typeof(IP5Any)));
+            }
+            case Opcode.OpNumber.OP_TEMPORARY:
+            {
+                Temporary tm = (Temporary)op;
+
+                return GetTemporary(tm.Index, null);
+            }
+            case Opcode.OpNumber.OP_TEMPORARY_SET:
+            {
+                Temporary tm = (Temporary)op;
+                Expression exp = Generate(op.Childs[0]);
+
+                return Expression.Assign(GetTemporary(tm.Index, exp.Type), exp);
+            }
             case Opcode.OpNumber.OP_LEXICAL:
             {
                 Lexical lx = (Lexical)op;
@@ -643,6 +753,15 @@ namespace org.mbarbon.p.runtime
                 Expression lexvar = GetLexical(lx.Index, lx.Slot);
 
                 return Expression.Assign(lexvar, Expression.Constant(null, lexvar.Type));
+            }
+            case Opcode.OpNumber.OP_LEXICAL_SET:
+            {
+                Lexical lx = (Lexical)op;
+                Expression lexvar = GetLexical(lx.Index, lx.Slot);
+
+                return Expression.Assign(
+                    lexvar,
+                    Expression.Convert(Generate(op.Childs[0]), lexvar.Type));
             }
             case Opcode.OpNumber.OP_LEXICAL_PAD:
             {
@@ -688,7 +807,7 @@ namespace org.mbarbon.p.runtime
 
         private LabelTarget SubLabel;
         private ParameterExpression Runtime, Arguments, Context, Pad;
-        private List<ParameterExpression> Variables, Lexicals;
+        private List<ParameterExpression> Variables, Lexicals, Temporaries;
         private List<LabelTarget> BlockLabels;
         private List<Expression> Blocks;
         private bool IsMain;
