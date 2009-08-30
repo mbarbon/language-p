@@ -4,7 +4,7 @@ using org.mbarbon.p.values;
 namespace org.mbarbon.p.values
 {
     public class P5Code : IP5Referrable
-    {       
+    {
         public P5Code(System.Delegate code, bool main)
         {
             subref = (Sub)code;
@@ -12,7 +12,8 @@ namespace org.mbarbon.p.values
             is_main = main;
         }
 
-        public IP5Any Call(Runtime runtime, Opcode.Context context, P5Array args)
+        public IP5Any Call(Runtime runtime, Opcode.ContextValues context,
+                           P5Array args)
         {
             P5ScratchPad pad = scratchpad;
             if (scratchpad != null && !is_main)
@@ -41,7 +42,8 @@ namespace org.mbarbon.p.values
             set { scratchpad = value; }
         }
 
-        public delegate IP5Any Sub(Runtime runtime, Opcode.Context context,
+        public delegate IP5Any Sub(Runtime runtime,
+                                   Opcode.ContextValues context,
                                    P5ScratchPad pad, P5Array args);
 
         private Sub subref;

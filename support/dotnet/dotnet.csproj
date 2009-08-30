@@ -50,6 +50,7 @@
     <Compile Include="Values\SymbolTable.cs" />
     <Compile Include="Runtime\Runtime.cs" />
     <Compile Include="Bytecode\Bytecode.cs" />
+    <Compile Include="Bytecode\BytecodeGenerated.cs" />
     <Compile Include="Runtime\Generator.cs" />
     <Compile Include="Values\Handle.cs" />
     <Compile Include="Values\Code.cs" />

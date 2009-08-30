@@ -53,6 +53,15 @@ sub ACTION_code_parrot {
 
 sub ACTION_code_dlr {
     my( $self ) = @_;
+
+    if( !$self->up_to_date( [ 'inc/Opcodes.pm', 'lib/Language/P/Keywords.pm' ],
+                            [ 'support/dotnet/Bytecode/BytecodeGenerated.cs' ] ) ) {
+        $self->do_system( $^X, '-Iinc', '-Ilib',
+                          '-MOpcodes', '-e', 'write_dotnet_deserializer()',
+                          '--', 'support/dotnet/Bytecode/BytecodeGenerated.cs' );
+        $self->add_to_cleanup( 'support/dotnet/Bytecode/BytecodeGenerated.cs' );
+    }
+
     my @files = map glob( "support/dotnet/$_" ), qw(*.cs */*.cs);
 
     # only works with MonoDevelop and when mdtool is in path
@@ -60,7 +69,6 @@ sub ACTION_code_dlr {
                             [ 'support/dotnet/bin/Debug/dotnet.exe' ] ) ) {
         $self->do_system( 'mdtool', 'build', 'support/dotnet/dotnet.csproj' );
     }
-
 }
 
 =head2 code

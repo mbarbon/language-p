@@ -6,3 +6,4 @@ dotnet.in
 *.userprefs
 *.usertasks
 *.pidb
+Bytecode/BytecodeGenerated.cs

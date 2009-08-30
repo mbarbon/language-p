@@ -258,7 +258,7 @@ namespace org.mbarbon.p.runtime
         {
             Runtime = Expression.Parameter(typeof(Runtime), "runtime");
             Arguments = Expression.Parameter(typeof(P5Array), "args");
-            Context = Expression.Parameter(typeof(Opcode.Context), "context");
+            Context = Expression.Parameter(typeof(Opcode.ContextValues), "context");
             Pad = Expression.Parameter(typeof(P5ScratchPad), "pad");
             Variables = new List<ParameterExpression>();
             Lexicals = new List<ParameterExpression>();
@@ -399,7 +399,7 @@ namespace org.mbarbon.p.runtime
             {
                 ConstantSub cs = (ConstantSub)op;
 
-                return Expression.Field(null, Subroutines[cs.Index].CodeField);
+                return Expression.Field(null, Subroutines[cs.Value].CodeField);
             }
             case Opcode.OpNumber.OP_GLOBAL:
             {
@@ -484,7 +484,7 @@ namespace org.mbarbon.p.runtime
                         Expression.Condition(
                             Expression.Equal(
                                 Context,
-                                Expression.Constant(Opcode.Context.LIST)),
+                                Expression.Constant(Opcode.ContextValues.LIST)),
                             val, empty, typeof(IP5Any));
                     Expression retscalar =
                         Expression.Call(
@@ -495,7 +495,7 @@ namespace org.mbarbon.p.runtime
                         Expression.Condition(
                             Expression.Equal(
                                 Context,
-                                Expression.Constant(Opcode.Context.SCALAR)),
+                                Expression.Constant(Opcode.ContextValues.SCALAR)),
                             retscalar, iflist, typeof(IP5Any));
 
                     return
@@ -519,11 +519,11 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_GET:
             {
-                return GetVariable(((GetSet)op).Variable);
+                return GetVariable(((GetSet)op).Index);
             }
             case Opcode.OpNumber.OP_SET:
             {
-                return Expression.Assign(GetVariable(((GetSet)op).Variable),
+                return Expression.Assign(GetVariable(((GetSet)op).Index),
                                          Generate(op.Childs[0]));
             }
             case Opcode.OpNumber.OP_JUMP:
@@ -576,7 +576,7 @@ namespace org.mbarbon.p.runtime
                                         typeof(IP5Any).GetMethod("IsDefined"),
                                         Runtime));
             }
-            case Opcode.OpNumber.OP_CONCAT:
+            case Opcode.OpNumber.OP_CONCATENATE:
             {
                 Expression s1 =
                     Expression.Call(Generate(op.Childs[0]),
@@ -593,7 +593,7 @@ namespace org.mbarbon.p.runtime
                         Expression.Call(
                             typeof(string).GetMethod("Concat", ProtoStringString), s1, s2));
             }
-            case Opcode.OpNumber.OP_CONCAT_ASSIGN:
+            case Opcode.OpNumber.OP_CONCATENATE_ASSIGN:
             {
                 return Expression.Call(Expression.Convert(Generate(op.Childs[0]), typeof(P5Scalar)),
                                      typeof(IP5Any).GetMethod("ConcatAssign"), Runtime, Generate(op.Childs[1]));
@@ -678,8 +678,11 @@ namespace org.mbarbon.p.runtime
                            typeof(P5Code).GetMethod("MakeClosure"),
                            Runtime, Pad);
             }
+            case Opcode.OpNumber.OP_SCOPE_ENTER:
+            case Opcode.OpNumber.OP_SCOPE_LEAVE:
+                return Expression.Constant(1);
             default:
-                throw new System.Exception(string.Format("Unhandled opcode {0:S}", op.Number.ToString()));
+                throw new System.Exception(string.Format("Unhandled opcode {0:S} in generation", op.Number.ToString()));
             }
         }
 
