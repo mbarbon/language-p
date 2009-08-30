@@ -1,48 +1,48 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
 
 namespace org.mbarbon.p.values
-{    
-    public class P5Typeglob
+{
+    public class P5Typeglob : P5Scalar
     {
         public P5Typeglob(Runtime runtime)
         {
-            body = new P5TypeglobBody(runtime);
+            body = globBody = new P5TypeglobBody(runtime);
         }
 
         public P5Scalar Scalar
         {
-            get { return body.Scalar; }
-            set { body.Scalar = value; }
+            get { return globBody.Scalar; }
+            set { globBody.Scalar = value; }
         }
 
         public P5Array Array
         {
-            get { return body.Array; }
-            set { body.Array = value; }
+            get { return globBody.Array; }
+            set { globBody.Array = value; }
         }
 
         public P5Hash Hash
         {
-            get { return body.Hash; }
-            set { body.Hash = value; }
+            get { return globBody.Hash; }
+            set { globBody.Hash = value; }
         }
 
         public P5Handle Handle
         {
-            get { return body.Handle; }
-            set { body.Handle = value; }
+            get { return globBody.Handle; }
+            set { globBody.Handle = value; }
         }
 
         public P5Code Code
         {
-            get { return body.Code; }
-            set { body.Code = value; }
+            get { return globBody.Code; }
+            set { globBody.Code = value; }
         }
 
-        private P5TypeglobBody body;
+        private P5TypeglobBody globBody;
     }
 
-    public class P5TypeglobBody
+    public class P5TypeglobBody : IP5ScalarBody
     {
         public P5TypeglobBody(Runtime runtime)
         {
@@ -71,11 +71,39 @@ namespace org.mbarbon.p.values
             get { return handle; }
             set { handle = value; }
         }
-        
+
         public P5Code Code
         {
             get { return code; }
             set { code = value; }
+        }
+
+        // IP5ScalarBody implementation
+        public virtual IP5ScalarBody CloneBody(Runtime runtime)
+        {
+            var newBody = new P5TypeglobBody(runtime);
+
+            newBody.scalar = scalar;
+            newBody.array = array;
+            newBody.hash = hash;
+            newBody.handle = handle;
+            newBody.code = code;
+
+            return newBody;
+        }
+
+        public virtual string AsString(Runtime runtime) { throw new System.NotImplementedException(); }
+        public virtual int AsInteger(Runtime runtime) { throw new System.NotImplementedException(); }
+        public virtual double AsFloat(Runtime runtime) { throw new System.NotImplementedException(); }
+
+        public virtual bool AsBoolean(Runtime runtime)
+        {
+            return true;
+        }
+
+        public virtual P5Code DereferenceSubroutine(Runtime runtime)
+        {
+            return code;
         }
 
         private P5Scalar scalar;

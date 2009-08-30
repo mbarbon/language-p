@@ -2,18 +2,22 @@ using Runtime = org.mbarbon.p.runtime.Runtime;
 using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
-{   
+{
     public class P5Scalar : IP5Any
-    {       
+    {
         public P5Scalar(Runtime runtime) : this(new P5Undef(runtime))
         {
         }
 
-        private P5Scalar(IP5ScalarBody b)
+        protected P5Scalar(IP5ScalarBody b)
         {
             body = b;
         }
-        
+
+        protected P5Scalar()
+        {
+        }
+
         public P5Scalar(Runtime runtime, string val) : this(new P5StringNumber(runtime, val)) {}
         public P5Scalar(Runtime runtime, int val) : this(new P5StringNumber(runtime, val)) {}
         public P5Scalar(Runtime runtime, double val) : this(new P5StringNumber(runtime, val)) {}
@@ -68,7 +72,7 @@ namespace org.mbarbon.p.values
             return body.DereferenceSubroutine(runtime);
         }
 
-        private IP5ScalarBody body;
+        protected IP5ScalarBody body;
     }
 
     public interface IP5ScalarBody
