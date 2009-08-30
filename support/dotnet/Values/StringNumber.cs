@@ -7,7 +7,7 @@ namespace org.mbarbon.p.values
         internal const int HasString  = 1;
         internal const int HasFloat   = 2;
         internal const int HasInteger = 4;
-        
+
         public P5StringNumber(Runtime runtime, int val)
         {
             flags = HasInteger;
@@ -38,11 +38,11 @@ namespace org.mbarbon.p.values
         {
             if ((flags & HasString) != 0) return stringValue;
             if ((flags & HasInteger) != 0) return System.String.Format("{0:D}", integerValue);
-            if ((flags & HasFloat) != 0) return System.String.Format("{0:F}", floatValue);
+            if ((flags & HasFloat) != 0) return System.String.Format("{0:0.#########}", floatValue);
 
             throw new System.Exception();
         }
-        
+
         public virtual int AsInteger(Runtime runtime)
         {
             if ((flags & HasString) != 0) return System.Int32.Parse(stringValue);
@@ -51,7 +51,7 @@ namespace org.mbarbon.p.values
 
             throw new System.Exception();
         }
-        
+
         public virtual double AsFloat(Runtime runtime)
         {
             if ((flags & HasString) != 0) return System.Double.Parse(stringValue);
