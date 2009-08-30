@@ -2,15 +2,25 @@ using Runtime = org.mbarbon.p.runtime.Runtime;
 using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
-{   
+{
     public class P5List : P5Array
-    {    
+    {
         public P5List(Runtime runtime) : base(runtime)
         {
         }
 
-        public P5List(Runtime runtime, IP5Any[] data) : base(runtime, data)
+        public P5List(Runtime runtime, IP5Any[] data) : base(runtime)
         {
+            foreach (var i in data)
+            {
+                var l = i as P5List;
+
+                if (l != null)
+                    foreach (var li in l)
+                        array.Add(li);
+                else
+                    array.Add(i);
+            }
         }
 
         public override P5Scalar AsScalar(Runtime runtime)
