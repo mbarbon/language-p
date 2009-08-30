@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Exporter 'import';
 
-our @EXPORT = qw(write_opcodes);
+our @EXPORT = qw(write_opcodes write_perl_serializer);
 
 use Language::P::Keywords qw(:all);
 use Data::Dumper;
@@ -15,11 +15,7 @@ my %flag_map =
     v => 3, # variadic implies unary
     );
 
-sub write_opcodes {
-    my( $file ) = @ARGV;
-
-    open my $out, '>', $file;
-
+sub parse_opdesc {
     my( %op );
     my $num = 1;
     while( defined( my $line = readline Opcodes::DATA ) ) {
@@ -40,8 +36,7 @@ sub write_opcodes {
             foreach ( split /,/, $attrs ) {
                 if( /(\w+)=(\w+)/ ) {
                     $named{$1} = $2;
-                } else {
-                    push @positional, $_;
+                    push @positional, $1, $2;
                 }
             }
 
@@ -59,6 +54,16 @@ sub write_opcodes {
 
         ++$num;
     }
+
+    return \%op;
+}
+
+sub write_opcodes {
+    my( $file ) = @ARGV;
+
+    my %op = %{parse_opdesc()};
+
+    open my $out, '>', $file;
 
     printf $out <<'EOT';
 package Language::P::Opcodes;
@@ -139,21 +144,112 @@ EOT
     local $Data::Dumper::Indent = 0;
     while( my( $k, $v ) = each %op ) {
         my $named = Dumper( $v->[3][1] );
-        my $positional = Dumper( $v->[3][0] );
         printf $out <<'EOT',
     %s() =>
       { in_args    => %d,
         out_args   => %d,
         named      => %s,
-        positional => %s,
         flags      => %d,
         },
 EOT
-            $k, $v->[1], $v->[2], $named, $positional, $v->[4];
+            $k, $v->[1], $v->[2], $named, $v->[4];
     }
 
     printf $out <<'EOT';
     );
+
+1;
+EOT
+
+}
+
+sub write_perl_serializer {
+    my( $file ) = @ARGV;
+
+    my %op = %{parse_opdesc()};
+
+    open my $out, '>', $file;
+
+    print $out <<'EOT';
+package Language::P::Intermediate::Serialize;
+
+use strict;
+use warnings;
+
+sub _write_op {
+    my( $self, $out, $op ) = @_;
+    return if $op->{label}; # skip label
+
+    my $opn = $op->{opcode_n};
+
+    print $out pack 'v', $opn;
+
+    if( 0 ) {
+        # simplifies code generation below
+    }
+EOT
+
+    while( my( $k, $v ) = each %op ) {
+        my $attrs = $v->[3][0];
+        next unless @$attrs;
+
+        print $out sprintf <<'EOT', $k;
+    elsif( $opn == %s ) {
+EOT
+
+        for( my $i = 0; $i < @$attrs; $i += 2 ) {
+            my $type = $attrs->[$i + 1];
+            my $name = $attrs->[$i];
+            if( $type eq 's' ) {
+                print $out sprintf <<'EOT', $name;
+        _write_string( $out, $op->{attributes}{%s} );
+EOT
+            } elsif( $type eq 'su' ) {
+                print $out sprintf <<'EOT', $name;
+        _write_string_undef( $out, $op->{attributes}{%s} );
+EOT
+            } elsif( $type eq 'i' || $type eq 'i4' ) {
+                print $out sprintf <<'EOT', $name;
+        print $out pack 'V', $op->{attributes}{%s};
+EOT
+            } elsif( $type eq 'i1' || $type eq 'i_sigil' ) {
+                print $out sprintf <<'EOT', $name;
+        print $out pack 'C', $op->{attributes}{%s};
+EOT
+            } elsif( $type eq 'b' ) {
+                print $out sprintf <<'EOT', $name;
+        print $out pack 'V', $self->{bb_map}{$op->{attributes}{%s}};
+EOT
+            } elsif( $type eq 'c' ) {
+                print $out sprintf <<'EOT', $name;
+        print $out pack 'V', $self->{sub_map}{$op->{attributes}{%s}};
+EOT
+            } elsif( $type eq 'ls' ) {
+                print $out sprintf <<'EOT', $name;
+        print $out pack 'V', $self->{li_map}{$op->{attributes}{%s} . '|0'};
+EOT
+            } elsif( $type eq 'lp' ) {
+                print $out sprintf <<'EOT', $name;
+        print $out pack 'V', $self->{li_map}{$op->{attributes}{%s} . '|1'};
+EOT
+            }
+        }
+
+        print $out <<'EOT';
+    }
+EOT
+
+    }
+
+    print $out <<'EOT';
+
+    if( $op->{parameters} ) {
+        print $out pack 'V', scalar @{$op->{parameters}};
+        _write_op( $self, $out, $_ ) foreach @{$op->{parameters}};
+    } else {
+        print $out pack 'V', 0;
+    }
+}
 
 1;
 EOT
@@ -167,100 +263,100 @@ __DATA__
 # v: variadic
 
 # opcode            flags   name                in out  attrs
-abs                 u       same                 1   1  noattr
-add                 0       same                 2   1  noattr
-add_assign          0       same                 2   1  noattr
+abs                 u       same                 1   1  context=i1
+add                 0       same                 2   1  context=i1
+add_assign          0       same                 2   1  context=i1
 anonymous_array     0       same                 1   1  noattr
 anonymous_hash      0       same                 1   1  noattr
-array_element       0       same                 2   1  noattr
-array_length        0       array_size           1   1  noattr
-array_pop           u       same                 1   1  noattr
-array_push          0       same                 2   1  noattr
-array_shift         u       same                 1   1  noattr
-array_slice         0       same                 2   1  noattr
-array_unshift       0       same                 2   1  noattr
-assign              0       same                 2   1  noattr
-backtick            0       same                 1   1  noattr
-binmode             u       same                 1   1  noattr
-bit_and             0       same                 2   1  noattr
-bit_and_assign      0       same                 2   1  noattr
-bit_or              0       same                 2   1  noattr
-bit_or_assign       0       same                 2   1  noattr
-bit_not             0       same                 1   1  noattr
-bit_xor             0       same                 2   1  noattr
-bit_xor_assign      0       same                 2   1  noattr
-bless               u       same                 2   1  noattr
-call                0       same                 2   1  noattr
-call_method         0       same                 1   1  noattr
-call_method_indirect 0      same                 2   1  noattr
-caller              v       same                -1   1  noattr
-chdir               u       same                 1   1  noattr
-chr                 u       same                 1   1  noattr
-close               u       same                 1   1  noattr
-concatenate_assign  0       concat_assign        2   1  noattr
-concatenate         0       concat               2   1  noattr
+array_element       0       same                 2   1  context=i1,create=i1
+array_length        0       array_size           1   1  context=i1
+array_pop           u       same                 1   1  context=i1
+array_push          0       same                 2   1  context=i1
+array_shift         u       same                 1   1  context=i1
+array_slice         0       same                 2   1  context=i1,create=i1
+array_unshift       0       same                 2   1  context=i1
+assign              0       same                 2   1  context=i1
+backtick            0       same                 1   1  context=i1
+binmode             u       same                 1   1  context=i1
+bit_and             0       same                 2   1  context=i1
+bit_and_assign      0       same                 2   1  context=i1
+bit_or              0       same                 2   1  context=i1
+bit_or_assign       0       same                 2   1  context=i1
+bit_not             0       same                 1   1  context=i1
+bit_xor             0       same                 2   1  context=i1
+bit_xor_assign      0       same                 2   1  context=i1
+bless               u       same                 2   1  context=i1
+call                0       same                 2   1  context=i1
+call_method         0       same                 1   1  context=i1,method=s
+call_method_indirect 0      same                 2   1  context=i1
+caller              v       same                -1   1  context=i1,arg_count=i1
+chdir               u       same                 1   1  context=i1
+chr                 u       same                 1   1  context=i1
+close               u       same                 1   1  context=i1
+concatenate_assign  0       concat_assign        2   1  context=i1
+concatenate         0       concat               2   1  context=i1
 constant_float      0       same                 0   1  value=f
 constant_integer    0       same                 0   1  value=i
 constant_regex      0       same                 0   1  value=r
 constant_string     0       same                 0   1  value=s
 constant_sub        0       same                 0   1  value=c
 constant_undef      0       same                 0   1  noattr
-defined             u       same                 1   1  noattr
-dereference_array   0       same                 1   1  noattr
-dereference_glob    0       same                 1   1  noattr
-dereference_hash    0       same                 1   1  noattr
-dereference_scalar  0       same                 1   1  noattr
-dereference_sub     0       dereference_subroutine 1 1  noattr
-die                 0       same                 1   1  noattr
-divide              0       same                 2   1  noattr
-divide_assign       0       same                 2   1  noattr
-do_file             u       same                 1   1  noattr
-dot_dot             0       same                 2   1  noattr
-dot_dot_dot         0       same                 2   1  noattr
+defined             u       same                 1   1  context=i1
+dereference_array   0       same                 1   1  context=i1
+dereference_glob    0       same                 1   1  context=i1
+dereference_hash    0       same                 1   1  context=i1
+dereference_scalar  0       same                 1   1  context=i1
+dereference_sub     0       dereference_subroutine 1 1  context=i1
+die                 0       same                 1   1  context=i1
+divide              0       same                 2   1  context=i1
+divide_assign       0       same                 2   1  context=i1
+do_file             u       same                 1   1  context=i1
+dot_dot             0       same                 2   1  context=i1
+dot_dot_dot         0       same                 2   1  context=i1
 dup                 0       same                 1   2  noattr
 end                 0       same                 0   0  noattr
-eval                u       same                 1   1  noattr
-eval_regex          u       same                 1   1  noattr
-exists              u       same                 1   1  noattr
-exists_array        u       same                 2   1  noattr
-exists_hash         u       same                 2   1  noattr
-find_method         u       same                 1   1  noattr
+eval                u       same                 1   1  context=i1,hints=i,warnings=su,package=s,lexicals=eval_my,globals=eval_our
+eval_regex          u       same                 1   1  context=i1
+exists              u       same                 1   1  context=i1
+exists_array        u       same                 2   1  context=i1
+exists_hash         u       same                 2   1  context=i1
+find_method         u       same                 1   1  method=s
 fresh_string        0       same                 0   1  value=s
-ft_atime            u       same                 1   1  noattr
-ft_ctime            u       same                 1   1  noattr
-ft_eexecutable      u       same                 1   1  noattr
-ft_empty            u       same                 1   1  noattr
-ft_eowned           u       same                 1   1  noattr
-ft_ereadable        u       same                 1   1  noattr
-ft_ewritable        u       same                 1   1  noattr
-ft_exists           u       same                 1   1  noattr
-ft_isascii          u       same                 1   1  noattr
-ft_isbinary         u       same                 1   1  noattr
-ft_isblockspecial   u       same                 1   1  noattr
-ft_ischarspecial    u       same                 1   1  noattr
-ft_isdir            u       same                 1   1  noattr
-ft_isfile           u       same                 1   1  noattr
-ft_ispipe           u       same                 1   1  noattr
-ft_issocket         u       same                 1   1  noattr
-ft_issymlink        u       same                 1   1  noattr
-ft_istty            u       same                 1   1  noattr
-ft_mtime            u       same                 1   1  noattr
-ft_nonempty         u       same                 1   1  noattr
-ft_rexecutable      u       same                 1   1  noattr
-ft_rowned           u       same                 1   1  noattr
-ft_rreadable        u       same                 1   1  noattr
-ft_rwritable        u       same                 1   1  noattr
-ft_setgid           u       same                 1   1  noattr
-ft_setuid           u       same                 1   1  noattr
-ft_sticky           u       same                 1   1  noattr
+ft_atime            u       same                 1   1  context=i1
+ft_ctime            u       same                 1   1  context=i1
+ft_eexecutable      u       same                 1   1  context=i1
+ft_empty            u       same                 1   1  context=i1
+ft_eowned           u       same                 1   1  context=i1
+ft_ereadable        u       same                 1   1  context=i1
+ft_ewritable        u       same                 1   1  context=i1
+ft_exists           u       same                 1   1  context=i1
+ft_isascii          u       same                 1   1  context=i1
+ft_isbinary         u       same                 1   1  context=i1
+ft_isblockspecial   u       same                 1   1  context=i1
+ft_ischarspecial    u       same                 1   1  context=i1
+ft_isdir            u       same                 1   1  context=i1
+ft_isfile           u       same                 1   1  context=i1
+ft_ispipe           u       same                 1   1  context=i1
+ft_issocket         u       same                 1   1  context=i1
+ft_issymlink        u       same                 1   1  context=i1
+ft_istty            u       same                 1   1  context=i1
+ft_mtime            u       same                 1   1  context=i1
+ft_nonempty         u       same                 1   1  context=i1
+ft_rexecutable      u       same                 1   1  context=i1
+ft_rowned           u       same                 1   1  context=i1
+ft_rreadable        u       same                 1   1  context=i1
+ft_rwritable        u       same                 1   1  context=i1
+ft_setgid           u       same                 1   1  context=i1
+ft_setuid           u       same                 1   1  context=i1
+ft_sticky           u       same                 1   1  context=i1
 get                 0       same                 0   1  index=i
-glob                0       same                 1   1  noattr
-glob_slot           0       same                 1   1  noattr
-glob_slot_set       0       same                 2   0  noattr
-global              0       same                 0   1  name=s,slot=i
-grep                0       same                 1   1  noattr
-hash_element        0       same                 2   1  noattr
-hash_slice          0       same                 2   1  noattr
+glob                0       same                 1   1  context=i1
+glob_slot           0       same                 1   1  slot=i_sigil
+glob_slot_set       0       same                 2   0  slot=i_sigil
+global              0       same                 0   1  name=s,slot=i_sigil
+grep                0       same                 1   1  context=i1
+hash_element        0       same                 2   1  context=i1,create=i1
+hash_slice          0       same                 2   1  context=i1,create=i1
 iterator            0       same                 1   1  noattr
 iterator_next       0       same                 1   1  noattr
 jump                0       same                 0   0  to=b
@@ -279,31 +375,31 @@ jump_if_s_lt        0       same                 2   0  to=b
 jump_if_s_ne        0       same                 2   0  to=b
 jump_if_true        0       same                 1   0  to=b
 jump_if_null        0       same                 1   0  to=b
-lexical             0       same                 0   1  index=i,slot=i
-lexical_clear       0       same                 0   0  index=i,slot=i
-lexical_set         0       same                 1   0  index=i
-lexical_pad         0       same                 0   1  index=i,slot=i
-lexical_pad_clear   0       same                 0   0  index=i,slot=i
-lexical_pad_set     0       same                 1   0  index=i
-list_slice          0       same                 2   1  noattr
+lexical             0       same                 0   1  index=ls
+lexical_clear       0       same                 0   0  index=ls
+lexical_set         0       same                 1   0  index=ls
+lexical_pad         0       same                 0   1  index=lp
+lexical_pad_clear   0       same                 0   0  index=lp
+lexical_pad_set     0       same                 1   0  index=lp
+list_slice          0       same                 2   1  context=i1
 local               0       same                 1   1  noattr
-localize_glob_slot  0       same                 0   1  noattr
+localize_glob_slot  0       same                 0   1  name=s,index=i,slot=i_sigil
 log_and             0       same                 2   1  noattr
-log_and_assign      0       same                 2   1  noattr
-log_not             0       not                  1   1  noattr
+log_and_assign      0       same                 2   1  context=i1
+log_not             0       not                  1   1  context=i1
 log_or              0       same                 2   1  noattr
-log_or_assign       0       same                 2   1  noattr
-log_xor             0       same                 2   1  noattr
+log_or_assign       0       same                 2   1  context=i1
+log_xor             0       same                 2   1  context=i1
 make_closure        0       same                 1   1  noattr
 make_list           0       same                -1   1  noattr
-map                 0       same                 1   1  noattr
-match               0       rx_match             2   1  noattr
-minus               0       negate               1   1  noattr
-modulus             0       same                 2   1  noattr
-modulus_assign      0       same                 2   1  noattr
-multiply            0       same                 2   1  noattr
-multiply_assign     0       same                 2   1  noattr
-negate              0       same                 1   1  noattr
+map                 0       same                 1   1  context=i1
+match               0       rx_match             2   1  context=i1
+minus               0       negate               1   1  context=i1
+modulus             0       same                 2   1  context=i1
+modulus_assign      0       same                 2   1  context=i1
+multiply            0       same                 2   1  context=i1
+multiply_assign     0       same                 2   1  context=i1
+negate              0       same                 1   1  context=i1
 noop                0       same                 0   0  noattr
 not_match           0       rx_not_match         2   1  noattr
 num_cmp             0       same                 2   1  noattr
@@ -313,19 +409,19 @@ num_gt              0       compare_f_gt_scalar  2   1  noattr
 num_le              0       compare_f_le_scalar  2   1  noattr
 num_lt              0       compare_f_lt_scalar  2   1  noattr
 num_ne              0       compare_f_ne_scalar  2   1  noattr
-open                0       same                 1   1  noattr
+open                0       same                 1   1  context=i1
 parentheses         0       same                -1  -1  noattr
 phi                 0       same                -1  -1  noattr
-pipe                0       same                 2   1  noattr
+pipe                0       same                 2   1  context=i1
 plus                0       same                 1   1  noattr
 pop                 0       same                 1   0  noattr
-postdec             0       same                 1   1  noattr
-postinc             0       same                 1   1  noattr
-power               0       same                 2   1  noattr
-power_assign        0       same                 2   1  noattr
-predec              0       same                 1   1  noattr
-preinc              0       same                 1   1  noattr
-print               0       same                 2   1  noattr
+postdec             0       same                 1   1  context=i1
+postinc             0       same                 1   1  context=i1
+power               0       same                 2   1  context=i1
+power_assign        0       same                 2   1  context=i1
+predec              0       same                 1   1  context=i1
+preinc              0       same                 1   1  context=i1
+print               0       same                 2   1  context=i1
 ql_lt               0       same                -1  -1  noattr
 ql_m                0       same                -1  -1  noattr
 ql_qr               0       same                -1  -1  noattr
@@ -333,15 +429,15 @@ ql_qw               0       same                -1  -1  noattr
 ql_qx               0       same                -1  -1  noattr
 ql_s                0       same                -1  -1  noattr
 ql_tr               0       same                -1  -1  noattr
-readline            u       same                 1   1  noattr
-reference           u       same                 1   1  noattr
-reftype             u       same                 1   1  noattr
-repeat              0       same                 2   1  noattr
-repeat_assign       0       same                 2   1  noattr
-require_file        u       same                 1   1  noattr
-restore_glob_slot   0       same                 0   0  noattr
-return              0       same                 1   0  noattr
-rmdir               u       same                 1   1  noattr
+readline            u       same                 1   1  context=i1
+reference           u       same                 1   1  context=i1
+reftype             u       same                 1   1  context=i1
+repeat              0       same                 2   1  context=i1
+repeat_assign       0       same                 2   1  context=i1
+require_file        u       same                 1   1  context=i1
+restore_glob_slot   0       same                 0   0  name=s,index=i,slot=i_sigil
+return              0       same                 1   0  context=i1
+rmdir               u       same                 1   1  context=i1
 set                 0       same                 1   0  index=i
 scope_enter         0       same                 0   0  scope=i
 scope_leave         0       same                 0   0  scope=i
@@ -352,18 +448,18 @@ str_gt              0       compare_s_gt_scalar  2   1  noattr
 str_le              0       compare_s_le_scalar  2   1  noattr
 str_lt              0       compare_s_lt_scalar  2   1  noattr
 str_ne              0       compare_s_ne_scalar  2   1  noattr
-stringify           0       same                 1   1  noattr
-subtract            0       same                 2   1  noattr
-subtract_assign     0       same                 2   1  noattr
+stringify           0       same                 1   1  context=i1
+subtract            0       same                 2   1  context=i1
+subtract_assign     0       same                 2   1  context=i1
 swap                0       same                 2   2  noattr
 temporary           0       same                 0   1  index=i
-temporary_set       0       same                 1   0  noattr
-undef               u       same                -1   1  noattr
-unlink              0       same                 1   1  noattr
-vivify_array        0       same                 1   1  noattr
-vivify_hash         0       same                 1   1  noattr
-vivify_scalar       0       same                 1   1  noattr
-wantarray           u       want                 0   1  noattr
+temporary_set       0       same                 1   0  index=i
+undef               u       same                -1   1  context=i1
+unlink              0       same                 1   1  context=i1
+vivify_array        0       same                 1   1  context=i1
+vivify_hash         0       same                 1   1  context=i1
+vivify_scalar       0       same                 1   1  context=i1
+wantarray           u       want                 0   1  context=i1
 
 rx_accept
 rx_capture_end

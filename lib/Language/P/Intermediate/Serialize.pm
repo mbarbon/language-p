@@ -5,6 +5,7 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 use Language::P::Opcodes qw(:all);
+use Language::P::Intermediate::SerializeGenerated;
 
 sub serialize {
     my( $self, $tree, $file ) = @_;
@@ -69,47 +70,6 @@ sub _write_bb {
     _write_op( $self, $out, $_ ) foreach @$ops;
 }
 
-sub _write_op {
-    my( $self, $out, $op ) = @_;
-    return if $op->{label}; # skip label
-
-    my $opn = $op->{opcode_n};
-
-    print $out pack 'v', $opn;
-
-    if( $opn == OP_CONSTANT_STRING || $opn == OP_FRESH_STRING ) {
-        _write_string( $out, $op->{attributes}{value} );
-    } elsif( $opn == OP_CONSTANT_INTEGER ) {
-        print $out pack 'V', $op->{attributes}{value};
-    } elsif( $opn == OP_CONSTANT_SUB ) {
-        print $out pack 'V', $self->{sub_map}{$op->{attributes}{value}};
-    } elsif( $opn == OP_GET || $opn == OP_SET ) {
-        print $out pack 'V', $op->{attributes}{index};
-    } elsif(    $opn == OP_LEXICAL
-             || $opn == OP_LEXICAL_SET
-             || $opn == OP_LEXICAL_CLEAR ) {
-        print $out pack 'V', $self->{li_map}{$op->{attributes}{index} . '|0'};
-    } elsif(    $opn == OP_LEXICAL_PAD
-             || $opn == OP_LEXICAL_PAD_SET
-             || $opn == OP_LEXICAL_PAD_CLEAR ) {
-        print $out pack 'V', $self->{li_map}{$op->{attributes}{index} . '|1'};
-    } elsif( $opn == OP_GLOBAL ) {
-        _write_string( $out, $op->{attributes}{name} );
-        print $out pack 'C', $op->{attributes}{slot};
-    } elsif( $opn == OP_CALL ) {
-        print $out pack 'C', $op->{attributes}{context};
-    } elsif( exists $op->{attributes}{to} ) {
-        print $out pack 'V', $self->{bb_map}{$op->{attributes}{to}};
-    }
-
-    if( $op->{parameters} ) {
-        print $out pack 'V', scalar @{$op->{parameters}};
-        _write_op( $self, $out, $_ ) foreach @{$op->{parameters}};
-    } else {
-        print $out pack 'V', 0;
-    }
-}
-
 sub _write_string {
     my( $out, $string ) = @_;
 
@@ -118,6 +78,12 @@ sub _write_string {
 
     print $out pack 'V', length $string;
     print $out $string;
+}
+
+sub _write_string_undef {
+    my( $out, $string ) = @_;
+
+    _write_string( $out, defined $string ? $string : '' );
 }
 
 1;

@@ -514,14 +514,14 @@ sub _builtin {
         $self->dispatch( $arg->subscripted );
 
         _add_bytecode $self,
-            opcode_np( $arg->type == VALUE_ARRAY ? OP_VIVIFY_ARRAY :
-                                                   OP_VIVIFY_HASH,
-                       $tree->pos )
+            opcode_npm( $arg->type == VALUE_ARRAY ? OP_VIVIFY_ARRAY :
+                                                    OP_VIVIFY_HASH,
+                        $tree->pos, context => CXT_SCALAR )
               if $arg->reference;
         _add_bytecode $self,
-            opcode_np( $arg->type == VALUE_ARRAY ? OP_EXISTS_ARRAY :
-                                                   OP_EXISTS_HASH,
-                       $tree->pos );
+            opcode_npm( $arg->type == VALUE_ARRAY ? OP_EXISTS_ARRAY :
+                                                    OP_EXISTS_HASH,
+                        $tree->pos, context => _context( $tree ) );
     } elsif( $op_flags & Language::P::Opcodes::FLAG_UNARY ) {
         _emit_label( $self, $tree );
         foreach my $arg ( @{$tree->arguments || []} ) {
@@ -598,7 +598,8 @@ sub _function_call {
             }
         }
 
-        _add_bytecode $self, opcode_np( $tree->function, $tree->pos );
+        _add_bytecode $self, opcode_npm( $tree->function, $tree->pos,
+                                         context => _context( $tree ) );
     }
 }
 
@@ -726,17 +727,20 @@ sub _binary_op {
 
         _add_bytecode $self,
                       opcode_n( OP_SWAP ),
-                      opcode_np( $tree->op, $tree->pos );
+                      opcode_npm( $tree->op, $tree->pos,
+                                  context => _context( $tree ) );
     } elsif( $tree->op == OP_NOT_MATCH ) {
         $self->dispatch( $tree->left );
         $self->dispatch( $tree->right );
 
-        # maybe perform the transformation during parsing, but remeber
+        # maybe perform the transformation during parsing, but remember
         # to correctly propagate context
         _add_bytecode $self,
             opcode_npm( OP_MATCH, $tree->pos,
                         context   => _context( $tree ) );
-        _add_bytecode $self, opcode_np( OP_LOG_NOT, $tree->pos );
+        _add_bytecode $self,
+            opcode_npm( OP_LOG_NOT, $tree->pos,
+                        context   => _context( $tree ) );
     } else {
         $self->dispatch( $tree->left );
         $self->dispatch( $tree->right );
@@ -1289,7 +1293,8 @@ sub _quoted_string {
     for( my $i = 0; $i < @{$tree->components}; ++$i ) {
         $self->dispatch( $tree->components->[$i] );
 
-        _add_bytecode $self, opcode_np( OP_CONCATENATE_ASSIGN, $tree->pos );
+        _add_bytecode $self, opcode_npm( OP_CONCATENATE_ASSIGN, $tree->pos,
+                                         context => CXT_SCALAR );
     }
 }
 
@@ -1302,13 +1307,15 @@ sub _subscript {
 
     my $lvalue = $tree->get_attribute( 'context' ) & (CXT_LVALUE|CXT_VIVIFY);
     if( $tree->type == VALUE_ARRAY ) {
-        _add_bytecode $self, opcode_np( OP_VIVIFY_ARRAY, $tree->pos )
+        _add_bytecode $self, opcode_npm( OP_VIVIFY_ARRAY, $tree->pos,
+                                         context   => CXT_SCALAR )
           if $tree->reference;
         _add_bytecode $self, opcode_npm( OP_ARRAY_ELEMENT, $tree->pos,
                                          create    => $lvalue ? 1 : 0,
                                          context   => _context( $tree ) );
     } elsif( $tree->type == VALUE_HASH ) {
-        _add_bytecode $self, opcode_np( OP_VIVIFY_HASH, $tree->pos )
+        _add_bytecode $self, opcode_npm( OP_VIVIFY_HASH, $tree->pos,
+                                         context   => CXT_SCALAR )
           if $tree->reference;
         _add_bytecode $self, opcode_npm( OP_HASH_ELEMENT, $tree->pos,
                                          create    => $lvalue ? 1 : 0,
@@ -1492,7 +1499,8 @@ sub _interpolated_pattern {
 
     $self->dispatch( $tree->string );
 
-    _add_bytecode $self, opcode_np( OP_EVAL_REGEX, $tree->pos );
+    _add_bytecode $self, opcode_npm( OP_EVAL_REGEX, $tree->pos,
+                                     context => _context( $tree ) );
 }
 
 sub _exit_scope {
