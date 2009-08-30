@@ -83,10 +83,18 @@ sub ACTION_code {
     if( !$self->up_to_date( [ 'inc/Opcodes.pm', 'lib/Language/P/Keywords.pm' ],
                             [ 'lib/Language/P/Opcodes.pm' ] ) ) {
         $self->do_system( $^X, '-Iinc', '-Ilib',
-                          '-MOpcodes', '-e', 'write_opcodes',
+                          '-MOpcodes', '-e', 'write_opcodes()',
                           '--', 'lib/Language/P/Opcodes.pm' );
         $self->add_to_cleanup( 'lib/Language/P/Opcodes.pm' );
     }
+    if( !$self->up_to_date( [ 'inc/Opcodes.pm', 'lib/Language/P/Keywords.pm' ],
+                            [ 'lib/Language/P/Intermediate/SerializeGenerated.pm' ] ) ) {
+        $self->do_system( $^X, '-Iinc', '-Ilib',
+                          '-MOpcodes', '-e', 'write_perl_serializer()',
+                          '--', 'lib/Language/P/Intermediate/SerializeGenerated.pm' );
+        $self->add_to_cleanup( 'lib/Language/P/Intermediate/SerializeGenerated.pm' );
+    }
+
     $self->depends_on( 'code_parrot' ) if $self->args( 'parrot' );
     $self->depends_on( 'code_dlr' ) if $self->args( 'dlr' );
 
@@ -237,10 +245,30 @@ sub _run_dotnet {
     $self->_run_p_tests( @byte_compile, @run );
 }
 
+sub _byte_compile {
+    my( $self, @tags ) = @_;
+
+    my @byte_compile;
+    foreach my $tag ( @tags ) {
+        my( $interpreter, @directories ) = @$tag;
+
+        push @byte_compile, [ [ $interpreter, '-fdump-bytecode' ],
+                              @directories ];
+    }
+
+    $self->_run_p_tests( @byte_compile );
+}
+
 sub ACTION_test_dotnet_run {
     my( $self ) = @_;
 
     $self->_run_dotnet( _expand_tags( $self, 'run' ) );
+}
+
+sub ACTION_test_dump_bytecode {
+    my( $self ) = @_;
+
+    $self->_byte_compile( _expand_tags( $self, 'run' ) );
 }
 
 =head2 test

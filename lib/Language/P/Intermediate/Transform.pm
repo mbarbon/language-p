@@ -325,7 +325,9 @@ sub _emit_out_stack {
 sub _generic {
     my( $self, $op ) = @_;
     my $attrs = $OP_ATTRIBUTES{$op->{opcode_n}};
-    my @in = $attrs->{in_args} ? _get_stack( $self, $attrs->{in_args} ) : ();
+    my $in_args = ( $attrs->{flags} & Language::P::Opcodes::FLAG_VARIADIC ) ?
+                      $op->{attributes}{arg_count} : $attrs->{in_args};
+    my @in = $in_args ? _get_stack( $self, $in_args ) : ();
     my $new_op;
 
     if( $op->{attributes} ) {

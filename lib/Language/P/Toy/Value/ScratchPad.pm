@@ -52,22 +52,22 @@ sub new_scope {
 }
 
 sub add_value_index {
-    my( $self, $runtime, $lexical, $index, $value ) = @_;
+    my( $self, $runtime, $lex_info, $index, $value ) = @_;
 
     # make repeated add a no-op
     return if defined $self->values->[$index];
 
     if( @_ == 5 ) {
         $self->values->[$index] = $value;
-    } elsif( $lexical->sigil == VALUE_SCALAR ) {
+    } elsif( $lex_info->{sigil} == VALUE_SCALAR ) {
         $self->values->[$index] = Language::P::Toy::Value::Undef->new( $runtime );
-    } elsif( $lexical->sigil == VALUE_ARRAY ) {
+    } elsif( $lex_info->{sigil} == VALUE_ARRAY ) {
         $self->values->[$index] = Language::P::Toy::Value::Array->new( $runtime );
-    } elsif( $lexical->sigil == VALUE_HASH ) {
+    } elsif( $lex_info->{sigil} == VALUE_HASH ) {
         $self->values->[$index] = Language::P::Toy::Value::Hash->new( $runtime );
     }
-    $self->{names}{$lexical->symbol_name} ||= [];
-    push @{$self->{names}{$lexical->symbol_name}}, $index;
+    $self->{names}{$lex_info->{symbol_name}} ||= [];
+    push @{$self->{names}{$lex_info->{symbol_name}}}, $index;
 
     return $index;
 }
