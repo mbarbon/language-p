@@ -140,6 +140,11 @@ namespace org.mbarbon.p.runtime
         public int Index;
     }
 
+    public class ElementAccess : Opcode
+    {
+        public int Create;
+    }
+
     public class Lexical : Opcode
     {
         public LexicalInfo LexicalInfo;

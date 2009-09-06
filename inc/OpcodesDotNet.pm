@@ -44,6 +44,10 @@ my %dotnet_classes =
     'OP_SCOPE_LEAVE'       => 'ScopeInOut',
     'OP_TEMPORARY'         => 'Temporary',
     'OP_TEMPORARY_SET'     => 'Temporary',
+    'OP_ARRAY_ELEMENT'     => 'ElementAccess',
+    'OP_ARRAY_SLICE'       => 'ElementAccess',
+    'OP_HASH_ELEMENT'      => 'ElementAccess',
+    'OP_HASH_SLICE'        => 'ElementAccess',
     );
 
 sub write_dotnet_deserializer {
