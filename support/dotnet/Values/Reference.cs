@@ -44,6 +44,14 @@ namespace org.mbarbon.p.values
                 throw new System.Exception("Not a CODE reference");
         }
 
+        internal IP5Referrable Referred
+        {
+            get
+            {
+                return referred;
+            }
+        }
+
         private IP5Referrable referred;
     }
 }

@@ -72,6 +72,14 @@ namespace org.mbarbon.p.values
             return body.DereferenceSubroutine(runtime);
         }
 
+        internal IP5ScalarBody Body
+        {
+            get
+            {
+                return body;
+            }
+        }
+
         protected IP5ScalarBody body;
     }
 

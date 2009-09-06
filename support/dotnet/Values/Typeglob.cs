@@ -39,6 +39,33 @@ namespace org.mbarbon.p.values
             set { globBody.Code = value; }
         }
 
+        public override IP5Any Assign(Runtime runtime, IP5Any other)
+        {
+            var ob = other.AsScalar(runtime).Body;
+            var obr = ob as P5Reference;
+            var obb = ob as P5TypeglobBody;
+
+            if (obb != null)
+                body = globBody = obb;
+            else if (obr != null)
+            {
+                var referred = obr.Referred;
+                var code = referred as P5Code;
+                var scalar = referred as P5Scalar;
+
+                if (code != null)
+                    globBody.Code = code;
+                else if (scalar != null)
+                    globBody.Scalar = scalar;
+            }
+            else
+            {
+                throw new System.NotImplementedException("Assign either glob or reference");
+            }
+
+            return this;
+        }
+
         private P5TypeglobBody globBody;
     }
 
