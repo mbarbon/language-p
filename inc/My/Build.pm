@@ -54,10 +54,10 @@ sub ACTION_code_parrot {
 sub ACTION_code_dlr {
     my( $self ) = @_;
 
-    if( !$self->up_to_date( [ 'inc/Opcodes.pm', 'lib/Language/P/Keywords.pm' ],
+    if( !$self->up_to_date( [ 'inc/Opcodes.pm', 'inc/OpcodesDotNet.pm', 'lib/Language/P/Keywords.pm' ],
                             [ 'support/dotnet/Bytecode/BytecodeGenerated.cs' ] ) ) {
         $self->do_system( $^X, '-Iinc', '-Ilib',
-                          '-MOpcodes', '-e', 'write_dotnet_deserializer()',
+                          '-MOpcodesDotNet', '-e', 'write_dotnet_deserializer()',
                           '--', 'support/dotnet/Bytecode/BytecodeGenerated.cs' );
         $self->add_to_cleanup( 'support/dotnet/Bytecode/BytecodeGenerated.cs' );
     }
