@@ -34,6 +34,8 @@ sub _write_sub {
     print $out pack 'V', scalar values %{$code->lexicals->{map}};
     print $out pack 'V', scalar @$bb;
 
+    # TODO serialize prototype, scopes, lexical states
+
     my $index = 0;
     foreach my $l ( values %{$code->lexicals->{map}} ) {
         _write_lex_info( $self, $out, $l );
@@ -67,6 +69,9 @@ sub _write_bb {
     my $ops = $bb->bytecode;
 
     print $out pack 'V', scalar( @$ops ) - 1; # skips label
+
+    # TODO serialize lexical state
+
     _write_op( $self, $out, $_ ) foreach @$ops;
 }
 
