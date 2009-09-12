@@ -32,14 +32,24 @@ sub _write_sub {
     print $out pack 'C', $code->type;
     print $out pack 'V', $code->outer ? $self->{sub_map}{$code->outer} : -1;
     print $out pack 'V', scalar values %{$code->lexicals->{map}};
+    print $out pack 'V', scalar @{$code->scopes};
+    print $out pack 'V', scalar @{$code->lexical_states};
     print $out pack 'V', scalar @$bb;
 
-    # TODO serialize prototype, scopes, lexical states
+    # TODO serialize prototype
 
     my $index = 0;
     foreach my $l ( values %{$code->lexicals->{map}} ) {
         _write_lex_info( $self, $out, $l );
         $self->{li_map}{$l->{index} . "|" . $l->{in_pad}} = $index++;
+    }
+
+    foreach my $s ( @{$code->scopes} ) {
+        _write_scope( $self, $out, $s );
+    }
+
+    foreach my $l ( @{$code->lexical_states} ) {
+        _write_lex_state( $self, $out, $l );
     }
 
     $self->{bb_map} = {};
@@ -64,13 +74,36 @@ sub _write_lex_info {
     print $out pack 'C', $lex_info->{from_main};
 }
 
+sub _write_scope {
+    my( $self, $out, $scope ) = @_;
+
+    print $out pack 'V', $scope->{outer};
+    print $out pack 'V', $scope->{id};
+    print $out pack 'V', $scope->{flags};
+    print $out pack 'V', $scope->{context};
+    print $out pack 'V', scalar @{$scope->{bytecode}};
+
+    foreach my $bc ( @{$scope->{bytecode}} ) {
+        print $out pack 'V', scalar @$bc;
+        _write_op( $self, $out, $_ ) foreach @$bc;
+    }
+}
+
+sub _write_lex_state {
+    my( $self, $out, $lex_state ) = @_;
+
+    print $out pack 'V', $lex_state->{scope};
+    print $out pack 'V', $lex_state->{hints};
+    _write_string( $out, $lex_state->{package} );
+    _write_string( $out, $lex_state->{warnings} || '' );
+}
+
 sub _write_bb {
     my( $self, $out, $bb ) = @_;
     my $ops = $bb->bytecode;
 
+    print $out pack 'V', $bb->lexical_state;
     print $out pack 'V', scalar( @$ops ) - 1; # skips label
-
-    # TODO serialize lexical state
 
     _write_op( $self, $out, $_ ) foreach @$ops;
 }
