@@ -21,7 +21,7 @@ L2:
   set index=3 (get index=2)
   jump to=L3
 L3:
-  assign (global name="x", slot=1), (get index=3)
+  assign context=2 (global name="x", slot=1), (get index=3)
   scope_leave scope=0
   end
 L4:
@@ -43,7 +43,7 @@ L2:
   set index=3 (get index=2)
   jump to=L3
 L3:
-  assign (global name="x", slot=1), (get index=3)
+  assign context=2 (global name="x", slot=1), (get index=3)
   scope_leave scope=0
   end
 L4:
@@ -72,7 +72,7 @@ L4:
   set index=5 (get index=4)
   jump to=L5
 L5:
-  assign (global name="x", slot=1), (get index=5)
+  assign context=2 (global name="x", slot=1), (get index=5)
   scope_leave scope=0
   end
 L6:
@@ -104,7 +104,7 @@ L4:
   set index=5 (get index=4)
   jump to=L5
 L5:
-  assign (global name="x", slot=1), (get index=5)
+  assign context=2 (global name="x", slot=1), (get index=5)
   scope_leave scope=0
   end
 L6:

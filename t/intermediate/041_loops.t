@@ -19,7 +19,7 @@ L1:
   constant_integer value=0
   global name="i", slot=1
   swap
-  assign
+  assign context=2
   pop
   jump to=L2
 L2:
@@ -41,7 +41,7 @@ L4:
   add context=4
   global name="i", slot=1
   swap
-  assign
+  assign context=2
   pop
   jump to=L2
 L5:

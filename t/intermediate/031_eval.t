@@ -16,12 +16,12 @@ EOP
 L1:
   scope_enter scope=0
   constant_string value="1"
-  eval warnings=undef, hints=0, globals={}, context=2, lexicals={}, package=main
+  eval warnings=undef, hints=0, globals={}, context=2, lexicals={}, package="main"
   pop
   jump to=L2
 L2:
   constant_string value="1"
-  eval warnings=undef, hints=0, globals={}, context=2, lexicals={}, package=x
+  eval warnings=undef, hints=0, globals={}, context=2, lexicals={}, package="x"
   pop
   scope_leave scope=0
   end
@@ -39,7 +39,7 @@ L1:
   scope_leave scope=1
   global name="x", slot=1
   swap
-  assign
+  assign context=2
   pop
   scope_enter scope=2
   constant_integer value=1

@@ -17,7 +17,7 @@ L1:
   constant_integer value=1
   constant_integer value=2
   make_list count=2
-  array_push
+  array_push context=2
   pop
   scope_leave scope=0
   end

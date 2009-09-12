@@ -24,7 +24,7 @@ L1:
 # BEGIN
 L1:
   scope_enter scope=0
-  return (make_list (constant_integer value=3))
+  return context=0 (make_list (constant_integer value=3))
   scope_leave scope=0
   end
 EOI

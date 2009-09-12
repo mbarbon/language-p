@@ -16,7 +16,7 @@ EOP
 L1:
   scope_enter scope=0
   scope_enter scope=1
-  assign (global name="i", slot=1), (constant_integer value=0)
+  assign context=2 (global name="i", slot=1), (constant_integer value=0)
   jump to=L2
 L2:
   jump_if_f_lt to=L3 (global name="i", slot=1), (constant_integer value=10)
@@ -27,7 +27,7 @@ L3:
   scope_leave scope=2
   jump to=L4
 L4:
-  assign (global name="i", slot=1), (add context=4 (global name="i", slot=1), (constant_integer value=1))
+  assign context=2 (global name="i", slot=1), (add context=4 (global name="i", slot=1), (constant_integer value=1))
   jump to=L2
 L5:
   scope_leave scope=1

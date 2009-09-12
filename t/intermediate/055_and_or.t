@@ -23,7 +23,7 @@ L2:
 L3:
   global name="x", slot=1
   swap
-  assign
+  assign context=2
   pop
   scope_leave scope=0
   end
@@ -47,7 +47,7 @@ L2:
 L3:
   global name="x", slot=1
   swap
-  assign
+  assign context=2
   pop
   scope_leave scope=0
   end
@@ -78,7 +78,7 @@ L4:
 L5:
   global name="x", slot=1
   swap
-  assign
+  assign context=2
   pop
   scope_leave scope=0
   end
@@ -111,7 +111,7 @@ L4:
 L5:
   global name="x", slot=1
   swap
-  assign
+  assign context=2
   pop
   scope_leave scope=0
   end

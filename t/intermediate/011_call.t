@@ -30,17 +30,17 @@ L1:
   global name="STDOUT", slot=7
   fresh_string value=""
   constant_string value="ok "
-  concat_assign
+  concat_assign context=4
   constant_integer value=0
   lexical index=0, slot=2
   array_element create=0, context=4
-  concat_assign
+  concat_assign context=4
   constant_string value="\x0a"
-  concat_assign
+  concat_assign context=4
   make_list count=1
   print context=0
   make_list count=1
-  return
+  return context=0
   scope_leave scope=0
   end
 EOI

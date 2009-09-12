@@ -22,26 +22,26 @@ EOP
 # main
 L1:
   scope_enter scope=0
-  assign (global name="x", slot=1), (call context=4 (make_list), (global name="outer", slot=4))
-  assign (global name="y", slot=1), (make_closure (constant_sub value=anoncode))
+  assign context=2 (global name="x", slot=1), (call context=4 (make_list), (global name="outer", slot=4))
+  assign context=2 (global name="y", slot=1), (make_closure (constant_sub value=anoncode))
   scope_leave scope=0
   end
 # outer
 L1:
   scope_enter scope=0
-  return (make_list (make_closure (constant_sub value=anoncode)))
+  return context=0 (make_list (make_closure (constant_sub value=anoncode)))
   scope_leave scope=0
   end
 # anoncode
 L1:
   scope_enter scope=0
-  return (make_list (constant_integer value=3))
+  return context=0 (make_list (constant_integer value=3))
   scope_leave scope=0
   end
 # anoncode
 L1:
   scope_enter scope=0
-  return (make_list (constant_integer value=4))
+  return context=0 (make_list (constant_integer value=4))
   scope_leave scope=0
   end
 EOI

@@ -16,7 +16,7 @@ L1:
   jump_if_f_gt to=L3 (global name="a", slot=1), (constant_integer value=2)
   jump to=L4
 L2:
-  assign (global name="x", slot=1), (get index=3)
+  assign context=2 (global name="x", slot=1), (get index=3)
   scope_leave scope=0
   end
 L3:
@@ -39,7 +39,7 @@ L1:
   jump_if_f_gt to=L3 (global name="a", slot=1), (constant_integer value=2)
   jump to=L4
 L2:
-  assign (global name="x", slot=1), (get index=4)
+  assign context=2 (global name="x", slot=1), (get index=4)
   scope_leave scope=0
   end
 L3:

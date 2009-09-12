@@ -22,7 +22,7 @@ L2:
   jump to=L5
 L3:
   scope_enter scope=2
-  assign (global name="x", slot=1), (add context=4 (constant_integer value=1), (constant_integer value=1))
+  assign context=2 (global name="x", slot=1), (add context=4 (constant_integer value=1), (constant_integer value=1))
   scope_leave scope=2
   jump to=L2
 L5:
@@ -48,12 +48,12 @@ L2:
   jump to=L5
 L3:
   scope_enter scope=2
-  assign (global name="x", slot=1), (constant_integer value=1)
+  assign context=2 (global name="x", slot=1), (constant_integer value=1)
   scope_leave scope=2
   jump to=L4
 L4:
   scope_enter scope=3
-  assign (global name="y", slot=1), (constant_integer value=2)
+  assign context=2 (global name="y", slot=1), (constant_integer value=2)
   scope_leave scope=3
   jump to=L2
 L5:

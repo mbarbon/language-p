@@ -17,7 +17,7 @@ L1:
   jump to=L4
 L2:
   set index=3 (phi L3, 1, L4, 2)
-  assign (global name="x", slot=1), (get index=3)
+  assign context=2 (global name="x", slot=1), (get index=3)
   scope_leave scope=0
   end
 L3:
@@ -39,7 +39,7 @@ L1:
   jump to=L4
 L2:
   set index=4 (phi L3, 1, L6, 2, L7, 3)
-  assign (global name="x", slot=1), (get index=4)
+  assign context=2 (global name="x", slot=1), (get index=4)
   scope_leave scope=0
   end
 L3:
