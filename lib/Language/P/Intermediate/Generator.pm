@@ -66,26 +66,44 @@ sub _new_block {
 
     return Language::P::Intermediate::BasicBlock->new_from_label
                ( 'L' . ++$self->{_label_count},
-                 $block ? $block->{lexical_state} : 0 );
+                 $block ? $block->{lexical_state} : 0,
+                 $block ? $block->{id} : 0 );
+}
+
+sub _start_bb {
+    my( $self ) = @_;
+    return if @{$self->_current_basic_block->bytecode} == 1;
+    my $block = _new_block( $self );
+
+    _add_jump $self,
+         opcode_nm( OP_JUMP, to => $block ), $block;
+    _add_blocks $self, $block;
+
+    return $block;
 }
 
 sub _context { $_[0]->get_attribute( 'context' ) & CXT_CALL_MASK }
 
 sub push_block {
-    my( $self, $flags, $exit_pos, $context ) = @_;
+    my( $self, $flags, $start_pos, $exit_pos, $context ) = @_;
     my $id = @{$self->_code_segments->[0]->scopes};
     my $outer = $self->_current_block;
     my $bytecode = [];
 
-    _add_bytecode $self,
-        opcode_nm( OP_SCOPE_ENTER, scope => $id );
+    Carp::confess( "Instructions at scope start" )
+      if @{$self->_current_basic_block->bytecode} != 1;
+    # TODO encapsulation
+    $self->_current_basic_block->{scope} = $id;
 
     push @{$self->_code_segments->[0]->scopes},
-         { outer    => $outer ? $outer->{id} : -1,
-           bytecode => $bytecode,
-           id       => $id,
-           flags    => $flags,
-           context  => $context || 0, # for eval BLOCK only
+         { outer         => $outer ? $outer->{id} : -1,
+           bytecode      => $bytecode,
+           id            => $id,
+           flags         => $flags,
+           context       => $context || 0, # for eval BLOCK only
+           pos_s         => $start_pos,
+           pos_e         => $exit_pos,
+           lexical_state => $outer ? $outer->{lexical_state} : 0,
            };
 
     $self->_current_block
@@ -105,9 +123,6 @@ sub pop_block {
     my $to_ret = $self->_current_block;
 
     $self->_current_block( $to_ret->{outer} );
-
-    _add_bytecode $self,
-        opcode_nm( OP_SCOPE_LEAVE, scope => $to_ret->{id} );
 
     return $to_ret;
 }
@@ -208,7 +223,7 @@ sub generate_use {
                  } );
 
     _add_blocks $self, $head;
-    $self->push_block( SCOPE_SUB|SCOPE_MAIN, $tree->pos_e );
+    $self->push_block( SCOPE_SUB|SCOPE_MAIN, $tree->pos_s, $tree->pos_e );
 
     # TODO require perl version
     ( my $file = $tree->package ) =~ s{::}{/}g;
@@ -279,7 +294,8 @@ sub generate_subroutine {
     $context->visit( $tree, CXT_VOID );
 
     _generate_bytecode( $self, 1, $tree->name, $tree->prototype,
-                        $outer || $self->_main, $tree->lines, $tree->pos_e );
+                        $outer || $self->_main, $tree->lines,
+                        $tree->pos_s, $tree->pos_e );
 }
 
 sub generate_bytecode {
@@ -289,13 +305,16 @@ sub generate_bytecode {
     foreach my $tree ( @$statements ) {
         $context->visit( $tree, CXT_VOID );
     }
+    my $pos_s = @$statements ? $statements->[0]->pos_s : undef;
     my $pos_e = @$statements ? $statements->[-1]->pos_e : undef;
 
-    _generate_bytecode( $self, 0, undef, undef, $outer, $statements, $pos_e );
+    _generate_bytecode( $self, 0, undef, undef, $outer, $statements,
+                        $pos_s, $pos_e );
 }
 
 sub _generate_bytecode {
-    my( $self, $is_sub, $name, $prototype, $outer, $statements, $pos_e ) = @_;
+    my( $self, $is_sub, $name, $prototype, $outer, $statements,
+        $pos_s, $pos_e ) = @_;
 
     $self->_code_segments( [] );
 
@@ -320,7 +339,9 @@ sub _generate_bytecode {
     my $block_flags =   ( $is_sub  ? SCOPE_SUB : 0 )
                       | ( $is_eval ? SCOPE_EVAL : 0 )
                       |              SCOPE_MAIN;
-    $self->push_block( $block_flags, $pos_e );
+
+    $self->push_block( 0, undef, undef );
+    $self->push_block( $block_flags, $pos_s, $pos_e );
 
     foreach my $tree ( @$statements ) {
         $self->dispatch( $tree );
@@ -329,7 +350,14 @@ sub _generate_bytecode {
 
     $self->pop_block;
 
+    if( @{$self->_current_basic_block->bytecode} > 1 ) {
+        my $end = _new_block( $self );
+        _add_jump $self, opcode_nm( OP_JUMP, to => $end ), $end;
+        _add_blocks $self, $end;
+    }
     _add_bytecode $self, opcode_n( OP_END );
+
+    $self->pop_block;
 
     # eliminate edges from a node with multiple successors to a node
     # with multiple predecessors by inserting an empty node and
@@ -460,11 +488,13 @@ sub _lexical_state {
     $self->_current_block->{lexical_state} = $state_id;
 
     # avoid generating a new basic block if the current basic block only
-    # contains a label or a label and a scope enter opcode
+    # contains a label
     my $bb = $self->_current_basic_block;
-    if(    @{$bb->bytecode} == 1
-        || (    @{$bb->bytecode} == 2
-             && $bb->bytecode->[-1]->opcode_n == OP_SCOPE_ENTER ) ) {
+    if( @{$bb->bytecode} == 1 ) {
+        # TODO emit _save at block start
+        _add_bytecode $self,
+            opcode_nm( OP_LEXICAL_STATE_SET,  index => $state_id );
+
         $bb->{lexical_state} = $state_id;
         return;
     }
@@ -472,6 +502,9 @@ sub _lexical_state {
     my $block = _new_block( $self );
     _add_jump $self, opcode_nm( OP_JUMP, to => $block ), $block;
     _add_blocks $self, $block;
+    # TODO emit _save at block start
+    _add_bytecode $self,
+        opcode_nm( OP_LEXICAL_STATE_SET,  index => $state_id );
 }
 
 sub _indirect {
@@ -961,8 +994,10 @@ sub _cond_loop {
          opcode_nm( OP_JUMP, to => $start_cond ), $start_cond;
     _add_blocks $self, $start_cond;
 
-    $self->push_block( 0, $tree->pos_e )
-      if $tree->block->isa( 'Language::P::ParseTree::Block' );
+    if( $tree->block->isa( 'Language::P::ParseTree::Block' ) ) {
+        _start_bb( $self );
+        $self->push_block( 0, $tree->pos_s, $tree->pos_e );
+    }
 
     $self->dispatch_cond( $tree->condition,
                           $is_until ? ( $end_loop, $start_loop ) :
@@ -980,11 +1015,12 @@ sub _cond_loop {
     }
 
     _add_jump $self, opcode_nm( OP_JUMP, to => $start_cond ), $start_cond;
-
     _add_blocks $self, $end_loop;
+
     if( $tree->block->isa( 'Language::P::ParseTree::Block' ) ) {
         _exit_scope( $self, $self->_current_block );
         $self->pop_block;
+        _start_bb( $self );
     }
 }
 
@@ -1002,8 +1038,10 @@ sub _foreach {
     $tree->set_attribute( 'lbl_last', $end_loop );
     $tree->set_attribute( 'lbl_redo', $start_loop );
 
-    $self->push_block( 0, $tree->pos_e )
-      if $tree->block->isa( 'Language::P::ParseTree::Block' );
+    if( $tree->block->isa( 'Language::P::ParseTree::Block' ) ) {
+        _start_bb( $self );
+        $self->push_block( 0, $tree->pos_s, $tree->pos_e );
+    }
 
     $self->dispatch( $tree->expression );
     _add_bytecode $self, opcode_nm( OP_MAKE_LIST, count => 1 );
@@ -1012,7 +1050,9 @@ sub _foreach {
     my( $glob, $slot );
     _add_bytecode $self,
         opcode_npm( OP_ITERATOR, $tree->pos ),
-        opcode_nm( OP_TEMPORARY_SET, index => $iterator );
+        opcode_nm( OP_TEMPORARY_SET,
+                   index => $iterator,
+                   slot  => VALUE_ITERATOR );
 
     if( !$is_lexical ) {
         $glob = $self->{_temporary_count}++;
@@ -1022,14 +1062,20 @@ sub _foreach {
             opcode_nm( OP_GLOBAL, name => $iter_var->name, slot => VALUE_GLOB ),
             opcode_n( OP_DUP ),
             opcode_nm( OP_GLOB_SLOT,   slot  => VALUE_SCALAR ),
-            opcode_nm( OP_TEMPORARY_SET, index => $slot ),
-            opcode_nm( OP_TEMPORARY_SET, index => $glob );
+            opcode_nm( OP_TEMPORARY_SET,
+                       index => $slot,
+                       slot  => VALUE_SCALAR ),
+            opcode_nm( OP_TEMPORARY_SET,
+                       index => $glob,
+                       slot  => VALUE_GLOB );
 
         push @{$self->_current_block->{bytecode}},
              [ opcode_npm( OP_TEMPORARY, $self->_current_block->{pos},
-                           index => $glob ),
+                           index => $glob,
+                           slot  => VALUE_GLOB ),
                opcode_npm( OP_TEMPORARY, $self->_current_block->{pos},
-                           index => $slot ),
+                           index => $slot,
+                           slot  => VALUE_SCALAR ),
                opcode_npm( OP_GLOB_SLOT_SET, $self->_current_block->{pos},
                            slot  => VALUE_SCALAR ),
                ];
@@ -1040,7 +1086,9 @@ sub _foreach {
 
     if( !$is_lexical ) {
         _add_bytecode $self,
-            opcode_nm( OP_TEMPORARY,     index => $iterator ),
+            opcode_nm( OP_TEMPORARY,
+                       index => $iterator,
+                       slot  => VALUE_ITERATOR ),
             opcode_npm( OP_ITERATOR_NEXT, $tree->pos ),
             opcode_n( OP_DUP );
         _add_jump $self,
@@ -1050,12 +1098,16 @@ sub _foreach {
 
         _add_blocks $self, $start_loop;
         _add_bytecode $self,
-            opcode_nm( OP_TEMPORARY,     index => $glob ),
+            opcode_nm( OP_TEMPORARY,
+                       index => $glob,
+                       slot  => VALUE_GLOB ),
             opcode_n( OP_SWAP ),
             opcode_nm( OP_GLOB_SLOT_SET, slot  => VALUE_SCALAR );
     } else {
         _add_bytecode $self,
-            opcode_nm( OP_TEMPORARY,      index => $iterator ),
+            opcode_nm( OP_TEMPORARY,
+                       index => $iterator,
+                       slot  => VALUE_ITERATOR ),
             opcode_np( OP_ITERATOR_NEXT, $tree->pos ),
             opcode_n( OP_DUP );
         _add_jump $self,
@@ -1092,6 +1144,7 @@ sub _foreach {
     if( $tree->block->isa( 'Language::P::ParseTree::Block' ) ) {
         _exit_scope( $self, $self->_current_block );
         $self->pop_block;
+        _start_bb( $self );
     }
 }
 
@@ -1104,7 +1157,8 @@ sub _for {
     $tree->set_attribute( 'lbl_last', $end_loop );
     $tree->set_attribute( 'lbl_redo', $start_loop );
 
-    $self->push_block( 0, $tree->pos_e );
+    _start_bb( $self );
+    $self->push_block( 0, $tree->pos_s, $tree->pos_e );
 
     $self->dispatch( $tree->initializer );
     _discard_if_void( $self, $tree->initializer );
@@ -1130,6 +1184,7 @@ sub _for {
     _add_blocks $self, $end_loop;
     _exit_scope( $self, $self->_current_block );
     $self->pop_block;
+    _start_bb( $self );
 }
 
 sub _cond {
@@ -1139,8 +1194,10 @@ sub _cond {
     my $with_scope =    $tree->iffalse
                      || $tree->iftrues->[0]->block->isa( 'Language::P::ParseTree::Block' );
 
-    $self->push_block( 0, $tree->pos_e )
-      if $with_scope;
+    if( $with_scope ) {
+        _start_bb( $self );
+        $self->push_block( 0, $tree->pos_s, $tree->pos_e );
+    }
 
     my( $next, $last ) = _new_blocks( $self, 2 );
     _add_jump $self, opcode_nm( OP_JUMP, to => $next ), $next;
@@ -1169,6 +1226,7 @@ sub _cond {
     if( $with_scope ) {
         _exit_scope( $self, $self->_current_block );
         $self->pop_block;
+        _start_bb( $self );
     }
 }
 
@@ -1194,9 +1252,19 @@ sub _block {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
+    _start_bb( $self );
     my $is_eval = $tree->isa( 'Language::P::ParseTree::EvalBlock' );
-    $self->push_block( $is_eval ? SCOPE_EVAL : 0, $tree->pos_e,
+    $self->push_block( $is_eval ? SCOPE_EVAL : 0, $tree->pos_s, $tree->pos_e,
                        $is_eval ? _context( $tree ) : 0 );
+
+    my $lex_state;
+    if( $tree->get_attribute( 'lexical_state' ) ) {
+        $lex_state = $self->_code_segments->[0]->scopes->[-1]->{lexical_state};
+        _add_bytecode $self,
+            opcode_nm( OP_LEXICAL_STATE_SAVE, index => $lex_state );
+        push @{$self->_current_block->{bytecode}},
+             [ opcode_nm( OP_LEXICAL_STATE_RESTORE, index => $lex_state ) ];
+    }
 
     foreach my $line ( @{$tree->lines} ) {
         $self->dispatch( $line );
@@ -1205,6 +1273,7 @@ sub _block {
 
     _exit_scope( $self, $self->_current_block );
     $self->pop_block;
+    _start_bb( $self ) if $is_eval;
 }
 
 sub _bare_block {
@@ -1220,7 +1289,17 @@ sub _bare_block {
          opcode_nm( OP_JUMP, to => $start_loop ), $start_loop;
     _add_blocks $self, $start_loop;
 
-    $self->push_block( 0, $tree->pos_e );
+    $self->push_block( 0, $tree->pos_s, $tree->pos_e );
+
+    my $lex_state;
+    if( $tree->get_attribute( 'lexical_state' ) ) {
+        $lex_state = $self->_code_segments->[0]->scopes->[-1]->{lexical_state};
+
+        _add_bytecode $self,
+            opcode_nm( OP_LEXICAL_STATE_SAVE, index => $lex_state );
+        push @{$self->_current_block->{bytecode}},
+             [ opcode_nm( OP_LEXICAL_STATE_RESTORE, index => $lex_state ) ];
+    }
 
     foreach my $line ( @{$tree->lines} ) {
         $self->dispatch( $line );

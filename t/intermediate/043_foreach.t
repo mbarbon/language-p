@@ -14,43 +14,41 @@ foreach $y ( 1, 2 ) {
 EOP
 # main
 L1:
-  scope_enter scope=0
-  scope_enter scope=1
   constant_integer value=1
   constant_integer value=2
   make_list count=2
   make_list count=1
   iterator
-  temporary_set index=0
+  temporary_set index=0, slot=9
   global name="y", slot=5
   dup
   glob_slot slot=1
-  temporary_set index=2
-  temporary_set index=1
+  temporary_set index=2, slot=1
+  temporary_set index=1, slot=5
   jump to=L2
 L2:
-  temporary index=0
+  temporary index=0, slot=9
   iterator_next
   dup
   jump_if_null false=L3, true=L5
 L3:
-  temporary index=1
+  temporary index=1, slot=5
   swap
   glob_slot_set slot=1
-  scope_enter scope=2
-  constant_integer value=3
-  pop
-  scope_leave scope=2
-  jump to=L2
+  jump to=L7
 L5:
   pop
   jump to=L6
 L6:
-  temporary index=1
-  temporary index=2
+  temporary index=1, slot=5
+  temporary index=2, slot=1
   glob_slot_set slot=1
-  scope_leave scope=1
-  scope_leave scope=0
+  jump to=L8
+L7:
+  constant_integer value=3
+  pop
+  jump to=L2
+L8:
   end
 EOI
 

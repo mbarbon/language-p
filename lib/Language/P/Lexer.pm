@@ -91,7 +91,7 @@ sub new {
     $self->{tokens} = [];
     $self->{brackets} = 0;
     $self->{pending_brackets} = [];
-    $self->{line} = 1;
+    $self->{line} ||= 1;
     $self->{_start_of_line} = 1;
     $self->{pos} = [ $self->file, $self->line ];
 

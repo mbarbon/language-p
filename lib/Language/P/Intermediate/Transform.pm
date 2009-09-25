@@ -6,7 +6,7 @@ use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_accessors( qw(_temporary_count _current_basic_block
                               _converting _queue _stack _converted
-                              _converted_segments) );
+                              _converted_segments _bytecode) );
 
 use Language::P::Opcodes qw(:all);
 use Language::P::Assembly qw(:all);
@@ -49,7 +49,7 @@ sub new {
 sub _add_bytecode {
     my( $self, @bytecode ) = @_;
 
-    push @{$self->_current_basic_block->bytecode}, @bytecode;
+    push @{$self->_bytecode}, @bytecode;
 }
 
 sub _opcode_set {
@@ -91,7 +91,7 @@ sub to_ssa {
                            name           => $code_segment->name,
                            basic_blocks   => [],
                            lexicals       => $code_segment->lexicals,
-                           scopes         => $code_segment->scopes,
+                           scopes         => [],
                            lexical_states => $code_segment->lexical_states,
                            } );
     $self->_converted_segments->{$code_segment} = $new_code;
@@ -133,10 +133,13 @@ sub to_ssa {
         $self->_converting( $self->_converted->{$block} );
         my $cblock = $self->_converting->{block} ||=
             Language::P::Intermediate::BasicBlock
-                ->new_from_label( $block->start_label, $block->lexical_state );
+                ->new_from_label( $block->start_label,
+                                  $block->lexical_state,
+                                  $block->scope );
 
         push @{$new_code->basic_blocks}, $cblock;
         $self->_current_basic_block( $cblock );
+        $self->_bytecode( $cblock->bytecode );
         @$stack = @{$self->_converting->{in_stack} || []};
 
         # remove dummy phi values that all get the same value
@@ -150,6 +153,7 @@ sub to_ssa {
             }
         }
 
+        # duplicated below
         foreach my $bc ( @{$block->bytecode} ) {
             next if $bc->{label};
             my $meth = $op_map{$bc->{opcode_n}} || '_generic';
@@ -159,6 +163,39 @@ sub to_ssa {
 
         _add_bytecode $self,
             grep $_->{opcode_n} != OP_PHI && $_->{opcode_n} != OP_GET, @$stack;
+    }
+
+    # convert block exit bytecode
+    foreach my $scope ( @{$code_segment->scopes} ) {
+         push @{$new_code->scopes},
+             { outer         => $scope->{outer},
+               bytecode      => [],
+               id            => $scope->{id},
+               flags         => $scope->{flags},
+               context       => $scope->{context},
+               pos_s         => $scope->{pos_s},
+               pos_e         => $scope->{pos_e},
+               lexical_state => $scope->{lexical_state},
+               };
+
+       foreach my $seg ( @{$scope->{bytecode}} ) {
+            my @bytecode;
+            @$stack = ();
+            $self->_bytecode( \@bytecode );
+
+            # duplicated above
+            foreach my $bc ( @$seg ) {
+                next if $bc->{label};
+                my $meth = $op_map{$bc->{opcode_n}} || '_generic';
+
+                $self->$meth( $bc );
+            }
+
+            _add_bytecode $self,
+                grep $_->{opcode_n} != OP_PHI && $_->{opcode_n} != OP_GET, @$stack;
+
+            push @{$new_code->scopes->[-1]{bytecode}}, \@bytecode;
+        }
     }
 
     return $new_code;
@@ -284,7 +321,8 @@ sub _jump_to {
     $converted->{depth} = @$stack;
     $converted->{block} ||= Language::P::Intermediate::BasicBlock
                                 ->new_from_label( $to->start_label,
-                                                  $to->lexical_state );
+                                                  $to->lexical_state,
+                                                  $to->scope );
     $op->{attributes}{to} = $converted->{block};
     push @{$self->_queue}, $to;
 
@@ -339,6 +377,7 @@ sub _generic {
     } else {
         $new_op = opcode_n( $op->{opcode_n}, @in );
     }
+    $new_op->{pos} = $op->{pos} if $op->{pos};
 
     if( !$attrs->{out_args} ) {
         _emit_out_stack( $self );

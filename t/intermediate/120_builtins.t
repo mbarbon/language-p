@@ -12,12 +12,12 @@ exists $foo[1];
 EOP
 # main
 L1:
-  scope_enter scope=0
   constant_integer value=1
   global name="foo", slot=2
-  exists_array
+  exists_array context=2
   pop
-  scope_leave scope=0
+  jump to=L2
+L2:
   end
 EOI
 
@@ -26,13 +26,13 @@ exists $foo->{1};
 EOP
 # main
 L1:
-  scope_enter scope=0
   constant_integer value=1
   global name="foo", slot=1
-  vivify_hash
-  exists_hash
+  vivify_hash context=4
+  exists_hash context=2
   pop
-  scope_leave scope=0
+  jump to=L2
+L2:
   end
 EOI
 
@@ -41,11 +41,11 @@ exists &foo;
 EOP
 # main
 L1:
-  scope_enter scope=0
   global name="foo", slot=4
   exists context=2
   pop
-  scope_leave scope=0
+  jump to=L2
+L2:
   end
 EOI
 
@@ -55,12 +55,12 @@ caller 1;
 EOP
 # main
 L1:
-  scope_enter scope=0
   caller context=2, arg_count=0
   pop
   constant_integer value=1
   caller context=2, arg_count=1
   pop
-  scope_leave scope=0
+  jump to=L2
+L2:
   end
 EOI

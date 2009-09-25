@@ -1184,6 +1184,8 @@ sub _parse_substitution {
     if( $match->flags & FLAG_RX_EVAL ) {
         local $self->{lexer} = Language::P::Lexer->new
                                    ( { string       => $token->[O_RX_SECOND_HALF]->[O_QS_BUFFER],
+                                       file         => $match->pos->[0],
+                                       line         => $match->pos->[1],
                                        runtime      => $self->runtime,
                                        _heredoc_lexer => $self->lexer,
                                        } );
@@ -1206,6 +1208,8 @@ sub _parse_string_rest {
     my @values;
     local $self->{lexer} = Language::P::Lexer->new
                                ( { string       => $token->[O_QS_BUFFER],
+                                   file         => $token->[O_POS][0],
+                                   line         => $token->[O_POS][1],
                                    runtime      => $self->runtime,
                                    } );
 
@@ -1294,7 +1298,10 @@ sub _parse_term_terminal {
                 if( $qstring->value =~ /^[a-zA-Z_]/ ) {
                     # FIXME simpler method, make lex_identifier static
                     my $lexer = Language::P::Lexer->new
-                                    ( { string => $qstring->value } );
+                                    ( { string => $qstring->value,
+                                        file   => $token->[O_POS][0],
+                                        line   => $token->[O_POS][1],
+                                        } );
                     my $id = $lexer->lex_identifier( 0 );
 
                     if( $id && !length( ${$lexer->buffer} ) ) {
@@ -1862,6 +1869,7 @@ sub _parse_block_rest {
     $end_token ||= T_CLBRK;
     $self->_enter_scope if $flags & BLOCK_OPEN_SCOPE;
 
+    my $has_lex_state = 0;
     my @lines;
     for(;;) {
         my $token = $self->lexer->lex( X_STATE );
@@ -1869,33 +1877,40 @@ sub _parse_block_rest {
             _lines_implicit_return( $self, \@lines )
                 if $flags & BLOCK_IMPLICIT_RETURN;
             $self->_leave_scope if $flags & BLOCK_OPEN_SCOPE;
+            my $block;
             if( $flags & BLOCK_BARE ) {
                 my $continue = _parse_continue( $self );
-                return Language::P::ParseTree::BareBlock->new
-                           ( { lines    => \@lines,
-                               continue => $continue,
-                               pos_s    => $pos,
-                               pos_e    => $token->[O_POS],
-                               } );
+                $block = Language::P::ParseTree::BareBlock->new
+                             ( { lines    => \@lines,
+                                 continue => $continue,
+                                 pos_s    => $pos,
+                                 pos_e    => $token->[O_POS],
+                                 } );
             } elsif( $flags & BLOCK_DO ) {
-                return Language::P::ParseTree::DoBlock->new
-                           ( { lines    => \@lines,
-                               pos_s    => $pos,
-                               pos_e    => $token->[O_POS],
-                               } );
+                $block = Language::P::ParseTree::DoBlock->new
+                             ( { lines    => \@lines,
+                                 pos_s    => $pos,
+                                 pos_e    => $token->[O_POS],
+                                 } );
             } elsif( $flags & BLOCK_EVAL ) {
-                return Language::P::ParseTree::EvalBlock->new
-                           ( { lines    => \@lines,
-                               pos_s    => $pos,
-                               pos_e    => $token->[O_POS],
-                               } );
+                $block = Language::P::ParseTree::EvalBlock->new
+                             ( { lines    => \@lines,
+                                 pos_s    => $pos,
+                                 pos_e    => $token->[O_POS],
+                                 } );
             } else {
-                return Language::P::ParseTree::Block->new
-                           ( { lines => \@lines,
-                               pos_s => $pos,
-                               pos_e => $token->[O_POS],
-                               } );
+                $block = Language::P::ParseTree::Block->new
+                             ( { lines => \@lines,
+                                 pos_s => $pos,
+                                 pos_e => $token->[O_POS],
+                                 } );
             }
+
+            if( $has_lex_state ) {
+                $block->set_attribute( 'lexical_state' => 1 );
+            }
+
+            return $block;
         } else {
             $self->lexer->unlex( $token );
             my $line = _parse_line( $self );
@@ -1908,7 +1923,10 @@ sub _parse_block_rest {
                 push @lines, $line;
             }
             my $lex_state = _lexical_state_node( $self );
-            push @lines, $lex_state if $lex_state;
+            if( $lex_state ) {
+                push @lines, $lex_state;
+                $has_lex_state = 1;
+            }
         }
     }
 }

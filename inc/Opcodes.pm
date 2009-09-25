@@ -183,6 +183,7 @@ sub _write_op {
     my $opn = $op->{opcode_n};
 
     print $out pack 'v', $opn;
+    _write_pos( $self, $out, $op->{pos} );
 
     if( 0 ) {
         # simplifies code generation below
@@ -200,6 +201,7 @@ EOT
         for( my $i = 0; $i < @$attrs; $i += 2 ) {
             my $type = $attrs->[$i + 1];
             my $name = $attrs->[$i];
+            next if $name eq 'arg_count';
             if( $type eq 's' ) {
                 print $out sprintf <<'EOT', $name;
         _write_string( $out, $op->{attributes}{%s} );
@@ -381,6 +383,9 @@ lexical_set         0       same                 1   0  index=ls
 lexical_pad         0       same                 0   1  index=lp
 lexical_pad_clear   0       same                 0   0  index=lp
 lexical_pad_set     0       same                 1   0  index=lp
+lexical_state_set   0       same                 0   0  index=i
+lexical_state_save  0       same                 0   0  index=i
+lexical_state_restore 0     same                 0   0  index=i
 list_slice          0       same                 2   1  context=i1
 local               0       same                 1   1  noattr
 localize_glob_slot  0       same                 0   1  name=s,index=i,slot=i_sigil
@@ -439,8 +444,6 @@ restore_glob_slot   0       same                 0   0  name=s,index=i,slot=i_si
 return              0       same                 1   0  context=i1
 rmdir               u       same                 1   1  context=i1
 set                 0       same                 1   0  index=i
-scope_enter         0       same                 0   0  scope=i
-scope_leave         0       same                 0   0  scope=i
 str_cmp             0       same                 2   1  noattr
 str_eq              0       compare_s_eq_scalar  2   1  noattr
 str_ge              0       compare_s_ge_scalar  2   1  noattr
@@ -452,8 +455,8 @@ stringify           0       same                 1   1  context=i1
 subtract            0       same                 2   1  context=i1
 subtract_assign     0       same                 2   1  context=i1
 swap                0       same                 2   2  noattr
-temporary           0       same                 0   1  index=i
-temporary_set       0       same                 1   0  index=i
+temporary           0       same                 0   1  index=i,slot=i_sigil
+temporary_set       0       same                 1   0  index=i,slot=i_sigil
 undef               u       same                -1   1  context=i1
 unlink              0       same                 1   1  context=i1
 vivify_array        0       same                 1   1  context=i1

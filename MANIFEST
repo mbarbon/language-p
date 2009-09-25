@@ -197,6 +197,7 @@ t/run/103_use_file.t
 t/run/110_eval.t
 t/run/115_data_handle.t
 t/run/120_stack_unwind.t
+t/run/121_eval_block.t
 t/run/123_caller.t
 t/run/files/Bar.pm
 t/run/files/Foo.pm
