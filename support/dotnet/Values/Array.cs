@@ -90,6 +90,11 @@ namespace org.mbarbon.p.values
             return clone;
         }
 
+        public virtual IP5Any Localize(Runtime runtime)
+        {
+            return new P5Array(runtime);
+        }
+
         public virtual P5Code DereferenceSubroutine(Runtime runtime)
         {
             throw new System.InvalidOperationException("Not a reference");

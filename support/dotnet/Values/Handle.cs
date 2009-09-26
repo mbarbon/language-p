@@ -30,6 +30,11 @@ namespace org.mbarbon.p.values
             return new P5Handle(runtime);
         }
 
+        public virtual IP5Any Localize(Runtime runtime)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public virtual IP5Any Assign(Runtime runtime, IP5Any other)
         {
             throw new System.NotImplementedException();

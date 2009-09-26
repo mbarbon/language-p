@@ -67,6 +67,11 @@ namespace org.mbarbon.p.values
             return new P5Scalar(body.CloneBody(runtime));
         }
 
+        public virtual IP5Any Localize(Runtime runtime)
+        {
+            return new P5Scalar(runtime);
+        }
+
         public virtual P5Code DereferenceSubroutine(Runtime runtime)
         {
             return body.DereferenceSubroutine(runtime);

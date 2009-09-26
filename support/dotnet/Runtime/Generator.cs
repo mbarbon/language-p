@@ -798,6 +798,93 @@ namespace org.mbarbon.p.runtime
                            typeof(P5Code).GetMethod("MakeClosure"),
                            Runtime, Pad);
             }
+            case Opcode.OpNumber.OP_LOCALIZE_GLOB_SLOT:
+            {
+                var exps = new List<Expression>();
+                var vars = new List<ParameterExpression>();
+                var lop = (LocalGlobSlot)op;
+                var st = typeof(Runtime).GetField("SymbolTable");
+                var glob = Expression.Variable(typeof(P5Typeglob));
+                var saved = Expression.Variable(TypeForSlot(lop.Slot));
+                var temp = GetTemporary(lop.Index, typeof(IP5Any));
+
+                // FIXME do not walk twice the symbol table
+                exps.Add(
+                    Expression.Assign(
+                        glob,
+                        Expression.Call(
+                            Expression.Field(Runtime, st),
+                            typeof(P5SymbolTable).GetMethod("GetOrCreateGlob"),
+                            Runtime,
+                            Expression.Constant(lop.Name))));
+                exps.Add(
+                    Expression.Assign(
+                        temp,
+                        Expression.Call(
+                            Expression.Field(Runtime, st),
+                            typeof(P5SymbolTable).GetMethod(MethodForSlot(lop.Slot)),
+                            Runtime,
+                            Expression.Constant(lop.Name))));
+                exps.Add(
+                    Expression.Assign(
+                        saved,
+                        Expression.Convert(
+                            Expression.Call(
+                                temp,
+                                typeof(IP5Any).GetMethod("Localize"),
+                                Runtime),
+                            saved.Type)));
+                exps.Add(
+                    Expression.Assign(
+                        Expression.Property(
+                            glob,
+                            PropertyForSlot(lop.Slot)),
+                        saved));
+                exps.Add(saved);
+
+                vars.Add(glob);
+                vars.Add(saved);
+
+                return Expression.Block(typeof(IP5Any), vars, exps);
+            }
+            case Opcode.OpNumber.OP_RESTORE_GLOB_SLOT:
+            {
+                var exps = new List<Expression>();
+                var vars = new List<ParameterExpression>();
+                var lop = (LocalGlobSlot)op;
+                var st = typeof(Runtime).GetField("SymbolTable");
+                var glob = Expression.Variable(typeof(P5Typeglob));
+                var saved = GetTemporary(lop.Index, typeof(IP5Any));
+
+                exps.Add(
+                    Expression.Assign(
+                        glob,
+                        Expression.Call(
+                            Expression.Field(Runtime, st),
+                            typeof(P5SymbolTable).GetMethod("GetOrCreateGlob"),
+                            Runtime,
+                            Expression.Constant(lop.Name))));
+                exps.Add(
+                    Expression.Assign(
+                        Expression.Property(
+                            glob,
+                            PropertyForSlot(lop.Slot)),
+                        Expression.Convert(
+                            saved,
+                            TypeForSlot(lop.Slot))));
+                exps.Add(
+                    Expression.Assign(
+                        saved,
+                        Expression.Constant(null, saved.Type)));
+
+                vars.Add(glob);
+
+                return Expression.IfThen(
+                    Expression.NotEqual(
+                        saved,
+                        Expression.Constant(null, typeof(IP5Any))),
+                    Expression.Block(typeof(void), vars, exps));
+            }
             case Opcode.OpNumber.OP_SCOPE_ENTER:
             case Opcode.OpNumber.OP_SCOPE_LEAVE:
                 return Expression.Constant(1);

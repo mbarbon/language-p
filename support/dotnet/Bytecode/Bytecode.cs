@@ -148,6 +148,13 @@ namespace org.mbarbon.p.runtime
         public Opcode.Sigil Slot;
     }
 
+    public class LocalGlobSlot : Opcode
+    {
+        public string Name;
+        public Opcode.Sigil Slot;
+        public int Index;
+    }
+
     public class GlobSlot : Opcode
     {
         public Opcode.Sigil Slot;

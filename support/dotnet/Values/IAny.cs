@@ -21,6 +21,7 @@ namespace org.mbarbon.p.values
         IP5Any ConcatAssign(Runtime runtime, IP5Any other);
 
         IP5Any Clone(Runtime runtime, int depth);
+        IP5Any Localize(Runtime runtime);
 
         P5Code DereferenceSubroutine(Runtime runtime);
     }
