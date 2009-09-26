@@ -404,7 +404,9 @@ namespace org.mbarbon.p.runtime
             }
 
             Variables.InsertRange(0, Lexicals);
-            Variables.InsertRange(0, Temporaries);
+            for (int i = 0; i < Temporaries.Count; ++i)
+                if (Temporaries[i] != null)
+                    Variables.Add(Temporaries[i]);
 
             var block = Expression.Block(typeof(IP5Any), Variables, Blocks);
             var args = new ParameterExpression[] { Runtime, Context, Pad, Arguments };
