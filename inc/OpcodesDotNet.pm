@@ -195,6 +195,7 @@ EOT
             SUB       = 4,
             GLOB      = 5,
             HANDLE    = 7,
+            ITERATOR  = 9,
         }
 
         public OpNumber Number;

@@ -186,6 +186,7 @@ namespace org.mbarbon.p.runtime
     public class Temporary : Opcode
     {
         public int Index;
+        public Opcode.Sigil Slot;
     }
 
     public class ElementAccess : Opcode

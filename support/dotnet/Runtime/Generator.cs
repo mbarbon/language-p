@@ -280,10 +280,11 @@ namespace org.mbarbon.p.runtime
 
         private Type TypeForSlot(Opcode.Sigil slot)
         {
-            return slot == Opcode.Sigil.SCALAR ? typeof(P5Scalar) :
-                   slot == Opcode.Sigil.ARRAY  ? typeof(P5Array) :
-                   slot == Opcode.Sigil.HASH   ? typeof(P5Hash) :
-                                                 typeof(void);
+            return slot == Opcode.Sigil.SCALAR   ? typeof(P5Scalar) :
+                   slot == Opcode.Sigil.ARRAY    ? typeof(P5Array) :
+                   slot == Opcode.Sigil.HASH     ? typeof(P5Hash) :
+                   slot == Opcode.Sigil.ITERATOR ? typeof(IEnumerator<IP5Any>) :
+                                                   typeof(void);
         }
 
         private string MethodForSlot(Opcode.Sigil slot)
@@ -732,7 +733,7 @@ namespace org.mbarbon.p.runtime
             {
                 Temporary tm = (Temporary)op;
 
-                return GetTemporary(tm.Index, null);
+                return GetTemporary(tm.Index, TypeForSlot(tm.Slot));
             }
             case Opcode.OpNumber.OP_TEMPORARY_SET:
             {
