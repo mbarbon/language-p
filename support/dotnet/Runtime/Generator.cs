@@ -627,6 +627,22 @@ namespace org.mbarbon.p.runtime
 
                 return Expression.IfThen(cmp, jump);
             }
+            case Opcode.OpNumber.OP_JUMP_IF_F_LE:
+            {
+                Expression cmp = Expression.LessThanOrEqual(Expression.Call(Generate(op.Childs[0]), typeof(IP5Any).GetMethod("AsFloat"), Runtime),
+                                                     Expression.Call(Generate(op.Childs[1]), typeof(IP5Any).GetMethod("AsFloat"), Runtime));
+                Expression jump = Expression.Goto(BlockLabels[((Jump)op).To], typeof(IP5Any));
+
+                return Expression.IfThen(cmp, jump);
+            }
+            case Opcode.OpNumber.OP_JUMP_IF_F_GT:
+            {
+                Expression cmp = Expression.GreaterThan(Expression.Call(Generate(op.Childs[0]), typeof(IP5Any).GetMethod("AsFloat"), Runtime),
+                                                           Expression.Call(Generate(op.Childs[1]), typeof(IP5Any).GetMethod("AsFloat"), Runtime));
+                Expression jump = Expression.Goto(BlockLabels[((Jump)op).To], typeof(IP5Any));
+
+                return Expression.IfThen(cmp, jump);
+            }
             case Opcode.OpNumber.OP_JUMP_IF_F_LT:
             {
                 Expression cmp = Expression.LessThan(Expression.Call(Generate(op.Childs[0]), typeof(IP5Any).GetMethod("AsFloat"), Runtime),
