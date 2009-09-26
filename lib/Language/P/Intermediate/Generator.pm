@@ -1012,7 +1012,9 @@ sub _foreach {
     my( $glob, $slot );
     _add_bytecode $self,
         opcode_npm( OP_ITERATOR, $tree->pos ),
-        opcode_nm( OP_TEMPORARY_SET, index => $iterator );
+        opcode_nm( OP_TEMPORARY_SET,
+                   index => $iterator,
+                   slot  => VALUE_ITERATOR );
 
     if( !$is_lexical ) {
         $glob = $self->{_temporary_count}++;
@@ -1022,14 +1024,20 @@ sub _foreach {
             opcode_nm( OP_GLOBAL, name => $iter_var->name, slot => VALUE_GLOB ),
             opcode_n( OP_DUP ),
             opcode_nm( OP_GLOB_SLOT,   slot  => VALUE_SCALAR ),
-            opcode_nm( OP_TEMPORARY_SET, index => $slot ),
-            opcode_nm( OP_TEMPORARY_SET, index => $glob );
+            opcode_nm( OP_TEMPORARY_SET,
+                       index => $slot,
+                       slot  => VALUE_SCALAR ),
+            opcode_nm( OP_TEMPORARY_SET,
+                       index => $glob,
+                       slot  => VALUE_GLOB );
 
         push @{$self->_current_block->{bytecode}},
              [ opcode_npm( OP_TEMPORARY, $self->_current_block->{pos},
-                           index => $glob ),
+                           index => $glob,
+                           slot  => VALUE_GLOB ),
                opcode_npm( OP_TEMPORARY, $self->_current_block->{pos},
-                           index => $slot ),
+                           index => $slot,
+                           slot  => VALUE_SCALAR ),
                opcode_npm( OP_GLOB_SLOT_SET, $self->_current_block->{pos},
                            slot  => VALUE_SCALAR ),
                ];
@@ -1040,7 +1048,9 @@ sub _foreach {
 
     if( !$is_lexical ) {
         _add_bytecode $self,
-            opcode_nm( OP_TEMPORARY,     index => $iterator ),
+            opcode_nm( OP_TEMPORARY,
+                       index => $iterator,
+                       slot  => VALUE_ITERATOR ),
             opcode_npm( OP_ITERATOR_NEXT, $tree->pos ),
             opcode_n( OP_DUP );
         _add_jump $self,
@@ -1050,12 +1060,16 @@ sub _foreach {
 
         _add_blocks $self, $start_loop;
         _add_bytecode $self,
-            opcode_nm( OP_TEMPORARY,     index => $glob ),
+            opcode_nm( OP_TEMPORARY,
+                       index => $glob,
+                       slot  => VALUE_GLOB ),
             opcode_n( OP_SWAP ),
             opcode_nm( OP_GLOB_SLOT_SET, slot  => VALUE_SCALAR );
     } else {
         _add_bytecode $self,
-            opcode_nm( OP_TEMPORARY,      index => $iterator ),
+            opcode_nm( OP_TEMPORARY,
+                       index => $iterator,
+                       slot  => VALUE_ITERATOR ),
             opcode_np( OP_ITERATOR_NEXT, $tree->pos ),
             opcode_n( OP_DUP );
         _add_jump $self,

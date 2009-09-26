@@ -452,8 +452,8 @@ stringify           0       same                 1   1  context=i1
 subtract            0       same                 2   1  context=i1
 subtract_assign     0       same                 2   1  context=i1
 swap                0       same                 2   2  noattr
-temporary           0       same                 0   1  index=i
-temporary_set       0       same                 1   0  index=i
+temporary           0       same                 0   1  index=i,slot=i_sigil
+temporary_set       0       same                 1   0  index=i,slot=i_sigil
 undef               u       same                -1   1  context=i1
 unlink              0       same                 1   1  context=i1
 vivify_array        0       same                 1   1  context=i1
