@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace org.mbarbon.p.values
 {
     public class P5SymbolTable
-    {       
+    {
         public P5SymbolTable(Runtime runtime)
         {
             symbols = new Dictionary<string, P5Typeglob>();

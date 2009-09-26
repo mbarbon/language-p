@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace org.mbarbon.p.values
 {
     public class P5Array : IP5Any
-    {       
+    {
         public P5Array(Runtime runtime)
         {
             array = new List<IP5Any>();
@@ -34,11 +34,11 @@ namespace org.mbarbon.p.values
         {
             array.Add(item);
         }
-        
+
         public virtual P5Scalar AsScalar(Runtime runtime) { return new P5Scalar(runtime, array.Count); }
         public virtual string AsString(Runtime runtime) { return AsScalar(runtime).AsString(runtime); }
         public virtual int AsInteger(Runtime runtime) { return array.Count; }
-        public virtual double AsFloat(Runtime runtime) { return array.Count; }        
+        public virtual double AsFloat(Runtime runtime) { return array.Count; }
         public virtual bool AsBoolean(Runtime runtime) { return array.Count != 0; }
         public virtual bool IsDefined(Runtime runtime) { return true; }
 
@@ -94,7 +94,7 @@ namespace org.mbarbon.p.values
         {
             throw new System.InvalidOperationException("Not a reference");
         }
-        
+
         protected List<IP5Any> array;
     }
 }

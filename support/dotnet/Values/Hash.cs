@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace org.mbarbon.p.values
 {
     public class P5Hash : IP5Any
-    {       
+    {
         public P5Hash(Runtime runtime)
         {
             hash = new Dictionary<string, IP5Any>();
