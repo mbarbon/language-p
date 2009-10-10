@@ -34,8 +34,8 @@ sub new {
     my $self = $class->SUPER::new( $args );
 
     $self->{inner} = [];
-    $self->{scopes} = [];
-    $self->{lexical_states} =
+    $self->{scopes} ||= [];
+    $self->{lexical_states} ||=
         [ { scope    => 0,
             package  => 'main',
             hints    => 0,
