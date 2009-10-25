@@ -16,15 +16,16 @@ BEGIN {
 EOP
 # main
 L1:
-  scope_enter scope=0
   constant_integer value=1
   constant_integer value=2
-  scope_leave scope=0
+  jump to=L2
+L2:
   end
 # BEGIN
 L1:
-  scope_enter scope=0
+  lexical_state_set index=1
   return context=0 (make_list (constant_integer value=3))
-  scope_leave scope=0
+  jump to=L2
+L2:
   end
 EOI

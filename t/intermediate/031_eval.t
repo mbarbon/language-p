@@ -14,37 +14,46 @@ eval "1";
 EOP
 # main
 L1:
-  scope_enter scope=0
   constant_string value="1"
   eval warnings=undef, hints=0, globals={}, context=2, lexicals={}, package="main"
   pop
   jump to=L2
 L2:
+  lexical_state_set index=1
   constant_string value="1"
   eval warnings=undef, hints=0, globals={}, context=2, lexicals={}, package="x"
   pop
-  scope_leave scope=0
+  jump to=L3
+L3:
   end
 EOI
 
 generate_and_diff( <<'EOP', <<'EOI' );
 $x = eval { 1 };
-eval { 1 };
+eval {
+    package x;
+    1
+};
 EOP
 # main
 L1:
-  scope_enter scope=0
-  scope_enter scope=1
   constant_integer value=1
-  scope_leave scope=1
+  jump to=L2
+L2:
   global name="x", slot=1
   swap
   assign context=2
   pop
-  scope_enter scope=2
+  jump to=L3
+L3:
+  lexical_state_save index=0
+  jump to=L4
+L4:
+  lexical_state_set index=1
   constant_integer value=1
   pop
-  scope_leave scope=2
-  scope_leave scope=0
+  lexical_state_restore index=0
+  jump to=L5
+L5:
   end
 EOI

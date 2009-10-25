@@ -133,7 +133,9 @@ sub to_ssa {
         $self->_converting( $self->_converted->{$block} );
         my $cblock = $self->_converting->{block} ||=
             Language::P::Intermediate::BasicBlock
-                ->new_from_label( $block->start_label, $block->lexical_state );
+                ->new_from_label( $block->start_label,
+                                  $block->lexical_state,
+                                  $block->scope );
 
         push @{$new_code->basic_blocks}, $cblock;
         $self->_current_basic_block( $cblock );
@@ -284,7 +286,8 @@ sub _jump_to {
     $converted->{depth} = @$stack;
     $converted->{block} ||= Language::P::Intermediate::BasicBlock
                                 ->new_from_label( $to->start_label,
-                                                  $to->lexical_state );
+                                                  $to->lexical_state,
+                                                  $to->scope );
     $op->{attributes}{to} = $converted->{block};
     push @{$self->_queue}, $to;
 

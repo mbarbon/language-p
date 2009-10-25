@@ -12,14 +12,14 @@ push @foo, 1, 2;
 EOP
 # main
 L1:
-  scope_enter scope=0
   global name="foo", slot=2
   constant_integer value=1
   constant_integer value=2
   make_list count=2
   array_push context=2
   pop
-  scope_leave scope=0
+  jump to=L2
+L2:
   end
 EOI
 
@@ -28,11 +28,11 @@ pop @foo;
 EOP
 # main
 L1:
-  scope_enter scope=0
   global name="foo", slot=2
   array_pop context=2
   pop
-  scope_leave scope=0
+  jump to=L2
+L2:
   end
 EOI
 
@@ -43,7 +43,6 @@ mypush @foo, 1, 2;
 EOP
 # main
 L1:
-  scope_enter scope=0
   global name="foo", slot=2
   reference
   constant_integer value=1
@@ -52,6 +51,7 @@ L1:
   global name="mypush", slot=4
   call context=2
   pop
-  scope_leave scope=0
+  jump to=L2
+L2:
   end
 EOI

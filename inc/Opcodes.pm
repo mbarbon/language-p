@@ -381,6 +381,9 @@ lexical_set         0       same                 1   0  index=ls
 lexical_pad         0       same                 0   1  index=lp
 lexical_pad_clear   0       same                 0   0  index=lp
 lexical_pad_set     0       same                 1   0  index=lp
+lexical_state_set   0       same                 0   0  index=i
+lexical_state_save  0       same                 0   0  index=i
+lexical_state_restore 0     same                 0   0  index=i
 list_slice          0       same                 2   1  context=i1
 local               0       same                 1   1  noattr
 localize_glob_slot  0       same                 0   1  name=s,index=i,slot=i_sigil
@@ -439,8 +442,6 @@ restore_glob_slot   0       same                 0   0  name=s,index=i,slot=i_si
 return              0       same                 1   0  context=i1
 rmdir               u       same                 1   1  context=i1
 set                 0       same                 1   0  index=i
-scope_enter         0       same                 0   0  scope=i
-scope_leave         0       same                 0   0  scope=i
 str_cmp             0       same                 2   1  noattr
 str_eq              0       compare_s_eq_scalar  2   1  noattr
 str_ge              0       compare_s_ge_scalar  2   1  noattr

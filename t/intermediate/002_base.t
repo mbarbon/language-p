@@ -12,7 +12,6 @@ $x = $a + 2
 EOP
 # main
 L1:
-  scope_enter scope=0
   global name="a", slot=1
   constant_integer value=2
   add context=4
@@ -20,7 +19,8 @@ L1:
   swap
   assign context=2
   pop
-  scope_leave scope=0
+  jump to=L2
+L2:
   end
 EOI
 
@@ -29,14 +29,14 @@ print !$a
 EOP
 # main
 L1:
-  scope_enter scope=0
   global name="STDOUT", slot=7
   global name="a", slot=1
   not context=8
   make_list count=1
   print context=2
   pop
-  scope_leave scope=0
+  jump to=L2
+L2:
   end
 EOI
 
@@ -45,7 +45,6 @@ $x = "$a\n";
 EOP
 # main
 L1:
-  scope_enter scope=0
   fresh_string value=""
   global name="a", slot=1
   concat_assign context=4
@@ -55,6 +54,7 @@ L1:
   swap
   assign context=2
   pop
-  scope_leave scope=0
+  jump to=L2
+L2:
   end
 EOI

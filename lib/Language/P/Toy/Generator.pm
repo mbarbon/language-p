@@ -7,7 +7,8 @@ use base qw(Language::P::ParseTree::Visitor);
 __PACKAGE__->mk_ro_accessors( qw(runtime) );
 __PACKAGE__->mk_accessors( qw(_code _pending _block_map _temporary_map
                               _options _generated _intermediate _processing
-                              _eval_context _segment _saved_subs) );
+                              _eval_context _segment _saved_subs
+                              _generated_scopes) );
 
 use Language::P::Intermediate::Code qw(:all);
 use Language::P::Intermediate::Generator;
@@ -138,12 +139,13 @@ my %opcode_map =
     OP_JUMP_IF_S_NE()                => \&_cond_jump_simple,
     OP_JUMP_IF_NULL()                => \&_cond_jump_simple,
     OP_JUMP()                        => \&_direct_jump,
+    OP_LEXICAL_STATE_SET()           => \&_lexical_state_set,
+    OP_LEXICAL_STATE_SAVE()          => \&_lexical_state_save,
+    OP_LEXICAL_STATE_RESTORE()       => \&_lexical_state_restore,
     OP_TEMPORARY()                   => \&_temporary,
     OP_TEMPORARY_SET()               => \&_temporary_set,
     OP_LOCALIZE_GLOB_SLOT()          => \&_map_slot_index,
     OP_RESTORE_GLOB_SLOT()           => \&_map_slot_index,
-    OP_SCOPE_ENTER()                 => \&_scope_enter,
-    OP_SCOPE_LEAVE()                 => \&_scope_leave,
     OP_END()                         => \&_end,
 
     OP_RX_QUANTIFIER()               => \&_rx_quantifier,
@@ -178,6 +180,65 @@ sub _convert_bytecode {
     }
 
     return \@bytecode;
+}
+
+sub _generate_block {
+    my( $self, $block, $converted ) = @_;
+    my $start = @{$self->_code->bytecode};
+
+    my $bytecode = _convert_bytecode( $self, $block->bytecode );
+    push @{$self->_code->bytecode}, @$bytecode;
+
+    push @$converted, [ $block, $start ];
+}
+
+sub _generate_scope {
+    my( $self, $scope_id, $converted ) = @_;
+
+    return if $self->_generated_scopes->{$scope_id};
+    $self->_generated_scopes->{$scope_id} = 1;
+
+    my $scope = $self->_segment->scopes->[$scope_id];
+    _generate_scope( $self, $scope->{outer}, $converted )
+        if $scope->{outer} != -1;
+    my $state = $self->_segment->lexical_states->[$scope->{lexical_state}];
+
+    my @exit_bytecode;
+    $self->_code->scopes->[$scope_id] =
+        { start         => scalar @{$self->_code->bytecode},
+          end           => -1,
+          flags         => $scope->{flags},
+          outer         => $scope->{outer},
+          context       => $scope->{context},
+          bytecode      => \@exit_bytecode,
+          pos_s         => $scope->{pos_s},
+          pos_e         => $scope->{pos_e},
+          warnings      => $state->{warnings},
+          hints         => $state->{hints},
+          package       => $state->{package},
+          };
+
+    foreach my $chunk ( reverse @{$scope->{bytecode}} ) {
+        push @exit_bytecode, @{$self->_convert_bytecode( $chunk )};
+    }
+    push @exit_bytecode, o( 'end' );
+
+    foreach my $block ( @{$self->_segment->basic_blocks} ) {
+        if( $block->scope != $scope_id ) {
+            next if $self->_generated_scopes->{$block->scope};
+            my $is_inside = 0;
+            for( my $s = $block->scope; !$is_inside && $s != -1;
+                 $s = $self->_segment->scopes->[$s]->{outer} ) {
+                $is_inside = $s == $scope_id;
+            }
+            _generate_scope( $self, $block->scope, $converted );
+        } else {
+            _generate_block( $self, $block, $converted );
+        }
+    }
+
+# XXX scope must end before the 'end' opcode
+    $self->_code->scopes->[$scope_id]->{end} = @{$self->_code->bytecode};
 }
 
 sub _generate_segment {
@@ -227,28 +288,14 @@ sub _generate_segment {
     $self->_block_map( {} );
     $self->_temporary_map( {} );
     $self->_segment( $segment );
+    $self->_generated_scopes( {} );
 
     my @converted;
-    foreach my $block ( @{$segment->basic_blocks} ) {
-        my $start = @{$self->_code->bytecode};
-        my $change =    !@{$block->predecessors}
-                     || grep $_->lexical_state != $block->lexical_state,
-                             @{$block->predecessors};
-        if( $change ) {
-            my $state = $segment->lexical_states->[$block->lexical_state];
-
-            push @{$self->_code->bytecode},
-                 o( 'lexical_state_set',
-                    package  => $state->{package},
-                    hints    => $state->{hints} & 0xff,
-                    warnings => $state->{warnings},
-                    );
-        }
-
-        my $bytecode = _convert_bytecode( $self, $block->bytecode );
-        push @{$self->_code->bytecode}, @$bytecode;
-
-        push @converted, [ $block, $start ];
+    if( $is_regex ) {
+        _generate_block( $self, $_, \@converted )
+            foreach @{$segment->basic_blocks};
+    } else {
+        _generate_scope( $self, $segment->scopes->[0]->{id}, \@converted );
     }
 
     foreach my $block ( @converted ) {
@@ -313,6 +360,7 @@ sub _cleanup {
     $self->_temporary_map( undef );
     $self->_generated( undef );
     $self->_processing( undef );
+    $self->_generated_scopes( {} );
 }
 
 sub start_code_generation {
@@ -346,48 +394,6 @@ sub end_code_generation {
 }
 
 sub is_generating { return $_[0]->_processing ? 1 : 0 }
-
-sub _scope_enter {
-    my( $self, $bytecode, $op ) = @_;
-    my $id = $op->{attributes}{scope};
-    my $scope = $self->_segment->scopes->[$id];
-    my @exit_bytecode;
-
-    $self->_code->scopes->[$id] =
-        { start         => @{$self->_code->bytecode} + @$bytecode,
-          end           => -1,
-          flags         => $scope->{flags},
-          outer         => $scope->{outer},
-          context       => $scope->{context},
-          bytecode      => \@exit_bytecode,
-          lexical_index => -1,
-          };
-
-    foreach my $chunk ( reverse @{$scope->{bytecode}} ) {
-        push @exit_bytecode, @{$self->_convert_bytecode( $chunk )};
-    }
-    if( ($scope->{flags} & SCOPE_LEX_STATE) && !($scope->{flags} & SCOPE_MAIN) ) {
-        my $idx = $self->_code->scopes->[$id]{lexical_index} =
-                  _temporary_index( $self, -$op->{attributes}{scope} );
-        push @$bytecode,
-             o( 'lexical_state_save', index => $idx );
-        push @exit_bytecode, o( 'lexical_state_restore', index => $idx );
-    }
-    push @exit_bytecode, o( 'end' );
-}
-
-sub _scope_leave {
-    my( $self, $bytecode, $op ) = @_;
-    my $id = $op->{attributes}{scope};
-    my $scope = $self->_code->scopes->[$id];
-
-    $scope->{end} = @{$self->_code->bytecode} + @$bytecode;
-    if( ($scope->{flags} & SCOPE_LEX_STATE) && !($scope->{flags} & SCOPE_MAIN) ) {
-        my $idx = _temporary_index( $self, -$op->{attributes}{scope} );
-        push @$bytecode,
-             o( 'lexical_state_restore', index => $idx );
-    }
-}
 
 sub _end {
     my( $self, $bytecode, $op ) = @_;
@@ -477,6 +483,37 @@ sub _const_codelike {
     my $sub = $self->_generated->{$op->{attributes}{value}};
     push @$bytecode,
          o( 'constant', value => $sub );
+}
+
+sub _lexical_state_set {
+    my( $self, $bytecode, $op ) = @_;
+    my $state = $self->_segment->lexical_states->[$op->{attributes}{index}];
+
+    push @$bytecode,
+         o( 'lexical_state_set',
+            package  => $state->{package},
+            hints    => $state->{hints} & 0xff,
+            warnings => $state->{warnings},
+            );
+}
+
+sub _lexical_state_save {
+    my( $self, $bytecode, $op ) = @_;
+    my $state_id = $op->{attributes}{index};
+
+    # TODO add multiple kinds of temp indices
+    push @$bytecode,
+         o( 'lexical_state_save',
+            index => _temporary_index( $self, -$state_id - 1 ) );
+}
+
+sub _lexical_state_restore {
+    my( $self, $bytecode, $op ) = @_;
+
+    # TODO add multiple kinds of temp indices
+    push @$bytecode,
+         o( 'lexical_state_restore',
+            index => _temporary_index( $self, -$op->{attributes}{index} - 1 ) );
 }
 
 sub _temporary_index {

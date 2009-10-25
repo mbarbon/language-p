@@ -68,7 +68,7 @@ print hints() == 0 ? "ok\n" : "not ok\n";;;
 eval {
     print subname() eq '(eval)' ? "ok\n" : "not ok\n";
     package x;
-    print caller eq 'main' ? "ok\n" : "not ok\n";
+    print caller eq 'main' ? "ok 15\n" : "not ok 15\n";
 };
 
 eval q{
