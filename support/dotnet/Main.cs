@@ -1,8 +1,8 @@
 using org.mbarbon.p.runtime;
 using org.mbarbon.p.values;
 
-using Microsoft.Linq;
-using Microsoft.Linq.Expressions;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Collections.Generic;
 
 namespace org.mbarbon.p
