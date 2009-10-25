@@ -6,6 +6,8 @@ using Microsoft.Linq.Expressions;
 using System.Collections.Generic;
 using Type = System.Type;
 using IEnumerator = System.Collections.IEnumerator;
+using DebuggableAttribute = System.Diagnostics.DebuggableAttribute;
+using DebugInfoGenerator = Microsoft.Runtime.CompilerServices.DebugInfoGenerator;
 
 namespace org.mbarbon.p.runtime
 {
@@ -82,7 +84,8 @@ namespace org.mbarbon.p.runtime
                 ClassBuilder.DefineMethod(
                     Subroutines[index].MethodName,
                     MethodAttributes.Static|MethodAttributes.Public);
-            body.CompileToMethod(method_builder);
+            body.CompileToMethod(method_builder,
+                                 DebugInfoGenerator.CreatePdbGenerator());
         }
 
         public void AddInitMethod(FieldInfo main)
@@ -935,9 +938,21 @@ namespace org.mbarbon.p.runtime
             AssemblyBuilder asm_builder =
                 System.AppDomain.CurrentDomain.DefineDynamicAssembly(
                     asm_name, AssemblyBuilderAccess.RunAndSave);
+
+            Type daType = typeof(DebuggableAttribute);
+            ConstructorInfo daCtor = daType.GetConstructor(
+                new Type[] { typeof(DebuggableAttribute.DebuggingModes) });
+            CustomAttributeBuilder daBuilder = new CustomAttributeBuilder(
+                daCtor, new object[] {
+                    DebuggableAttribute.DebuggingModes.DisableOptimizations|
+                    DebuggableAttribute.DebuggingModes.Default });
+            asm_builder.SetCustomAttribute(daBuilder);
+
             ModuleBuilder mod_builder =
                 asm_builder.DefineDynamicModule(asm_name.Name,
-                                                asm_name.Name + ".dll");
+                                                asm_name.Name + ".dll",
+                                                true);
+
             // FIXME should at least be the module name with which the
             //       file was loaded, in case multiple modules are
             //       compiled to the same file; works for now
