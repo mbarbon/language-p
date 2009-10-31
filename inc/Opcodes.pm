@@ -200,6 +200,7 @@ EOT
         for( my $i = 0; $i < @$attrs; $i += 2 ) {
             my $type = $attrs->[$i + 1];
             my $name = $attrs->[$i];
+            next if $name eq 'arg_count';
             if( $type eq 's' ) {
                 print $out sprintf <<'EOT', $name;
         _write_string( $out, $op->{attributes}{%s} );
