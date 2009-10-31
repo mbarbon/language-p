@@ -19,7 +19,18 @@ namespace org.mbarbon.p.values
             if (scratchpad != null && !is_main)
                 pad = scratchpad.NewScope(runtime);
 
-            return subref(runtime, context, pad, args);
+            try
+            {
+                runtime.CallStack.Push(new StackFrame(runtime.Package,
+                                                      runtime.File,
+                                                      runtime.Line, this,
+                                                      context, false));
+                return subref(runtime, context, pad, args);
+            }
+            finally
+            {
+                runtime.CallStack.Pop();
+            }
         }
 
         public void NewScope(Runtime runtime)
