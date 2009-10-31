@@ -12,6 +12,7 @@ sub serialize {
     open my $out, '>', $file || die "open '$file': $!";
 
     $self->{sub_map} = {};
+    $self->{file_map} = {};
     for( my $i = 0; $i <= $#$tree; ++$i ) {
         $self->{sub_map}{$tree->[$i]} = $i;
     }
@@ -21,6 +22,27 @@ sub serialize {
     for( my $i = 0; $i <= $#$tree; ++$i ) {
         _write_sub( $self, $out, $tree->[$i], $tree->[$i]->name );
     }
+}
+
+sub _write_pos {
+    my( $self, $out, $pos ) = @_;
+
+    if( !$pos ) {
+        print $out pack 'v', -2;
+        return;
+    }
+
+    my $idx = $self->{file_map}{$pos->[0]};
+
+    if( defined $idx ) {
+        print $out pack 'v', $idx;
+    } else {
+        print $out pack 'v', -1;
+        _write_string( $out, $pos->[0] );
+        $self->{file_map}{$pos->[0]} = scalar keys %{$self->{file_map}};
+    }
+
+    print $out pack 'V', $pos->[1];
 }
 
 sub _write_sub {
@@ -81,6 +103,9 @@ sub _write_scope {
     print $out pack 'V', $scope->{id};
     print $out pack 'V', $scope->{flags};
     print $out pack 'V', $scope->{context};
+    _write_pos( $self, $out, $scope->{pos_s} );
+    _write_pos( $self, $out, $scope->{pos_e} );
+    print $out pack 'V', $scope->{lexical_state};
     print $out pack 'V', scalar @{$scope->{bytecode}};
 
     foreach my $bc ( @{$scope->{bytecode}} ) {

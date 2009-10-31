@@ -183,6 +183,7 @@ sub _write_op {
     my $opn = $op->{opcode_n};
 
     print $out pack 'v', $opn;
+    _write_pos( $self, $out, $op->{pos} );
 
     if( 0 ) {
         # simplifies code generation below
