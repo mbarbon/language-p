@@ -57,6 +57,7 @@
     <Compile Include="Values\ScratchPad.cs" />
     <Compile Include="Values\Hash.cs" />
     <Compile Include="Values\Reference.cs" />
+    <Compile Include="Values\Exception.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
