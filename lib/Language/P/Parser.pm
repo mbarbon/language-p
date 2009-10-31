@@ -1184,6 +1184,8 @@ sub _parse_substitution {
     if( $match->flags & FLAG_RX_EVAL ) {
         local $self->{lexer} = Language::P::Lexer->new
                                    ( { string       => $token->[O_RX_SECOND_HALF]->[O_QS_BUFFER],
+                                       file         => $match->pos->[0],
+                                       line         => $match->pos->[1],
                                        runtime      => $self->runtime,
                                        _heredoc_lexer => $self->lexer,
                                        } );
@@ -1206,6 +1208,8 @@ sub _parse_string_rest {
     my @values;
     local $self->{lexer} = Language::P::Lexer->new
                                ( { string       => $token->[O_QS_BUFFER],
+                                   file         => $token->[O_POS][0],
+                                   line         => $token->[O_POS][1],
                                    runtime      => $self->runtime,
                                    } );
 
@@ -1294,7 +1298,10 @@ sub _parse_term_terminal {
                 if( $qstring->value =~ /^[a-zA-Z_]/ ) {
                     # FIXME simpler method, make lex_identifier static
                     my $lexer = Language::P::Lexer->new
-                                    ( { string => $qstring->value } );
+                                    ( { string => $qstring->value,
+                                        file   => $token->[O_POS][0],
+                                        line   => $token->[O_POS][1],
+                                        } );
                     my $id = $lexer->lex_identifier( 0 );
 
                     if( $id && !length( ${$lexer->buffer} ) ) {
