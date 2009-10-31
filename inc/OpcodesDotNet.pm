@@ -42,8 +42,9 @@ my %dotnet_classes =
     'OP_LEXICAL_SET'       => 'Lexical',
     'OP_LEXICAL_PAD_CLEAR' => 'Lexical',
     'OP_LEXICAL_CLEAR'     => 'Lexical',
-    'OP_SCOPE_ENTER'       => 'ScopeInOut',
-    'OP_SCOPE_LEAVE'       => 'ScopeInOut',
+    'OP_LEXICAL_STATE_SAVE' => 'LexState',
+    'OP_LEXICAL_STATE_RESTORE' => 'LexState',
+    'OP_LEXICAL_STATE_SET' => 'LexState',
     'OP_TEMPORARY'         => 'Temporary',
     'OP_TEMPORARY_SET'     => 'Temporary',
     'OP_ARRAY_ELEMENT'     => 'ElementAccess',
@@ -69,25 +70,33 @@ namespace org.mbarbon.p.runtime
         public static Opcode ReadOpcode(BinaryReader reader, Subroutine sub)
         {
             var num = (Opcode.OpNumber)reader.ReadInt16();
+            string file;
+            int line;
             Opcode op;
+
+            ReadPos(reader, out file, out line);
 
             switch (num)
             {
 EOT
 
-    while( my( $k, $v ) = each %op ) {
+    OPCODES: while( my( $k, $v ) = each %op ) {
         my $class = $dotnet_classes{$k};
         my $attrs = $v->[3][0];
 
         next unless @$attrs;
         if( !$class ) {
-            if( @$attrs > 2 || $attrs->[0] ne 'context' ) {
-        print $out sprintf <<'EOT', $k, $class, $class;
+            for( my $i = 0; $i < @$attrs; $i += 2)
+            {
+                if( $attrs->[$i] ne 'context' && $attrs->[$i] ne 'arg_count' ) {
+                    print $out sprintf <<'EOT', $k, $class, $class;
             case Opcode.OpNumber.%s:
                 throw new System.Exception(string.Format("Unhandled opcode {0:S} in deserialization", num.ToString()));
 EOT
-                next;
+                    next OPCODES;
+                }
             }
+
             $class = 'Opcode';
         }
 
@@ -106,6 +115,7 @@ EOT
         for( my $i = 0; $i < @$attrs; $i += 2 ) {
             my $type = $attrs->[$i + 1];
             my $name = $attrs->[$i];
+            next if $name eq 'arg_count';
             if( $type eq 's' ) {
                 print $out sprintf <<'EOT', ucfirst $name;
                 opc.%s = ReadString(reader);
@@ -152,6 +162,8 @@ EOT
             }
 
             op.Number = num;
+            op.Position.File = file;
+            op.Position.Line = line;
             int count = reader.ReadInt32();
             op.Childs = new Opcode[count];
 
@@ -201,6 +213,7 @@ EOT
         }
 
         public OpNumber Number;
+        public Position Position;
         public int Context;
         public Opcode[] Childs;
     }
