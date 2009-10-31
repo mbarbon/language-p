@@ -9,7 +9,7 @@ namespace org.mbarbon.p.values
         {
         }
 
-        public P5List(Runtime runtime, IP5Any[] data) : base(runtime)
+        public P5List(Runtime runtime, params IP5Any[] data) : base(runtime)
         {
             foreach (var i in data)
             {
