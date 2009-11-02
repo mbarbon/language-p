@@ -1066,6 +1066,69 @@ namespace org.mbarbon.p.runtime
                         Generate(sub, op.Childs[1]), typeof(P5Code).GetMethod("Call"),
                         Runtime, OpContext(op), Generate(sub, op.Childs[0]));
             }
+            case Opcode.OpNumber.OP_REFTYPE:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(IP5Any).GetMethod("ReferenceType"),
+                    Runtime);
+            }
+            case Opcode.OpNumber.OP_REFERENCE:
+            {
+                return Expression.New(
+                    typeof(P5Scalar).GetConstructor(
+                        new System.Type[] { typeof(Runtime), typeof(IP5Referrable) }),
+                    new Expression[] { Runtime, Generate(sub, op.Childs[0]) });
+            }
+            case Opcode.OpNumber.OP_VIVIFY_SCALAR:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(IP5Any).GetMethod("VivifyScalar"),
+                    Runtime);
+            }
+            case Opcode.OpNumber.OP_VIVIFY_ARRAY:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(IP5Any).GetMethod("VivifyArray"),
+                    Runtime);
+            }
+            case Opcode.OpNumber.OP_VIVIFY_HASH:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(IP5Any).GetMethod("VivifyHash"),
+                    Runtime);
+            }
+            case Opcode.OpNumber.OP_DEREFERENCE_SCALAR:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(IP5Any).GetMethod("DereferenceScalar"),
+                    Runtime);
+            }
+            case Opcode.OpNumber.OP_DEREFERENCE_ARRAY:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(IP5Any).GetMethod("DereferenceArray"),
+                    Runtime);
+            }
+            case Opcode.OpNumber.OP_DEREFERENCE_HASH:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(IP5Any).GetMethod("DereferenceHash"),
+                    Runtime);
+            }
+            case Opcode.OpNumber.OP_DEREFERENCE_GLOB:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(IP5Any).GetMethod("DereferenceGlob"),
+                    Runtime);
+            }
             case Opcode.OpNumber.OP_DEREFERENCE_SUB:
             {
                 return Expression.Call(

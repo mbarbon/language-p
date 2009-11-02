@@ -18,6 +18,31 @@ namespace org.mbarbon.p.values
         public virtual double AsFloat(Runtime runtime) { return 0.0; }
         public virtual bool AsBoolean(Runtime runtime) { return false; }
 
+        public virtual P5Scalar ReferenceType(Runtime runtime)
+        {
+            return new P5Scalar(runtime);
+        }
+
+        public virtual P5Scalar DereferenceScalar(Runtime runtime)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
+
+        public virtual P5Array DereferenceArray(Runtime runtime)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
+
+        public virtual P5Hash DereferenceHash(Runtime runtime)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
+
+        public virtual P5Typeglob DereferenceGlob(Runtime runtime)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
+
         public virtual P5Code DereferenceSubroutine(Runtime runtime)
         {
             throw new System.InvalidOperationException("Not a reference");

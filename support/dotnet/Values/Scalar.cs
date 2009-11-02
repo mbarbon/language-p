@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
 {
-    public class P5Scalar : IP5Any
+    public class P5Scalar : IP5Any, IP5Referrable
     {
         public P5Scalar(Runtime runtime) : this(new P5Undef(runtime))
         {
@@ -72,9 +72,64 @@ namespace org.mbarbon.p.values
             return new P5Scalar(runtime);
         }
 
+        public virtual P5Scalar ReferenceType(Runtime runtime)
+        {
+            return body.ReferenceType(runtime);
+        }
+
+        public virtual P5Scalar DereferenceScalar(Runtime runtime)
+        {
+            return body.DereferenceScalar(runtime);
+        }
+
+        public virtual P5Array DereferenceArray(Runtime runtime)
+        {
+            return body.DereferenceArray(runtime);
+        }
+
+        public virtual P5Hash DereferenceHash(Runtime runtime)
+        {
+            return body.DereferenceHash(runtime);
+        }
+
+        public virtual P5Typeglob DereferenceGlob(Runtime runtime)
+        {
+            return body.DereferenceGlob(runtime);
+        }
+
         public virtual P5Code DereferenceSubroutine(Runtime runtime)
         {
             return body.DereferenceSubroutine(runtime);
+        }
+
+        public virtual P5Scalar VivifyScalar(Runtime runtime)
+        {
+            var undef = body as P5Undef;
+
+            if (undef != null)
+                body = new P5Reference(runtime, new P5Scalar(runtime));
+
+            return body.DereferenceScalar(runtime);
+        }
+
+        public virtual P5Array VivifyArray(Runtime runtime)
+        {
+            var undef = body as P5Undef;
+
+            if (undef != null)
+                body = new P5Reference(runtime, new P5Array(runtime));
+
+            return body.DereferenceArray(runtime);
+        }
+
+        public virtual P5Hash VivifyHash(Runtime runtime)
+        {
+            var undef = body as P5Undef;
+
+            if (undef != null)
+                body = new P5Reference(runtime, new P5Hash(runtime));
+
+            return body.DereferenceHash(runtime);
         }
 
         internal IP5ScalarBody Body
@@ -96,6 +151,12 @@ namespace org.mbarbon.p.values
         double AsFloat(Runtime runtime);
         bool AsBoolean(Runtime runtime);
 
+        P5Scalar ReferenceType(Runtime runtime);
+
+        P5Scalar DereferenceScalar(Runtime runtime);
+        P5Array DereferenceArray(Runtime runtime);
+        P5Hash DereferenceHash(Runtime runtime);
+        P5Typeglob DereferenceGlob(Runtime runtime);
         P5Code DereferenceSubroutine(Runtime runtime);
     }
 }

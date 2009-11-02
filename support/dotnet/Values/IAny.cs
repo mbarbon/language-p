@@ -22,7 +22,16 @@ namespace org.mbarbon.p.values
 
         IP5Any Clone(Runtime runtime, int depth);
         IP5Any Localize(Runtime runtime);
+        P5Scalar ReferenceType(Runtime runtime);
 
+        P5Scalar DereferenceScalar(Runtime runtime);
+        P5Array DereferenceArray(Runtime runtime);
+        P5Hash DereferenceHash(Runtime runtime);
+        P5Typeglob DereferenceGlob(Runtime runtime);
         P5Code DereferenceSubroutine(Runtime runtime);
+
+        P5Scalar VivifyScalar(Runtime runtime);
+        P5Array VivifyArray(Runtime runtime);
+        P5Hash VivifyHash(Runtime runtime);
     }
 }

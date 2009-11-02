@@ -34,6 +34,62 @@ namespace org.mbarbon.p.values
             return true;
         }
 
+        public virtual P5Scalar ReferenceType(Runtime runtime)
+        {
+            if (referred as P5Scalar != null)
+                return new P5Scalar(runtime, "SCALAR");
+            if (referred as P5Array != null)
+                return new P5Scalar(runtime, "ARRAY");
+            if (referred as P5Hash != null)
+                return new P5Scalar(runtime, "HASH");
+            if (referred as P5Typeglob != null)
+                return new P5Scalar(runtime, "GLOB");
+            if (referred as P5Code != null)
+                return new P5Scalar(runtime, "CODE");
+
+            return new P5Scalar(runtime);
+        }
+
+        public virtual P5Scalar DereferenceScalar(Runtime runtime)
+        {
+            P5Scalar val = referred as P5Scalar;
+
+            if (val != null)
+                return val;
+            else
+                throw new System.Exception("Not a SCALAR reference");
+        }
+
+        public virtual P5Array DereferenceArray(Runtime runtime)
+        {
+            P5Array val = referred as P5Array;
+
+            if (val != null)
+                return val;
+            else
+                throw new System.Exception("Not an ARRAY reference");
+        }
+
+        public virtual P5Hash DereferenceHash(Runtime runtime)
+        {
+            P5Hash val = referred as P5Hash;
+
+            if (val != null)
+                return val;
+            else
+                throw new System.Exception("Not a HASH reference");
+        }
+
+        public virtual P5Typeglob DereferenceGlob(Runtime runtime)
+        {
+            P5Typeglob val = referred as P5Typeglob;
+
+            if (val != null)
+                return val;
+            else
+                throw new System.Exception("Not a GLOB reference");
+        }
+
         public virtual P5Code DereferenceSubroutine(Runtime runtime)
         {
             P5Code val = referred as P5Code;

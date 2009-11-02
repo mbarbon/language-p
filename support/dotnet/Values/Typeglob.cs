@@ -128,9 +128,58 @@ namespace org.mbarbon.p.values
             return true;
         }
 
+        public virtual P5Scalar ReferenceType(Runtime runtime)
+        {
+            return new P5Scalar(runtime);
+        }
+
+        public virtual P5Scalar DereferenceScalar(Runtime runtime)
+        {
+            return scalar;
+        }
+
+        public virtual P5Array DereferenceArray(Runtime runtime)
+        {
+            return array;
+        }
+
+        public virtual P5Hash DereferenceHash(Runtime runtime)
+        {
+            return hash;
+        }
+
+        public virtual P5Typeglob DereferenceGlob(Runtime runtime)
+        {
+            throw new System.InvalidOperationException("Not a GLOB reference");
+        }
+
         public virtual P5Code DereferenceSubroutine(Runtime runtime)
         {
             return code;
+        }
+
+        public virtual P5Scalar VivifyScalar(Runtime runtime)
+        {
+            if (scalar == null)
+                scalar = new P5Scalar(runtime);
+
+            return scalar;
+        }
+
+        public virtual P5Array VivifyArray(Runtime runtime)
+        {
+            if (array == null)
+                array = new P5Array(runtime);
+
+            return array;
+        }
+
+        public virtual P5Hash VivifyHash(Runtime runtime)
+        {
+            if (hash == null)
+                hash = new P5Hash(runtime);
+
+            return hash;
         }
 
         private P5Scalar scalar;
