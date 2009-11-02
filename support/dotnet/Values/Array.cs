@@ -57,14 +57,19 @@ namespace org.mbarbon.p.values
             // FIXME multiple dispatch
             P5Scalar s = other as P5Scalar;
             P5Array a = other as P5Array;
+            P5Hash h = other as P5Hash;
             if (s != null)
             {
                 array = new List<IP5Any>(1);
                 array[0] = s.Clone(runtime, 1);
             }
+            else if (h != null)
+            {
+                AssignIterator(runtime, ((P5Hash)h.Clone(runtime, 1)).GetEnumerator(runtime));
+            }
             else if (a != null)
             {
-                AssignIterator(runtime, ((P5Array)a.Clone(runtime, 1)).GetEnumerator());
+                AssignIterator(runtime, ((P5Array)a.Clone(runtime, 1)).GetEnumerator(runtime));
             }
 
             return this;
