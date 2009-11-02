@@ -10,6 +10,11 @@ namespace org.mbarbon.p.values
             hash = new Dictionary<string, IP5Any>();
         }
 
+        public P5Hash(Runtime runtime, P5Array array) : this(runtime)
+        {
+            AssignIterator(runtime, array.GetEnumerator(runtime));
+        }
+
         public IP5Any GetItemOrUndef(Runtime runtime, IP5Any key)
         {
             string k = key.AsString(runtime);
@@ -33,7 +38,7 @@ namespace org.mbarbon.p.values
             P5Hash h = other as P5Hash;
 
             if (a != null)
-                return AssignIterator(runtime, a.GetEnumerator());
+                return AssignIterator(runtime, a.GetEnumerator(runtime));
 
             hash.Clear();
             foreach (var e in h.hash)
@@ -55,6 +60,15 @@ namespace org.mbarbon.p.values
             }
 
             return this;
+        }
+
+        public IEnumerator<IP5Any> GetEnumerator(Runtime runtime)
+        {
+            foreach (var i in hash)
+            {
+                yield return new P5Scalar(runtime, i.Key);
+                yield return i.Value;
+            }
         }
 
         public virtual IP5Any ConcatAssign(Runtime runtime, IP5Any other) { throw new System.InvalidOperationException(); }

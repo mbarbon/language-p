@@ -256,6 +256,8 @@ namespace org.mbarbon.p.runtime
             new Type[] { typeof(Runtime), typeof(double) };
         private static Type[] ProtoRuntimeIP5AnyArray =
             new Type[] { typeof(Runtime), typeof(IP5Any[]) };
+        private static Type[] ProtoRuntimeP5Array =
+            new Type[] { typeof(Runtime), typeof(P5Array) };
         private static Type[] ProtoStringString =
             new Type[] { typeof(string), typeof(string) };
 
@@ -694,6 +696,32 @@ namespace org.mbarbon.p.runtime
                             Runtime,
                             Expression.NewArrayInit(typeof(IP5Any), data) });
             }
+            case Opcode.OpNumber.OP_ANONYMOUS_ARRAY:
+            {
+                return
+                    Expression.New(
+                        typeof(P5Scalar).GetConstructor(
+                            new System.Type[] { typeof(Runtime),
+                                                typeof(IP5Referrable) }),
+                        Runtime,
+                        Expression.New(
+                            typeof(P5Array).GetConstructor(ProtoRuntimeP5Array),
+                            Runtime,
+                            Generate(sub, op.Childs[0])));
+            }
+            case Opcode.OpNumber.OP_ANONYMOUS_HASH:
+            {
+                return
+                    Expression.New(
+                        typeof(P5Scalar).GetConstructor(
+                            new System.Type[] { typeof(Runtime),
+                                                typeof(IP5Referrable) }),
+                        Runtime,
+                        Expression.New(
+                            typeof(P5Hash).GetConstructor(ProtoRuntimeP5Array),
+                            Runtime,
+                            Generate(sub, op.Childs[0])));
+            }
             case Opcode.OpNumber.OP_PRINT:
             {
                 return
@@ -949,7 +977,8 @@ namespace org.mbarbon.p.runtime
             {
                 return Expression.Call(
                     Generate(sub, op.Childs[0]),
-                    typeof(P5Array).GetMethod("GetEnumerator"));
+                    typeof(P5Array).GetMethod("GetEnumerator", new System.Type[] {typeof(Runtime)}),
+                    Runtime);
             }
             case Opcode.OpNumber.OP_ITERATOR_NEXT:
             {

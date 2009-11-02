@@ -41,7 +41,7 @@ namespace org.mbarbon.p.values
             }
             else if (a != null)
             {
-                e = ((P5Array)a.Clone(runtime, 1)).GetEnumerator();
+                e = ((P5Array)a.Clone(runtime, 1)).GetEnumerator(runtime);
             }
 
             foreach (var i in this)

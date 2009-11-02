@@ -15,6 +15,11 @@ namespace org.mbarbon.p.values
             array = new List<IP5Any>(data);
         }
 
+        public P5Array(Runtime runtime, P5Array array) : this(runtime)
+        {
+            AssignIterator(runtime, array.GetEnumerator(runtime));
+        }
+
         public int GetCount(Runtime runtime) { return array.Count; }
         public IP5Any GetItem(Runtime runtime, int i) { return array[i]; }
         public IP5Any GetItemOrUndef(Runtime runtime, IP5Any index)
@@ -23,6 +28,11 @@ namespace org.mbarbon.p.values
             if (array.Count > i)
                 return array[i];
             return new P5Scalar(runtime);
+        }
+
+        public IEnumerator<IP5Any> GetEnumerator(Runtime runtime)
+        {
+            return array.GetEnumerator();
         }
 
         public IEnumerator<IP5Any> GetEnumerator()
