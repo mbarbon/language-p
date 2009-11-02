@@ -880,6 +880,17 @@ namespace org.mbarbon.p.runtime
                             typeof(IP5Any).GetMethod("AsBoolean"),
                             Runtime)));
             }
+            case Opcode.OpNumber.OP_MINUS:
+            {
+                return Expression.New(
+                    typeof(P5Scalar).GetConstructor(ProtoRuntimeInt),
+                    Runtime,
+                    Expression.Negate(
+                        Expression.Call(
+                            Generate(sub, op.Childs[0]),
+                            typeof(IP5Any).GetMethod("AsInteger"),
+                            Runtime)));
+            }
             case Opcode.OpNumber.OP_DEFINED:
             {
                 return
