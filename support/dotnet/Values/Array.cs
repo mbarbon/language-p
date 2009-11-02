@@ -22,11 +22,29 @@ namespace org.mbarbon.p.values
 
         public int GetCount(Runtime runtime) { return array.Count; }
         public IP5Any GetItem(Runtime runtime, int i) { return array[i]; }
-        public IP5Any GetItemOrUndef(Runtime runtime, IP5Any index)
+        public IP5Any GetItemOrUndef(Runtime runtime, IP5Any index, bool create)
         {
             int i = index.AsInteger(runtime);
-            if (array.Count > i)
+
+            if (i < 0 && -i > array.Count)
+            {
+                if (create)
+                    throw new System.Exception("Modification of non-creatable array value attempted, subscript " + i.ToString());
+                else
+                    return new P5Scalar(runtime);
+            }
+            if (i < 0)
+                return array[array.Count + i];
+
+            if (i < array.Count)
                 return array[i];
+            if (create)
+            {
+                while (array.Count <= i)
+                    array.Add(new P5Scalar(runtime));
+                return array[i];
+            }
+
             return new P5Scalar(runtime);
         }
 

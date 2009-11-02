@@ -15,12 +15,19 @@ namespace org.mbarbon.p.values
             AssignIterator(runtime, array.GetEnumerator(runtime));
         }
 
-        public IP5Any GetItemOrUndef(Runtime runtime, IP5Any key)
+        public IP5Any GetItemOrUndef(Runtime runtime, IP5Any key, bool create)
         {
             string k = key.AsString(runtime);
             IP5Any v = null;
             if (hash.TryGetValue(k, out v))
                 return v;
+            if (create)
+            {
+                v = new P5Scalar(runtime);
+                hash[k] = v;
+
+                return v;
+            }
             return new P5Scalar(runtime);
         }
 

@@ -972,17 +972,25 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_ARRAY_ELEMENT:
             {
+                var ea = (ElementAccess)op;
+
                 return Expression.Call(
                     Generate(sub, op.Childs[1]),
                     typeof(P5Array).GetMethod("GetItemOrUndef"),
-                    Runtime, Generate(sub, op.Childs[0]));
+                    Runtime,
+                    Generate(sub, op.Childs[0]),
+                    Expression.Constant(ea.Create != 0));
             }
             case Opcode.OpNumber.OP_HASH_ELEMENT:
             {
+                var ea = (ElementAccess)op;
+
                 return Expression.Call(
                     Generate(sub, op.Childs[1]),
                     typeof(P5Hash).GetMethod("GetItemOrUndef"),
-                    Runtime, Generate(sub, op.Childs[0]));
+                    Runtime,
+                    Generate(sub, op.Childs[0]),
+                    Expression.Constant(ea.Create != 0));
             }
             case Opcode.OpNumber.OP_ITERATOR:
             {
