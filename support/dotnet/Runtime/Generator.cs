@@ -992,6 +992,22 @@ namespace org.mbarbon.p.runtime
                     Generate(sub, op.Childs[0]),
                     Expression.Constant(ea.Create != 0));
             }
+            case Opcode.OpNumber.OP_EXISTS_ARRAY:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[1]),
+                    typeof(P5Array).GetMethod("Exists"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
+            }
+            case Opcode.OpNumber.OP_EXISTS_HASH:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[1]),
+                    typeof(P5Hash).GetMethod("Exists"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
+            }
             case Opcode.OpNumber.OP_ITERATOR:
             {
                 return Expression.Call(
@@ -1010,6 +1026,36 @@ namespace org.mbarbon.p.runtime
                     has_next,
                     Expression.Property(iter, "Current"),
                     Expression.Constant(null, typeof(IP5Any)));
+            }
+            case Opcode.OpNumber.OP_ARRAY_SLICE:
+            {
+                var ea = (ElementAccess)op;
+
+                return Expression.Call(
+                    Generate(sub, op.Childs[1]),
+                    typeof(P5Array).GetMethod("Slice"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]),
+                    Expression.Constant(ea.Create != 0));
+            }
+            case Opcode.OpNumber.OP_HASH_SLICE:
+            {
+                var ea = (ElementAccess)op;
+
+                return Expression.Call(
+                    Generate(sub, op.Childs[1]),
+                    typeof(P5Hash).GetMethod("Slice"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]),
+                    Expression.Constant(ea.Create != 0));
+            }
+            case Opcode.OpNumber.OP_LIST_SLICE:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[1]),
+                    typeof(P5List).GetMethod("Slice", new System.Type[] {typeof(Runtime), typeof(P5Array)}),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
             }
             case Opcode.OpNumber.OP_TEMPORARY:
             {

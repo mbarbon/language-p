@@ -31,6 +31,27 @@ namespace org.mbarbon.p.values
             return new P5Scalar(runtime);
         }
 
+        public P5List Slice(Runtime runtime, P5Array keys, bool create)
+        {
+            var res = new P5List(runtime);
+            var list = new List<IP5Any>();
+
+            foreach (var key in keys)
+            {
+                list.Add(GetItemOrUndef(runtime, key, create));
+            }
+            res.SetArray(list);
+
+            return res;
+        }
+
+        public IP5Any Exists(Runtime runtime, IP5Any key)
+        {
+            string k = key.AsString(runtime);
+
+            return new P5Scalar(runtime, hash.ContainsKey(k));
+        }
+
         public virtual P5Scalar AsScalar(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual int AsInteger(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual double AsFloat(Runtime runtime) { throw new System.NotImplementedException(); }

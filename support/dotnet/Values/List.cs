@@ -49,5 +49,24 @@ namespace org.mbarbon.p.values
 
             return this;
         }
+
+        public P5List Slice(Runtime runtime, P5Array keys)
+        {
+            var res = new P5List(runtime);
+            var list = new List<IP5Any>();
+            bool found = false;
+
+            foreach (var key in keys)
+            {
+                int i = key.AsInteger(runtime);
+
+                found = found || i < array.Count;
+                list.Add(GetItemOrUndef(runtime, key, false));
+            }
+            if (found)
+                res.SetArray(list);
+
+            return res;
+        }
     }
 }

@@ -48,6 +48,27 @@ namespace org.mbarbon.p.values
             return new P5Scalar(runtime);
         }
 
+        public P5List Slice(Runtime runtime, P5Array keys, bool create)
+        {
+            var res = new P5List(runtime);
+            var list = new List<IP5Any>();
+
+            foreach (var key in keys)
+            {
+                list.Add(GetItemOrUndef(runtime, key, create));
+            }
+            res.SetArray(list);
+
+            return res;
+        }
+
+        public IP5Any Exists(Runtime runtime, IP5Any index)
+        {
+            int i = index.AsInteger(runtime);
+
+            return new P5Scalar(runtime, (i >= 0 && i < array.Count) || (i < 0 && -i < array.Count));
+        }
+
         public IEnumerator<IP5Any> GetEnumerator(Runtime runtime)
         {
             return array.GetEnumerator();
@@ -171,6 +192,11 @@ namespace org.mbarbon.p.values
         public virtual P5Hash VivifyHash(Runtime runtime)
         {
             throw new System.InvalidOperationException("Not a reference");
+        }
+
+        internal void SetArray(List<IP5Any> a)
+        {
+            array = a;
         }
 
         protected List<IP5Any> array;
