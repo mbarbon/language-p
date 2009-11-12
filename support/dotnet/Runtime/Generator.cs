@@ -204,6 +204,23 @@ namespace org.mbarbon.p.runtime
                     Initializers.Add(set_main_pad);
                     main = si.CodeField;
                 }
+                else if (si.SubName == "BEGIN")
+                {
+                    Expression empty_list =
+                        Expression.New(
+                            typeof(P5List).GetConstructor(
+                                new System.Type[] { typeof(Runtime) }),
+                            InitRuntime);
+                    Expression call_begin =
+                        Expression.Call(
+                            Expression.Field(null, si.CodeField),
+                            typeof(P5Code).GetMethod("Call"),
+                            InitRuntime,
+                            Expression.Constant(Opcode.ContextValues.VOID),
+                            empty_list);
+
+                    Initializers.Add(call_begin);
+                }
                 else if (si.SubName != null)
                 {
                     // runtime.SymbolTable.SetCode(runtime, sub_name, code)
