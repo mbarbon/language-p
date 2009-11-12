@@ -87,10 +87,6 @@ sub process {
         my $sub_int = $self->_intermediate->generate_subroutine( $tree );
         my $sub = _generate_segment( $self, $sub_int->[0] );
 
-        if( $self->_options->{'dump-bytecode'} ) {
-            push @{$self->{_saved_subs} ||= []}, @$sub_int;
-        }
-
         # run right away if it is a begin block
         if( $tree->name eq 'BEGIN' ) {
             my $args = Language::P::Toy::Value::List->new( $self->runtime );
