@@ -325,7 +325,7 @@ sub finished {
     my( $self ) = @_;
     my $main_int = $self->_intermediate->generate_bytecode( $self->_pending );
 
-    if( $self->_options->{'dump-bytecode'} ) {
+    if( $self->_options->{'dump-bytecode'} && !$main_int->[0]->is_eval ) {
         require Language::P::Intermediate::Transform;
         require Language::P::Intermediate::Serialize;
 
