@@ -23,5 +23,6 @@ t/*/*.pbc
 t/*/*.pir
 t/*/*.ir
 t/*/*.pb
+t/*/*/*.pb
 support/parrot/runtime/*.pbc
 parrot
