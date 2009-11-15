@@ -24,7 +24,7 @@ L2:
 # BEGIN
 L1:
   lexical_state_set index=1
-  return context=0 (make_list (constant_integer value=3))
+  return context=1 (make_list (constant_integer value=3))
   jump to=L2
 L2:
   end

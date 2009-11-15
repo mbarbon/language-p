@@ -38,9 +38,9 @@ L1:
   constant_string value="\x0a"
   concat_assign context=4
   make_list count=1
-  print context=0
+  print context=1
   make_list count=1
-  return context=0
+  return context=1
   jump to=L2
 L2:
   end
