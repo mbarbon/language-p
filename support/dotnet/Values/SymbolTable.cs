@@ -1,5 +1,6 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
 using System.Collections.Generic;
+using StringSplitOptions = System.StringSplitOptions;
 
 namespace org.mbarbon.p.values
 {
@@ -8,6 +9,7 @@ namespace org.mbarbon.p.values
         public P5SymbolTable(Runtime runtime)
         {
             symbols = new Dictionary<string, P5Typeglob>();
+            packages = new Dictionary<string, P5SymbolTable>();
         }
 
         public P5Scalar GetOrCreateScalar(Runtime runtime, string name)
@@ -52,11 +54,14 @@ namespace org.mbarbon.p.values
 
         public P5Typeglob GetOrCreateGlob(Runtime runtime, string name)
         {
+            string[] packs = name.Split(separator, StringSplitOptions.None);
+            P5SymbolTable st = GetPackage(runtime, packs, true, true);
+
             P5Typeglob glob;
-            if (!symbols.TryGetValue(name, out glob))
+            if (!st.symbols.TryGetValue(packs[packs.Length - 1], out glob))
             {
                 glob = new P5Typeglob(runtime);
-                symbols.Add(name, glob);
+                st.symbols.Add(packs[packs.Length - 1], glob);
             }
 
             return glob;
@@ -77,7 +82,54 @@ namespace org.mbarbon.p.values
             glob.Code = code;
         }
 
+        public P5SymbolTable GetOrCreatePackage(Runtime runtime, string pack)
+        {
+            string[] packs = pack.Split(separator, StringSplitOptions.None);
+
+            return GetPackage(runtime, packs, false, true);
+        }
+
+        public P5SymbolTable GetOrCreatePackage(Runtime runtime, string pack,
+                                                bool skip_last)
+        {
+            string[] packs = pack.Split(separator, StringSplitOptions.None);
+
+            return GetPackage(runtime, packs, skip_last, true);
+        }
+
+        internal P5SymbolTable GetPackage(Runtime runtime, string pack,
+                                          bool skip_last, bool create)
+        {
+            string[] packs = pack.Split(separator, StringSplitOptions.None);
+
+            return GetPackage(runtime, packs, skip_last, create);
+        }
+
+        internal P5SymbolTable GetPackage(Runtime runtime, string[] packs,
+                                          bool skip_last, bool create)
+        {
+            P5SymbolTable current = this, next;
+
+            int last = packs.Length + (skip_last ? -1 : 0);
+            for (int i = 0; i < last; ++i)
+            {
+                if (!current.packages.TryGetValue(packs[i], out next))
+                {
+                    if (!create)
+                        return null;
+
+                    next = new P5SymbolTable(runtime);
+                    current.packages.Add(packs[i], next);
+                }
+                current = next;
+            }
+
+            return current;
+        }
+
+        protected readonly string[] separator = new string [] {"::"};
         protected Dictionary<string, P5Typeglob> symbols;
+        protected Dictionary<string, P5SymbolTable> packages;
     }
 
     public class P5MainSymbolTable : P5SymbolTable
