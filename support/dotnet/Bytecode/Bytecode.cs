@@ -7,15 +7,20 @@ namespace org.mbarbon.p.runtime
     {
         public static CompilationUnit ReadCompilationUnit(string file_name)
         {
-            BinaryReader reader = new BinaryReader(File.Open(file_name, FileMode.Open));
-            files = new List<string>();
+            CompilationUnit cu;
 
-            int count = reader.ReadInt32();
-            var cu = new CompilationUnit(file_name, count);
-
-            for (int i = 0; i < count; ++i)
+            using (var fs = File.Open(file_name, FileMode.Open))
             {
-                cu.Subroutines[i] = ReadSubroutine(reader);
+                BinaryReader reader = new BinaryReader(fs);
+                files = new List<string>();
+
+                int count = reader.ReadInt32();
+                cu = new CompilationUnit(file_name, count);
+
+                for (int i = 0; i < count; ++i)
+                {
+                    cu.Subroutines[i] = ReadSubroutine(reader);
+                }
             }
             files = null;
 
