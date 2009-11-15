@@ -15,6 +15,11 @@ namespace org.mbarbon.p.values
             AssignIterator(runtime, array.GetEnumerator(runtime));
         }
 
+        internal void SetItem(Runtime runtime, string key, IP5Any value)
+        {
+            hash[key] = value;
+        }
+
         public IP5Any GetItemOrUndef(Runtime runtime, IP5Any key, bool create)
         {
             string k = key.AsString(runtime);
@@ -43,6 +48,11 @@ namespace org.mbarbon.p.values
             res.SetArray(list);
 
             return res;
+        }
+
+        internal bool ExistsKey(Runtime runtime, string key)
+        {
+            return hash.ContainsKey(key);
         }
 
         public IP5Any Exists(Runtime runtime, IP5Any key)
