@@ -39,6 +39,10 @@ namespace org.mbarbon.p.runtime
         {
             SymbolTable = new P5MainSymbolTable(this);
             CallStack = new Stack<StackFrame>();
+
+            // set up INC
+            SymbolTable.GetOrCreateArray(this, "INC").Assign(
+                this, new P5Scalar(this, "."));
         }
 
         public void SetException(System.Exception e)
