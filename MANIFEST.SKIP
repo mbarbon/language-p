@@ -8,6 +8,7 @@
 ^t/.*/.*\.pt$
 ^t/.*/.*\.pb$
 ^support/parrot/runtime/.*\.pbc$
+^lib/Language/P/Intermediate/SerializeGenerated\.pm$
 
 # Avoid version control files.
 \bRCS\b
