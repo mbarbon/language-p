@@ -769,6 +769,24 @@ namespace org.mbarbon.p.runtime
                         Runtime,
                         Generate(sub, op.Childs[0])));
             }
+            case Opcode.OpNumber.OP_DO_FILE:
+            {
+                return
+                    Expression.Call(
+                        typeof(Builtins).GetMethod("DoFile"),
+                        Runtime,
+                        OpContext(op),
+                        Generate(sub, op.Childs[0]));
+            }
+            case Opcode.OpNumber.OP_REQUIRE_FILE:
+            {
+                return
+                    Expression.Call(
+                        typeof(Builtins).GetMethod("RequireFile"),
+                        Runtime,
+                        OpContext(op),
+                        Generate(sub, op.Childs[0]));
+            }
             case Opcode.OpNumber.OP_WANTARRAY:
             {
                 return
