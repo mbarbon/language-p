@@ -100,7 +100,7 @@ namespace org.mbarbon.p.values
             if (s != null)
             {
                 array = new List<IP5Any>(1);
-                array[0] = s.Clone(runtime, 1);
+                array.Add(s.Clone(runtime, 1));
             }
             else if (h != null)
             {
