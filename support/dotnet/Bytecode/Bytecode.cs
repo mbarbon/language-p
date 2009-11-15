@@ -261,6 +261,11 @@ namespace org.mbarbon.p.runtime
         }
     }
 
+    public class CallMethod : Opcode
+    {
+        public string Method;
+    }
+
     public class Scope
     {
         public const int SCOPE_SUB       = 1;
