@@ -24,5 +24,13 @@ namespace org.mbarbon.p.runtime
 
             return reference;
         }
+
+        public static P5Scalar WantArray(Runtime runtime, Opcode.ContextValues cxt)
+        {
+            if (cxt == Opcode.ContextValues.VOID)
+                return new P5Scalar(runtime);
+
+            return new P5Scalar(runtime, cxt == Opcode.ContextValues.LIST);
+        }
     }
 }

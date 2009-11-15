@@ -769,6 +769,14 @@ namespace org.mbarbon.p.runtime
                         Runtime,
                         Generate(sub, op.Childs[0])));
             }
+            case Opcode.OpNumber.OP_WANTARRAY:
+            {
+                return
+                    Expression.Call(
+                        typeof(Builtins).GetMethod("WantArray"),
+                        Runtime,
+                        Context);
+            }
             case Opcode.OpNumber.OP_RETURN:
             {
                 Expression empty =
