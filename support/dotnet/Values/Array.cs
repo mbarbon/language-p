@@ -199,6 +199,27 @@ namespace org.mbarbon.p.values
             array = a;
         }
 
+        public virtual void Bless(Runtime runtime, P5SymbolTable stash)
+        {
+            blessed = stash;
+        }
+
+        public virtual bool IsBlessed(Runtime runtime)
+        {
+            return blessed != null;
+        }
+
+        public virtual P5Code FindMethod(Runtime runtime, string method)
+        {
+            return blessed.FindMethod(runtime, method);
+        }
+
+        public virtual P5SymbolTable Blessed(Runtime runtime)
+        {
+            return blessed;
+        }
+
+        private P5SymbolTable blessed;
         protected List<IP5Any> array;
     }
 }

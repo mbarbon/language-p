@@ -5,9 +5,12 @@ namespace org.mbarbon.p.values
 {
     public interface IP5Referrable
     {
+        void Bless(Runtime runtime, P5SymbolTable stash);
+        bool IsBlessed(Runtime runtime);
+        P5SymbolTable Blessed(Runtime runtime);
     }
 
-    public interface IP5Any
+    public interface IP5Any : IP5Referrable
     {
         P5Scalar AsScalar(Runtime runtime);
         string AsString(Runtime runtime);
@@ -33,5 +36,7 @@ namespace org.mbarbon.p.values
         P5Scalar VivifyScalar(Runtime runtime);
         P5Array VivifyArray(Runtime runtime);
         P5Hash VivifyHash(Runtime runtime);
+
+        P5Code FindMethod(Runtime runtime, string method);
     }
 }

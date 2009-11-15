@@ -94,5 +94,25 @@ namespace org.mbarbon.p.values
         {
             throw new System.InvalidOperationException("Not a reference");
         }
+
+        public virtual P5Code FindMethod(Runtime runtime, string method)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
+
+        public virtual void Bless(Runtime runtime, P5SymbolTable stash)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
+
+        public virtual bool IsBlessed(Runtime runtime)
+        {
+            return false;
+        }
+
+        public virtual P5SymbolTable Blessed(Runtime runtime)
+        {
+            return null;
+        }
     }
 }

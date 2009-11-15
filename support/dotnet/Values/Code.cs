@@ -47,6 +47,21 @@ namespace org.mbarbon.p.values
             return new P5Scalar(runtime, closure);
         }
 
+        public virtual void Bless(Runtime runtime, P5SymbolTable stash)
+        {
+            blessed = stash;
+        }
+
+        public virtual bool IsBlessed(Runtime runtime)
+        {
+            return blessed != null;
+        }
+
+        public virtual P5SymbolTable Blessed(Runtime runtime)
+        {
+            return blessed;
+        }
+
         public P5ScratchPad ScratchPad
         {
             get { return scratchpad; }
@@ -57,6 +72,7 @@ namespace org.mbarbon.p.values
                                    Opcode.ContextValues context,
                                    P5ScratchPad pad, P5Array args);
 
+        private P5SymbolTable blessed;
         private Sub subref;
         private P5ScratchPad scratchpad;
         private bool is_main;

@@ -127,6 +127,35 @@ namespace org.mbarbon.p.values
             return current;
         }
 
+        public P5Code FindMethod(Runtime runtime, string method)
+        {
+            var code = GetCode(runtime, method);
+            if (code != null)
+                return code;
+
+            P5Typeglob isa;
+            if (!symbols.TryGetValue("ISA", out isa))
+                return null;
+            P5Array isa_array = isa.Array;
+            if (isa_array == null)
+                return null;
+
+            var main_st = runtime.SymbolTable;
+            foreach (var c in isa_array)
+            {
+                var c_str = c.AsString(runtime);
+                var super = main_st.GetPackage(runtime, c_str, false, false);
+                if (super == null)
+                    continue;
+
+                code = super.FindMethod(runtime, method);
+                if (code != null)
+                    return code;
+            }
+
+            return null;
+        }
+
         protected readonly string[] separator = new string [] {"::"};
         protected Dictionary<string, P5Typeglob> symbols;
         protected Dictionary<string, P5SymbolTable> packages;

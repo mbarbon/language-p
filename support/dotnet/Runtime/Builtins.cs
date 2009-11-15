@@ -14,5 +14,15 @@ namespace org.mbarbon.p.runtime
 
             return new P5Scalar(runtime, 1);
         }
+
+        public static P5Scalar Bless(Runtime runtime, P5Scalar reference, P5Scalar pack)
+        {
+            var pack_str = pack.AsString(runtime);
+            var stash = runtime.SymbolTable.GetOrCreatePackage(runtime, pack_str);
+
+            reference.BlessReference(runtime, stash);
+
+            return reference;
+        }
     }
 }

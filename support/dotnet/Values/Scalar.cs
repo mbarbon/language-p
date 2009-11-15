@@ -132,6 +132,47 @@ namespace org.mbarbon.p.values
             return body.DereferenceHash(runtime);
         }
 
+        public virtual void Bless(Runtime runtime, P5SymbolTable stash)
+        {
+            blessed = stash;
+        }
+
+        public virtual bool IsBlessed(Runtime runtime)
+        {
+            return blessed != null;
+        }
+
+        public virtual P5Code FindMethod(Runtime runtime, string method)
+        {
+            var refbody = body as P5Reference;
+            if (refbody != null)
+            {
+                var stash = refbody.Referred.Blessed(runtime);
+
+                return stash.FindMethod(runtime, method);
+            }
+            else
+            {
+                var stash = runtime.SymbolTable.GetOrCreatePackage(runtime, AsString(runtime));
+
+                return stash.FindMethod(runtime, method);
+            }
+        }
+
+        internal void BlessReference(Runtime runtime, P5SymbolTable stash)
+        {
+            var refbody = body as P5Reference;
+            if (refbody == null)
+                throw new System.Exception("Not a reference");
+
+            refbody.Referred.Bless(runtime, stash);
+        }
+
+        public virtual P5SymbolTable Blessed(Runtime runtime)
+        {
+            return blessed;
+        }
+
         internal IP5ScalarBody Body
         {
             get
@@ -140,6 +181,7 @@ namespace org.mbarbon.p.values
             }
         }
 
+        protected P5SymbolTable blessed;
         protected IP5ScalarBody body;
     }
 

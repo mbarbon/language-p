@@ -166,6 +166,27 @@ namespace org.mbarbon.p.values
             throw new System.InvalidOperationException("Not a reference");
         }
 
+        public virtual void Bless(Runtime runtime, P5SymbolTable stash)
+        {
+            blessed = stash;
+        }
+
+        public virtual bool IsBlessed(Runtime runtime)
+        {
+            return blessed != null;
+        }
+
+        public virtual P5Code FindMethod(Runtime runtime, string method)
+        {
+            return blessed.FindMethod(runtime, method);
+        }
+
+        public virtual P5SymbolTable Blessed(Runtime runtime)
+        {
+            return blessed;
+        }
+
+        private P5SymbolTable blessed;
         private Dictionary<string, IP5Any> hash;
     }
 }

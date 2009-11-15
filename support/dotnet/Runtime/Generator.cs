@@ -1122,6 +1122,26 @@ namespace org.mbarbon.p.runtime
 
                 return Expression.Assign(lexvar, Expression.Constant(null, lexvar.Type));
             }
+            case Opcode.OpNumber.OP_BLESS:
+            {
+                return
+                    Expression.Call(
+                        typeof(Builtins).GetMethod("Bless"),
+                        Runtime,
+                        Generate(sub, op.Childs[0]),
+                        Generate(sub, op.Childs[1]));
+            }
+            case Opcode.OpNumber.OP_CALL_METHOD:
+            {
+                CallMethod cm = (CallMethod)op;
+
+                return
+                    Expression.Call(
+                        Generate(sub, op.Childs[0]),
+                        typeof(P5List).GetMethod("CallMethod"),
+                        Runtime, OpContext(op),
+                        Expression.Constant(cm.Method));
+            }
             case Opcode.OpNumber.OP_CALL:
             {
                 return

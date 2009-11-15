@@ -1,4 +1,5 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
+using Opcode = org.mbarbon.p.runtime.Opcode;
 using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
@@ -67,6 +68,18 @@ namespace org.mbarbon.p.values
                 res.SetArray(list);
 
             return res;
+        }
+
+        public IP5Any CallMethod(Runtime runtime, Opcode.ContextValues context,
+                                 string method)
+        {
+            var invocant = array[0];
+            var pmethod = invocant.FindMethod(runtime, method);
+
+            if (pmethod == null)
+                throw new System.Exception("Can't find method " + method);
+
+            return pmethod.Call(runtime, context, this);
         }
     }
 }
