@@ -1,0 +1,19 @@
+=head1 NAME
+
+Language::P::Docs::TOC - documentation table of contents
+
+=head1 DOCUMENTS
+
+=over 4
+
+=item Roadmap
+
+see L<Language::P::Docs::Roadmap>
+
+=item Architecture
+
+see L<Language::P::Docs::Architecture>
+
+=back
+
+=cut

@@ -22,6 +22,8 @@ implementation and a toy runtime written in Perl 5.
 
 Time permitting it will acquire a Parrot (and Java and .Net and ... runtime).
 
+See L<Language::P::Docs::TOC>.
+
 =head1 METHODS
 
 =cut

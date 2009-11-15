@@ -1,0 +1,132 @@
+=head1 NAME
+
+Language::P::Docs::Architecture - architecture
+
+=head1 COMPONENTS
+
+L<Language::P> is divided in 3 components: the language parser, the
+intermediate code generator, the low level code generator and runtime.
+
+=head2 Parsing
+
+L<Language::P::Parser> is the entry point to the parsing process; it can
+take input from a file or a string and produces a parse tree as output;
+the nodes composing the parse tree are defined in L<Language::P::ParseTree>.
+
+Each node of the parse tree corresponds to a syntactic item in the original
+source.  For example this Perl source code:
+
+    FOO: while( $a > 2 ) {
+        last FOO;
+    }
+
+translates to the following parse tree:
+
+    Node: ConditionalLoop
+      block_type: while
+      condition:
+        Node: BinOp
+          op: OP_NUM_GT
+          context: CXT_SCALAR
+          left:
+            Node: Symbol
+              context: CXT_SCALAR
+              name: a
+              sigil: VALUE_SCALAR
+          right:
+            Node: Constant
+              context: CXT_SCALAR
+              flags: CONST_NUMBER|NUM_INTEGER
+              value: 2
+      block:
+        Node: Block
+          lines:
+            - Node: Jump
+                left: FOO
+                op: OP_LAST
+      continue: ~
+      label: FOO
+
+The parser is an hand-written recursive descent parser, without
+backtrackin, and uses L<Language::P::Lexer> for the lexical analysis
+part.
+
+Since some ambiguities in the Perl grammar can only be resolved by
+looking at the state of the symbol table, both the lexer and the
+parser hold a reference to the runtime object.
+
+=head2 Intermediate code generation
+
+The aim of the IR code generator is to do as much static code analysis
+as possible in a runtime-independent way, to give the final code
+generator a low level representation that is easy to convert to the
+target bytecode/machine code.
+
+The output of the IR code generator is a list of
+L<Language::P::Intermediate::Code> objects, one for each subroutine
+compiled, plus one for the top level initialization code.
+
+A L<Language::P::Intermediate::Code> object contains a list of basic
+blocks; every L<Language::P::Intermediate::BasicBlock> object contains
+a sequence of low-level operations (opcodes) and ends with a jump
+operation to another basic block or an "end" opcode.
+
+For example the following Perl code:
+
+    0;
+    unless( $a < 2 ) {
+        1;
+    }
+
+is compiled to:
+
+    L1:
+      constant_integer value=0
+      pop
+      jump to=L3
+    L3:
+      global name="a", slot=1
+      constant_integer value=2
+      jump_if_f_lt false=L5, true=L4
+    L5:
+      constant_integer value=1
+      pop
+      jump to=L4
+    L4:
+      end
+
+The intermediate representation language is stack-based, so every
+operation takes its operands from the stack and pushes its result to
+the stack.
+
+=head2 Final code generation and runtime
+
+The final code generator takes the output of the intermediate
+generation step, converts it to runable bytecode/machine code and
+executes it.
+
+Currently there are a "Toy" runtime written in Perl and mostly useful
+to experiment with the parser, and a .Net runtime.
+
+=head1 INTERACTIONS
+
+The entry point is the parser.  As soon as the parsing of a subroutine
+is complete, the parser hands the parse tree fragment to the low level
+code generator.  If the parse tree fragment is a subroutine, BEGIN
+block or use statement, it is processed right away, otherwise it is
+stored and processed when the parsing of the file completes.
+
+The low level code generator calls the intermediate code generator to
+perform the first pass of code generation, takes the resulting
+bytecode and performs the final code generation; it then runs the
+resultin code.
+
+The lexer/parser can call the runtime to create the DATA handle, to
+see if a package has been defined (to disambiguate indirect method
+call syntax) to see if a subroutine is defined and has a prototype and
+to lookup package/global variables and to check hints/warnings state.
+
+The runtime calls the parser to set the compile time value for
+hints/warnings.
+
+=cut

@@ -11,6 +11,9 @@ inc/Opcodes.pm
 inc/p_parrot
 lib/Language/P.pm
 lib/Language/P/Assembly.pm
+lib/Language/P/Docs/Architecture.pod
+lib/Language/P/Docs/Roadmap.pod
+lib/Language/P/Docs/TOC.pod
 lib/Language/P/Exception.pm
 lib/Language/P/Intermediate/BasicBlock.pm
 lib/Language/P/Intermediate/Code.pm
