@@ -13,6 +13,7 @@ my %dotnet_classes =
     'OP_CONSTANT_STRING'   => 'ConstantString',
     'OP_CONSTANT_INTEGER'  => 'ConstantInt',
     'OP_CONSTANT_SUB'      => 'ConstantSub',
+    'OP_CONSTANT_FLOAT'    => 'ConstantFloat',
     'OP_GLOBAL'            => 'Global',
     'OP_GLOB_SLOT'         => 'GlobSlot',
     'OP_GLOB_SLOT_SET'     => 'GlobSlot',
@@ -124,6 +125,10 @@ EOT
             } elsif( $type eq 'i' || $type eq 'i4' ) {
                 print $out sprintf <<'EOT', ucfirst $name;
                 opc.%s = reader.ReadInt32();
+EOT
+            } elsif( $type eq 'f' ) {
+                print $out sprintf <<'EOT', ucfirst $name;
+                opc.%s = reader.ReadDouble();
 EOT
             } elsif( $type eq 'i_sigil' ) {
                 print $out sprintf <<'EOT', ucfirst $name;

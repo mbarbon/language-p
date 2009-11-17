@@ -225,6 +225,11 @@ namespace org.mbarbon.p.runtime
         public int Value;
     }
 
+    public class ConstantFloat : Opcode
+    {
+        public double Value;
+    }
+
     public class GetSet : Opcode
     {
         public int Index;
