@@ -214,6 +214,10 @@ EOT
                 print $out sprintf <<'EOT', $name;
         print $out pack 'V', $op->{attributes}{%s};
 EOT
+            } elsif( $type eq 'f' ) {
+                print $out sprintf <<'EOT', $name;
+        print $out pack 'd', $op->{attributes}{%s};
+EOT
             } elsif( $type eq 'i1' || $type eq 'i_sigil' ) {
                 print $out sprintf <<'EOT', $name;
         print $out pack 'C', $op->{attributes}{%s};
