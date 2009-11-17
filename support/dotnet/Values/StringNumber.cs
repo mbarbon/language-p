@@ -73,6 +73,24 @@ namespace org.mbarbon.p.values
             return new P5StringNumber(runtime, flags, integerValue, stringValue, floatValue);
         }
 
+        internal void Increment(Runtime runtime)
+        {
+            if ((flags & HasFloat) != 0)
+                floatValue = floatValue + 1.0;
+            if ((flags & HasInteger) != 0)
+                integerValue = integerValue + 1;
+            // TODO string increment
+        }
+
+        internal void Decrement(Runtime runtime)
+        {
+            if ((flags & HasFloat) != 0)
+                floatValue = floatValue - 1.0;
+            if ((flags & HasInteger) != 0)
+                integerValue = integerValue - 1;
+            // TODO string decrement
+        }
+
         public virtual P5Scalar ReferenceType(Runtime runtime)
         {
             return new P5Scalar(runtime);

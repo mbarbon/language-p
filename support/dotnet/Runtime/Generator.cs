@@ -654,6 +654,19 @@ namespace org.mbarbon.p.runtime
 
                 return Expression.Field(null, field);
             }
+            case Opcode.OpNumber.OP_CONSTANT_FLOAT:
+            {
+                var ctor = typeof(P5Scalar).GetConstructor(ProtoRuntimeDouble);
+                var cf = (ConstantFloat)op;
+                var init =
+                    Expression.New(ctor,
+                                   new Expression[] {
+                                       ModuleGenerator.InitRuntime,
+                                       Expression.Constant(cf.Value) });
+                FieldInfo field = ModuleGenerator.AddField(init);
+
+                return Expression.Field(null, field);
+            }
             case Opcode.OpNumber.OP_CONSTANT_SUB:
             {
                 ConstantSub cs = (ConstantSub)op;
@@ -1012,6 +1025,48 @@ namespace org.mbarbon.p.runtime
                 return Expression.New(
                     typeof(P5Scalar).GetConstructor(ProtoRuntimeDouble),
                     new Expression[] { Runtime, sum });
+            }
+            case Opcode.OpNumber.OP_MULTIPLY:
+            {
+                Expression sum =
+                    Expression.Multiply(
+                        Expression.Call(
+                            Generate(sub, op.Childs[0]),
+                            typeof(IP5Any).GetMethod("AsFloat"), Runtime),
+                        Expression.Call(
+                            Generate(sub, op.Childs[1]),
+                            typeof(IP5Any).GetMethod("AsFloat"), Runtime));
+                return Expression.New(
+                    typeof(P5Scalar).GetConstructor(ProtoRuntimeDouble),
+                    new Expression[] { Runtime, sum });
+            }
+            case Opcode.OpNumber.OP_PREINC:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(P5Scalar).GetMethod("PreIncrement"),
+                    Runtime);
+            }
+            case Opcode.OpNumber.OP_PREDEC:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(P5Scalar).GetMethod("PreDecrement"),
+                    Runtime);
+            }
+            case Opcode.OpNumber.OP_POSTINC:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(P5Scalar).GetMethod("PostIncrement"),
+                    Runtime);
+            }
+            case Opcode.OpNumber.OP_POSTDEC:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(P5Scalar).GetMethod("PostDecrement"),
+                    Runtime);
             }
             case Opcode.OpNumber.OP_ARRAY_ELEMENT:
             {

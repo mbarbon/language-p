@@ -62,6 +62,46 @@ namespace org.mbarbon.p.values
         public virtual bool AsBoolean(Runtime runtime) { return body.AsBoolean(runtime); }
         public virtual bool IsDefined(Runtime runtime) { return !(body is P5Undef); }
 
+        public virtual P5Scalar PreIncrement(Runtime runtime)
+        {
+            var sb = body as P5StringNumber;
+
+            if (sb != null)
+                sb.Increment(runtime);
+            else
+                body = new P5StringNumber(runtime, body.AsInteger(runtime) + 1);
+
+            return this;
+        }
+
+        public virtual P5Scalar PreDecrement(Runtime runtime)
+        {
+            var sb = body as P5StringNumber;
+
+            if (sb != null)
+                sb.Decrement(runtime);
+            else
+                body = new P5StringNumber(runtime, body.AsInteger(runtime) - 1);
+
+            return this;
+        }
+
+        public virtual P5Scalar PostIncrement(Runtime runtime)
+        {
+            var old = Clone(runtime, 0) as P5Scalar;
+            PreIncrement(runtime);
+
+            return old;
+        }
+
+        public virtual P5Scalar PostDecrement(Runtime runtime)
+        {
+            var old = Clone(runtime, 0) as P5Scalar;
+            PreDecrement(runtime);
+
+            return old;
+        }
+
         public virtual IP5Any Clone(Runtime runtime, int depth)
         {
             return new P5Scalar(body.CloneBody(runtime));
