@@ -53,6 +53,7 @@ my %dotnet_classes =
     'OP_HASH_ELEMENT'      => 'ElementAccess',
     'OP_HASH_SLICE'        => 'ElementAccess',
     'OP_CALL_METHOD'       => 'CallMethod',
+    'OP_FIND_METHOD'       => 'CallMethod',
     );
 
 sub write_dotnet_deserializer {

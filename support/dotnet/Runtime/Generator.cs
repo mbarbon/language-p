@@ -1253,6 +1253,16 @@ namespace org.mbarbon.p.runtime
                         Runtime, OpContext(op),
                         Expression.Constant(cm.Method));
             }
+            case Opcode.OpNumber.OP_FIND_METHOD:
+            {
+                CallMethod cm = (CallMethod)op;
+
+                return
+                    Expression.Call(
+                        Generate(sub, op.Childs[0]),
+                        typeof(IP5Any).GetMethod("FindMethod"),
+                        Runtime, Expression.Constant(cm.Method));
+            }
             case Opcode.OpNumber.OP_CALL:
             {
                 return
