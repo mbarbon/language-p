@@ -9,7 +9,9 @@ use Language::P::Intermediate::SerializeGenerated;
 
 sub serialize {
     my( $self, $tree, $file ) = @_;
-    open my $out, '>', $file || die "open '$file': $!";
+    # TODO handle the case where the source file is in a read-only
+    #      directory by saving the bytecode in an user-defined directory
+    open my $out, '>', $file or return; # die "open '$file': $!";
 
     $self->{sub_map} = {};
     $self->{file_map} = {};
