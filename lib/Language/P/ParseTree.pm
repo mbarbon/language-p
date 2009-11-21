@@ -55,7 +55,7 @@ use constant
     CXT_LIST           => 8,
     CXT_LVALUE         => 16,
     CXT_VIVIFY         => 32,
-    CXT_CALL_MASK      => 2|4|8,
+    CXT_CALL_MASK      => 1|2|4|8,
 
     PROTO_SCALAR       => 1,
     PROTO_ARRAY        => 2,

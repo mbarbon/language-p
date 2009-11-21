@@ -25,17 +25,19 @@ my $re5 = Language::P::Toy::Value::Regex->new
                   } );
 
 eq_or_diff( $re5->match( $runtime, 'abcde' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 3,
-              captures    => [],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 3,
+              captures        => [],
+              string_captures => [],
               } );
 
 eq_or_diff( $re5->match( $runtime, 'abxabcabc' ),
-            { matched     => 1,
-              match_start => 3,
-              match_end   => 6,
-              captures    => [],
+            { matched         => 1,
+              match_start     => 3,
+              match_end       => 6,
+              captures        => [],
+              string_captures => [],
               } );
 
 eq_or_diff( $re5->match( $runtime, 'aaaaaaaaaaa' ),

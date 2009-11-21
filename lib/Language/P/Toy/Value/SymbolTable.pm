@@ -27,6 +27,33 @@ sub get_package {
     return $self->_get_symbol( $runtime, $package, '::', $create );
 }
 
+sub _tied_to_regex_capture {
+    my( $runtime, $index ) = @_;
+
+    my $get = sub {
+        my $re_state = $runtime->get_last_match;
+
+        return Language::P::Toy::Value::Undef->new( $runtime )
+            if !$re_state || @{$re_state->{captures}} < $index;
+        return Language::P::Toy::Value::Scalar->new_string( $runtime, $re_state->{string_captures}[$index - 1] );
+    };
+
+    return Language::P::Toy::Value::ActiveScalarCallbacks->new
+               ( $runtime,
+                 { get_callback => $get,
+                   set_callback => sub { die "Readonly"; },
+                   } );
+}
+
+sub _apply_magic {
+    my( $self, $runtime, $name, $symbol ) = @_;
+
+     if( $name =~ /^([1-9][0-9]*)$/ ) {
+             $symbol->set_slot( $runtime, 'scalar',
+                                _tied_to_regex_capture( $runtime, $1 ) );
+     }
+}
+
 our %sigils =
   ( '$'  => [ 'scalar',     'Language::P::Toy::Value::Scalar' ],
     '@'  => [ 'array',      'Language::P::Toy::Value::Array' ],
@@ -40,9 +67,19 @@ our %sigils =
 
 sub get_symbol {
     my( $self, $runtime, $name, $sigil, $create ) = @_;
-    my( $symbol, $created ) = $self->_get_symbol( $runtime, $name, $sigil, $create );
+    my( $symbol, $created ) = $self->_get_symbol( $runtime, $name, '*', $create );
 
-    return $symbol;
+    return $symbol unless $symbol;
+    if( !$created ) {
+        return $symbol if $sigil eq '*';
+        return $create ? $symbol->get_or_create_slot( $runtime, $sigils{$sigil}[0] ) :
+                         $symbol->get_slot( $runtime, $sigils{$sigil}[0] );
+    }
+    $self->_apply_magic( $runtime, $name, $symbol );
+
+    return $symbol if $sigil eq '*';
+    return $create ? $symbol->get_or_create_slot( $runtime, $sigils{$sigil}[0] ) :
+                     $symbol->get_slot( $runtime, $sigils{$sigil}[0] );
 }
 
 sub _get_symbol {

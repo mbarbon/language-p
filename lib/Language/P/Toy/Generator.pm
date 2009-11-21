@@ -5,7 +5,7 @@ use warnings;
 use base qw(Language::P::ParseTree::Visitor);
 
 __PACKAGE__->mk_ro_accessors( qw(runtime) );
-__PACKAGE__->mk_accessors( qw(_code _pending _block_map _temporary_map
+__PACKAGE__->mk_accessors( qw(_code _pending _block_map _index_map
                               _options _generated _intermediate _processing
                               _eval_context _segment _saved_subs
                               _generated_scopes) );
@@ -22,6 +22,13 @@ use Language::P::Toy::Value::Regex;
 use Language::P::ParseTree qw(:all);
 use Language::P::Keywords qw(:all);
 
+use constant
+  { IDX_TEMPORARY  => 0,
+    IDX_LEX_STATE  => 1,
+    IDX_REGEX      => 2,
+    IDX_MAX        => 2,
+    };
+
 my %sigil_to_slot =
   ( VALUE_SCALAR() => 'scalar',
     VALUE_SUB()    => 'subroutine',
@@ -34,7 +41,7 @@ sub new {
     my( $class, $args ) = @_;
     my $self = $class->SUPER::new( $args );
 
-    $self->_options( {} );
+    $self->_options( {} ) unless $self->_options;
     $self->_intermediate( Language::P::Intermediate::Generator->new
                               ( { file_name => 'a.ir',
                                    } ) );
@@ -76,6 +83,11 @@ sub process {
         # emit the 'use' almost the same way as the corresponding
         # BEGIN block would look if written in Perl
         my $sub_int = $self->_intermediate->generate_use( $tree );
+
+        if( $self->_options->{'dump-bytecode'} ) {
+            push @{$self->{_saved_subs} ||= []}, @$sub_int;
+        }
+
         my $sub = _generate_segment( $self, $sub_int->[0] );
 
         my $args = Language::P::Toy::Value::List->new( $self->runtime );
@@ -91,10 +103,6 @@ sub process {
         }
 
         my $sub = _generate_segment( $self, $sub_int->[0] );
-
-        if( $self->_options->{'dump-bytecode'} ) {
-            push @{$self->{_saved_subs} ||= []}, @$sub_int;
-        }
 
         # run right away if it is a begin block
         if( $tree->name eq 'BEGIN' ) {
@@ -156,6 +164,7 @@ my %opcode_map =
     OP_RX_QUANTIFIER()               => \&_rx_quantifier,
     OP_RX_START_GROUP()              => \&_direct_jump,
     OP_RX_TRY()                      => \&_direct_jump,
+    OP_RX_STATE_RESTORE()            => \&_rx_state_restore,
     );
 
 sub _qualify {
@@ -297,7 +306,7 @@ sub _generate_segment {
 
     $self->_code( $code );
     $self->_block_map( {} );
-    $self->_temporary_map( {} );
+    $self->_index_map( {} );
     $self->_segment( $segment );
     $self->_generated_scopes( {} );
 
@@ -305,6 +314,7 @@ sub _generate_segment {
     if( $is_regex ) {
         _generate_block( $self, $_, \@converted )
             foreach @{$segment->basic_blocks};
+        push @{$self->{_saved_subs} ||= []}, $segment;
     } else {
         _generate_scope( $self, $segment->scopes->[0]->{id}, \@converted );
     }
@@ -340,7 +350,13 @@ sub finished {
     my( $self ) = @_;
     my $main_int = $self->_intermediate->generate_bytecode( $self->_pending );
 
-    if( $self->_options->{'dump-bytecode'} ) {
+    # perform code generation before serializing, for regexes
+    my $head = pop @{$self->{_processing}};
+    my $res = _generate_segment( $self, $main_int->[0], $head );
+    $main_int->[0]->weaken; # allow GC to happen
+    $self->_cleanup;
+
+    if( $self->_options->{'dump-bytecode'} && !$main_int->[0]->is_eval ) {
         require Language::P::Intermediate::Transform;
         require Language::P::Intermediate::Serialize;
 
@@ -354,11 +370,6 @@ sub finished {
         $tree->[0]->weaken; # allow GC to happen
     }
 
-    my $head = pop @{$self->{_processing}};
-    my $res = _generate_segment( $self, $main_int->[0], $head );
-    $main_int->[0]->weaken; # allow GC to happen
-    $self->_cleanup;
-
     return $res;
 }
 
@@ -368,7 +379,7 @@ sub _cleanup {
     $self->_pending( [] );
     $self->_code( undef );
     $self->_block_map( undef );
-    $self->_temporary_map( undef );
+    $self->_index_map( undef );
     $self->_generated( undef );
     $self->_processing( undef );
     $self->_generated_scopes( {} );
@@ -512,26 +523,25 @@ sub _lexical_state_save {
     my( $self, $bytecode, $op ) = @_;
     my $state_id = $op->{attributes}{index};
 
-    # TODO add multiple kinds of temp indices
     push @$bytecode,
          o( 'lexical_state_save',
-            index => _temporary_index( $self, -$state_id - 1 ) );
+            index => _temporary_index( $self, IDX_LEX_STATE, $state_id ) );
 }
 
 sub _lexical_state_restore {
     my( $self, $bytecode, $op ) = @_;
+    my $state_id = $op->{attributes}{index};
 
-    # TODO add multiple kinds of temp indices
     push @$bytecode,
          o( 'lexical_state_restore',
-            index => _temporary_index( $self, -$op->{attributes}{index} - 1 ) );
+            index => _temporary_index( $self, IDX_LEX_STATE, $state_id ) );
 }
 
 sub _temporary_index {
-    my( $self, $index ) = @_;
-    return $self->_temporary_map->{$index}
-        if exists $self->_temporary_map->{$index};
-    my $offset = $self->_temporary_map->{$index} = $self->_code->stack_size;
+    my( $self, $type, $index ) = @_;
+    return $self->_index_map->{$type}{$index}
+        if exists $self->_index_map->{$type}{$index};
+    my $offset = $self->_index_map->{$type}{$index} = $self->_code->stack_size;
     ++$self->_code->{stack_size};
     return $offset;
 }
@@ -540,14 +550,14 @@ sub _temporary {
     my( $self, $bytecode, $op ) = @_;
 
     push @$bytecode,
-         o( 'lexical', index => _temporary_index( $self, $op->{attributes}{index} ) );
+         o( 'lexical', index => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ) );
 }
 
 sub _temporary_set {
     my( $self, $bytecode, $op ) = @_;
 
     push @$bytecode,
-         o( 'lexical_set', index => _temporary_index( $self, $op->{attributes}{index} ) );
+         o( 'lexical_set', index => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ) );
 }
 
 sub _map_slot_index {
@@ -557,7 +567,7 @@ sub _map_slot_index {
          o( $NUMBER_TO_NAME{$op->{opcode_n}},
             name  => $op->{attributes}{name},
             slot  => $sigil_to_slot{$op->{attributes}{slot}},
-            index => _temporary_index( $self, $op->{attributes}{index} ),
+            index => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ),
             );
 }
 
@@ -589,6 +599,13 @@ sub _rx_quantifier {
          o( 'jump' );
     push @{$self->_block_map->{$op->{attributes}{true}}}, $bytecode->[-2];
     push @{$self->_block_map->{$op->{attributes}{false}}}, $bytecode->[-1];
+}
+
+sub _rx_state_restore {
+    my( $self, $bytecode, $op ) = @_;
+
+    push @$bytecode,
+         o( 'rx_state_restore', index => _temporary_index( $self, IDX_REGEX, $op->{attributes}{index} ) );
 }
 
 sub _allocate_lexicals {

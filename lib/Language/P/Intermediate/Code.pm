@@ -11,7 +11,7 @@ __PACKAGE__->mk_ro_accessors( qw(type name basic_blocks outer inner
 
 use Exporter 'import';
 
-our @EXPORT_OK = qw(SCOPE_SUB SCOPE_EVAL SCOPE_MAIN SCOPE_LEX_STATE
+our @EXPORT_OK = qw(SCOPE_SUB SCOPE_EVAL SCOPE_MAIN SCOPE_LEX_STATE SCOPE_REGEX
                     CODE_MAIN CODE_SUB CODE_REGEX CODE_EVAL);
 our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,
@@ -22,6 +22,7 @@ use constant +
     SCOPE_EVAL       => 2, # eval block/eval string
     SCOPE_MAIN       => 4, # eval string, file or subroutine top scope
     SCOPE_LEX_STATE  => 8, # there is a lexical state change inside the scope
+    SCOPE_REGEX      => 16,# there is a regex match inside the scope
 
     CODE_MAIN        => 1,
     CODE_SUB         => 2,

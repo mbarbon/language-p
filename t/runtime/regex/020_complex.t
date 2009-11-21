@@ -17,7 +17,8 @@ my @re4 =
     # start quantifier
     o( 'rx_start_group', to       => 3 ), # 1
     o( 'rx_exact',       string   => 'a', length => 1 ),
-    o( 'rx_quantifier',  to       => 2, min => 0, max => -1, greedy => 1 ), # 3
+    o( 'rx_quantifier',  to       => 2, min => 0, max => -1, greedy => 1,
+                         group    => -1 ), # 3
     # end quantifier
     # start alternation
     o( 'rx_try',         to       => 7 ), # 4
@@ -42,7 +43,8 @@ my @re6 =
     # start quantifier
     o( 'rx_start_group', to       => 3 ),
     o( 'rx_exact',       string   => 'a', length => 1 ),
-    o( 'rx_quantifier',  to       => 2, min => 0, max => -1, greedy => 1 ),
+    o( 'rx_quantifier',  to       => 2, min => 0, max => -1, greedy => 1,
+                         group    => -1 ),
     # end quantifier
     # start capture
     o( 'rx_capture_start', group  => 0 ),
@@ -103,50 +105,57 @@ my $re8 = Language::P::Toy::Value::Regex->new
                   } );
 
 eq_or_diff( $re4->match( $runtime, 'aadcwwbb' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 2,
-              captures    => [],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 2,
+              captures        => [],
+              string_captures => [],
               } );
 
 eq_or_diff( $re4->match( $runtime, 'aacwwbb' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 3,
-              captures    => [],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 3,
+              captures        => [],
+              string_captures => [],
               } );
 
 eq_or_diff( $re4->match( $runtime, 'aacbb' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 3,
-              captures    => [],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 3,
+              captures        => [],
+              string_captures => [],
               } );
 
 eq_or_diff( $re4->match( $runtime, 'aabb' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 3,
-              captures    => [],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 3,
+              captures        => [],
+              string_captures => [],
               } );
 
 eq_or_diff( $re6->match( $runtime, 'aadcwwbb' ),
-            { matched     => 1,
-              match_start => 3,
-              match_end   => 4,
-              captures    => [ [3, 4] ],
+            { matched         => 1,
+              match_start     => 3,
+              match_end       => 4,
+              captures        => [ [3, 4] ],
+              string_captures => [ 'c' ],
               } );
 
 eq_or_diff( $re8->match( $runtime, 'aaw' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 3,
-              captures    => [ [2, 2], [-1, -1], [1, 2] ],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 3,
+              captures        => [ [2, 2], [-1, -1], [1, 2] ],
+              string_captures => [ '', undef, 'a' ],
               } );
 
 eq_or_diff( $re8->match( $runtime, 'bbw' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 3,
-              captures    => [ [2, 2], [-1, -1], [-1, -1] ],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 3,
+              captures        => [ [2, 2], [-1, -1], [-1, -1] ],
+              string_captures => [ '', undef, undef ],
               } );

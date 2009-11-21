@@ -37,6 +37,10 @@ sub reset {
 
     $self->{_stack} = [ [ -2, undef, CXT_VOID, undef, {} ], undef ];
     $self->{_frame} = @{$self->{_stack}};
+    $self->{_last_match} =
+      { captures        => [],
+        string_captures => [],
+        };
 }
 
 sub set_data_handle {
@@ -51,7 +55,7 @@ sub set_data_handle {
 sub run_last_file {
     my( $self, $code, $context ) = @_;
     # FIXME duplicates Language::P::Toy::Value::Code::call
-    my $frame = $self->push_frame( $code->stack_size + 2 );
+    my $frame = $self->push_frame( $code->stack_size + 3 );
     my $stack = $self->{_stack};
     $stack->[$frame - 2] = [ -2, $self->{_bytecode}, $context, $self->{_code}, $self->{_lex} ];
     $stack->[$frame - 1] = $code->lexicals || 'no_pad';
@@ -74,7 +78,7 @@ sub run_file {
     my $parser = $self->parser->safe_instance;
     my $code = do {
         local $self->{_parser} = $parser;
-        my $flags =   ( $context != CXT_VOID ? PARSE_ADD_RETURN : 0 )
+        my $flags =   PARSE_ADD_RETURN
                     | ( $is_main             ? PARSE_MAIN : 0 );
         $parser->parse_file( $program, $flags );
     };
@@ -518,6 +522,18 @@ sub warning_if {
     return unless vec($self->{_variables}{warnings}, $offset, 1) ||
                   vec($self->{_variables}{warnings}, $offset_all, 1) ;
     $self->warning( $file, $line, $message );
+}
+
+sub set_last_match {
+    my( $self, $match ) = @_;
+
+    $self->{_last_match} = $match;
+}
+
+sub get_last_match {
+    my( $self ) = @_;
+
+    return $self->{_last_match};
 }
 
 1;

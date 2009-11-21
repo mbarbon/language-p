@@ -73,16 +73,11 @@ sub _tied_to_rt_methods {
                    } )
 }
 
-sub get_symbol {
-    my( $self, $runtime, $name, $sigil, $create ) = @_;
-    my( $symbol, $created ) = $self->SUPER::_get_symbol( $runtime, $name, '*', $create );
+sub _apply_magic {
+    my( $self, $runtime, $name, $symbol ) = @_;
 
-    return $symbol unless $symbol;
-    if( !$created ) {
-        return $symbol if $sigil eq '*';
-        return $create ? $symbol->get_or_create_slot( $runtime, $sigils{$sigil}[0] ) :
-                         $symbol->get_slot( $runtime, $sigils{$sigil}[0] );
-    }
+    $self->SUPER::_apply_magic( $runtime, $name, $symbol );
+
     if( $special_names{$name} ) {
         if( $name eq "\017" ) {
             $symbol->set_slot( $runtime, 'scalar',
@@ -97,10 +92,6 @@ sub get_symbol {
                                                     'set_warnings' ) );
         }
     }
-
-    return $symbol if $sigil eq '*';
-    return $create ? $symbol->get_or_create_slot( $runtime, $sigils{$sigil}[0] ) :
-                     $symbol->get_slot( $runtime, $sigils{$sigil}[0] );
 }
 
 1;

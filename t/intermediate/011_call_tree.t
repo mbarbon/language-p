@@ -23,7 +23,7 @@ L2:
 # foo
 L1:
   lexical_state_set index=1
-  return context=0 (make_list (print context=0 (global name="STDOUT", slot=7), (make_list (concat_assign context=4 (concat_assign context=4 (concat_assign context=4 (fresh_string value=""), (constant_string value="ok ")), (array_element create=0, context=4 (constant_integer value=0), (lexical index=0, slot=2))), (constant_string value="\x0a")))))
+  return context=1 (make_list (print context=1 (global name="STDOUT", slot=7), (make_list (concat_assign context=4 (concat_assign context=4 (concat_assign context=4 (fresh_string value=""), (constant_string value="ok ")), (array_element create=0, context=4 (constant_integer value=0), (lexical index=0, slot=2))), (constant_string value="\x0a")))))
   jump to=L2
 L2:
   end

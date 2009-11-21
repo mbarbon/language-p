@@ -1,0 +1,46 @@
+=head1 NAME
+
+Language::P::Docs::Roadmap - aims and roadmap
+
+=head1 AIMS
+
+I created L<Language::P> to be a different implementation for Perl and
+to see if Perl could be parsed by something else than the Perl
+interpreter.
+
+The goal of the project is to create a self-hosting Perl interpreter
+for C# and to create a reusable parser and framework that can be used
+to reimplement the Perl interpreter for Java, LLVM, etc.
+
+=head2 STEPS
+
+=over 4
+
+=item Basic parsing
+
+Write a Perl parser in Perl that can parse an interesting subset of
+the language (mostly done).
+
+=item Intermediate code genration
+
+Create a reusable intermediate code generator (partially done, will
+likely need some redesign/tweaking to make it really reusable).
+
+=item Toy runtime
+
+A Perl runtime written in Perl, to experiment with/test the parser
+(partially done, needs more features).
+
+=item C# runtime
+
+A code generator for C# (foundation work done, needs to implement more
+Perl features and integration with the DLR).
+
+=item Making the C# runtime self-hosting
+
+Once the C# runtime becomes complete enough to run the Perl-written
+Perl parser/IR generator, it can be used as a normal Perl interpreter.
+
+=back
+
+=cut

@@ -214,6 +214,10 @@ EOT
                 print $out sprintf <<'EOT', $name;
         print $out pack 'V', $op->{attributes}{%s};
 EOT
+            } elsif( $type eq 'f' ) {
+                print $out sprintf <<'EOT', $name;
+        print $out pack 'd', $op->{attributes}{%s};
+EOT
             } elsif( $type eq 'i1' || $type eq 'i_sigil' ) {
                 print $out sprintf <<'EOT', $name;
         print $out pack 'C', $op->{attributes}{%s};
@@ -299,7 +303,7 @@ concatenate_assign  0       concat_assign        2   1  context=i1
 concatenate         0       concat               2   1  context=i1
 constant_float      0       same                 0   1  value=f
 constant_integer    0       same                 0   1  value=i
-constant_regex      0       same                 0   1  value=r
+constant_regex      0       same                 0   1  value=c
 constant_string     0       same                 0   1  value=s
 constant_sub        0       same                 0   1  value=c
 constant_undef      0       same                 0   1  noattr
@@ -406,7 +410,7 @@ multiply            0       same                 2   1  context=i1
 multiply_assign     0       same                 2   1  context=i1
 negate              0       same                 1   1  context=i1
 noop                0       same                 0   0  noattr
-not_match           0       rx_not_match         2   1  noattr
+not_match           0       rx_not_match         2   1  context=i1
 num_cmp             0       same                 2   1  noattr
 num_eq              0       compare_f_eq_scalar  2   1  noattr
 num_ge              0       compare_f_ge_scalar  2   1  noattr
@@ -464,13 +468,14 @@ vivify_hash         0       same                 1   1  context=i1
 vivify_scalar       0       same                 1   1  context=i1
 wantarray           u       want                 0   1  context=i1
 
-rx_accept
-rx_capture_end
-rx_capture_start
-rx_end_special
-rx_exact
-rx_quantifier
-rx_start_group
-rx_start_match
-rx_start_special
-rx_try
+rx_accept           0       same                 0   0  groups=i
+rx_capture_end      0       same                 0   0  group=i
+rx_capture_start    0       same                 0   0  group=i
+rx_end_special      0       same                 0   0  noattr
+rx_exact            0       same                 0   0  string=s,length=i
+rx_quantifier       0       same                 0   0  min=i,max=i,greedy=i1,group=i,to=b
+rx_start_group      0       same                 0   0  to=b
+rx_start_match      0       same                 0   0  noattr
+rx_start_special    0       same                 0   0  noattr
+rx_try              0       same                 0   0  to=b
+rx_state_restore    0       same                 0   0  index=i

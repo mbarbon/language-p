@@ -5,12 +5,12 @@ BEGIN {
     @INC = 't/run/files';
 }
 
-use Foo '2';
-no Foo;
-use Foo '4';
+use Moo '2';
+no Moo;
+use Moo '4';
 
 use Bar;
 no Bar;
 
-Foo::ok_foo( 5 );
+Moo::ok_moo( 5 );
 Bar::ok_bar( 6 );

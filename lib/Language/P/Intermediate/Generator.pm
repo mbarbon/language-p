@@ -214,11 +214,11 @@ sub generate_use {
 
     push @{$self->_code_segments},
          Language::P::Intermediate::Code->new
-             ( { type         => CODE_MAIN,
-                 name         => undef,
+             ( { type         => CODE_SUB,
+                 name         => 'BEGIN',
                  basic_blocks => [],
                  outer        => undef,
-                 lexicals     => { max_stack => 0 },
+                 lexicals     => { max_stack => 1 },
                  prototype    => undef,
                  } );
 
@@ -254,10 +254,10 @@ sub generate_use {
                     method => $tree->is_no ? 'unimport' : 'import' ),
         opcode_n( OP_DUP );
     _add_jump $self,
-        opcode_nm( OP_JUMP_IF_TRUE,
-                   true  => $call_import,
-                   false => $empty ),
-        $call_import, $empty;
+        opcode_nm( OP_JUMP_IF_NULL,
+                   true  => $empty,
+                   false => $call_import ),
+        $empty, $call_import;
 
     # empty block, for SSA conversion
     _add_blocks $self, $empty;
@@ -281,7 +281,6 @@ sub generate_use {
     # return
     _add_blocks $self, $return;
     $self->pop_block;
-    _add_bytecode $self, opcode_np( OP_RETURN, $tree->pos );
     _add_bytecode $self, opcode_n( OP_END );
 
     return $self->_code_segments;
@@ -416,6 +415,7 @@ my %dispatch =
     'Language::P::ParseTree::NamedSubroutine'        => '_subroutine',
     'Language::P::ParseTree::SubroutineDeclaration'  => '_subroutine_decl',
     'Language::P::ParseTree::AnonymousSubroutine'    => '_anon_subroutine',
+    'Language::P::ParseTree::Use'                    => '_use',
     'Language::P::ParseTree::QuotedString'           => '_quoted_string',
     'Language::P::ParseTree::Subscript'              => '_subscript',
     'Language::P::ParseTree::Slice'                  => '_slice',
@@ -762,18 +762,29 @@ sub _binary_op {
                       opcode_n( OP_SWAP ),
                       opcode_npm( $tree->op, $tree->pos,
                                   context => _context( $tree ) );
-    } elsif( $tree->op == OP_NOT_MATCH ) {
+    } elsif( $tree->op == OP_MATCH || $tree->op == OP_NOT_MATCH ) {
         $self->dispatch( $tree->left );
         $self->dispatch( $tree->right );
 
-        # maybe perform the transformation during parsing, but remember
-        # to correctly propagate context
+        my $scope_id = $self->_code_segments->[0]->scopes->[-1]->{id};
+
+        unless( $self->_code_segments->[0]->scopes->[-1]->{flags} & SCOPE_REGEX ) {
+            $self->_code_segments->[0]->scopes->[$scope_id]->{flags} |= SCOPE_REGEX;
+            push @{$self->_current_block->{bytecode}},
+                 [ opcode_nm( OP_RX_STATE_RESTORE, index => $scope_id ) ];
+        }
+
         _add_bytecode $self,
             opcode_npm( OP_MATCH, $tree->pos,
-                        context   => _context( $tree ) );
-        _add_bytecode $self,
-            opcode_npm( OP_LOG_NOT, $tree->pos,
-                        context   => _context( $tree ) );
+                        context   => _context( $tree ),
+                        index     => $scope_id );
+        # maybe perform the transformation during parsing, but remember
+        # to correctly propagate context
+        if( $tree->op == OP_NOT_MATCH ) {
+            _add_bytecode $self,
+                opcode_npm( OP_LOG_NOT, $tree->pos,
+                            context   => _context( $tree ) );
+        }
     } else {
         $self->dispatch( $tree->left );
         $self->dispatch( $tree->right );
@@ -1354,6 +1365,22 @@ sub _subroutine {
     return $code_segments->[0];
 }
 
+sub _use {
+    my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
+
+    my $generator = Language::P::Intermediate::Generator->new
+                        ( { _options => { %{$self->{_options}},
+                                          # performed by caller
+                                          'dump-ir' => 0,
+                                          },
+                            } );
+    my $code_segments = $generator->generate_use( $tree );
+    push @{$self->_code_segments}, @$code_segments;
+
+    return $code_segments->[0];
+}
+
 sub _quoted_string {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
@@ -1630,7 +1657,7 @@ sub _regex_quantifier {
         opcode_nm( OP_RX_QUANTIFIER,
                    min => $tree->min, max => $tree->max,
                    greedy => $tree->greedy,
-                   group => ( $capture ? $start_group : undef ),
+                   group => ( $capture ? $start_group : -1 ),
                    subgroups_start => $start_group,
                    subgroups_end => $self->_group_count,
                    true => $start, false => $end );

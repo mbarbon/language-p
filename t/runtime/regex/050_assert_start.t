@@ -9,10 +9,11 @@ use TestRegex qw(:all);
 use Test::Differences;
 
 eq_or_diff( match( 'test', '^test' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 4,
-              captures    => [],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 4,
+              captures        => [],
+              string_captures => [],
               } );
 
 eq_or_diff( match( 'atest', '^test' ),

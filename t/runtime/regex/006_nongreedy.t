@@ -20,7 +20,8 @@ my @re3 =
     o( 'rx_exact',       string   => 'a', length => 1 ),
     o( 'rx_capture_end', group    => 0 ),
     o( 'rx_quantifier',  to       => 2, min => 2, max => 3, greedy => 0,
-                         subgroups_start => 0, subgroups_end => 1 ),
+                         subgroups_start => 0, subgroups_end => 1,
+                         group    => -1 ),
     # end quantifier
     o( 'rx_capture_start', group  => 1 ), # 4
     o( 'rx_exact',       string   => 'a', length => 1 ),
@@ -59,37 +60,42 @@ eq_or_diff( $re3->match( $runtime, 'bab' ),
               } );
 
 eq_or_diff( $re3->match( $runtime, 'babbaaabbaaaaa' ),
-            { matched     => 1,
-              match_start => 4,
-              match_end   => 7,
-              captures    => [ [5, 6], [6, 7] ],
+            { matched         => 1,
+              match_start     => 4,
+              match_end       => 7,
+              captures        => [ [5, 6], [6, 7] ],
+              string_captures => [ 'a', 'a' ],
               } );
 
 eq_or_diff( $re3->match( $runtime, 'babbaabbaaaaa' ),
-            { matched     => 1,
-              match_start => 8,
-              match_end   => 11,
-              captures    => [ [9, 10], [10, 11] ],
+            { matched         => 1,
+              match_start     => 8,
+              match_end       => 11,
+              captures        => [ [9, 10], [10, 11] ],
+              string_captures => [ 'a', 'a' ],
               } );
 
 eq_or_diff( $re3->match( $runtime, 'aaaaaaa' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 3,
-              captures    => [ [1, 2], [2, 3] ],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 3,
+              captures        => [ [1, 2], [2, 3] ],
+              string_captures => [ 'a', 'a' ],
               } );
 
 eq_or_diff( $re7->match( $runtime, 'aaaa' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 1,
-              captures    => [ [-1, -1], [0, 1] ],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 1,
+              captures        => [ [-1, -1], [0, 1] ],
+              string_captures => [ undef, 'a' ],
               } );
 
 eq_or_diff( $re7->match( $runtime, 'a' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 1,
-              captures    => [ [-1, -1], [0, 1] ],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 1,
+              captures        => [ [-1, -1], [0, 1] ],
+              string_captures => [ undef, 'a' ],
               } );
 

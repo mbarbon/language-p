@@ -11,6 +11,9 @@ inc/Opcodes.pm
 inc/p_parrot
 lib/Language/P.pm
 lib/Language/P/Assembly.pm
+lib/Language/P/Docs/Architecture.pod
+lib/Language/P/Docs/Roadmap.pod
+lib/Language/P/Docs/TOC.pod
 lib/Language/P/Exception.pm
 lib/Language/P/Intermediate/BasicBlock.pm
 lib/Language/P/Intermediate/Code.pm
@@ -182,6 +185,7 @@ t/run/015_defined.t
 t/run/017_references.t
 t/run/018_vivification.t
 t/run/020_lexicals.t
+t/run/021_interpolated_regexp.t
 t/run/021_regexp.t
 t/run/025_begin.t
 t/run/035_local.t
@@ -200,7 +204,7 @@ t/run/120_stack_unwind.t
 t/run/121_eval_block.t
 t/run/123_caller.t
 t/run/files/Bar.pm
-t/run/files/Foo.pm
+t/run/files/Moo.pm
 t/run/files/foo.pl
 t/runtime/001_load.t
 t/runtime/002_base.t
