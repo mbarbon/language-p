@@ -415,6 +415,7 @@ my %dispatch =
     'Language::P::ParseTree::NamedSubroutine'        => '_subroutine',
     'Language::P::ParseTree::SubroutineDeclaration'  => '_subroutine_decl',
     'Language::P::ParseTree::AnonymousSubroutine'    => '_anon_subroutine',
+    'Language::P::ParseTree::Use'                    => '_use',
     'Language::P::ParseTree::QuotedString'           => '_quoted_string',
     'Language::P::ParseTree::Subscript'              => '_subscript',
     'Language::P::ParseTree::Slice'                  => '_slice',
@@ -1348,6 +1349,22 @@ sub _subroutine {
     my $code_segments =
       _generate_bytecode( $generator, 1, $tree->name, $tree->prototype,
                           $self->_code_segments->[0], $tree->lines );
+    push @{$self->_code_segments}, @$code_segments;
+
+    return $code_segments->[0];
+}
+
+sub _use {
+    my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
+
+    my $generator = Language::P::Intermediate::Generator->new
+                        ( { _options => { %{$self->{_options}},
+                                          # performed by caller
+                                          'dump-ir' => 0,
+                                          },
+                            } );
+    my $code_segments = $generator->generate_use( $tree );
     push @{$self->_code_segments}, @$code_segments;
 
     return $code_segments->[0];
