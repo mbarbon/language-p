@@ -214,11 +214,11 @@ sub generate_use {
 
     push @{$self->_code_segments},
          Language::P::Intermediate::Code->new
-             ( { type         => CODE_MAIN,
-                 name         => undef,
+             ( { type         => CODE_SUB,
+                 name         => 'BEGIN',
                  basic_blocks => [],
                  outer        => undef,
-                 lexicals     => { max_stack => 0 },
+                 lexicals     => { max_stack => 1 },
                  prototype    => undef,
                  } );
 
@@ -281,7 +281,6 @@ sub generate_use {
     # return
     _add_blocks $self, $return;
     $self->pop_block;
-    _add_bytecode $self, opcode_np( OP_RETURN, $tree->pos );
     _add_bytecode $self, opcode_n( OP_END );
 
     return $self->_code_segments;
