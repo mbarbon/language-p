@@ -10,6 +10,7 @@
 ^support/parrot/runtime/.*\.pbc$
 ^support/dotnet/bin/
 ^support/dotnet/(?:configure|dotnet\.in|.*\.make|Makefile\.include)$
+^support/dotnet/Bytecode/BytecodeGenerated\.cs$
 ^lib/Language/P/Intermediate/SerializeGenerated\.pm$
 
 # Avoid version control files.
