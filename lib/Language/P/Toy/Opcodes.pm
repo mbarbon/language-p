@@ -359,7 +359,7 @@ sub o_find_method {
     my $invocant = pop @{$runtime->{_stack}};
     my $sub = $invocant->find_method( $runtime, $op->{method} );
 
-    push @{$runtime->{_stack}}, $sub || Language::P::Toy::Value::Undef->new( $runtime );
+    push @{$runtime->{_stack}}, $sub;
 
     return $pc + 1;
 }

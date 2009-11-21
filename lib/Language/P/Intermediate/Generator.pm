@@ -254,10 +254,10 @@ sub generate_use {
                     method => $tree->is_no ? 'unimport' : 'import' ),
         opcode_n( OP_DUP );
     _add_jump $self,
-        opcode_nm( OP_JUMP_IF_TRUE,
-                   true  => $call_import,
-                   false => $empty ),
-        $call_import, $empty;
+        opcode_nm( OP_JUMP_IF_NULL,
+                   true  => $empty,
+                   false => $call_import ),
+        $empty, $call_import;
 
     # empty block, for SSA conversion
     _add_blocks $self, $empty;
