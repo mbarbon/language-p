@@ -15,7 +15,7 @@ namespace org.mbarbon.p
             var cu = Serializer.ReadCompilationUnit(args[0]);
 
             P5Code main = new Generator(runtime).Generate(null, cu);
-            main.Call(runtime, Opcode.ContextValues.SCALAR, null);
+            main.Call(runtime, Opcode.ContextValues.VOID, null);
         }
     }
 }
