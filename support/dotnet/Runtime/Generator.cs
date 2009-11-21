@@ -1106,6 +1106,36 @@ namespace org.mbarbon.p.runtime
                     Runtime,
                     Generate(sub, op.Childs[0]));
             }
+            case Opcode.OpNumber.OP_ARRAY_PUSH:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(P5Array).GetMethod("PushList"),
+                    Runtime,
+                    Generate(sub, op.Childs[1]));
+            }
+            case Opcode.OpNumber.OP_ARRAY_UNSHIFT:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(P5Array).GetMethod("UnshiftList"),
+                    Runtime,
+                    Generate(sub, op.Childs[1]));
+            }
+            case Opcode.OpNumber.OP_ARRAY_POP:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(P5Array).GetMethod("PopElement"),
+                    Runtime);
+            }
+            case Opcode.OpNumber.OP_ARRAY_SHIFT:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(P5Array).GetMethod("ShiftElement"),
+                    Runtime);
+            }
             case Opcode.OpNumber.OP_ITERATOR:
             {
                 return Expression.Call(

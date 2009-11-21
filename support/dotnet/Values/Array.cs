@@ -92,6 +92,46 @@ namespace org.mbarbon.p.values
             array.Add(item);
         }
 
+        public virtual P5Scalar PushList(Runtime runtime, P5Array items)
+        {
+            array.AddRange(items);
+
+            return new P5Scalar(runtime, array.Count);
+        }
+
+        public virtual IP5Any PopElement(Runtime runtime)
+        {
+            if (array.Count == 0)
+                return new P5Scalar(runtime);
+            int last = array.Count - 1;
+            var e = array[last];
+
+            array.RemoveAt(last);
+
+            return e;
+        }
+
+        public virtual P5Scalar UnshiftList(Runtime runtime, P5Array items)
+        {
+            var newArray = new List<IP5Any>(items);
+            newArray.AddRange(array);
+
+            array = newArray;
+
+            return new P5Scalar(runtime, array.Count);
+        }
+
+        public virtual IP5Any ShiftElement(Runtime runtime)
+        {
+            if (array.Count == 0)
+                return new P5Scalar(runtime);
+            var e = array[0];
+
+            array.RemoveAt(0);
+
+            return e;
+        }
+
         public virtual P5Scalar AsScalar(Runtime runtime) { return new P5Scalar(runtime, array.Count); }
         public virtual string AsString(Runtime runtime) { return AsScalar(runtime).AsString(runtime); }
         public virtual int AsInteger(Runtime runtime) { return array.Count; }
