@@ -552,17 +552,23 @@ namespace org.mbarbon.p.runtime
                 Blocks.Insert(0, Expression.Block(typeof(void), init_exps));
             }
 
-            Variables.InsertRange(0, Lexicals);
-            for (int i = 0; i < Temporaries.Count; ++i)
-                if (Temporaries[i] != null)
-                    Variables.Add(Temporaries[i]);
-            for (int i = 0; i < LexStates.Count; ++i)
-                if (LexStates[i] != null)
-                    Variables.Add(LexStates[i]);
+            var vars = new List<ParameterExpression>();
+            AddVars(vars, Variables);
+            AddVars(vars, Lexicals);
+            AddVars(vars, Temporaries);
+            AddVars(vars, LexStates);
 
-            var block = Expression.Block(typeof(IP5Any), Variables, Blocks);
+            var block = Expression.Block(typeof(IP5Any), vars, Blocks);
             var args = new ParameterExpression[] { Runtime, Context, Pad, Arguments };
             return Expression.Lambda<P5Code.Sub>(Expression.Label(SubLabel, block), args);
+        }
+
+        private void AddVars(List<ParameterExpression> vars,
+                             List<ParameterExpression> toAdd)
+        {
+            foreach (var i in toAdd)
+                if (i != null)
+                    vars.Add(i);
         }
 
         public void UpdateFileLine(Opcode op, List<Expression> expressions)
