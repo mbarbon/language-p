@@ -52,6 +52,20 @@ namespace org.mbarbon.p.values
             return handle;
         }
 
+        public P5Typeglob GetGlob(Runtime runtime, string name)
+        {
+            string[] packs = name.Split(separator, StringSplitOptions.None);
+            P5SymbolTable st = GetPackage(runtime, packs, true, false);
+            P5Typeglob glob;
+
+            if (st == null)
+                return null;
+            if (!st.symbols.TryGetValue(packs[packs.Length - 1], out glob))
+                return null;
+
+            return glob;
+        }
+
         public P5Typeglob GetOrCreateGlob(Runtime runtime, string name)
         {
             string[] packs = name.Split(separator, StringSplitOptions.None);
@@ -69,8 +83,8 @@ namespace org.mbarbon.p.values
 
         public P5Code GetCode(Runtime runtime, string name)
         {
-            P5Typeglob glob;
-            if (symbols.TryGetValue(name, out glob))
+            P5Typeglob glob = GetGlob(runtime, name);
+            if (glob != null)
                 return glob.Code;
 
             return null;
