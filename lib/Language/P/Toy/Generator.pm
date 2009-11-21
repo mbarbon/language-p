@@ -34,7 +34,7 @@ sub new {
     my( $class, $args ) = @_;
     my $self = $class->SUPER::new( $args );
 
-    $self->_options( {} );
+    $self->_options( {} ) unless $self->_options;
     $self->_intermediate( Language::P::Intermediate::Generator->new
                               ( { file_name => 'a.ir',
                                    } ) );
