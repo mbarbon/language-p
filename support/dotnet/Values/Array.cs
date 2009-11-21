@@ -1,9 +1,10 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
 using System.Collections.Generic;
+using System.Collections;
 
 namespace org.mbarbon.p.values
 {
-    public class P5Array : IP5Any, IP5Referrable
+    public class P5Array : IP5Any, IP5Referrable, IEnumerable<IP5Any>
     {
         public P5Array(Runtime runtime)
         {
@@ -74,7 +75,14 @@ namespace org.mbarbon.p.values
             return array.GetEnumerator();
         }
 
+        // implement both System.Collections.Generic.IEnumerable<T>
+        // and System.Collections.IEnumerable
         public IEnumerator<IP5Any> GetEnumerator()
+        {
+            return array.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
         {
             return array.GetEnumerator();
         }
