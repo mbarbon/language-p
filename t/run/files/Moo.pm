@@ -1,4 +1,4 @@
-package Foo;
+package Moo;
 
 print "ok 1\n";
 
@@ -10,7 +10,7 @@ sub unimport {
     print "ok 3\n";
 }
 
-sub ok_foo {
+sub ok_moo {
     print "ok $_[0]\n";
 }
 

@@ -182,7 +182,7 @@ t/run/120_stack_unwind.t
 t/run/121_eval_block.t
 t/run/123_caller.t
 t/run/files/Bar.pm
-t/run/files/Foo.pm
+t/run/files/Moo.pm
 t/run/files/foo.pl
 t/runtime/001_load.t
 t/runtime/002_base.t
