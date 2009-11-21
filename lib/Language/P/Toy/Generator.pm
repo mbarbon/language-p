@@ -76,6 +76,11 @@ sub process {
         # emit the 'use' almost the same way as the corresponding
         # BEGIN block would look if written in Perl
         my $sub_int = $self->_intermediate->generate_use( $tree );
+
+        if( $self->_options->{'dump-bytecode'} ) {
+            push @{$self->{_saved_subs} ||= []}, @$sub_int;
+        }
+
         my $sub = _generate_segment( $self, $sub_int->[0] );
 
         my $args = Language::P::Toy::Value::List->new( $self->runtime );
