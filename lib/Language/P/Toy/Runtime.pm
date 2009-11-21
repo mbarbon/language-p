@@ -74,7 +74,7 @@ sub run_file {
     my $parser = $self->parser->safe_instance;
     my $code = do {
         local $self->{_parser} = $parser;
-        my $flags =   ( $context != CXT_VOID ? PARSE_ADD_RETURN : 0 )
+        my $flags =   PARSE_ADD_RETURN
                     | ( $is_main             ? PARSE_MAIN : 0 );
         $parser->parse_file( $program, $flags );
     };
