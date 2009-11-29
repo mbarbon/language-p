@@ -13,6 +13,7 @@ my %dotnet_classes =
     'OP_CONSTANT_STRING'   => 'ConstantString',
     'OP_CONSTANT_INTEGER'  => 'ConstantInt',
     'OP_CONSTANT_SUB'      => 'ConstantSub',
+    'OP_CONSTANT_REGEX'    => 'ConstantSub',
     'OP_CONSTANT_FLOAT'    => 'ConstantFloat',
     'OP_GLOBAL'            => 'Global',
     'OP_GLOB_SLOT'         => 'GlobSlot',
@@ -54,6 +55,10 @@ my %dotnet_classes =
     'OP_HASH_SLICE'        => 'ElementAccess',
     'OP_CALL_METHOD'       => 'CallMethod',
     'OP_FIND_METHOD'       => 'CallMethod',
+    'OP_RX_EXACT'          => 'RegexExact',
+    'OP_RX_ACCEPT'         => 'RegexAccept',
+    'OP_RX_START_GROUP'    => 'RegexStartGroup',
+    'OP_RX_QUANTIFIER'     => 'RegexQuantifier',
     );
 
 sub write_dotnet_deserializer {

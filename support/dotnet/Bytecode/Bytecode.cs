@@ -276,6 +276,30 @@ namespace org.mbarbon.p.runtime
         public string Method;
     }
 
+    public class RegexExact : Opcode
+    {
+        public string String;
+        public int Length;
+    }
+
+    public class RegexAccept : Opcode
+    {
+        public int Groups;
+    }
+
+    public class RegexStartGroup : Opcode
+    {
+        public int To;
+    }
+
+    public class RegexQuantifier : Opcode
+    {
+        public int Min, Max;
+        public byte Greedy;
+        public int Group;
+        public int To;
+    }
+
     public class Scope
     {
         public const int SCOPE_SUB       = 1;
