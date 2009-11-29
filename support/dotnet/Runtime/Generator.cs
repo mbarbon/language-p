@@ -20,17 +20,28 @@ namespace org.mbarbon.p.runtime
             internal SubInfo(string method, Subroutine sub, FieldInfo codefield)
             {
                 MethodName = method;
-                SubName = sub.Name;
-                IsMain = sub.Type == 1;
-                Lexicals = sub.Lexicals;
                 CodeField = codefield;
+                Subroutine = sub;
             }
 
+            internal Subroutine Subroutine;
             internal string MethodName;
-            internal string SubName;
-            internal LexicalInfo[] Lexicals;
             internal FieldInfo CodeField;
-            internal bool IsMain;
+
+            internal string SubName
+            {
+                get { return Subroutine.Name; }
+            }
+
+            internal LexicalInfo[] Lexicals
+            {
+                get { return Subroutine.Lexicals; }
+            }
+
+            internal bool IsMain
+            {
+                get { return Subroutine.IsMain; }
+            }
         }
 
         public ModuleGenerator(TypeBuilder class_builder)
@@ -64,7 +75,7 @@ namespace org.mbarbon.p.runtime
 
         public void AddSubInfo(Subroutine sub)
         {
-            bool is_main = sub.Type == 1;
+            bool is_main = sub.IsMain;
             string suffix = is_main          ? "main" :
                             sub.Name != null ? sub.Name :
                                                "anonymous";

@@ -340,9 +340,27 @@ namespace org.mbarbon.p.runtime
 
     public class Subroutine
     {
+        public enum CodeType
+        {
+            MAIN    = 1,
+            SUB     = 2,
+            REGEX   = 3,
+            EVAL    = 4,
+        }
+
         public Subroutine(int blockCount)
         {
             BasicBlocks = new BasicBlock[blockCount];
+        }
+
+        public bool IsMain
+        {
+            get { return Type == (int)CodeType.MAIN; }
+        }
+
+        public bool IsRegex
+        {
+            get { return Type == (int)CodeType.REGEX; }
         }
 
         public int Type;
