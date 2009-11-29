@@ -295,6 +295,7 @@ sub _generate_segment {
     if( $is_regex ) {
         _generate_block( $self, $_, \@converted )
             foreach @{$segment->basic_blocks};
+        push @{$self->{_saved_subs} ||= []}, $segment;
     } else {
         _generate_scope( $self, $segment->scopes->[0]->{id}, \@converted );
     }
@@ -330,6 +331,12 @@ sub finished {
     my( $self ) = @_;
     my $main_int = $self->_intermediate->generate_bytecode( $self->_pending );
 
+    # perform code generation before serializing, for regexes
+    my $head = pop @{$self->{_processing}};
+    my $res = _generate_segment( $self, $main_int->[0], $head );
+    $main_int->[0]->weaken; # allow GC to happen
+    $self->_cleanup;
+
     if( $self->_options->{'dump-bytecode'} && !$main_int->[0]->is_eval ) {
         require Language::P::Intermediate::Transform;
         require Language::P::Intermediate::Serialize;
@@ -343,11 +350,6 @@ sub finished {
         $serialize->serialize( $tree, $outfile );
         $tree->[0]->weaken; # allow GC to happen
     }
-
-    my $head = pop @{$self->{_processing}};
-    my $res = _generate_segment( $self, $main_int->[0], $head );
-    $main_int->[0]->weaken; # allow GC to happen
-    $self->_cleanup;
 
     return $res;
 }
