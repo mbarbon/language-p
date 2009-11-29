@@ -55,17 +55,23 @@ sub _write_sub {
 
     print $out pack 'C', $code->type;
     print $out pack 'V', $code->outer ? $self->{sub_map}{$code->outer} : -1;
-    print $out pack 'V', scalar values %{$code->lexicals->{map}};
+    if( !$code->is_regex ) {
+        print $out pack 'V', scalar values %{$code->lexicals->{map}};
+    } else {
+        print $out pack 'V', 0;
+    }
     print $out pack 'V', scalar @{$code->scopes};
     print $out pack 'V', scalar @{$code->lexical_states};
     print $out pack 'V', scalar @$bb;
 
     # TODO serialize prototype
 
-    my $index = 0;
-    foreach my $l ( values %{$code->lexicals->{map}} ) {
-        _write_lex_info( $self, $out, $l );
-        $self->{li_map}{$l->{index} . "|" . $l->{in_pad}} = $index++;
+    if( !$code->is_regex ) {
+        my $index = 0;
+        foreach my $l ( values %{$code->lexicals->{map}} ) {
+            _write_lex_info( $self, $out, $l );
+            $self->{li_map}{$l->{index} . "|" . $l->{in_pad}} = $index++;
+        }
     }
 
     foreach my $s ( @{$code->scopes} ) {
