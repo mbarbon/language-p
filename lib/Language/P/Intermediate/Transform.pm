@@ -17,6 +17,7 @@ my %op_map =
     OP_SWAP()             => '_swap',
     OP_DUP()              => '_dup',
     OP_CONSTANT_SUB()     => '_const_sub',
+    OP_CONSTANT_REGEX()   => '_const_regex',
     OP_JUMP_IF_TRUE()     => '_cond_jump',
     OP_JUMP_IF_FALSE()    => '_cond_jump',
     OP_JUMP_IF_NULL()     => '_cond_jump',
@@ -33,6 +34,8 @@ my %op_map =
     OP_JUMP_IF_S_LE()     => '_cond_jump',
     OP_JUMP_IF_S_LT()     => '_cond_jump',
     OP_JUMP()             => '_jump',
+    OP_RX_START_GROUP()   => '_rx_start_group',
+    OP_RX_QUANTIFIER()    => '_rx_quantifier',
     );
 
 sub _local_name { ++$_[0]->{_temporary_count} }
@@ -399,6 +402,15 @@ sub _const_sub {
     _created( $self, 1 );
 }
 
+sub _const_regex {
+    my( $self, $op ) = @_;
+    my $new_seg = $self->_converted_segments->{$op->{attributes}{value}};
+    my $new_op = opcode_nm( OP_CONSTANT_REGEX(), value => $new_seg );
+
+    push @{$self->_stack}, $new_op;
+    _created( $self, 1 );
+}
+
 sub _pop {
     my( $self, $op ) = @_;
 
@@ -456,6 +468,32 @@ sub _jump {
     my $new_jump = opcode_nm( $op->{opcode_n} );
 
     _jump_to( $self, $new_jump, $op->{attributes}{to}, [] );
+    _add_bytecode $self, $new_jump;
+}
+
+sub _rx_start_group {
+    my( $self, $op ) = @_;
+    my $new_jump = opcode_nm( OP_RX_START_GROUP );
+
+    _jump_to( $self, $new_jump, $op->{attributes}{to}, [] );
+    _add_bytecode $self, $new_jump;
+}
+
+sub _rx_quantifier {
+    my( $self, $op ) = @_;
+    my $attrs = $op->{attributes};
+    my $new_quant =
+        opcode_nm( OP_RX_QUANTIFIER,
+                   min => $attrs->{min}, max => $attrs->{max},
+                   greedy => $attrs->{greedy},
+                   group => $attrs->{group},
+                   subgroups_start => $attrs->{subgroups_start},
+                   subgroups_end => $attrs->{subgroups_end} );
+    my $new_jump = opcode_n( OP_JUMP );
+
+    _jump_to( $self, $new_quant, $op->{attributes}{true}, [] );
+    _add_bytecode $self, $new_quant;
+    _jump_to( $self, $new_jump, $op->{attributes}{false}, [] );
     _add_bytecode $self, $new_jump;
 }
 
