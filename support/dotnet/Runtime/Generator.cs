@@ -10,6 +10,8 @@ using Type = System.Type;
 using IEnumerator = System.Collections.IEnumerator;
 using DebuggableAttribute = System.Diagnostics.DebuggableAttribute;
 using DebugInfoGenerator = Microsoft.Runtime.CompilerServices.DebugInfoGenerator;
+using MemoryStream = System.IO.MemoryStream;
+using BinaryFormatter = System.Runtime.Serialization.Formatters.Binary.BinaryFormatter;
 
 namespace org.mbarbon.p.runtime
 {
@@ -73,6 +75,15 @@ namespace org.mbarbon.p.runtime
             return AddField(initializer, typeof(P5Scalar));
         }
 
+        public void AddRegexInfo(Subroutine sub)
+        {
+            FieldInfo field = ClassBuilder.DefineField(
+                "regex_" + MethodIndex++.ToString(), typeof(Regex),
+                FieldAttributes.Private|FieldAttributes.Static);
+
+            Subroutines.Add(new SubInfo(null, sub, field));
+        }
+
         public void AddSubInfo(Subroutine sub)
         {
             bool is_main = sub.IsMain;
@@ -86,6 +97,106 @@ namespace org.mbarbon.p.runtime
                 FieldAttributes.Private|FieldAttributes.Static);
 
             Subroutines.Add(new SubInfo(method_name, sub, field));
+        }
+
+        public void AddRegex(int index, Subroutine sub)
+        {
+            Regex regex = GenerateRegex(sub);
+            var stream = new MemoryStream();
+            var formatter = new BinaryFormatter();
+
+            formatter.Serialize(stream, regex);
+
+            var bytes = new List<Expression>();
+            foreach (var b in stream.ToArray())
+                bytes.Add(Expression.Constant(b));
+
+            var byteField = AddField(
+                Expression.NewArrayInit(typeof(byte), bytes),
+                typeof(byte[]));
+            var memStream = Expression.New(
+                typeof(MemoryStream).GetConstructor(
+                    new Type[] { typeof(byte[]) }),
+                Expression.Field(null, byteField));
+            var deserializer = Expression.New(
+                typeof(BinaryFormatter).GetConstructor(
+                    new Type[0]));
+            var init = Expression.Convert(
+                Expression.Call(
+                    deserializer,
+                    typeof(BinaryFormatter).GetMethod(
+                        "Deserialize",
+                        new Type[] { typeof(System.IO.Stream) }),
+                    memStream),
+                typeof(Regex));
+
+            Initializers.Add(
+                Expression.Assign(
+                    Expression.Field(null, Subroutines[index].CodeField),
+                    init));
+        }
+
+        public Regex GenerateRegex(Subroutine sub)
+        {
+            var quantifiers = new List<RxQuantifier>();
+            var ops = new List<Regex.Op>();
+            var targets = new List<int>();
+            var exact = new List<string>();
+
+            foreach (var bb in sub.BasicBlocks)
+            {
+                targets.Add(ops.Count);
+
+                foreach (var op in bb.Opcodes)
+                {
+                    switch (op.Number)
+                    {
+                    case Opcode.OpNumber.OP_RX_START_SPECIAL:
+                    case Opcode.OpNumber.OP_RX_END_SPECIAL:
+                    case Opcode.OpNumber.OP_RX_START_MATCH:
+                    case Opcode.OpNumber.OP_RX_ACCEPT:
+                        ops.Add(new Regex.Op(op.Number));
+                        break;
+                    case Opcode.OpNumber.OP_RX_EXACT:
+                    {
+                        var ex = (RegexExact)op;
+
+                        ops.Add(new Regex.Op(ex.Number, exact.Count));
+                        exact.Add(ex.String);
+                        break;
+                    }
+                    case Opcode.OpNumber.OP_RX_START_GROUP:
+                    {
+                        var gr = (RegexStartGroup)op;
+
+                        ops.Add(new Regex.Op(gr.Number, gr.To));
+                        break;
+                    }
+                    case Opcode.OpNumber.OP_RX_QUANTIFIER:
+                    {
+                        var qu = (RegexQuantifier)op;
+
+                        ops.Add(new Regex.Op(qu.Number, quantifiers.Count));
+                        quantifiers.Add(
+                            new RxQuantifier(qu.Min, qu.Max, qu.Greedy != 0,
+                                             qu.To));
+                        break;
+                    }
+                    case Opcode.OpNumber.OP_JUMP:
+                    {
+                        var ju = (Jump)op;
+
+                        ops.Add(new Regex.Op(ju.Number, ju.To));
+                        break;
+                    }
+                    default:
+                        throw new System.Exception(string.Format("Unhandled opcode {0:S} in regex generation", op.Number.ToString()));
+                    }
+                }
+            }
+
+            return new Regex(ops.ToArray(), targets.ToArray(),
+                             exact.ToArray(), quantifiers.ToArray());
         }
 
         public void AddMethod(int index, Subroutine sub)
@@ -147,6 +258,9 @@ namespace org.mbarbon.p.runtime
             FieldInfo main = null;
             foreach (SubInfo si in Subroutines)
             {
+                if (si.Subroutine.IsRegex)
+                    continue;
+
                 // new P5Code(System.Delegate.CreateDelegate(method, null)
                 Expression initcode =
                     Expression.New(code_ctor, new Expression[] {
@@ -1522,6 +1636,34 @@ namespace org.mbarbon.p.runtime
                         Generate(sub, op.Childs[0]),
                         OpContext(op));
             }
+            case Opcode.OpNumber.OP_CONSTANT_REGEX:
+            {
+                ConstantSub cs = (ConstantSub)op;
+
+                return Expression.Field(null, Subroutines[cs.Value].CodeField);
+            }
+            case Opcode.OpNumber.OP_MATCH:
+            {
+                return Expression.New(
+                    typeof(P5Scalar).GetConstructor(ProtoRuntimeBool),
+                    Runtime,
+                    Expression.Call(
+                        Generate(sub, op.Childs[1]),
+                        typeof(Regex).GetMethod("Match"),
+                        Runtime,
+                        Generate(sub, op.Childs[0])));
+            }
+            case Opcode.OpNumber.OP_NOT_MATCH:
+            {
+                return Expression.New(
+                    typeof(P5Scalar).GetConstructor(ProtoRuntimeBool),
+                    Runtime,
+                    Expression.Call(
+                        Generate(sub, op.Childs[1]),
+                        typeof(Regex).GetMethod("Match"),
+                        Runtime,
+                        Generate(sub, op.Childs[0])));
+            }
             default:
                 throw new System.Exception(string.Format("Unhandled opcode {0:S} in generation", op.Number.ToString()));
             }
@@ -1573,9 +1715,24 @@ namespace org.mbarbon.p.runtime
             ModuleGenerator perl_mod_generator = new ModuleGenerator(perl_module);
 
             for (int i = 0; i < cu.Subroutines.Length; ++i)
-                perl_mod_generator.AddSubInfo(cu.Subroutines[i]);
+            {
+                var sub = cu.Subroutines[i];
+
+                if (sub.IsRegex)
+                    perl_mod_generator.AddRegexInfo(sub);
+                else
+                    perl_mod_generator.AddSubInfo(sub);
+            }
+
             for (int i = 0; i < cu.Subroutines.Length; ++i)
-                perl_mod_generator.AddMethod(i, cu.Subroutines[i]);
+            {
+                var sub = cu.Subroutines[i];
+
+                if (sub.IsRegex)
+                    perl_mod_generator.AddRegex(i, sub);
+                else
+                    perl_mod_generator.AddMethod(i, sub);
+            }
 
             return perl_mod_generator.CompleteGeneration(Runtime);
         }

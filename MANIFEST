@@ -59,6 +59,7 @@ support/dotnet/Bytecode/Bytecode.cs
 support/dotnet/Main.cs
 support/dotnet/Runtime/Builtins.cs
 support/dotnet/Runtime/Generator.cs
+support/dotnet/Runtime/Regex.cs
 support/dotnet/Runtime/Runtime.cs
 support/dotnet/Values/Array.cs
 support/dotnet/Values/Code.cs

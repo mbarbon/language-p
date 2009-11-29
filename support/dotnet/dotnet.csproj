@@ -52,6 +52,7 @@
     <Compile Include="Bytecode\Bytecode.cs" />
     <Compile Include="Bytecode\BytecodeGenerated.cs" />
     <Compile Include="Runtime\Generator.cs" />
+    <Compile Include="Runtime\Regex.cs" />
     <Compile Include="Values\Handle.cs" />
     <Compile Include="Values\Code.cs" />
     <Compile Include="Values\ScratchPad.cs" />
