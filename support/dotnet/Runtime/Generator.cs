@@ -220,7 +220,7 @@ namespace org.mbarbon.p.runtime
                     Expression empty_list =
                         Expression.New(
                             typeof(P5List).GetConstructor(
-                                new System.Type[] { typeof(Runtime) }),
+                                new Type[] { typeof(Runtime) }),
                             InitRuntime);
                     Expression call_begin =
                         Expression.Call(
@@ -316,7 +316,7 @@ namespace org.mbarbon.p.runtime
                     typeof(Opcode.ContextValues));
         }
 
-        private ParameterExpression GetVariable(int index, System.Type type)
+        private ParameterExpression GetVariable(int index, Type type)
         {
             if (typeof(P5Scalar).IsAssignableFrom(type))
                 type = typeof(IP5Any);
@@ -382,7 +382,7 @@ namespace org.mbarbon.p.runtime
             }
         }
 
-        private ParameterExpression GetTemporary(int index, System.Type type)
+        private ParameterExpression GetTemporary(int index, Type type)
         {
             while (Temporaries.Count <= index)
                 Temporaries.Add(null);
@@ -757,8 +757,8 @@ namespace org.mbarbon.p.runtime
                 return
                     Expression.New(
                         typeof(P5Scalar).GetConstructor(
-                            new System.Type[] { typeof(Runtime),
-                                                typeof(IP5Referrable) }),
+                            new Type[] { typeof(Runtime),
+                                         typeof(IP5Referrable) }),
                         Runtime,
                         Expression.New(
                             typeof(P5Array).GetConstructor(ProtoRuntimeP5Array),
@@ -770,8 +770,8 @@ namespace org.mbarbon.p.runtime
                 return
                     Expression.New(
                         typeof(P5Scalar).GetConstructor(
-                            new System.Type[] { typeof(Runtime),
-                                                typeof(IP5Referrable) }),
+                            new Type[] { typeof(Runtime),
+                                         typeof(IP5Referrable) }),
                         Runtime,
                         Expression.New(
                             typeof(P5Hash).GetConstructor(ProtoRuntimeP5Array),
@@ -1172,7 +1172,7 @@ namespace org.mbarbon.p.runtime
             {
                 return Expression.Call(
                     Generate(sub, op.Childs[0]),
-                    typeof(P5Array).GetMethod("GetEnumerator", new System.Type[] {typeof(Runtime)}),
+                    typeof(P5Array).GetMethod("GetEnumerator", ProtoRuntime),
                     Runtime);
             }
             case Opcode.OpNumber.OP_ITERATOR_NEXT:
@@ -1213,7 +1213,8 @@ namespace org.mbarbon.p.runtime
             {
                 return Expression.Call(
                     Generate(sub, op.Childs[1]),
-                    typeof(P5List).GetMethod("Slice", new System.Type[] {typeof(Runtime), typeof(P5Array)}),
+                    typeof(P5List).GetMethod("Slice", new Type[] {
+                            typeof(Runtime), typeof(P5Array) }),
                     Runtime,
                     Generate(sub, op.Childs[0]));
             }
@@ -1313,7 +1314,7 @@ namespace org.mbarbon.p.runtime
             {
                 return Expression.New(
                     typeof(P5Scalar).GetConstructor(
-                        new System.Type[] { typeof(Runtime), typeof(IP5Referrable) }),
+                        new Type[] { typeof(Runtime), typeof(IP5Referrable) }),
                     new Expression[] { Runtime, Generate(sub, op.Childs[0]) });
             }
             case Opcode.OpNumber.OP_VIVIFY_SCALAR:
