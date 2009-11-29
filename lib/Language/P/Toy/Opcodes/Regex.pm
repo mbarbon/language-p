@@ -214,7 +214,7 @@ sub o_rx_quantifier {
     my $c = $cxt->{btg}->{c} += 1;
 
     v "Quantifier at $pc (pos: $cxt->{pos}, rep: $c) btg: $cxt->{btg} old: ${$cxt->{btg}->{btg} ? \$cxt->{btg}->{btg} : \''}\n";
-    _end_capture( $cxt, $op->{group} ) if $c > 0 && defined $op->{group};
+    _end_capture( $cxt, $op->{group} ) if $c > 0 && $op->{group} >= 0;
 
     if( $c == $op->{max} ) {
         v "Reached max limit\n";
@@ -255,7 +255,7 @@ sub o_rx_quantifier {
         return $pc + 1;
     }
 
-    _start_capture( $cxt, $op->{group} ) if defined $op->{group};
+    _start_capture( $cxt, $op->{group} ) if $op->{group} >= 0;
 
     return $op->{to};
 }

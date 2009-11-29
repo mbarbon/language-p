@@ -1646,7 +1646,7 @@ sub _regex_quantifier {
         opcode_nm( OP_RX_QUANTIFIER,
                    min => $tree->min, max => $tree->max,
                    greedy => $tree->greedy,
-                   group => ( $capture ? $start_group : undef ),
+                   group => ( $capture ? $start_group : -1 ),
                    subgroups_start => $start_group,
                    subgroups_end => $self->_group_count,
                    true => $start, false => $end );

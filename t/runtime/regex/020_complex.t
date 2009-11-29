@@ -17,7 +17,8 @@ my @re4 =
     # start quantifier
     o( 'rx_start_group', to       => 3 ), # 1
     o( 'rx_exact',       string   => 'a', length => 1 ),
-    o( 'rx_quantifier',  to       => 2, min => 0, max => -1, greedy => 1 ), # 3
+    o( 'rx_quantifier',  to       => 2, min => 0, max => -1, greedy => 1,
+                         group    => -1 ), # 3
     # end quantifier
     # start alternation
     o( 'rx_try',         to       => 7 ), # 4
@@ -42,7 +43,8 @@ my @re6 =
     # start quantifier
     o( 'rx_start_group', to       => 3 ),
     o( 'rx_exact',       string   => 'a', length => 1 ),
-    o( 'rx_quantifier',  to       => 2, min => 0, max => -1, greedy => 1 ),
+    o( 'rx_quantifier',  to       => 2, min => 0, max => -1, greedy => 1,
+                         group    => -1 ),
     # end quantifier
     # start capture
     o( 'rx_capture_start', group  => 0 ),

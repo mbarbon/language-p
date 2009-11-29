@@ -20,7 +20,8 @@ my @re3 =
     o( 'rx_exact',       string   => 'a', length => 1 ),
     o( 'rx_capture_end', group    => 0 ),
     o( 'rx_quantifier',  to       => 2, min => 2, max => 3, greedy => 0,
-                         subgroups_start => 0, subgroups_end => 1 ),
+                         subgroups_start => 0, subgroups_end => 1,
+                         group    => -1 ),
     # end quantifier
     o( 'rx_capture_start', group  => 1 ), # 4
     o( 'rx_exact',       string   => 'a', length => 1 ),
