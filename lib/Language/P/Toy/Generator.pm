@@ -5,7 +5,7 @@ use warnings;
 use base qw(Language::P::ParseTree::Visitor);
 
 __PACKAGE__->mk_ro_accessors( qw(runtime) );
-__PACKAGE__->mk_accessors( qw(_code _pending _block_map _temporary_map
+__PACKAGE__->mk_accessors( qw(_code _pending _block_map _index_map
                               _options _generated _intermediate _processing
                               _eval_context _segment _saved_subs
                               _generated_scopes) );
@@ -21,6 +21,13 @@ use Language::P::Toy::Value::Code;
 use Language::P::Toy::Value::Regex;
 use Language::P::ParseTree qw(:all);
 use Language::P::Keywords qw(:all);
+
+use constant
+  { IDX_TEMPORARY  => 0,
+    IDX_LEX_STATE  => 1,
+    IDX_REGEX      => 2,
+    IDX_MAX        => 2,
+    };
 
 my %sigil_to_slot =
   ( VALUE_SCALAR() => 'scalar',
@@ -287,7 +294,7 @@ sub _generate_segment {
 
     $self->_code( $code );
     $self->_block_map( {} );
-    $self->_temporary_map( {} );
+    $self->_index_map( {} );
     $self->_segment( $segment );
     $self->_generated_scopes( {} );
 
@@ -360,7 +367,7 @@ sub _cleanup {
     $self->_pending( [] );
     $self->_code( undef );
     $self->_block_map( undef );
-    $self->_temporary_map( undef );
+    $self->_index_map( undef );
     $self->_generated( undef );
     $self->_processing( undef );
     $self->_generated_scopes( {} );
@@ -504,26 +511,25 @@ sub _lexical_state_save {
     my( $self, $bytecode, $op ) = @_;
     my $state_id = $op->{attributes}{index};
 
-    # TODO add multiple kinds of temp indices
     push @$bytecode,
          o( 'lexical_state_save',
-            index => _temporary_index( $self, -$state_id - 1 ) );
+            index => _temporary_index( $self, IDX_LEX_STATE, $state_id ) );
 }
 
 sub _lexical_state_restore {
     my( $self, $bytecode, $op ) = @_;
+    my $state_id = $op->{attributes}{index};
 
-    # TODO add multiple kinds of temp indices
     push @$bytecode,
          o( 'lexical_state_restore',
-            index => _temporary_index( $self, -$op->{attributes}{index} - 1 ) );
+            index => _temporary_index( $self, IDX_LEX_STATE, $state_id ) );
 }
 
 sub _temporary_index {
-    my( $self, $index ) = @_;
-    return $self->_temporary_map->{$index}
-        if exists $self->_temporary_map->{$index};
-    my $offset = $self->_temporary_map->{$index} = $self->_code->stack_size;
+    my( $self, $type, $index ) = @_;
+    return $self->_index_map->{$type}{$index}
+        if exists $self->_index_map->{$type}{$index};
+    my $offset = $self->_index_map->{$type}{$index} = $self->_code->stack_size;
     ++$self->_code->{stack_size};
     return $offset;
 }
@@ -532,14 +538,14 @@ sub _temporary {
     my( $self, $bytecode, $op ) = @_;
 
     push @$bytecode,
-         o( 'lexical', index => _temporary_index( $self, $op->{attributes}{index} ) );
+         o( 'lexical', index => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ) );
 }
 
 sub _temporary_set {
     my( $self, $bytecode, $op ) = @_;
 
     push @$bytecode,
-         o( 'lexical_set', index => _temporary_index( $self, $op->{attributes}{index} ) );
+         o( 'lexical_set', index => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ) );
 }
 
 sub _map_slot_index {
@@ -549,7 +555,7 @@ sub _map_slot_index {
          o( $NUMBER_TO_NAME{$op->{opcode_n}},
             name  => $op->{attributes}{name},
             slot  => $sigil_to_slot{$op->{attributes}{slot}},
-            index => _temporary_index( $self, $op->{attributes}{index} ),
+            index => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ),
             );
 }
 
