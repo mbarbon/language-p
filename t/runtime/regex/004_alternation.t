@@ -46,15 +46,17 @@ eq_or_diff( $re1->match( $runtime, 'qqac' ),
               } );
 
 eq_or_diff( $re1->match( $runtime, 'qqax' ),
-            { matched     => 1,
-              match_start => 2,
-              match_end   => 4,
-              captures    => [ [ 2, 3 ] ],
+            { matched         => 1,
+              match_start     => 2,
+              match_end       => 4,
+              captures        => [ [ 2, 3 ] ],
+              string_captures => [ 'a' ],
               } );
 
 eq_or_diff( $re1->match( $runtime, 'qqacbbx' ),
-            { matched     => 1,
-              match_start => 5,
-              match_end   => 7,
-              captures    => [ [ 5, 6 ] ],
+            { matched         => 1,
+              match_start     => 5,
+              match_end       => 7,
+              captures        => [ [ 5, 6 ] ],
+              string_captures => [ 'b' ],
               } );

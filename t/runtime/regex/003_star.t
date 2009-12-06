@@ -53,37 +53,42 @@ my $re7 = Language::P::Toy::Value::Regex->new
                   } );
 
 eq_or_diff( $re3->match( $runtime, 'bb' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 0,
-              captures    => [ [-1, -1] ],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 0,
+              captures        => [ [-1, -1] ],
+              string_captures => [ undef ],
               } );
 
 eq_or_diff( $re3->match( $runtime, '' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 0,
-              captures    => [ [-1, -1] ],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 0,
+              captures        => [ [-1, -1] ],
+              string_captures => [ undef ],
               } );
 
 eq_or_diff( $re3->match( $runtime, 'aa' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 2,
-              captures    => [ [1, 2] ],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 2,
+              captures        => [ [1, 2] ],
+              string_captures => [ 'a' ],
               } );
 
 eq_or_diff( $re7->match( $runtime, 'aaaa' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 4,
-              captures    => [ [2, 3], [3, 4] ],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 4,
+              captures        => [ [2, 3], [3, 4] ],
+              string_captures => [ 'a', 'a' ],
               } );
 
 eq_or_diff( $re7->match( $runtime, 'a' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 1,
-              captures    => [ [-1, -1], [0, 1] ],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 1,
+              captures        => [ [-1, -1], [0, 1] ],
+              string_captures => [ undef, 'a' ],
               } );
 

@@ -60,37 +60,42 @@ eq_or_diff( $re3->match( $runtime, 'bab' ),
               } );
 
 eq_or_diff( $re3->match( $runtime, 'babbaaabbaaaaa' ),
-            { matched     => 1,
-              match_start => 4,
-              match_end   => 7,
-              captures    => [ [5, 6], [6, 7] ],
+            { matched         => 1,
+              match_start     => 4,
+              match_end       => 7,
+              captures        => [ [5, 6], [6, 7] ],
+              string_captures => [ 'a', 'a' ],
               } );
 
 eq_or_diff( $re3->match( $runtime, 'babbaabbaaaaa' ),
-            { matched     => 1,
-              match_start => 8,
-              match_end   => 12,
-              captures    => [ [10, 11], [11, 12] ],
+            { matched         => 1,
+              match_start     => 8,
+              match_end       => 12,
+              captures        => [ [10, 11], [11, 12] ],
+              string_captures => [ 'a', 'a' ],
               } );
 
 eq_or_diff( $re3->match( $runtime, 'aaaaaaa' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 4,
-              captures    => [ [2, 3], [3, 4] ],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 4,
+              captures        => [ [2, 3], [3, 4] ],
+              string_captures => [ 'a', 'a' ],
               } );
 
 eq_or_diff( $re7->match( $runtime, 'aaaa' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 2,
-              captures    => [ [0, 1], [1, 2] ],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 2,
+              captures        => [ [0, 1], [1, 2] ],
+              string_captures => [ 'a', 'a' ],
               } );
 
 eq_or_diff( $re7->match( $runtime, 'a' ),
-            { matched     => 1,
-              match_start => 0,
-              match_end   => 1,
-              captures    => [ [-1, -1], [0, 1] ],
+            { matched         => 1,
+              match_start     => 0,
+              match_end       => 1,
+              captures        => [ [-1, -1], [0, 1] ],
+              string_captures => [ undef, 'a' ],
               } );
 

@@ -169,10 +169,19 @@ sub o_rx_accept {
     for( my $i = $cxt->{last_open_capture} + 1; $i < $op->{groups}; ++$i ) {
         $cxt->{captures}[$i][0] = $cxt->{captures}[$i][1] = -1;
     }
+    # save captured strings
+    my @strings;
+    foreach my $capt ( @{$cxt->{captures}} ) {
+        push @strings, $capt->[1] == -1 ? undef :
+             substr $cxt->{string}, $capt->[0], $capt->[1] - $capt->[0];
+    }
 
-    push @{$runtime->{_stack}}, { matched   => 1,
-                                  match_end => $cxt->{pos},
-                                  captures  => $cxt->{captures} };
+    push @{$runtime->{_stack}},
+      { matched         => 1,
+        match_end       => $cxt->{pos},
+        captures        => $cxt->{captures},
+        string_captures => \@strings,
+        };
 
     return $rpc + 1;
 }
