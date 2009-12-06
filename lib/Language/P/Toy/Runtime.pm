@@ -51,7 +51,7 @@ sub set_data_handle {
 sub run_last_file {
     my( $self, $code, $context ) = @_;
     # FIXME duplicates Language::P::Toy::Value::Code::call
-    my $frame = $self->push_frame( $code->stack_size + 2 );
+    my $frame = $self->push_frame( $code->stack_size + 3 );
     my $stack = $self->{_stack};
     $stack->[$frame - 2] = [ -2, $self->{_bytecode}, $context, $self->{_code}, $self->{_lex} ];
     $stack->[$frame - 1] = $code->lexicals || 'no_pad';
