@@ -159,6 +159,7 @@ my %opcode_map =
     OP_RX_QUANTIFIER()               => \&_rx_quantifier,
     OP_RX_START_GROUP()              => \&_direct_jump,
     OP_RX_TRY()                      => \&_direct_jump,
+    OP_RX_STATE_RESTORE()            => \&_rx_state_restore,
     );
 
 sub _qualify {
@@ -587,6 +588,13 @@ sub _rx_quantifier {
          o( 'jump' );
     push @{$self->_block_map->{$op->{attributes}{true}}}, $bytecode->[-2];
     push @{$self->_block_map->{$op->{attributes}{false}}}, $bytecode->[-1];
+}
+
+sub _rx_state_restore {
+    my( $self, $bytecode, $op ) = @_;
+
+    push @$bytecode,
+         o( 'rx_state_restore', index => _temporary_index( $self, IDX_REGEX, $op->{attributes}{index} ) );
 }
 
 sub _allocate_lexicals {

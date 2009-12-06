@@ -37,6 +37,10 @@ sub reset {
 
     $self->{_stack} = [ [ -2, undef, CXT_VOID, undef, {} ], undef ];
     $self->{_frame} = @{$self->{_stack}};
+    $self->{_last_match} =
+      { captures        => [],
+        string_captures => [],
+        };
 }
 
 sub set_data_handle {
@@ -518,6 +522,18 @@ sub warning_if {
     return unless vec($self->{_variables}{warnings}, $offset, 1) ||
                   vec($self->{_variables}{warnings}, $offset_all, 1) ;
     $self->warning( $file, $line, $message );
+}
+
+sub set_last_match {
+    my( $self, $match ) = @_;
+
+    $self->{_last_match} = $match;
+}
+
+sub get_last_match {
+    my( $self ) = @_;
+
+    return $self->{_last_match};
 }
 
 1;

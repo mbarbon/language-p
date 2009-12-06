@@ -6,7 +6,7 @@ use Exporter 'import';
 
 our @EXPORT_OK = qw(o_rx_start_match o_rx_accept o_rx_exact o_rx_start_group
                     o_rx_quantifier o_rx_capture_start o_rx_capture_end o_rx_try
-                    o_rx_start_special o_rx_end_special
+                    o_rx_start_special o_rx_end_special o_rx_state_restore
                     o_rx_match);
 our %EXPORT_TAGS =
   ( opcodes => \@EXPORT_OK,
@@ -132,6 +132,12 @@ sub o_rx_match {
     my $scalar = pop @{$runtime->{_stack}};
 
     my $match = $pattern->match( $runtime, $scalar->as_string( $runtime ) );
+    if( $match->{matched} ) {
+        my $state = $runtime->get_last_match;
+        $runtime->set_last_match( $match );
+
+        $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = $state;
+    }
 
     push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new
                                     ( $runtime, { integer => $match->{matched} } );
@@ -325,6 +331,17 @@ sub o_rx_end_special {
              || substr( $cxt->{string}, -1, 1 ) ne "\n" ) ) {
         return _backtrack( $runtime, $cxt );
     }
+
+    return $pc + 1;
+}
+
+sub o_rx_state_restore {
+    my( $op, $runtime, $pc ) = @_;
+    my $old = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
+
+    $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = undef;
+    $runtime->set_last_match( $old )
+        if $old;
 
     return $pc + 1;
 }
