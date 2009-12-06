@@ -291,12 +291,6 @@ sub _generate_segment {
                            - ( $code->is_subroutine ? 1 : 0 )
         if $segment->lexicals;
 
-    # Toy subroutine start with stack_size = 1 (for args), and so does
-    # the IR code segment
-    $code->{stack_size} +=   $segment->lexicals->{max_stack}
-                           - ( $code->is_subroutine ? 1 : 0 )
-        if $segment->lexicals;
-
     $self->_generated->{$segment} = $code;
 
     foreach my $inner ( @{$segment->inner} ) {
