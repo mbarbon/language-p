@@ -762,18 +762,29 @@ sub _binary_op {
                       opcode_n( OP_SWAP ),
                       opcode_npm( $tree->op, $tree->pos,
                                   context => _context( $tree ) );
-    } elsif( $tree->op == OP_NOT_MATCH ) {
+    } elsif( $tree->op == OP_MATCH || $tree->op == OP_NOT_MATCH ) {
         $self->dispatch( $tree->left );
         $self->dispatch( $tree->right );
 
-        # maybe perform the transformation during parsing, but remember
-        # to correctly propagate context
+        my $scope_id = $self->_code_segments->[0]->scopes->[-1]->{id};
+
+        unless( $self->_code_segments->[0]->scopes->[-1]->{flags} & SCOPE_REGEX ) {
+            $self->_code_segments->[0]->scopes->[$scope_id]->{flags} |= SCOPE_REGEX;
+            push @{$self->_current_block->{bytecode}},
+                 [ opcode_nm( OP_RX_STATE_RESTORE, index => $scope_id ) ];
+        }
+
         _add_bytecode $self,
             opcode_npm( OP_MATCH, $tree->pos,
-                        context   => _context( $tree ) );
-        _add_bytecode $self,
-            opcode_npm( OP_LOG_NOT, $tree->pos,
-                        context   => _context( $tree ) );
+                        context   => _context( $tree ),
+                        index     => $scope_id );
+        # maybe perform the transformation during parsing, but remember
+        # to correctly propagate context
+        if( $tree->op == OP_NOT_MATCH ) {
+            _add_bytecode $self,
+                opcode_npm( OP_LOG_NOT, $tree->pos,
+                            context   => _context( $tree ) );
+        }
     } else {
         $self->dispatch( $tree->left );
         $self->dispatch( $tree->right );
