@@ -117,6 +117,7 @@ t/parser/expressions/021_map.t
 t/parser/expressions/024_or_low.t
 t/parser/loops/001_block.t
 t/parser/regex/002_base.t
+t/parser/regex/004_quoting.t
 t/parser/regex/010_character_classes.t
 t/parser/regex/011_character_class_intuit.t
 t/parser/regex/020_quantifiers.t

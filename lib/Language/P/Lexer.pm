@@ -458,6 +458,14 @@ sub lex_quote {
                             $v .= $c . $qc;
                             next;
                         }
+                    } elsif( $pattern_special{$qc} ) {
+                        substr $$buffer, 0, 1, ''; # eat character
+                        if( $pattern ) {
+                            $v .= $qc;
+                        } else {
+                            $v .= $c . $qc;
+                        }
+                        next;
                     }
                 } elsif(    $c eq '{'
                          && $$buffer =~ s/^([0-9]+)(?:(,)([0-9]+)?)?}(\?)?// ) {
