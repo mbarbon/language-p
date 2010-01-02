@@ -44,7 +44,9 @@ Parsing:
     - [[] is a "["
     - ^ negation
     - euristic for $foo[...] (intuit_more)
+    - POSIX char classes
   - other metacharacters
+    - \p{}, \P{}, \X
   - backreferences, also in substitution; backref vs. octal escaper
   - magic variables
   - (?...) syntax and grouping
