@@ -243,6 +243,7 @@ my %quoted_pattern =
 my %pattern_special =
   ( '^'  => [ T_ASSERTION, 'START_SPECIAL' ],
     '$'  => [ T_ASSERTION, 'END_SPECIAL' ],
+    '.'  => [ T_ASSERTION, 'ANY_SPECIAL' ],
     '*'  => [ T_QUANTIFIER, 0, -1, 1 ],
     '+'  => [ T_QUANTIFIER, 1, -1, 1 ],
     '?'  => [ T_QUANTIFIER, 0,  1, 1 ],
