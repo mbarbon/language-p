@@ -459,6 +459,14 @@ sub lex_quote {
                             next;
                         }
                     }
+                } elsif(    $c eq '{'
+                         && $$buffer =~ s/^([0-9]+)(?:(,)([0-9]+)?)?}(\?)?// ) {
+                    my $from = $1;
+                    my $to = !$2        ? $from :
+                             defined $3 ? $3 :
+                                          -1;
+                    $to_return = [ $self->{pos}, T_PATTERN, '{',
+                                   [ T_QUANTIFIER, $from, $to, $4 ? 0 : 1 ] ];
                 } elsif( $c eq '(' && !$interpolated_pattern ) {
                     my $nc = substr $$buffer, 0, 1;
 
