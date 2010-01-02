@@ -36,6 +36,7 @@ my %op_map =
     OP_JUMP()             => '_jump',
     OP_RX_START_GROUP()   => '_rx_start_group',
     OP_RX_QUANTIFIER()    => '_rx_quantifier',
+    OP_RX_TRY()           => '_rx_try',
     );
 
 sub _local_name { ++$_[0]->{_temporary_count} }
@@ -494,6 +495,14 @@ sub _rx_quantifier {
     _jump_to( $self, $new_quant, $op->{attributes}{true}, [] );
     _add_bytecode $self, $new_quant;
     _jump_to( $self, $new_jump, $op->{attributes}{false}, [] );
+    _add_bytecode $self, $new_jump;
+}
+
+sub _rx_try {
+    my( $self, $op ) = @_;
+    my $new_jump = opcode_nm( OP_RX_TRY );
+
+    _jump_to( $self, $new_jump, $op->{attributes}{to}, [] );
     _add_bytecode $self, $new_jump;
 }
 
