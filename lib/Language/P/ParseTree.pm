@@ -840,4 +840,14 @@ our @FIELDS = qw(left right);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+package Language::P::ParseTree::RXBackreference;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(group);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
 1;

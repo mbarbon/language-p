@@ -121,6 +121,7 @@ t/parser/regex/004_quoting.t
 t/parser/regex/010_character_classes.t
 t/parser/regex/011_character_class_intuit.t
 t/parser/regex/020_quantifiers.t
+t/parser/regex/030_backreferences.t
 t/parser/statements/020_labels.t
 t/parser/statements/025_goto.t
 t/parser/statements/026_loop_control.t

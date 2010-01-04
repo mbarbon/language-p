@@ -40,7 +40,7 @@ BEGIN {
        T_ANDANDEQUAL T_OROREQUAL
 
        T_CLASS_START T_CLASS_END T_CLASS T_QUANTIFIER T_ASSERTION T_ALTERNATE
-       T_CLGROUP
+       T_CLGROUP T_BACKREFERENCE
        );
 };
 
@@ -466,6 +466,11 @@ sub lex_quote {
                             $v .= $c . $qc;
                         }
                         next;
+                    } elsif( $qc =~ /[1-9]/ ) {
+                        $$buffer =~ s/^([0-9]+)//;
+
+                        $to_return = [ $self->{pos}, T_PATTERN, $1,
+                                       [ T_BACKREFERENCE, $1 ] ];
                     }
                 } elsif(    $c eq '{'
                          && $$buffer =~ s/^([0-9]+)(?:(,)([0-9]+)?)?}(\?)?// ) {

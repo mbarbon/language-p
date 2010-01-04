@@ -9,7 +9,7 @@ use Language::P::Lexer qw(:all);
 use Language::P::ParseTree qw(:all);
 
 __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime
-                                 interpolate) );
+                                 interpolate _group_count) );
 
 # will be used to parse embedded code blocks
 sub parser { die; }
@@ -18,6 +18,7 @@ sub parse_string {
     my( $self, $string ) = @_;
 
     $self->{lexer} = Language::P::Lexer->new( { string => $string } );
+    $self->{_group_count} = 0;
     $self->_parse;
 }
 
@@ -64,6 +65,7 @@ sub _parse {
                 $st = $nst;
             } elsif( $value->[O_VALUE] eq '(' ) {
                 ++$in_group;
+                ++$self->{_group_count};
                 push @$st, Language::P::ParseTree::RXGroup->new
                                ( { components => [],
                                    capture    => 1,
@@ -111,6 +113,22 @@ sub _parse {
                                    } );
 
                 _parse_charclass( $self, $st->[-1] );
+            } elsif( $value->[O_RX_REST]->[0] == T_BACKREFERENCE ) {
+                my $idx = $value->[O_RX_REST]->[1];
+
+                if( $idx < 10 || $idx <= $self->_group_count ) {
+                    push @$st, Language::P::ParseTree::RXBackreference->new
+                                   ( { group => $idx,,
+                                       } );
+                } else {
+                    my $digits = $value->[O_VALUE];
+
+                    $digits =~ /^[89]/ and die "Invalid octal digit";
+                    push @$st, Language::P::ParseTree::Constant->new
+                                   ( { flags => CONST_STRING,
+                                       value => chr oct '0' . $digits,
+                                       } );
+                }
             } else {
                 Carp::confess $value->[O_TYPE], ' ', $value->[O_VALUE], ' ',
                               $value->[O_RX_REST]->[0];
