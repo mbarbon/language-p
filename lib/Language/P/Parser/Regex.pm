@@ -24,14 +24,14 @@ sub parse_string {
 
 sub _parse {
     my( $self ) = @_;
-    my( @values );
 
     $self->lexer->quote( { interpolate          => $self->interpolate,
                            pattern              => 1,
                            interpolated_pattern => 0,
                            } );
 
-    my( $in_group, $st ) = ( 0, \@values );
+    my( @values );
+    my( $in_group, $st, $flags ) = ( 0, \@values, $self->flags );
     for(;;) {
         my $value = $self->lexer->lex_quote;
 
@@ -100,8 +100,24 @@ sub _parse {
                                     greedy => $value->[O_RX_REST]->[3],
                                     } );
             } elsif( $value->[O_RX_REST]->[0] == T_ASSERTION ) {
+                my $assertion = $value->[O_RX_REST]->[1];
+
+                if( $assertion eq 'ANY_SPECIAL' ) {
+                    $assertion =
+                      ( $flags & FLAG_RX_SINGLE_LINE ) ? 'ANY' :
+                                                         'ANY_NONEWLINE';
+                } elsif( $assertion eq 'START_SPECIAL' ) {
+                    $assertion =
+                      ( $flags & FLAG_RX_MULTI_LINE ) ? 'LINE_BEGINNING' :
+                                                        'BEGINNING';
+                } elsif( $assertion eq 'END_SPECIAL' ) {
+                    $assertion =
+                      ( $flags & FLAG_RX_MULTI_LINE ) ? 'LINE_END' :
+                                                        'END_OR_NEWLINE';
+                }
+
                 push @$st, Language::P::ParseTree::RXAssertion->new
-                               ( { type => $value->[O_RX_REST]->[1],
+                               ( { type => $assertion,
                                    } );
             } elsif( $value->[O_RX_REST]->[0] == T_CLASS ) {
                 push @$st, Language::P::ParseTree::RXSpecialClass->new

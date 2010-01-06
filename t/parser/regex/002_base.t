@@ -20,12 +20,12 @@ op: OP_MATCH
 right: !parsetree:Pattern
   components:
     - !parsetree:RXAssertion
-      type: START_SPECIAL
+      type: BEGINNING
     - !parsetree:Constant
       flags: CONST_STRING
       value: "\ntes"
     - !parsetree:RXAssertion
-      type: ANY_SPECIAL
+      type: ANY_NONEWLINE
     - !parsetree:Constant
       flags: CONST_STRING
       value: .
@@ -147,7 +147,7 @@ right: !parsetree:Pattern
     - !parsetree:RXAlternation
       left:
         - !parsetree:RXAssertion
-          type: START_SPECIAL
+          type: BEGINNING
         - !parsetree:Constant
           flags: CONST_STRING
           value: t
@@ -162,7 +162,7 @@ right: !parsetree:Pattern
               flags: CONST_STRING
               value: t
             - !parsetree:RXAssertion
-              type: END_SPECIAL
+              type: END_OR_NEWLINE
   flags: 0
   op: OP_QL_M
 EOE

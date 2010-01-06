@@ -20,12 +20,12 @@ op: OP_MATCH
 right: !parsetree:Pattern
   components:
     - !parsetree:RXAssertion
-      type: START_SPECIAL
+      type: BEGINNING
     - !parsetree:Constant
       flags: CONST_STRING
       value: test
     - !parsetree:RXAssertion
-      type: END_SPECIAL
+      type: END_OR_NEWLINE
   flags: 0
   op: OP_QL_M
 EOE
@@ -43,7 +43,7 @@ op: OP_MATCH
 right: !parsetree:Pattern
   components:
     - !parsetree:RXAssertion
-      type: START_SPECIAL
+      type: BEGINNING
     - !parsetree:Constant
       flags: CONST_STRING
       value: test
@@ -73,7 +73,7 @@ EOP
 --- !parsetree:Pattern
 components:
   - !parsetree:RXAssertion
-    type: START_SPECIAL
+    type: BEGINNING
   - !parsetree:Constant
     flags: CONST_STRING
     value: test
@@ -125,9 +125,9 @@ op: OP_MATCH
 right: !parsetree:Pattern
   components:
     - !parsetree:RXAssertion
-      type: START_SPECIAL
+      type: BEGINNING
     - !parsetree:RXAssertion
-      type: END_SPECIAL
+      type: END_OR_NEWLINE
     - !parsetree:Constant
       flags: CONST_STRING
       value: '{foo}aaa'
