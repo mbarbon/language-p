@@ -1191,7 +1191,7 @@ sub _parse_substitution {
                                        } );
         $replace = _parse_block_rest( $self, undef, BLOCK_OPEN_SCOPE, T_EOF );
     } else {
-        $replace = _parse_string_rest( $self, $token->[O_RX_SECOND_HALF], 0 );
+        $replace = _parse_string_rest( $self, $token->[O_RX_SECOND_HALF], 0, 1 );
     }
 
     my $sub = Language::P::ParseTree::Substitution->new
@@ -1204,7 +1204,7 @@ sub _parse_substitution {
 }
 
 sub _parse_string_rest {
-    my( $self, $token, $pattern ) = @_;
+    my( $self, $token, $pattern, $substitution ) = @_;
     my @values;
     local $self->{lexer} = Language::P::Lexer->new
                                ( { string       => $token->[O_QS_BUFFER],
@@ -1215,6 +1215,7 @@ sub _parse_string_rest {
 
     $self->lexer->quote( { interpolate          => $token->[O_QS_INTERPOLATE],
                            pattern              => 0,
+                           substitution         => $substitution,
                            interpolated_pattern => $pattern,
                            } );
     for(;;) {

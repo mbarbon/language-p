@@ -443,6 +443,8 @@ sub lex_quote {
         my $to_return;
         my $pattern = $self->quote->{pattern};
         my $interpolated_pattern = $self->quote->{interpolated_pattern};
+        my $substitution = $self->quote->{substitution};
+
         while( length $$buffer ) {
             my $c = substr $$buffer, 0, 1, '';
 
@@ -531,6 +533,21 @@ sub lex_quote {
                         }
                     } else {
                         die "Invalid escape '$qc'";
+                    }
+                } elsif(    $substitution
+                         && $qc =~ /^[1-9]$/
+                         && $self->quote->{interpolate}
+                         && $$buffer !~ /^[0-9]$/ ) {
+                    _quoted_code_lookahead( $self );
+
+                    # handle \1 backreference in substitution
+                    $self->unlex( [ $self->{pos}, T_ID, $qc, T_ID ] );
+
+                    if( length $v ) {
+                        $self->unlex( [ $self->{pos}, T_DOLLAR, '$' ] );
+                        return [ $self->{pos}, T_STRING, $v ];
+                    } else {
+                        return [ $self->{pos}, T_DOLLAR, '$' ];
                     }
                 } elsif( $qc =~ /^[0-7]$/ ) {
                     if( $$buffer =~ s/^([0-7]{1,2})// ) {

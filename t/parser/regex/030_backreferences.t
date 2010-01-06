@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 2;
+use Test::More tests => 3;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -53,4 +53,39 @@ right: !parsetree:Pattern
       value: "\x08"
   flags: 0
   op: OP_QL_M
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+s/()/a\2\16/
+EOP
+--- !parsetree:BinOp
+context: CXT_VOID
+left: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: _
+  sigil: VALUE_SCALAR
+op: OP_MATCH
+right: !parsetree:Substitution
+  pattern: !parsetree:Pattern
+    components:
+      - !parsetree:RXGroup
+        capture: 1
+        components: []
+    flags: 0
+    op: OP_QL_S
+  replacement: !parsetree:QuotedString
+    components:
+      - !parsetree:Constant
+        context: CXT_SCALAR
+        flags: CONST_STRING
+        value: a
+      - !parsetree:Symbol
+        context: CXT_SCALAR
+        name: 2
+        sigil: VALUE_SCALAR
+      - !parsetree:Constant
+        context: CXT_SCALAR
+        flags: CONST_STRING
+        value: "\x0e"
+    context: CXT_SCALAR
 EOE
