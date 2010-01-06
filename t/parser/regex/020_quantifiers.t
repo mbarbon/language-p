@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 9;
+use Test::More tests => 12;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -208,4 +208,89 @@ right: !parsetree:Pattern
         value: a
   flags: 0
   op: OP_QL_M
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+/$a{a}/;
+EOP
+--- !parsetree:BinOp
+context: CXT_VOID
+left: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: _
+  sigil: VALUE_SCALAR
+op: OP_MATCH
+right: !parsetree:InterpolatedPattern
+  context: CXT_SCALAR
+  flags: 0
+  op: OP_QL_M
+  string: !parsetree:QuotedString
+    components:
+      - !parsetree:Subscript
+        context: CXT_SCALAR
+        reference: 0
+        subscript: !parsetree:Constant
+          context: CXT_SCALAR
+          flags: CONST_STRING|STRING_BARE
+          value: a
+        subscripted: !parsetree:Symbol
+          context: CXT_LIST
+          name: a
+          sigil: VALUE_HASH
+        type: VALUE_HASH
+    context: CXT_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+/$a{5}/;
+EOP
+--- !parsetree:BinOp
+context: CXT_VOID
+left: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: _
+  sigil: VALUE_SCALAR
+op: 134
+right: !parsetree:InterpolatedPattern
+  context: CXT_SCALAR
+  flags: 0
+  op: OP_QL_M
+  string: !parsetree:QuotedString
+    components:
+      - !parsetree:Symbol
+        context: CXT_SCALAR
+        name: a
+        sigil: VALUE_SCALAR
+      - !parsetree:Constant
+        context: CXT_SCALAR
+        flags: CONST_STRING
+        value: '{5}'
+    context: CXT_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+/$a{5,7}/;
+EOP
+--- !parsetree:BinOp
+context: CXT_VOID
+left: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: _
+  sigil: VALUE_SCALAR
+op: 134
+right: !parsetree:InterpolatedPattern
+  context: CXT_SCALAR
+  flags: 0
+  op: OP_QL_M
+  string: !parsetree:QuotedString
+    components:
+      - !parsetree:Symbol
+        context: CXT_SCALAR
+        name: a
+        sigil: VALUE_SCALAR
+      - !parsetree:Constant
+        context: CXT_SCALAR
+        flags: CONST_STRING
+        value: '{5,7}'
+    context: CXT_SCALAR
 EOE

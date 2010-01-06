@@ -363,8 +363,10 @@ sub _quoted_code_lookahead {
         if( !$self->quote->{interpolated_pattern} ) {
             ++$self->{brackets};
             $self->unlex( [ $self->{pos}, T_OPBRK, '{' ] );
-        } elsif( $$buffer =~ /^[0-9]+,[0-9]*}/ ) {
-            die 'Quantifier!';
+        } elsif( $$buffer =~ /^[0-9]+/ ) {
+            $$buffer = '{' . $$buffer;
+            my $token = $self->lex_quote;
+            $self->unlex( $token );
         } else {
             ++$self->{brackets};
             $self->unlex( [ $self->{pos}, T_OPBRK, '{' ] );
@@ -475,6 +477,7 @@ sub lex_quote {
                                        [ T_BACKREFERENCE, $1 ] ];
                     }
                 } elsif(    $c eq '{'
+                         && !$interpolated_pattern
                          && $$buffer =~ s/^([0-9]+)(?:(,)([0-9]+)?)?}(\?)?// ) {
                     my $from = $1;
                     my $to = !$2        ? $from :
