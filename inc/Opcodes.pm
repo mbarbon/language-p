@@ -322,7 +322,7 @@ dot_dot_dot         0       same                 2   1  context=i1
 dup                 0       same                 1   2  noattr
 end                 0       same                 0   0  noattr
 eval                u       same                 1   1  context=i1,hints=i,warnings=su,package=s,lexicals=eval_my,globals=eval_our
-eval_regex          u       same                 1   1  context=i1
+eval_regex          u       same                 1   1  context=i1,flags=i
 exists              u       same                 1   1  context=i1
 exists_array        u       same                 2   1  context=i1
 exists_hash         u       same                 2   1  context=i1

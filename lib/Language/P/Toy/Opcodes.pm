@@ -1394,7 +1394,8 @@ sub o_eval_regex {
     my( $op, $runtime, $pc ) = @_;
     my $string = pop @{$runtime->{_stack}};
 
-    my $re = $runtime->compile_regex( $string->as_string( $runtime ) );
+    my $re = $runtime->compile_regex( $string->as_string( $runtime ),
+                                      $op->{flags} );
     push @{$runtime->{_stack}}, $re;
 
     return $pc + 1;

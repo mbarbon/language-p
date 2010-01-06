@@ -1164,6 +1164,7 @@ sub _parse_match {
                         ( { generator   => $self->generator,
                             runtime     => $self->runtime,
                             interpolate => $token->[O_QS_INTERPOLATE],
+                            flags       => $token->[O_RX_FLAGS],
                             } )->parse_string( $token->[O_QS_BUFFER] );
         my $match = Language::P::ParseTree::Pattern->new
                         ( { components => $parts,

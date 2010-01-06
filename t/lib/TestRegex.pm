@@ -19,6 +19,7 @@ my $generator = Language::P::Toy::Generator->new( { runtime => $runtime } );
 my $parser = Language::P::Parser::Regex->new( { runtime     => $runtime,
                                                 generator   => $generator,
                                                 interpolate => 1,
+                                                flags       => 0,
                                                 } );
 
 sub match {

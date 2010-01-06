@@ -1606,7 +1606,9 @@ sub _interpolated_pattern {
     $self->dispatch( $tree->string );
 
     _add_bytecode $self, opcode_npm( OP_EVAL_REGEX, $tree->pos,
-                                     context => _context( $tree ) );
+                                     context => _context( $tree ),
+                                     flags   => $tree->flags,
+                                     );
 }
 
 sub _exit_scope {

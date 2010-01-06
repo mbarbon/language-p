@@ -9,7 +9,7 @@ use Language::P::Lexer qw(:all);
 use Language::P::ParseTree qw(:all);
 
 __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime
-                                 interpolate _group_count) );
+                                 interpolate flags _group_count) );
 
 # will be used to parse embedded code blocks
 sub parser { die; }
