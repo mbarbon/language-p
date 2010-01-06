@@ -683,6 +683,7 @@ sub _unary_op {
     $self->dispatch( $tree->left );
 
     my $op = $tree->op;
+    return if $op == OP_PLUS;
     if( $tree->get_attribute( 'context' ) & CXT_VIVIFY ) {
         if( $op == OP_DEREFERENCE_SCALAR ) {
             $op = OP_VIVIFY_SCALAR;
