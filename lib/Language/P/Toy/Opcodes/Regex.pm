@@ -6,7 +6,7 @@ use Exporter 'import';
 
 our @EXPORT_OK = qw(o_rx_start_match o_rx_accept o_rx_exact o_rx_start_group
                     o_rx_quantifier o_rx_capture_start o_rx_capture_end o_rx_try
-                    o_rx_start_special o_rx_end_special o_rx_state_restore
+                    o_rx_beginning o_rx_end_or_newline o_rx_state_restore
                     o_rx_match);
 our %EXPORT_TAGS =
   ( opcodes => \@EXPORT_OK,
@@ -311,7 +311,7 @@ sub o_rx_capture_end {
     return $pc + 1;
 }
 
-sub o_rx_start_special {
+sub o_rx_beginning {
     my( $op, $runtime, $pc ) = @_;
     my $cxt = $runtime->{_stack}->[-1];
 
@@ -322,7 +322,7 @@ sub o_rx_start_special {
     return $pc + 1;
 }
 
-sub o_rx_end_special {
+sub o_rx_end_or_newline {
     my( $op, $runtime, $pc ) = @_;
     my $cxt = $runtime->{_stack}->[-1];
 

@@ -1620,8 +1620,8 @@ sub _exit_scope {
 }
 
 my %regex_assertions =
-  ( START_SPECIAL => OP_RX_START_SPECIAL,
-    END_SPECIAL   => OP_RX_END_SPECIAL,
+  ( BEGINNING        => OP_RX_BEGINNING,
+    END_OR_NEWLINE   => OP_RX_END_OR_NEWLINE,
     );
 
 sub _regex_assertion {
