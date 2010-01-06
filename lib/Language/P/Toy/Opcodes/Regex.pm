@@ -7,7 +7,7 @@ use Exporter 'import';
 our @EXPORT_OK = qw(o_rx_start_match o_rx_accept o_rx_exact o_rx_start_group
                     o_rx_quantifier o_rx_capture_start o_rx_capture_end o_rx_try
                     o_rx_beginning o_rx_end_or_newline o_rx_state_restore
-                    o_rx_match);
+                    o_rx_match o_rx_replace);
 our %EXPORT_TAGS =
   ( opcodes => \@EXPORT_OK,
     );
@@ -137,6 +137,42 @@ sub o_rx_match {
         $runtime->set_last_match( $match );
 
         $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = $state;
+    }
+
+    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new
+                                    ( $runtime, { integer => $match->{matched} } );
+
+    return $pc + 1;
+}
+
+sub o_rx_replace {
+    my( $op, $runtime, $pc ) = @_;
+    my $replace = $op->{to};
+    my $pattern = pop @{$runtime->{_stack}};
+    my $scalar = pop @{$runtime->{_stack}};
+
+    my $string = $scalar->as_string( $runtime );
+    my $match = $pattern->match( $runtime, $string );
+    if( $match->{matched} ) {
+        # save match state
+        my $state = $runtime->get_last_match;
+        $runtime->set_last_match( $match );
+
+        $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = $state;
+
+        # replace the matched string; _pc will be restored by
+        # "return $pc + 1" below
+        $runtime->{_pc} = $replace;
+        $runtime->run;
+
+        my $replacement = pop @{$runtime->{_stack}};
+
+        substr $string, $match->{match_start},
+               $match->{match_end} - $match->{match_start},
+               $replacement->as_string( $runtime );
+
+        $scalar->assign( $runtime, Language::P::Toy::Value::Scalar->new_string
+                                       ( $runtime, $string ) );
     }
 
     push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new

@@ -731,6 +731,25 @@ sub _parentheses {
     $self->dispatch( $tree->left );
 }
 
+sub _substitution {
+    my( $self, $tree ) = @_;
+    _pattern( $self, $tree->pattern );
+
+    my $current = $self->_current_basic_block;
+    my $block = _new_block( $self );
+    _add_blocks $self, $block;
+
+    $self->dispatch( $tree->replacement );
+
+    # OP_STOP marks the end of a sequence of opcodes that are run in a
+    # secondary run loop; it is currently used only for regex
+    # substitutions; maybe can be removed
+    _add_bytecode $self, opcode_n( OP_STOP );
+    $self->_current_basic_block( $current );
+
+    return $block;
+}
+
 sub _binary_op {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
@@ -766,9 +785,6 @@ sub _binary_op {
                       opcode_npm( $tree->op, $tree->pos,
                                   context => _context( $tree ) );
     } elsif( $tree->op == OP_MATCH || $tree->op == OP_NOT_MATCH ) {
-        $self->dispatch( $tree->left );
-        $self->dispatch( $tree->right );
-
         my $scope_id = $self->_code_segments->[0]->scopes->[-1]->{id};
 
         unless( $self->_code_segments->[0]->scopes->[-1]->{flags} & SCOPE_REGEX ) {
@@ -776,6 +792,23 @@ sub _binary_op {
             push @{$self->_current_block->{bytecode}},
                  [ opcode_nm( OP_RX_STATE_RESTORE, index => $scope_id ) ];
         }
+
+
+        $self->dispatch( $tree->left );
+
+        if( $tree->right->isa( 'Language::P::ParseTree::Substitution' ) ) {
+            my $repl = _substitution( $self, $tree->right );
+
+            _add_bytecode $self,
+                opcode_npm( OP_REPLACE, $tree->pos,
+                            context   => _context( $tree ),
+                            index     => $scope_id,
+                            to        => $repl );
+
+            return;
+        }
+
+        $self->dispatch( $tree->right );
 
         _add_bytecode $self,
             opcode_npm( OP_MATCH, $tree->pos,

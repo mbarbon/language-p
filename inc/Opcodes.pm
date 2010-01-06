@@ -443,11 +443,13 @@ reference           u       same                 1   1  context=i1
 reftype             u       same                 1   1  context=i1
 repeat              0       same                 2   1  context=i1
 repeat_assign       0       same                 2   1  context=i1
+replace             0       rx_replace           2   1  context=i1,index=i,to=b
 require_file        u       same                 1   1  context=i1
 restore_glob_slot   0       same                 0   0  name=s,index=i,slot=i_sigil
 return              0       same                 1   0  context=i1
 rmdir               u       same                 1   1  context=i1
 set                 0       same                 1   0  index=i
+stop                0       same                 1   0  noattr
 str_cmp             0       same                 2   1  noattr
 str_eq              0       compare_s_eq_scalar  2   1  noattr
 str_ge              0       compare_s_ge_scalar  2   1  noattr

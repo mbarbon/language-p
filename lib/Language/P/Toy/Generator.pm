@@ -155,11 +155,13 @@ my %opcode_map =
     OP_LOCALIZE_GLOB_SLOT()          => \&_map_slot_index,
     OP_RESTORE_GLOB_SLOT()           => \&_map_slot_index,
     OP_END()                         => \&_end,
+    OP_STOP()                        => \&_stop,
 
     OP_RX_QUANTIFIER()               => \&_rx_quantifier,
     OP_RX_START_GROUP()              => \&_direct_jump,
     OP_RX_TRY()                      => \&_direct_jump,
     OP_RX_STATE_RESTORE()            => \&_rx_state_restore,
+    OP_REPLACE()                     => \&_replace,
     );
 
 sub _qualify {
@@ -421,6 +423,12 @@ sub _end {
     }
 }
 
+sub _stop {
+    my( $self, $bytecode, $op ) = @_;
+
+    push @$bytecode, o( 'end' );
+}
+
 sub _global {
     my( $self, $bytecode, $op ) = @_;
 
@@ -576,6 +584,16 @@ sub _cond_jump_simple {
          o( 'jump' );
     push @{$self->_block_map->{$op->{attributes}{true}}}, $bytecode->[-2];
     push @{$self->_block_map->{$op->{attributes}{false}}}, $bytecode->[-1];
+}
+
+sub _replace {
+    my( $self, $bytecode, $op ) = @_;
+    my %params = %{$op->{attributes}};
+    delete $params{to};
+
+    push @$bytecode,
+         o( $NUMBER_TO_NAME{$op->{opcode_n}}, %params );
+    push @{$self->_block_map->{$op->{attributes}{to}}}, $bytecode->[-1];
 }
 
 sub _rx_quantifier {
