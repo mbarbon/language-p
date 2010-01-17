@@ -195,8 +195,7 @@ sub _generate_regex {
         opcode_nm( OP_RX_ACCEPT, groups => $self->_group_count );
 
     die "Flags i, o, g, c not supported"
-      if $regex->flags & ( FLAG_RX_CASE_INSENSITIVE|
-                           FLAG_RX_ONCE|FLAG_RX_GLOBAL|FLAG_RX_KEEP );
+      if $regex->flags & ( FLAG_RX_CASE_INSENSITIVE|FLAG_RX_ONCE );
 
     return $self->_code_segments;
 }
@@ -793,16 +792,18 @@ sub _binary_op {
                  [ opcode_nm( OP_RX_STATE_RESTORE, index => $scope_id ) ];
         }
 
-
         $self->dispatch( $tree->left );
 
         if( $tree->right->isa( 'Language::P::ParseTree::Substitution' ) ) {
             my $repl = _substitution( $self, $tree->right );
+            my $flags = $tree->right->pattern->flags &
+                        (FLAG_RX_GLOBAL|FLAG_RX_KEEP);
 
             _add_bytecode $self,
                 opcode_npm( OP_REPLACE, $tree->pos,
                             context   => _context( $tree ),
                             index     => $scope_id,
+                            flags     => $flags,
                             to        => $repl );
 
             return;
@@ -810,9 +811,13 @@ sub _binary_op {
 
         $self->dispatch( $tree->right );
 
+        my $flags = $tree->right->flags &
+                    (FLAG_RX_GLOBAL|FLAG_RX_KEEP);
+
         _add_bytecode $self,
             opcode_npm( OP_MATCH, $tree->pos,
                         context   => _context( $tree ),
+                        flags     => $flags,
                         index     => $scope_id );
         # maybe perform the transformation during parsing, but remember
         # to correctly propagate context

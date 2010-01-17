@@ -402,7 +402,7 @@ log_xor             0       same                 2   1  context=i1
 make_closure        0       same                 1   1  noattr
 make_list           0       same                -1   1  noattr
 map                 0       same                 1   1  context=i1
-match               0       rx_match             2   1  context=i1,index=i
+match               0       rx_match             2   1  context=i1,flags=i,index=i
 minus               0       negate               1   1  context=i1
 modulus             0       same                 2   1  context=i1
 modulus_assign      0       same                 2   1  context=i1
@@ -444,7 +444,7 @@ reference           u       same                 1   1  context=i1
 reftype             u       same                 1   1  context=i1
 repeat              0       same                 2   1  context=i1
 repeat_assign       0       same                 2   1  context=i1
-replace             0       rx_replace           2   1  context=i1,index=i,to=b
+replace             0       rx_replace           2   1  context=i1,index=i,flags=i,to=b
 require_file        u       same                 1   1  context=i1
 restore_glob_slot   0       same                 0   0  name=s,index=i,slot=i_sigil
 return              0       same                 1   0  context=i1

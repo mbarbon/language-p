@@ -161,6 +161,7 @@ my %opcode_map =
     OP_RX_START_GROUP()              => \&_direct_jump,
     OP_RX_TRY()                      => \&_direct_jump,
     OP_RX_STATE_RESTORE()            => \&_rx_state_restore,
+    OP_MATCH()                       => \&_match,
     OP_REPLACE()                     => \&_replace,
     );
 
@@ -586,13 +587,24 @@ sub _cond_jump_simple {
     push @{$self->_block_map->{$op->{attributes}{false}}}, $bytecode->[-1];
 }
 
+sub _match {
+    my( $self, $bytecode, $op ) = @_;
+    my %params = $op->{attributes} ? %{$op->{attributes}} : ();
+    $params{pos} = $op->{pos} if $op->{pos};
+
+    push @$bytecode,
+         o( ( $params{flags} & FLAG_RX_GLOBAL ) ? 'rx_match_global' :
+                                                  'rx_match', %params );
+}
+
 sub _replace {
     my( $self, $bytecode, $op ) = @_;
     my %params = %{$op->{attributes}};
     delete $params{to};
 
     push @$bytecode,
-         o( $NUMBER_TO_NAME{$op->{opcode_n}}, %params );
+         o( ( $params{flags} & FLAG_RX_GLOBAL ) ? 'rx_replace_global' :
+                                                  'rx_replace', %params );
     push @{$self->_block_map->{$op->{attributes}{to}}}, $bytecode->[-1];
 }
 
