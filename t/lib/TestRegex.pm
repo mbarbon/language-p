@@ -27,6 +27,7 @@ sub match {
     my $parsed_rx = $parser->parse_string( $regex );
     my $pattern = Language::P::ParseTree::Pattern->new
                       ( { components => $parsed_rx,
+                          flags      => 0,
                           } );
 
 #    use Data::Dumper; print Dumper $parsed_rx;
