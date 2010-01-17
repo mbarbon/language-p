@@ -126,6 +126,7 @@ undef               b
 map                 b       
 grep                b       
 exists              b       
+pos                 b       
 unlink              o       
 glob                o       
 readline            o       

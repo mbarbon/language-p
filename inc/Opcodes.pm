@@ -424,6 +424,7 @@ phi                 0       same                -1  -1  noattr
 pipe                0       same                 2   1  context=i1
 plus                0       same                 1   1  noattr
 pop                 0       same                 1   0  noattr
+pos                 0       same                 1   1  noattr
 postdec             0       same                 1   1  context=i1
 postinc             0       same                 1   1  context=i1
 power               0       same                 2   1  context=i1

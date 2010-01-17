@@ -57,9 +57,9 @@ sub assign {
     $self->{float} = $other->{float};
 }
 
-sub set_string { $_[0]->{string} = $_[2] }
-sub set_integer { $_[0]->{integer} = $_[2] }
-sub set_float { $_[0]->{float} = $_[2] }
+sub set_string { delete $_[0]->{pos}; $_[0]->{string} = $_[2] }
+sub set_integer { delete $_[0]->{pos}; $_[0]->{integer} = $_[2] }
+sub set_float { delete $_[0]->{pos}; $_[0]->{float} = $_[2] }
 
 sub as_boolean_int {
     my( $self, $runtime ) = @_;
@@ -79,6 +79,16 @@ sub is_defined {
     my( $self, $runtime ) = @_;
 
     return 1;
+}
+
+sub get_length_int {
+    my( $self, $runtime ) = @_;
+
+    if( defined $self->{string} ) {
+        return length $self->{string};
+    } else {
+        return length $self->as_string( $runtime );
+    }
 }
 
 1;

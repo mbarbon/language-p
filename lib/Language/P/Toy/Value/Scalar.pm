@@ -66,6 +66,9 @@ sub assign_iterator {
     $self->assign( $runtime, $iter->item );
 }
 
+sub set_pos { $_[0]->{pos} = $_[2] }
+sub get_pos { $_[0]->{pos} }
+
 sub localize {
     my( $self, $runtime ) = @_;
 
@@ -125,6 +128,12 @@ sub post_decrement {
     pre_decrement( $self, $runtime );
 
     return $rv;
+}
+
+sub get_length_int {
+    my( $self, $runtime ) = @_;
+
+    return length( $self->as_string( $runtime ) );
 }
 
 1;

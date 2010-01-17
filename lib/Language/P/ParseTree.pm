@@ -175,6 +175,7 @@ our %PROTOTYPE =
     OP_ARRAY_SHIFT() => [  1,  1, PROTO_DEFAULT_ARG, PROTO_MAKE_ARRAY|PROTO_REFERENCE ],
     OP_EXISTS()      => [  1,  1, PROTO_AMPER, PROTO_AMPER ],
     OP_CALLER()      => [  0,  1, 0, PROTO_SCALAR ],
+    OP_POS()         => [  0,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
     );
 
 our %CONTEXT =

@@ -54,6 +54,12 @@ sub is_defined {
     return 0;
 }
 
+sub get_length_int {
+    my( $self, $runtime ) = @_;
+
+    return 0;
+}
+
 sub vivify_scalar {
     my( $self, $runtime ) = @_;
     my $new = Language::P::Toy::Value::Reference->new

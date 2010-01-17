@@ -24,6 +24,7 @@ sub assign {
     Language::P::Toy::Value::Scalar::assign( $self, $runtime, $other )
         unless ref( $self ) eq ref( $other );
 
+    delete $self->{pos};
     $self->{reference} = $other->{reference};
 }
 

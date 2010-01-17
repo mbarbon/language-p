@@ -8,6 +8,7 @@ use Language::P::Toy::Value::StringNumber;
 use Language::P::Toy::Value::Reference;
 use Language::P::Toy::Value::Array;
 use Language::P::Toy::Value::List;
+use Language::P::Toy::Value::Pos;
 use Language::P::Toy::Exception;
 use Language::P::ParseTree qw(:all);
 
@@ -838,6 +839,17 @@ sub o_assign {
     my $vl = $runtime->{_stack}[-1];
 
     $vl->assign( $runtime, $vr );
+
+    return $pc + 1;
+}
+
+sub o_pos {
+    my( $op, $runtime, $pc ) = @_;
+    my $val = pop @{$runtime->{_stack}};
+    my $sc = $val->as_scalar( $runtime );
+    my $pos = Language::P::Toy::Value::Pos->new( $runtime, $sc );
+
+    push @{$runtime->{_stack}}, $pos;
 
     return $pc + 1;
 }
