@@ -18,14 +18,15 @@ sub next_start {
 }
 
 sub match {
-    my( $self, $runtime, $string ) = @_;
+    my( $self, $runtime, $string, $pos ) = @_;
+    my $start = $pos || 0;
 
     # print "String: $string\n";
 
     my $rv;
     # make space for the values
     push @{$runtime->{_stack}}, 0, $string;
-    foreach my $i ( 0 .. length( $string ) ) {
+    foreach my $i ( $start .. length( $string ) ) {
         local $SIG{__WARN__} = sub { Carp::confess @_ };
         $runtime->{_stack}[-2] = $i;
         # print "Start: $i\n";
@@ -34,6 +35,11 @@ sub match {
         $rv = pop @{$runtime->{_stack}};
 
         next unless $rv->{matched};
+        # disallow matching twice at the same position with a zero-length match
+        if( defined $pos && $pos == $rv->{match_end} ) {
+            $rv->{matched} = 0;
+            next;
+        }
 
         $rv->{match_start} = $i;
         # print 'Matched: "' . substr( $string, $i, $rv->{match_end} - $i )
