@@ -151,6 +151,7 @@ sub compile_regex {
     my $parsed_rx = $parser->parse_string( $string );
     my $pattern = Language::P::ParseTree::Pattern->new
                       ( { components => $parsed_rx,
+                          flags      => $flags,
                           } );
     my $re = $generator->process_regex( $pattern );
 
