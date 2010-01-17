@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use Exporter 'import';
 
+use Language::P::ParseTree qw(:all);
+
 our @EXPORT_OK = qw(o_rx_start_match o_rx_accept o_rx_exact o_rx_start_group
                     o_rx_quantifier o_rx_capture_start o_rx_capture_end o_rx_try
                     o_rx_beginning o_rx_end_or_newline o_rx_state_restore
@@ -26,6 +28,14 @@ sub d(@) {
     require Data::Dumper;
 
     return Data::Dumper::Dumper( @_ );
+}
+
+sub _context {
+    my( $op, $runtime ) = @_;
+    my $cxt = $op ? $op->{context} : 0;
+
+    return $cxt if $cxt && $cxt != CXT_CALLER;
+    return $runtime->{_stack}[$runtime->{_frame} - 2][2];
 }
 
 sub _save_groups {
@@ -130,6 +140,7 @@ sub o_rx_match {
     my( $op, $runtime, $pc ) = @_;
     my $pattern = pop @{$runtime->{_stack}};
     my $scalar = pop @{$runtime->{_stack}};
+    my $cxt = _context( $op, $runtime );
 
     my $match = $pattern->match( $runtime, $scalar->as_string( $runtime ) );
     if( $match->{matched} ) {
@@ -139,8 +150,26 @@ sub o_rx_match {
         $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = $state;
     }
 
-    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new
-                                    ( $runtime, { integer => $match->{matched} } );
+    if( $cxt == CXT_SCALAR || $cxt == CXT_VOID ) {
+        push @{$runtime->{_stack}},
+            Language::P::Toy::Value::StringNumber->new_boolean
+                ( $runtime, $match->{matched} );
+    } elsif( $match->{matched} && @{$match->{string_captures}} ) {
+        my @values;
+        foreach my $capt ( @{$match->{string_captures}} ) {
+            push @values,
+                Language::P::Toy::Value::StringNumber->new
+                    ( $runtime, { string => $capt } );
+        }
+
+        push @{$runtime->{_stack}},
+            Language::P::Toy::Value::List->new
+                ( $runtime, { array => \@values } );
+    } else {
+        push @{$runtime->{_stack}},
+            Language::P::Toy::Value::List->new_boolean
+                ( $runtime, $match->{matched} );
+    }
 
     return $pc + 1;
 }
@@ -150,6 +179,7 @@ sub o_rx_replace {
     my $replace = $op->{to};
     my $pattern = pop @{$runtime->{_stack}};
     my $scalar = pop @{$runtime->{_stack}};
+    my $cxt = _context( $op, $runtime );
 
     my $string = $scalar->as_string( $runtime );
     my $match = $pattern->match( $runtime, $string );
@@ -175,8 +205,15 @@ sub o_rx_replace {
                                        ( $runtime, $string ) );
     }
 
-    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new
-                                    ( $runtime, { integer => $match->{matched} } );
+    if( $cxt == CXT_SCALAR || $cxt == CXT_VOID ) {
+        push @{$runtime->{_stack}},
+            Language::P::Toy::Value::StringNumber->new_boolean
+                ( $runtime, $match->{matched} );
+    } else {
+        push @{$runtime->{_stack}},
+            Language::P::Toy::Value::List->new_boolean
+                ( $runtime, $match->{matched} );
+    }
 
     return $pc + 1;
 }

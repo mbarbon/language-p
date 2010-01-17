@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..16\n";
+print "1..17\n";
 
 $text = 'abbcccddddeeeeeffffff';
 
@@ -38,3 +38,8 @@ print $1 eq 'c' ? "ok\n" : "not ok\n";
 }
 
 print $1 eq 'c' ? "ok\n" : "not ok - $1\n";
+
+# captures in list context
+@x = $text =~ /((b|c)+)/;
+
+print "$x[0] $x[1]" eq "bbccc c" ? "ok\n" : "not ok - $x[0] $x[1]\n";
