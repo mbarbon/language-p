@@ -8,6 +8,17 @@ __PACKAGE__->mk_ro_accessors( qw() );
 
 sub type { 8 }
 
+sub new_boolean {
+    my( $class, $runtime, $value ) = @_;
+
+    return $value ?
+               Language::P::Toy::Value::List->new
+                   ( $runtime,
+                     { array => [ Language::P::Toy::Value::StringNumber->new
+                                      ( $runtime, { integer => 1 } ) ] } ) :
+               Language::P::Toy::Value::List->new( $runtime, { array => [] } );
+}
+
 sub assign {
     my( $self, $runtime, $other ) = @_;
 
