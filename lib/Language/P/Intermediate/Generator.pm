@@ -1705,9 +1705,12 @@ sub _regex_quantifier {
 sub _regex_group {
     my( $self, $tree ) = @_;
 
+    my $start_group = $self->_group_count;
     if( $tree->capture ) {
+        $self->_group_count( $start_group + 1 );
+
         _add_bytecode $self,
-            opcode_nm( OP_RX_CAPTURE_START, group => $self->_group_count );
+            opcode_nm( OP_RX_CAPTURE_START, group => $start_group );
     }
 
     foreach my $c ( @{$tree->components} ) {
@@ -1716,8 +1719,7 @@ sub _regex_group {
 
     if( $tree->capture ) {
         _add_bytecode $self,
-            opcode_nm( OP_RX_CAPTURE_END, group => $self->_group_count );
-        $self->_group_count( $self->_group_count + 1 );
+            opcode_nm( OP_RX_CAPTURE_END, group => $start_group );
     }
 }
 
