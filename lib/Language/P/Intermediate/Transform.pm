@@ -34,6 +34,7 @@ my %op_map =
     OP_JUMP_IF_S_LE()     => '_cond_jump',
     OP_JUMP_IF_S_LT()     => '_cond_jump',
     OP_JUMP()             => '_jump',
+    OP_REPLACE()          => '_replace',
     OP_RX_START_GROUP()   => '_rx_start_group',
     OP_RX_QUANTIFIER()    => '_rx_quantifier',
     OP_RX_TRY()           => '_rx_try',
@@ -470,6 +471,33 @@ sub _jump {
 
     _jump_to( $self, $new_jump, $op->{attributes}{to}, [] );
     _add_bytecode $self, $new_jump;
+}
+
+sub _replace {
+    my( $self, $op ) = @_;
+    my $new_jump = opcode_npm( $op->{opcode_n}, $op->{pos},
+                               context => $op->{attributes}{context},
+                               index   => $op->{attributes}{index},
+                               flags   => $op->{attributes}{flags},
+                               );
+    $new_jump->{parameters} = [ _get_stack( $self, 2 ) ];
+
+    my $to = $op->{attributes}{to};
+
+    # extracted from _jump_to
+    my $converted_blocks = $self->_converted;
+    my $converted = $converted_blocks->{$to} ||= {};
+
+    $converted->{block} ||= Language::P::Intermediate::BasicBlock
+                                ->new_from_label( $to->start_label,
+                                                  $to->lexical_state,
+                                                  $to->scope );
+    $new_jump->{attributes}{to} = $converted->{block};
+    push @{$self->_queue}, $to;
+
+    push @{$self->_stack}, $new_jump;
+
+    _created( $self, 1 );
 }
 
 sub _rx_start_group {
