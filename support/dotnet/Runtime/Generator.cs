@@ -416,6 +416,7 @@ namespace org.mbarbon.p.runtime
             BlockLabels = new List<LabelTarget>();
             Blocks = new List<Expression>();
             LexStates = new List<ParameterExpression>();
+            RxStates = new List<ParameterExpression>();
             ModuleGenerator = module_generator;
             Subroutines = subroutines;
         }
@@ -522,6 +523,19 @@ namespace org.mbarbon.p.runtime
             }
 
             return LexStates[index];
+        }
+
+        private ParameterExpression GetSavedRxState(int index)
+        {
+            while (RxStates.Count <= index)
+                RxStates.Add(null);
+            if (RxStates[index] == null)
+            {
+                RxStates[index] =
+                    Expression.Variable(typeof(RxContext));
+            }
+
+            return RxStates[index];
         }
 
         private ParameterExpression GetLexical(int index, Opcode.Sigil slot)
@@ -691,6 +705,7 @@ namespace org.mbarbon.p.runtime
             AddVars(vars, Lexicals);
             AddVars(vars, Temporaries);
             AddVars(vars, LexStates);
+            AddVars(vars, RxStates);
 
             var block = Expression.Block(typeof(IP5Any), vars, Blocks);
             var args = new ParameterExpression[] { Runtime, Context, Pad, Arguments };
@@ -1642,6 +1657,14 @@ namespace org.mbarbon.p.runtime
 
                 return Expression.Field(null, Subroutines[cs.Value].CodeField);
             }
+            case Opcode.OpNumber.OP_RX_STATE_RESTORE:
+            {
+                RegexState rs = (RegexState)op;
+
+                return Expression.Assign(
+                    Expression.Field(Runtime, "LastMatch"),
+                    GetSavedRxState(rs.Index));
+            }
             case Opcode.OpNumber.OP_MATCH:
             {
                 return Expression.New(
@@ -1671,7 +1694,7 @@ namespace org.mbarbon.p.runtime
 
         private LabelTarget SubLabel;
         private ParameterExpression Runtime, Arguments, Context, Pad;
-        private List<ParameterExpression> Variables, Lexicals, Temporaries, LexStates;
+        private List<ParameterExpression> Variables, Lexicals, Temporaries, LexStates, RxStates;
         private List<LabelTarget> BlockLabels;
         private List<Expression> Blocks;
         private bool IsMain;

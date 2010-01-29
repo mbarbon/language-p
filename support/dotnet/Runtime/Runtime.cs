@@ -117,5 +117,6 @@ namespace org.mbarbon.p.runtime
         public Stack<StackFrame> CallStack;
         public string File, Package;
         public int Line, Hints;
+        public RxContext LastMatch;
     }
 }
