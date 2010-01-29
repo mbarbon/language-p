@@ -7,17 +7,34 @@ namespace org.mbarbon.p.runtime
     [Serializable]
     public struct RxQuantifier
     {
-        public RxQuantifier(int min, int max, bool greedy, int to)
+        public RxQuantifier(int min, int max, bool greedy, int to, int group,
+                            int start_subgroup, int end_subgroup)
         {
             MinCount = min;
             MaxCount = max;
             IsGreedy = greedy;
             To = to;
+            Group = group;
+            SubgroupStart = start_subgroup;
+            SubgroupEnd = end_subgroup;
         }
 
-        public int MinCount, MaxCount;
+        public int MinCount, MaxCount, Group;
         public int To;
         public bool IsGreedy;
+        public int SubgroupStart, SubgroupEnd;
+    }
+
+    public struct RxCapture
+    {
+        public int Start;
+        public int End;
+    }
+
+    public struct RxSavedGroups
+    {
+        public int Start, LastOpenCapture, LastClosedCapture;
+        public RxCapture[] Data;
     }
 
     public struct RxState
@@ -27,11 +44,13 @@ namespace org.mbarbon.p.runtime
             Pos = pos;
             Target = target;
             Group = group;
+            Groups = new RxSavedGroups();
         }
 
         public int Pos;
         public int Target;
         public int Group;
+        public RxSavedGroups Groups;
     }
 
     public struct RxGroup
@@ -48,10 +67,12 @@ namespace org.mbarbon.p.runtime
 
     public struct RxContext
     {
-        public int Pos;
+        public int Pos, LastOpenCapture, LastClosedCapture;
         public List<RxGroup> Groups;
         public List<RxState> States;
         public List<int> StateBacktrack;
+        public RxCapture[] Captures;
+        public string[] StringCaptures;
         public bool Matched;
     }
 
@@ -78,15 +99,47 @@ namespace org.mbarbon.p.runtime
         }
 
         public Regex(Op[] ops, int[] targets, string[] exact,
-                     RxQuantifier[] quantifiers)
+                     RxQuantifier[] quantifiers, int captures)
         {
             Ops = ops;
             Targets = targets;
             Exact = exact;
             Quantifiers = quantifiers;
+            Captures = captures;
         }
 
-        public int Backtrack(ref RxContext cxt)
+        private void SaveGroups(ref RxContext cxt, int start, int end,
+                                bool clear, out RxSavedGroups groups)
+        {
+            groups.Start = start;
+            groups.LastOpenCapture = cxt.LastOpenCapture;
+            groups.LastClosedCapture = cxt.LastClosedCapture;
+            groups.Data = new RxCapture[end - start];
+
+            for (int i = start; i < end; ++i)
+            {
+                if (clear || cxt.Captures.Length <= i)
+                    groups.Data[i - start].Start = groups.Data[i - start].End = -1;
+                else
+                {
+                    groups.Data[i - start] = cxt.Captures[i];
+                }
+            }
+        }
+
+        private void RestoreGroups(ref RxContext cxt, ref RxSavedGroups groups)
+        {
+            if (groups.Data == null)
+                return;
+
+            for (int i = 0; i < groups.Data.Length; ++i)
+                cxt.Captures[i + groups.Start] = groups.Data[i];
+
+            cxt.LastOpenCapture = groups.LastOpenCapture;
+            cxt.LastClosedCapture = groups.LastClosedCapture;
+        }
+
+        private int Backtrack(ref RxContext cxt)
         {
             if (cxt.States.Count > 0)
             {
@@ -101,7 +154,7 @@ namespace org.mbarbon.p.runtime
                     if (btState.Group >= 0)
                         cxt.Groups.RemoveRange(btState.Group, cxt.Groups.Count - btState.Group);
 
-                    // TODO restore capture groups
+                    RestoreGroups(ref cxt, ref btState.Groups);
 
                     return index;
                 }
@@ -113,7 +166,8 @@ namespace org.mbarbon.p.runtime
 
                 cxt.StateBacktrack.RemoveAt(cxt.StateBacktrack.Count - 1);
                 cxt.States.RemoveRange(btIdx, cxt.States.Count - btIdx);
-                cxt.Groups.RemoveAt(cxt.Groups.Count - 1);
+                if (cxt.Groups.Count > 0)
+                    cxt.Groups.RemoveAt(cxt.Groups.Count - 1);
 
                 return Backtrack(ref cxt);
             }
@@ -123,6 +177,25 @@ namespace org.mbarbon.p.runtime
 
                 return -1;
             }
+        }
+
+        private void StartCapture(ref RxContext cxt, int group)
+        {
+            for (int i = cxt.LastOpenCapture; i >= 0 && i < group; ++i)
+                cxt.Captures[i].Start = cxt.Captures[i].End = -1;
+
+            cxt.Captures[group].Start = cxt.Pos;
+            cxt.Captures[group].End = -1;
+
+            if (cxt.LastOpenCapture < group)
+                cxt.LastOpenCapture = group;
+        }
+
+        private void EndCapture(ref RxContext cxt, int group)
+        {
+            cxt.Captures[group].End = cxt.Pos;
+
+            cxt.LastClosedCapture = group;
         }
 
         public bool Match(Runtime runtime, IP5Any value)
@@ -150,6 +223,12 @@ namespace org.mbarbon.p.runtime
             cxt.States = new List<RxState>();
             cxt.StateBacktrack = new List<int>();
             cxt.Matched = false;
+            if (Captures > 0)
+                cxt.Captures = new RxCapture[Captures];
+            else
+                cxt.Captures = null;
+            cxt.StringCaptures = null;
+            cxt.LastOpenCapture = cxt.LastClosedCapture = -1;
 
             for (int index = 0; index >= 0;)
             {
@@ -193,6 +272,16 @@ namespace org.mbarbon.p.runtime
                     index = Targets[Ops[index].Index];
                     break;
                 }
+                case Opcode.OpNumber.OP_RX_TRY:
+                {
+                    var st = new RxState(cxt.Pos, Targets[Ops[index].Index],
+                                         cxt.Groups.Count);
+
+                    cxt.States.Add(st);
+
+                    ++index;
+                    break;
+                }
                 case Opcode.OpNumber.OP_RX_QUANTIFIER:
                 {
                     var group = cxt.Groups[cxt.Groups.Count - 1];
@@ -203,7 +292,8 @@ namespace org.mbarbon.p.runtime
                     group.Count += 1;
                     group.LastMatch = cxt.Pos;
 
-                    // TODO end capture
+                    if (group.Count > 0 && quant.Group >= 0)
+                        EndCapture(ref cxt, quant.Group);
 
                     // max repeat count
                     if (group.Count == quant.MaxCount)
@@ -218,20 +308,26 @@ namespace org.mbarbon.p.runtime
                         break;
                     }
 
-                    // TODO save subgroups
+                    RxSavedGroups gr;
+                    if (group.Count == 0 || group.Count >= quant.MinCount)
+                        SaveGroups(ref cxt, quant.SubgroupStart, quant.SubgroupEnd,
+                                   group.Count == 0,
+                                   out gr);
+                    else
+                        gr = new RxSavedGroups();
 
                     if (group.Count == 0 && quant.MinCount > 0)
                     {
                         // force failure on backtrack
-                        var st = new RxState(cxt.Pos, -1, -1
-                                             /* TODO saved groups here */);
+                        var st = new RxState(cxt.Pos, -1, -1);
+                        st.Groups = gr;
 
                         cxt.States.Add(st);
                     }
                     else if (group.Count >= quant.MinCount)
                     {
-                        var st = new RxState(cxt.Pos, index, cxt.Groups.Count - 1
-                                             /* TODO saved groups here */);
+                        var st = new RxState(cxt.Pos, index, cxt.Groups.Count - 1);
+                        st.Groups = gr;
 
                         cxt.States.Add(st);
                     }
@@ -246,15 +342,40 @@ namespace org.mbarbon.p.runtime
                         break;
                     }
 
-                    // TODO start capture
+                    if (quant.Group >= 0)
+                        StartCapture(ref cxt, quant.Group);
 
                     index = Targets[quant.To];
                     break;
                 }
+                case Opcode.OpNumber.OP_RX_CAPTURE_START:
+                {
+                    StartCapture(ref cxt, Ops[index].Index);
+
+                    ++index;
+                    break;
+                }
+                case Opcode.OpNumber.OP_RX_CAPTURE_END:
+                {
+                    EndCapture(ref cxt, Ops[index].Index);
+
+                    ++index;
+                    break;
+                }
                 case Opcode.OpNumber.OP_RX_ACCEPT:
                 {
-                    // TODO null-out unclosed groups
-                    // TODO return captures and end pos
+                    for (int i = cxt.LastOpenCapture; i >= 0 && i < Ops[index].Index; ++i)
+                        cxt.Captures[i].Start = cxt.Captures[i].End = -1;
+
+                    if (cxt.Captures != null)
+                    {
+                        cxt.StringCaptures = new string[cxt.Captures.Length];
+                        for (int i = 0; i < cxt.Captures.Length; ++i)
+                            if (cxt.Captures[i].End != -1)
+                                cxt.StringCaptures[i] =
+                                    str.Substring(cxt.Captures[i].Start,
+                                                  cxt.Captures[i].End - cxt.Captures[i].Start);
+                    }
 
                     cxt.Matched = true;
                     index = -1;
@@ -272,9 +393,10 @@ namespace org.mbarbon.p.runtime
             return cxt.Matched;
         }
 
-        Op[] Ops;
-        string[] Exact;
-        int[] Targets;
-        RxQuantifier[] Quantifiers;
+        private Op[] Ops;
+        private string[] Exact;
+        private int[] Targets;
+        private RxQuantifier[] Quantifiers;
+        private int Captures;
     }
 }

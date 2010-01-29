@@ -142,6 +142,7 @@ namespace org.mbarbon.p.runtime
             var ops = new List<Regex.Op>();
             var targets = new List<int>();
             var exact = new List<string>();
+            int captures = 0;
 
             foreach (var bb in sub.BasicBlocks)
             {
@@ -154,9 +155,15 @@ namespace org.mbarbon.p.runtime
                     case Opcode.OpNumber.OP_RX_START_SPECIAL:
                     case Opcode.OpNumber.OP_RX_END_SPECIAL:
                     case Opcode.OpNumber.OP_RX_START_MATCH:
-                    case Opcode.OpNumber.OP_RX_ACCEPT:
                         ops.Add(new Regex.Op(op.Number));
                         break;
+                    case Opcode.OpNumber.OP_RX_ACCEPT:
+                    {
+                        var ac = (RegexAccept)op;
+
+                        ops.Add(new Regex.Op(ac.Number, ac.Groups));
+                        break;
+                    }
                     case Opcode.OpNumber.OP_RX_EXACT:
                     {
                         var ex = (RegexExact)op;
@@ -172,6 +179,13 @@ namespace org.mbarbon.p.runtime
                         ops.Add(new Regex.Op(gr.Number, gr.To));
                         break;
                     }
+                    case Opcode.OpNumber.OP_RX_TRY:
+                    {
+                        var tr = (RegexTry)op;
+
+                        ops.Add(new Regex.Op(tr.Number, tr.To));
+                        break;
+                    }
                     case Opcode.OpNumber.OP_RX_QUANTIFIER:
                     {
                         var qu = (RegexQuantifier)op;
@@ -179,7 +193,22 @@ namespace org.mbarbon.p.runtime
                         ops.Add(new Regex.Op(qu.Number, quantifiers.Count));
                         quantifiers.Add(
                             new RxQuantifier(qu.Min, qu.Max, qu.Greedy != 0,
-                                             qu.To));
+                                             qu.To, qu.Group, qu.SubgroupsStart,
+                                             qu.SubgroupsEnd));
+                        if (captures <= qu.Group)
+                            captures = qu.Group + 1;
+
+                        break;
+                    }
+                    case Opcode.OpNumber.OP_RX_CAPTURE_START:
+                    case Opcode.OpNumber.OP_RX_CAPTURE_END:
+                    {
+                        var ca = (RegexCapture)op;
+
+                        ops.Add(new Regex.Op(ca.Number, ca.Group));
+                        if (captures <= ca.Group)
+                            captures = ca.Group + 1;
+
                         break;
                     }
                     case Opcode.OpNumber.OP_JUMP:
@@ -196,7 +225,8 @@ namespace org.mbarbon.p.runtime
             }
 
             return new Regex(ops.ToArray(), targets.ToArray(),
-                             exact.ToArray(), quantifiers.ToArray());
+                             exact.ToArray(), quantifiers.ToArray(),
+                             captures);
         }
 
         public void AddMethod(int index, Subroutine sub)
