@@ -494,14 +494,13 @@ sub o_rx_try {
     my( $op, $runtime, $pc ) = @_;
     my $cxt = $runtime->{_stack}->[-1];
 
-    my $groups = defined $op->{subgroups_start} ?
-                     _save_groups( $cxt, $op, 0 ) : undef;
+    # TODO used to save groups here, but it's probably not needed
 
     push @{$cxt->{states}},
          { pos           => $cxt->{pos},
            ret_pc        => $op->{to},
            group_count   => scalar @{$cxt->{groups}},
-           saved_groups  => $groups,
+           saved_groups  => undef,
            };
 
     return $pc + 1;
