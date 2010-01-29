@@ -292,12 +292,28 @@ namespace org.mbarbon.p.runtime
         public int To;
     }
 
+    public class RegexTry : Opcode
+    {
+        public int To;
+    }
+
     public class RegexQuantifier : Opcode
     {
         public int Min, Max;
         public byte Greedy;
         public int Group;
         public int To;
+        public int SubgroupsStart, SubgroupsEnd;
+    }
+
+    public class RegexCapture : Opcode
+    {
+        public int Group;
+    }
+
+    public class RegexState : Opcode
+    {
+        public int Index;
     }
 
     public class Scope

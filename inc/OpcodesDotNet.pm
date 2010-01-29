@@ -59,6 +59,10 @@ my %dotnet_classes =
     'OP_RX_ACCEPT'         => 'RegexAccept',
     'OP_RX_START_GROUP'    => 'RegexStartGroup',
     'OP_RX_QUANTIFIER'     => 'RegexQuantifier',
+    'OP_RX_STATE_RESTORE'  => 'RegexState',
+    'OP_RX_TRY'            => 'RegexTry',
+    'OP_RX_CAPTURE_START'  => 'RegexCapture',
+    'OP_RX_CAPTURE_END'    => 'RegexCapture',
     );
 
 sub write_dotnet_deserializer {
@@ -124,32 +128,33 @@ EOT
             my $type = $attrs->[$i + 1];
             my $name = $attrs->[$i];
             next if $name eq 'arg_count';
+            my $n = join '', map ucfirst, split /_/, $name;
             if( $type eq 's' ) {
-                print $out sprintf <<'EOT', ucfirst $name;
+                print $out sprintf <<'EOT', $n;
                 opc.%s = ReadString(reader);
 EOT
             } elsif( $type eq 'i' || $type eq 'i4' ) {
-                print $out sprintf <<'EOT', ucfirst $name;
+                print $out sprintf <<'EOT', $n;
                 opc.%s = reader.ReadInt32();
 EOT
             } elsif( $type eq 'f' ) {
-                print $out sprintf <<'EOT', ucfirst $name;
+                print $out sprintf <<'EOT', $n;
                 opc.%s = reader.ReadDouble();
 EOT
             } elsif( $type eq 'i_sigil' ) {
-                print $out sprintf <<'EOT', ucfirst $name;
+                print $out sprintf <<'EOT', $n;
                 opc.%s = (Opcode.Sigil)reader.ReadByte();
 EOT
             } elsif( $type eq 'i1' ) {
-                print $out sprintf <<'EOT', ucfirst $name;
+                print $out sprintf <<'EOT', $n;
                 opc.%s = reader.ReadByte();
 EOT
             } elsif( $type eq 'b' ) {
-                print $out sprintf <<'EOT', ucfirst $name;
+                print $out sprintf <<'EOT', $n;
                 opc.%s = reader.ReadInt32();
 EOT
             } elsif( $type eq 'c' ) {
-                print $out sprintf <<'EOT', ucfirst $name;
+                print $out sprintf <<'EOT', $n;
                 opc.%s = reader.ReadInt32();
 EOT
             } elsif( $type eq 'ls' || $type eq 'lp' ) {
