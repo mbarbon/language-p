@@ -75,6 +75,7 @@ namespace org.mbarbon.p.values
             if (!st.symbols.TryGetValue(packs[packs.Length - 1], out glob))
             {
                 glob = new P5Typeglob(runtime);
+                ApplyMagic(runtime, packs[packs.Length - 1], glob);
                 st.symbols.Add(packs[packs.Length - 1], glob);
             }
 
@@ -109,6 +110,18 @@ namespace org.mbarbon.p.values
             string[] packs = pack.Split(separator, StringSplitOptions.None);
 
             return GetPackage(runtime, packs, skip_last, true);
+        }
+
+        virtual protected void ApplyMagic(Runtime runtime, string name,
+                                          P5Typeglob symbol)
+        {
+            if (name.Length == 0 || name[0] == '0')
+                return;
+            for (int i = 0; i < name.Length; ++i)
+                if (!char.IsDigit(name[i]))
+                    return;
+
+            symbol.Scalar = new P5Capture(runtime, int.Parse(name));
         }
 
         internal P5SymbolTable GetPackage(Runtime runtime, string pack,
