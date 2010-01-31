@@ -194,7 +194,7 @@ EOT
         }
     }
 
-    public class Opcode
+    public partial class Opcode
     {
         public enum OpNumber : short
         {
@@ -210,30 +210,6 @@ EOT
 
     print $out <<'EOT';
         }
-
-        public enum ContextValues
-        {
-            CALLER = 1,
-            VOID   = 2,
-            SCALAR = 4,
-            LIST   = 8,
-        }
-
-        public enum Sigil
-        {
-            SCALAR    = 1,
-            ARRAY     = 2,
-            HASH      = 3,
-            SUB       = 4,
-            GLOB      = 5,
-            HANDLE    = 7,
-            ITERATOR  = 9,
-        }
-
-        public OpNumber Number;
-        public Position Position;
-        public int Context;
-        public Opcode[] Childs;
     }
 }
 EOT
