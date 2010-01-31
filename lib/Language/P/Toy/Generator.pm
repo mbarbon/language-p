@@ -8,7 +8,7 @@ __PACKAGE__->mk_ro_accessors( qw(runtime) );
 __PACKAGE__->mk_accessors( qw(_code _pending _block_map _index_map
                               _options _generated _intermediate _processing
                               _eval_context _segment _saved_subs
-                              _generated_scopes) );
+                              _generated_scopes _data_handle) );
 
 use Language::P::Intermediate::Code qw(:all);
 use Language::P::Intermediate::Generator;
@@ -338,9 +338,24 @@ sub process_regex {
     return $res;
 }
 
+sub set_data_handle {
+    my( $self, $package, $handle ) = @_;
+
+    if( $self->_options->{'dump-bytecode'} ) {
+        local $/; # slurp mode
+        my $data = readline $handle;
+
+        $self->_data_handle( [ $package, $data ] );
+        open $handle, '<', \$data;
+    }
+
+    $self->runtime->set_data_handle( $package, $handle );
+}
+
 sub finished {
     my( $self ) = @_;
     my $main_int = $self->_intermediate->generate_bytecode( $self->_pending );
+    my $data_handle = $self->_data_handle;
 
     # perform code generation before serializing, for regexes
     my $head = pop @{$self->{_processing}};
@@ -358,7 +373,7 @@ sub finished {
                                               @{$self->_saved_subs || []} ] );
         ( my $outfile = $self->_intermediate->file_name ) =~ s/(\.\w+)?$/.pb/;
 
-        $serialize->serialize( $tree, $outfile );
+        $serialize->serialize( $tree, $outfile, $data_handle );
         $tree->[0]->weaken; # allow GC to happen
     }
 
@@ -375,6 +390,7 @@ sub _cleanup {
     $self->_generated( undef );
     $self->_processing( undef );
     $self->_generated_scopes( {} );
+    $self->_data_handle( undef );
 }
 
 sub start_code_generation {

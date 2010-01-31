@@ -8,7 +8,7 @@ use Language::P::Opcodes qw(:all);
 use Language::P::Intermediate::SerializeGenerated;
 
 sub serialize {
-    my( $self, $tree, $file ) = @_;
+    my( $self, $tree, $file, $data_handle ) = @_;
     # TODO handle the case where the source file is in a read-only
     #      directory by saving the bytecode in an user-defined directory
     open my $out, '>', $file or return; # die "open '$file': $!";
@@ -21,8 +21,15 @@ sub serialize {
 
     # compilation unit
     print $out pack 'V', scalar @$tree;
+    print $out pack 'V', $data_handle ? 1 : 0;
+
     for( my $i = 0; $i <= $#$tree; ++$i ) {
         _write_sub( $self, $out, $tree->[$i], $tree->[$i]->name );
+    }
+
+    if( $data_handle ) {
+        _write_string( $out, $data_handle->[0] );
+        _write_string( $out, $data_handle->[1] );
     }
 }
 

@@ -275,11 +275,11 @@ sub _parse {
     _lines_implicit_return( $self, \@lines ) if $flags & PARSE_ADD_RETURN;
     $self->generator->process( $_ ) foreach @lines;
 
-    my $code = $self->generator->end_code_generation;
-
     my $data = $self->lexer->data_handle;
-    $self->runtime->set_data_handle( $package, $data->[1] )
+    $self->generator->set_data_handle( $package, $data->[1] )
       if $data && ( ( $flags & PARSE_MAIN ) || $data->[0] eq 'DATA' );
+
+    my $code = $self->generator->end_code_generation;
 
     return $code;
 }

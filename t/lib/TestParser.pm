@@ -39,6 +39,7 @@ my @lines;
     sub runtime { $_[0]->{runtime} }
     sub start_code_generation {}
     sub end_code_generation {}
+    sub set_data_handle { }
 
     sub add_declaration {
         my( $self, $name, $prototype ) = @_;
@@ -67,7 +68,6 @@ my @lines;
     sub get_package { $_[0]->_symbol_table->get_package( $_[0], $_[1] ) }
     sub _symbol_table { $_[0]->{symbol_table} }
     sub set_bytecode { }
-    sub set_data_handle { }
 }
 
 sub fresh_parser {
