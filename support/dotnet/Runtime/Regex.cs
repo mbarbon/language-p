@@ -198,25 +198,31 @@ namespace org.mbarbon.p.runtime
             cxt.LastClosedCapture = group;
         }
 
-        public bool Match(Runtime runtime, IP5Any value)
+        public bool Match(Runtime runtime, IP5Any value, ref RxContext oldState)
         {
             string str = value.AsString(runtime);
 
             for (int i = 0; i < str.Length; ++i)
             {
-                bool matched = MatchAt(runtime, str, i);
+                RxContext cxt;
+                MatchAt(runtime, str, i, out cxt);
 
-                if (matched)
-                    return matched;
+                if (cxt.Matched)
+                {
+                    oldState = runtime.LastMatch;
+                    runtime.LastMatch = cxt;
+
+                    return true;
+                }
             }
 
             return false;
         }
 
-        public bool MatchAt(Runtime runtime, string str, int pos)
+        public bool MatchAt(Runtime runtime, string str, int pos,
+                            out RxContext cxt)
         {
             int len = str.Length;
-            RxContext cxt;
 
             cxt.Pos = pos;
             cxt.Groups = new List<RxGroup>();

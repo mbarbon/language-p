@@ -1697,6 +1697,8 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_MATCH:
             {
+                RegexState rs = (RegexState)op;
+
                 return Expression.New(
                     typeof(P5Scalar).GetConstructor(ProtoRuntimeBool),
                     Runtime,
@@ -1704,7 +1706,8 @@ namespace org.mbarbon.p.runtime
                         Generate(sub, op.Childs[1]),
                         typeof(Regex).GetMethod("Match"),
                         Runtime,
-                        Generate(sub, op.Childs[0])));
+                        Generate(sub, op.Childs[0]),
+                        GetSavedRxState(rs.Index)));
             }
             case Opcode.OpNumber.OP_NOT_MATCH:
             {
