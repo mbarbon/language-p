@@ -22,7 +22,7 @@ print $x == 1 ? "ok 6\n" : "not ok 6\n";
 
 $ok = eval 'require file_not_there';
 print $ok ? "not ok 7\n" : "ok 7\n";
-print $@ =~ m'Can\'t locate file_not_there.pm in @INC ' ? "ok 8\n" : "not ok 8\n";
+print $@ =~ m'Can\'t locate file_not_there\.pm in @INC ' ? "ok 8\n" : "not ok 8\n";
 
 $ok = eval 'sub a 1';
 print $ok ? "not ok 9\n" : "ok 9\n";

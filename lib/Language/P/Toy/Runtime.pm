@@ -139,17 +139,19 @@ sub eval_string {
 }
 
 sub compile_regex {
-    my( $self, $string ) = @_;
+    my( $self, $string, $flags ) = @_;
     # FIXME encapsulation
     my $generator = $self->parser->generator->safe_instance;
     my $parser = Language::P::Parser::Regex->new
                      ( { runtime     => $self,
                          generator   => $generator,
                          interpolate => 1,
+                         flags       => $flags,
                          } );
     my $parsed_rx = $parser->parse_string( $string );
     my $pattern = Language::P::ParseTree::Pattern->new
                       ( { components => $parsed_rx,
+                          flags      => $flags,
                           } );
     my $re = $generator->process_regex( $pattern );
 

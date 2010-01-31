@@ -4,10 +4,14 @@ use strict;
 use warnings;
 use Exporter 'import';
 
+use Language::P::ParseTree qw(:all);
+
 our @EXPORT_OK = qw(o_rx_start_match o_rx_accept o_rx_exact o_rx_start_group
                     o_rx_quantifier o_rx_capture_start o_rx_capture_end o_rx_try
-                    o_rx_start_special o_rx_end_special o_rx_state_restore
-                    o_rx_match);
+                    o_rx_beginning o_rx_end_or_newline o_rx_state_restore
+                    o_rx_match o_rx_match_global o_rx_replace
+                    o_rx_replace_global);
+
 our %EXPORT_TAGS =
   ( opcodes => \@EXPORT_OK,
     );
@@ -26,6 +30,14 @@ sub d(@) {
     require Data::Dumper;
 
     return Data::Dumper::Dumper( @_ );
+}
+
+sub _context {
+    my( $op, $runtime ) = @_;
+    my $cxt = $op ? $op->{context} : 0;
+
+    return $cxt if $cxt && $cxt != CXT_CALLER;
+    return $runtime->{_stack}[$runtime->{_frame} - 2][2];
 }
 
 sub _save_groups {
@@ -130,6 +142,7 @@ sub o_rx_match {
     my( $op, $runtime, $pc ) = @_;
     my $pattern = pop @{$runtime->{_stack}};
     my $scalar = pop @{$runtime->{_stack}};
+    my $cxt = _context( $op, $runtime );
 
     my $match = $pattern->match( $runtime, $scalar->as_string( $runtime ) );
     if( $match->{matched} ) {
@@ -139,8 +152,209 @@ sub o_rx_match {
         $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = $state;
     }
 
-    push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new
-                                    ( $runtime, { integer => $match->{matched} } );
+    if( $cxt == CXT_SCALAR || $cxt == CXT_VOID ) {
+        push @{$runtime->{_stack}},
+            Language::P::Toy::Value::StringNumber->new_boolean
+                ( $runtime, $match->{matched} );
+    } elsif( $match->{matched} && @{$match->{string_captures}} ) {
+        my @values;
+        foreach my $capt ( @{$match->{string_captures}} ) {
+            push @values,
+                Language::P::Toy::Value::StringNumber->new
+                    ( $runtime, { string => $capt } );
+        }
+
+        push @{$runtime->{_stack}},
+            Language::P::Toy::Value::List->new
+                ( $runtime, { array => \@values } );
+    } else {
+        push @{$runtime->{_stack}},
+            Language::P::Toy::Value::List->new_boolean
+                ( $runtime, $match->{matched} );
+    }
+
+    return $pc + 1;
+}
+
+sub o_rx_match_global {
+    my( $op, $runtime, $pc ) = @_;
+    my $pattern = pop @{$runtime->{_stack}};
+    my $scalar = pop @{$runtime->{_stack}};
+    my $cxt = _context( $op, $runtime );
+    my $pos = $scalar->get_pos;
+    my $string = $scalar->as_string( $runtime );
+
+    my $match;
+
+    if( $cxt == CXT_SCALAR || $cxt == CXT_VOID ) {
+        $match = $pattern->match( $runtime, $string, $pos );
+        if( $match->{matched} ) {
+            my $state = $runtime->get_last_match;
+            $runtime->set_last_match( $match );
+
+            $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = $state;
+        }
+
+        push @{$runtime->{_stack}},
+            Language::P::Toy::Value::StringNumber->new_boolean
+                ( $runtime, $match->{matched} );
+    } else {
+        my @values;
+        my $prev;
+
+        for(;;) {
+            $match = $pattern->match( $runtime, $string, $pos );
+            if( $match->{matched} ) {
+                foreach my $capt ( @{$match->{string_captures}} ) {
+                    push @values,
+                        Language::P::Toy::Value::StringNumber->new
+                            ( $runtime, { string => $capt } );
+                }
+
+                # if there aren't capture groups, add the matched substring
+                if( !@{$match->{string_captures}} ) {
+                    my $substr = substr $string, $match->{match_start},
+                                        $match->{match_end} - $match->{match_start};
+                    push @values,
+                        Language::P::Toy::Value::StringNumber->new
+                            ( $runtime, { string => $substr } );
+                }
+            } else {
+                last;
+            }
+
+            $pos = $match->{match_end};
+            $prev = $match;
+        }
+
+        if( $prev ) {
+            my $state = $runtime->get_last_match;
+            $runtime->set_last_match( $prev );
+
+            $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = $state;
+        }
+
+        if( $op->{flags} & FLAG_RX_KEEP ) {
+            $match = $prev;
+        }
+
+        push @{$runtime->{_stack}},
+            Language::P::Toy::Value::List->new
+                ( $runtime, { array => \@values } );
+    }
+
+    if( $match->{matched} ) {
+        $scalar->set_pos( $runtime, $match->{match_end} );
+    } elsif( !( $op->{flags} & FLAG_RX_KEEP ) ) {
+        $scalar->set_pos( $runtime, undef );
+    }
+
+    return $pc + 1;
+}
+
+sub o_rx_replace {
+    my( $op, $runtime, $pc ) = @_;
+    my $replace = $op->{to};
+    my $pattern = pop @{$runtime->{_stack}};
+    my $scalar = pop @{$runtime->{_stack}};
+    my $cxt = _context( $op, $runtime );
+
+    my $string = $scalar->as_string( $runtime );
+    my $match = $pattern->match( $runtime, $string );
+    if( $match->{matched} ) {
+        # save match state
+        my $state = $runtime->get_last_match;
+        $runtime->set_last_match( $match );
+
+        $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = $state;
+
+        # replace the matched string; _pc will be restored by
+        # "return $pc + 1" below
+        $runtime->{_pc} = $replace;
+        $runtime->run;
+
+        my $replacement = pop @{$runtime->{_stack}};
+
+        substr $string, $match->{match_start},
+               $match->{match_end} - $match->{match_start},
+               $replacement->as_string( $runtime );
+
+        $scalar->assign( $runtime, Language::P::Toy::Value::Scalar->new_string
+                                       ( $runtime, $string ) );
+    }
+
+    if( $cxt == CXT_SCALAR || $cxt == CXT_VOID ) {
+        push @{$runtime->{_stack}},
+            Language::P::Toy::Value::StringNumber->new_boolean
+                ( $runtime, $match->{matched} );
+    } else {
+        push @{$runtime->{_stack}},
+            Language::P::Toy::Value::List->new_boolean
+                ( $runtime, $match->{matched} );
+    }
+
+    return $pc + 1;
+}
+
+sub o_rx_replace_global {
+    my( $op, $runtime, $pc ) = @_;
+    my $replace = $op->{to};
+    my $pattern = pop @{$runtime->{_stack}};
+    my $scalar = pop @{$runtime->{_stack}};
+    my $cxt = _context( $op, $runtime );
+    my $count = 0;
+    my $pos = 0;
+
+    # save match state
+    my $state = $runtime->get_last_match;
+    my $string = $scalar->as_string( $runtime );
+    my $last;
+    my @replacements;
+    for(;;) {
+        my $match = $pattern->match( $runtime, $string, $pos );
+        if( $match->{matched} ) {
+            $runtime->set_last_match( $match );
+            ++$count;
+            $last = $match;
+            $pos = $match->{match_end};
+
+            # replace the matched string; _pc will be restored by
+            # "return $pc + 1" below
+            $runtime->{_pc} = $replace;
+            $runtime->run;
+
+            my $replacement = pop @{$runtime->{_stack}};
+
+            push @replacements,
+                 [ $match->{match_start},
+                   $match->{match_end} - $match->{match_start},
+                   $replacement->as_string( $runtime ) ];
+        } else {
+            last;
+        }
+    }
+
+    foreach my $repl ( reverse @replacements ) {
+        substr $string, $repl->[0], $repl->[1], $repl->[2];
+    }
+
+    $scalar->assign( $runtime, Language::P::Toy::Value::Scalar->new_string
+                                   ( $runtime, $string ) );
+
+    if( $last ) {
+        $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = $state;
+    }
+
+    my $res = Language::P::Toy::Value::StringNumber->new_integer
+                  ( $runtime, $count );
+
+    if( $cxt == CXT_SCALAR || $cxt == CXT_VOID ) {
+        push @{$runtime->{_stack}}, $res;
+    } else {
+        push @{$runtime->{_stack}},
+            Language::P::Toy::Value::List->new
+                ( $runtime, { array => [ $res ] } );
+    }
 
     return $pc + 1;
 }
@@ -280,14 +494,13 @@ sub o_rx_try {
     my( $op, $runtime, $pc ) = @_;
     my $cxt = $runtime->{_stack}->[-1];
 
-    my $groups = defined $op->{subgroups_start} ?
-                     _save_groups( $cxt, $op, 0 ) : undef;
+    # TODO used to save groups here, but it's probably not needed
 
     push @{$cxt->{states}},
          { pos           => $cxt->{pos},
            ret_pc        => $op->{to},
            group_count   => scalar @{$cxt->{groups}},
-           saved_groups  => $groups,
+           saved_groups  => undef,
            };
 
     return $pc + 1;
@@ -311,7 +524,7 @@ sub o_rx_capture_end {
     return $pc + 1;
 }
 
-sub o_rx_start_special {
+sub o_rx_beginning {
     my( $op, $runtime, $pc ) = @_;
     my $cxt = $runtime->{_stack}->[-1];
 
@@ -322,7 +535,7 @@ sub o_rx_start_special {
     return $pc + 1;
 }
 
-sub o_rx_end_special {
+sub o_rx_end_or_newline {
     my( $op, $runtime, $pc ) = @_;
     my $cxt = $runtime->{_stack}->[-1];
 

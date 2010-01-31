@@ -275,11 +275,11 @@ sub _parse {
     _lines_implicit_return( $self, \@lines ) if $flags & PARSE_ADD_RETURN;
     $self->generator->process( $_ ) foreach @lines;
 
-    my $code = $self->generator->end_code_generation;
-
     my $data = $self->lexer->data_handle;
-    $self->runtime->set_data_handle( $package, $data->[1] )
+    $self->generator->set_data_handle( $package, $data->[1] )
       if $data && ( ( $flags & PARSE_MAIN ) || $data->[0] eq 'DATA' );
+
+    my $code = $self->generator->end_code_generation;
 
     return $code;
 }
@@ -1164,6 +1164,7 @@ sub _parse_match {
                         ( { generator   => $self->generator,
                             runtime     => $self->runtime,
                             interpolate => $token->[O_QS_INTERPOLATE],
+                            flags       => $token->[O_RX_FLAGS],
                             } )->parse_string( $token->[O_QS_BUFFER] );
         my $match = Language::P::ParseTree::Pattern->new
                         ( { components => $parts,
@@ -1191,7 +1192,7 @@ sub _parse_substitution {
                                        } );
         $replace = _parse_block_rest( $self, undef, BLOCK_OPEN_SCOPE, T_EOF );
     } else {
-        $replace = _parse_string_rest( $self, $token->[O_RX_SECOND_HALF], 0 );
+        $replace = _parse_string_rest( $self, $token->[O_RX_SECOND_HALF], 0, 1 );
     }
 
     my $sub = Language::P::ParseTree::Substitution->new
@@ -1204,7 +1205,7 @@ sub _parse_substitution {
 }
 
 sub _parse_string_rest {
-    my( $self, $token, $pattern ) = @_;
+    my( $self, $token, $pattern, $substitution ) = @_;
     my @values;
     local $self->{lexer} = Language::P::Lexer->new
                                ( { string       => $token->[O_QS_BUFFER],
@@ -1215,6 +1216,7 @@ sub _parse_string_rest {
 
     $self->lexer->quote( { interpolate          => $token->[O_QS_INTERPOLATE],
                            pattern              => 0,
+                           substitution         => $substitution,
                            interpolated_pattern => $pattern,
                            } );
     for(;;) {

@@ -22,6 +22,12 @@ sub as_scalar {
     return $self->_get( $runtime );
 }
 
+sub get_length_int {
+    my( $self, $runtime ) = @_;
+
+    return $self->_get( $runtime )->get_length_int( $runtime );
+}
+
 sub assign {
     my( $self, $runtime, $other ) = @_;
 
@@ -46,6 +52,18 @@ sub set_float {
     $self->_set_float( $runtime, $other );
 }
 
+sub get_pos {
+    my( $self, $runtime ) = @_;
+
+    return $self->_get( $runtime )->get_pos;
+}
+
+sub set_pos {
+    my( $self, $runtime, $pos ) = @_;
+
+    return $self->_get( $runtime )->set_pos( $runtime, $pos );
+}
+
 sub as_string {
     my( $self, $runtime ) = @_;
 
@@ -62,6 +80,12 @@ sub as_float {
     my( $self, $runtime ) = @_;
 
     return $self->_get( $runtime )->as_float( $runtime );
+}
+
+sub is_defined {
+    my( $self, $runtime ) = @_;
+
+    return $self->_get( $runtime )->is_defined( $runtime );
 }
 
 package Language::P::Toy::Value::ActiveScalarCallbacks;

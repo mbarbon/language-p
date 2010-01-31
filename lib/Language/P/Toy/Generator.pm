@@ -8,7 +8,7 @@ __PACKAGE__->mk_ro_accessors( qw(runtime) );
 __PACKAGE__->mk_accessors( qw(_code _pending _block_map _index_map
                               _options _generated _intermediate _processing
                               _eval_context _segment _saved_subs
-                              _generated_scopes) );
+                              _generated_scopes _data_handle) );
 
 use Language::P::Intermediate::Code qw(:all);
 use Language::P::Intermediate::Generator;
@@ -160,11 +160,14 @@ my %opcode_map =
     OP_LOCALIZE_GLOB_SLOT()          => \&_map_slot_index,
     OP_RESTORE_GLOB_SLOT()           => \&_map_slot_index,
     OP_END()                         => \&_end,
+    OP_STOP()                        => \&_stop,
 
     OP_RX_QUANTIFIER()               => \&_rx_quantifier,
     OP_RX_START_GROUP()              => \&_direct_jump,
     OP_RX_TRY()                      => \&_direct_jump,
     OP_RX_STATE_RESTORE()            => \&_rx_state_restore,
+    OP_MATCH()                       => \&_match,
+    OP_REPLACE()                     => \&_replace,
     );
 
 sub _qualify {
@@ -340,9 +343,24 @@ sub process_regex {
     return $res;
 }
 
+sub set_data_handle {
+    my( $self, $package, $handle ) = @_;
+
+    if( $self->_options->{'dump-bytecode'} ) {
+        local $/; # slurp mode
+        my $data = readline $handle;
+
+        $self->_data_handle( [ $package, $data ] );
+        open $handle, '<', \$data;
+    }
+
+    $self->runtime->set_data_handle( $package, $handle );
+}
+
 sub finished {
     my( $self ) = @_;
     my $main_int = $self->_intermediate->generate_bytecode( $self->_pending );
+    my $data_handle = $self->_data_handle;
 
     # perform code generation before serializing, for regexes
     my $head = pop @{$self->{_processing}};
@@ -360,7 +378,7 @@ sub finished {
                                               @{$self->_saved_subs || []} ] );
         ( my $outfile = $self->_intermediate->file_name ) =~ s/(\.\w+)?$/.pb/;
 
-        $serialize->serialize( $tree, $outfile );
+        $serialize->serialize( $tree, $outfile, $data_handle );
         $tree->[0]->weaken; # allow GC to happen
     }
 
@@ -377,6 +395,7 @@ sub _cleanup {
     $self->_generated( undef );
     $self->_processing( undef );
     $self->_generated_scopes( {} );
+    $self->_data_handle( undef );
 }
 
 sub start_code_generation {
@@ -424,6 +443,12 @@ sub _end {
     } else {
         push @$bytecode, o( 'end' );
     }
+}
+
+sub _stop {
+    my( $self, $bytecode, $op ) = @_;
+
+    push @$bytecode, o( 'end' );
 }
 
 sub _global {
@@ -581,6 +606,27 @@ sub _cond_jump_simple {
          o( 'jump' );
     push @{$self->_block_map->{$op->{attributes}{true}}}, $bytecode->[-2];
     push @{$self->_block_map->{$op->{attributes}{false}}}, $bytecode->[-1];
+}
+
+sub _match {
+    my( $self, $bytecode, $op ) = @_;
+    my %params = $op->{attributes} ? %{$op->{attributes}} : ();
+    $params{pos} = $op->{pos} if $op->{pos};
+
+    push @$bytecode,
+         o( ( $params{flags} & FLAG_RX_GLOBAL ) ? 'rx_match_global' :
+                                                  'rx_match', %params );
+}
+
+sub _replace {
+    my( $self, $bytecode, $op ) = @_;
+    my %params = %{$op->{attributes}};
+    delete $params{to};
+
+    push @$bytecode,
+         o( ( $params{flags} & FLAG_RX_GLOBAL ) ? 'rx_replace_global' :
+                                                  'rx_replace', %params );
+    push @{$self->_block_map->{$op->{attributes}{to}}}, $bytecode->[-1];
 }
 
 sub _rx_quantifier {

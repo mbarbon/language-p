@@ -40,7 +40,7 @@ BEGIN {
        T_ANDANDEQUAL T_OROREQUAL
 
        T_CLASS_START T_CLASS_END T_CLASS T_QUANTIFIER T_ASSERTION T_ALTERNATE
-       T_CLGROUP
+       T_CLGROUP T_BACKREFERENCE
        );
 };
 
@@ -243,6 +243,7 @@ my %quoted_pattern =
 my %pattern_special =
   ( '^'  => [ T_ASSERTION, 'START_SPECIAL' ],
     '$'  => [ T_ASSERTION, 'END_SPECIAL' ],
+    '.'  => [ T_ASSERTION, 'ANY_SPECIAL' ],
     '*'  => [ T_QUANTIFIER, 0, -1, 1 ],
     '+'  => [ T_QUANTIFIER, 1, -1, 1 ],
     '?'  => [ T_QUANTIFIER, 0,  1, 1 ],
@@ -362,8 +363,10 @@ sub _quoted_code_lookahead {
         if( !$self->quote->{interpolated_pattern} ) {
             ++$self->{brackets};
             $self->unlex( [ $self->{pos}, T_OPBRK, '{' ] );
-        } elsif( $$buffer =~ /^[0-9]+,[0-9]*}/ ) {
-            die 'Quantifier!';
+        } elsif( $$buffer =~ /^[0-9]+/ ) {
+            $$buffer = '{' . $$buffer;
+            my $token = $self->lex_quote;
+            $self->unlex( $token );
         } else {
             ++$self->{brackets};
             $self->unlex( [ $self->{pos}, T_OPBRK, '{' ] );
@@ -442,6 +445,8 @@ sub lex_quote {
         my $to_return;
         my $pattern = $self->quote->{pattern};
         my $interpolated_pattern = $self->quote->{interpolated_pattern};
+        my $substitution = $self->quote->{substitution};
+
         while( length $$buffer ) {
             my $c = substr $$buffer, 0, 1, '';
 
@@ -457,7 +462,29 @@ sub lex_quote {
                             $v .= $c . $qc;
                             next;
                         }
+                    } elsif( $pattern_special{$qc} ) {
+                        substr $$buffer, 0, 1, ''; # eat character
+                        if( $pattern ) {
+                            $v .= $qc;
+                        } else {
+                            $v .= $c . $qc;
+                        }
+                        next;
+                    } elsif( $qc =~ /[1-9]/ ) {
+                        $$buffer =~ s/^([0-9]+)//;
+
+                        $to_return = [ $self->{pos}, T_PATTERN, $1,
+                                       [ T_BACKREFERENCE, $1 ] ];
                     }
+                } elsif(    $c eq '{'
+                         && !$interpolated_pattern
+                         && $$buffer =~ s/^([0-9]+)(?:(,)([0-9]+)?)?}(\?)?// ) {
+                    my $from = $1;
+                    my $to = !$2        ? $from :
+                             defined $3 ? $3 :
+                                          -1;
+                    $to_return = [ $self->{pos}, T_PATTERN, '{',
+                                   [ T_QUANTIFIER, $from, $to, $4 ? 0 : 1 ] ];
                 } elsif( $c eq '(' && !$interpolated_pattern ) {
                     my $nc = substr $$buffer, 0, 1;
 
@@ -509,6 +536,21 @@ sub lex_quote {
                         }
                     } else {
                         die "Invalid escape '$qc'";
+                    }
+                } elsif(    $substitution
+                         && $qc =~ /^[1-9]$/
+                         && $self->quote->{interpolate}
+                         && $$buffer !~ /^[0-9]$/ ) {
+                    _quoted_code_lookahead( $self );
+
+                    # handle \1 backreference in substitution
+                    $self->unlex( [ $self->{pos}, T_ID, $qc, T_ID ] );
+
+                    if( length $v ) {
+                        $self->unlex( [ $self->{pos}, T_DOLLAR, '$' ] );
+                        return [ $self->{pos}, T_STRING, $v ];
+                    } else {
+                        return [ $self->{pos}, T_DOLLAR, '$' ];
                     }
                 } elsif( $qc =~ /^[0-7]$/ ) {
                     if( $$buffer =~ s/^([0-7]{1,2})// ) {

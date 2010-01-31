@@ -8,6 +8,7 @@ use Language::P::Toy::Value::StringNumber;
 use Language::P::Toy::Value::Reference;
 use Language::P::Toy::Value::Array;
 use Language::P::Toy::Value::List;
+use Language::P::Toy::Value::Pos;
 use Language::P::Toy::Exception;
 use Language::P::ParseTree qw(:all);
 
@@ -213,6 +214,11 @@ _make_binary_op( $_ ), _make_binary_op_assign( $_ ) foreach
     { name     => 'o_bit_and',
       convert  => 'as_integer',
       operator => '&',
+      new_type => 'integer',
+      },
+    { name     => 'o_bit_xor',
+      convert  => 'as_integer',
+      operator => '^',
       new_type => 'integer',
       },
     { name     => 'o_modulus',
@@ -555,6 +561,10 @@ _make_cond_jump( $_ ) foreach
       convert  => 'as_float',
       operator => '==',
       },
+    { name     => 'o_jump_if_f_ne',
+      convert  => 'as_float',
+      operator => '!=',
+      },
     { name     => 'o_jump_if_f_ge',
       convert  => 'as_float',
       operator => '>=',
@@ -829,6 +839,17 @@ sub o_assign {
     my $vl = $runtime->{_stack}[-1];
 
     $vl->assign( $runtime, $vr );
+
+    return $pc + 1;
+}
+
+sub o_pos {
+    my( $op, $runtime, $pc ) = @_;
+    my $val = pop @{$runtime->{_stack}};
+    my $sc = $val->as_scalar( $runtime );
+    my $pos = Language::P::Toy::Value::Pos->new( $runtime, $sc );
+
+    push @{$runtime->{_stack}}, $pos;
 
     return $pc + 1;
 }
@@ -1394,7 +1415,8 @@ sub o_eval_regex {
     my( $op, $runtime, $pc ) = @_;
     my $string = pop @{$runtime->{_stack}};
 
-    my $re = $runtime->compile_regex( $string->as_string( $runtime ) );
+    my $re = $runtime->compile_regex( $string->as_string( $runtime ),
+                                      $op->{flags} );
     push @{$runtime->{_stack}}, $re;
 
     return $pc + 1;

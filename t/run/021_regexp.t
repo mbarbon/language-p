@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..16\n";
+print "1..29\n";
 
 $text = 'abbcccddddeeeeeffffff';
 
@@ -38,3 +38,33 @@ print $1 eq 'c' ? "ok\n" : "not ok\n";
 }
 
 print $1 eq 'c' ? "ok\n" : "not ok - $1\n";
+
+# captures in list context
+@x = $text =~ /((b|c)+)/;
+
+print "$x[0] $x[1]" eq "bbccc c" ? "ok\n" : "not ok - $x[0] $x[1]\n";
+
+# global match in list context
+@x = $text =~ /b+|d+|f+/g;
+
+print "$x[0] $x[1] $x[2]" eq "bb dddd ffffff" ? "ok\n" : "not ok - $x[0] $x[1] $x[2]\n";
+
+# global match in scalar context
+print $text =~ /b+|d+|f+/g ? "ok\n" : "not ok\n";
+print pos $text == 3 ? "ok\n" : "not ok\n";
+
+print $text =~ /b+|d+|f+/g ? "ok\n" : "not ok\n";
+print pos $text == 10 ? "ok\n" : "not ok\n";
+
+print $text =~ /b+|d+|f+/g ? "ok\n" : "not ok\n";
+print pos $text == 21 ? "ok\n" : "not ok\n";
+
+print $text =~ /b+|d+|f+/gc ? "not ok\n" : "ok\n";
+print pos $text == 21 ? "ok\n" : "not ok\n";
+
+print $text =~ /b+|d+|f+/g ? "not ok\n" : "ok\n";
+print defined pos $text ? "not ok\n" : "ok\n";
+
+# global match the empty string
+++$x, "\n" while $text =~ /z*/g;
+print $x == 22 ? "ok\n" : "not ok\n";

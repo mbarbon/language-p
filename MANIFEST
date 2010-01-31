@@ -45,6 +45,7 @@ lib/Language/P/Toy/Value/Handle.pm
 lib/Language/P/Toy/Value/Hash.pm
 lib/Language/P/Toy/Value/List.pm
 lib/Language/P/Toy/Value/MainSymbolTable.pm
+lib/Language/P/Toy/Value/Pos.pm
 lib/Language/P/Toy/Value/Reference.pm
 lib/Language/P/Toy/Value/Regex.pm
 lib/Language/P/Toy/Value/Scalar.pm
@@ -141,8 +142,11 @@ t/parser/expressions/021_map.t
 t/parser/expressions/024_or_low.t
 t/parser/loops/001_block.t
 t/parser/regex/002_base.t
+t/parser/regex/004_quoting.t
 t/parser/regex/010_character_classes.t
 t/parser/regex/011_character_class_intuit.t
+t/parser/regex/020_quantifiers.t
+t/parser/regex/030_backreferences.t
 t/parser/statements/020_labels.t
 t/parser/statements/025_goto.t
 t/parser/statements/026_loop_control.t
@@ -185,11 +189,13 @@ t/run/010_arithmetic.t
 t/run/011_call.t
 t/run/015_array_ops.t
 t/run/015_defined.t
+t/run/015_pos.t
 t/run/017_references.t
 t/run/018_vivification.t
 t/run/020_lexicals.t
 t/run/021_interpolated_regexp.t
 t/run/021_regexp.t
+t/run/021_substitution.t
 t/run/025_begin.t
 t/run/035_local.t
 t/run/038_goto.t

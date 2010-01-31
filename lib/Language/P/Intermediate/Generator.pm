@@ -194,7 +194,8 @@ sub _generate_regex {
     _add_bytecode $self,
         opcode_nm( OP_RX_ACCEPT, groups => $self->_group_count );
 
-    die "Flags not supported" if $regex->flags;
+    die "Flags i, o, g, c not supported"
+      if $regex->flags & ( FLAG_RX_CASE_INSENSITIVE|FLAG_RX_ONCE );
 
     return $self->_code_segments;
 }
@@ -683,6 +684,7 @@ sub _unary_op {
     $self->dispatch( $tree->left );
 
     my $op = $tree->op;
+    return if $op == OP_PLUS;
     if( $tree->get_attribute( 'context' ) & CXT_VIVIFY ) {
         if( $op == OP_DEREFERENCE_SCALAR ) {
             $op = OP_VIVIFY_SCALAR;
@@ -728,6 +730,25 @@ sub _parentheses {
     $self->dispatch( $tree->left );
 }
 
+sub _substitution {
+    my( $self, $tree ) = @_;
+    _pattern( $self, $tree->pattern );
+
+    my $current = $self->_current_basic_block;
+    my $block = _new_block( $self );
+    _add_blocks $self, $block;
+
+    $self->dispatch( $tree->replacement );
+
+    # OP_STOP marks the end of a sequence of opcodes that are run in a
+    # secondary run loop; it is currently used only for regex
+    # substitutions; maybe can be removed
+    _add_bytecode $self, opcode_n( OP_STOP );
+    $self->_current_basic_block( $current );
+
+    return $block;
+}
+
 sub _binary_op {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
@@ -763,9 +784,6 @@ sub _binary_op {
                       opcode_npm( $tree->op, $tree->pos,
                                   context => _context( $tree ) );
     } elsif( $tree->op == OP_MATCH || $tree->op == OP_NOT_MATCH ) {
-        $self->dispatch( $tree->left );
-        $self->dispatch( $tree->right );
-
         my $scope_id = $self->_code_segments->[0]->scopes->[-1]->{id};
 
         unless( $self->_code_segments->[0]->scopes->[-1]->{flags} & SCOPE_REGEX ) {
@@ -774,9 +792,32 @@ sub _binary_op {
                  [ opcode_nm( OP_RX_STATE_RESTORE, index => $scope_id ) ];
         }
 
+        $self->dispatch( $tree->left );
+
+        if( $tree->right->isa( 'Language::P::ParseTree::Substitution' ) ) {
+            my $repl = _substitution( $self, $tree->right );
+            my $flags = $tree->right->pattern->flags &
+                        (FLAG_RX_GLOBAL|FLAG_RX_KEEP);
+
+            _add_bytecode $self,
+                opcode_npm( OP_REPLACE, $tree->pos,
+                            context   => _context( $tree ),
+                            index     => $scope_id,
+                            flags     => $flags,
+                            to        => $repl );
+
+            return;
+        }
+
+        $self->dispatch( $tree->right );
+
+        my $flags = $tree->right->flags &
+                    (FLAG_RX_GLOBAL|FLAG_RX_KEEP);
+
         _add_bytecode $self,
             opcode_npm( OP_MATCH, $tree->pos,
                         context   => _context( $tree ),
+                        flags     => $flags,
                         index     => $scope_id );
         # maybe perform the transformation during parsing, but remember
         # to correctly propagate context
@@ -1606,7 +1647,9 @@ sub _interpolated_pattern {
     $self->dispatch( $tree->string );
 
     _add_bytecode $self, opcode_npm( OP_EVAL_REGEX, $tree->pos,
-                                     context => _context( $tree ) );
+                                     context => _context( $tree ),
+                                     flags   => $tree->flags,
+                                     );
 }
 
 sub _exit_scope {
@@ -1618,8 +1661,8 @@ sub _exit_scope {
 }
 
 my %regex_assertions =
-  ( START_SPECIAL => OP_RX_START_SPECIAL,
-    END_SPECIAL   => OP_RX_END_SPECIAL,
+  ( BEGINNING        => OP_RX_BEGINNING,
+    END_OR_NEWLINE   => OP_RX_END_OR_NEWLINE,
     );
 
 sub _regex_assertion {
@@ -1667,9 +1710,12 @@ sub _regex_quantifier {
 sub _regex_group {
     my( $self, $tree ) = @_;
 
+    my $start_group = $self->_group_count;
     if( $tree->capture ) {
+        $self->_group_count( $start_group + 1 );
+
         _add_bytecode $self,
-            opcode_nm( OP_RX_CAPTURE_START, group => $self->_group_count );
+            opcode_nm( OP_RX_CAPTURE_START, group => $start_group );
     }
 
     foreach my $c ( @{$tree->components} ) {
@@ -1678,8 +1724,7 @@ sub _regex_group {
 
     if( $tree->capture ) {
         _add_bytecode $self,
-            opcode_nm( OP_RX_CAPTURE_END, group => $self->_group_count );
-        $self->_group_count( $self->_group_count + 1 );
+            opcode_nm( OP_RX_CAPTURE_END, group => $start_group );
     }
 }
 

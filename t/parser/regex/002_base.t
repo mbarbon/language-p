@@ -8,7 +8,7 @@ use lib 't/lib';
 use TestParser qw(:all);
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
-m/^\ntest\w/;
+m/^\ntes.\.\w/;
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
@@ -20,10 +20,15 @@ op: OP_MATCH
 right: !parsetree:Pattern
   components:
     - !parsetree:RXAssertion
-      type: START_SPECIAL
+      type: BEGINNING
     - !parsetree:Constant
       flags: CONST_STRING
-      value: "\ntest"
+      value: "\ntes"
+    - !parsetree:RXAssertion
+      type: ANY_NONEWLINE
+    - !parsetree:Constant
+      flags: CONST_STRING
+      value: .
     - !parsetree:RXSpecialClass
       type: WORDS
   flags: 0
@@ -142,7 +147,7 @@ right: !parsetree:Pattern
     - !parsetree:RXAlternation
       left:
         - !parsetree:RXAssertion
-          type: START_SPECIAL
+          type: BEGINNING
         - !parsetree:Constant
           flags: CONST_STRING
           value: t
@@ -157,7 +162,7 @@ right: !parsetree:Pattern
               flags: CONST_STRING
               value: t
             - !parsetree:RXAssertion
-              type: END_SPECIAL
+              type: END_OR_NEWLINE
   flags: 0
   op: OP_QL_M
 EOE

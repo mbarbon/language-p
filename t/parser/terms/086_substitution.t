@@ -163,7 +163,7 @@ right: !parsetree:Substitution
   pattern: !parsetree:Pattern
     components:
       - !parsetree:RXAssertion
-        type: END_SPECIAL
+        type: END_OR_NEWLINE
       - !parsetree:Constant
         flags: CONST_STRING
         value: foo

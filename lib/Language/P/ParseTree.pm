@@ -175,6 +175,7 @@ our %PROTOTYPE =
     OP_ARRAY_SHIFT() => [  1,  1, PROTO_DEFAULT_ARG, PROTO_MAKE_ARRAY|PROTO_REFERENCE ],
     OP_EXISTS()      => [  1,  1, PROTO_AMPER, PROTO_AMPER ],
     OP_CALLER()      => [  0,  1, 0, PROTO_SCALAR ],
+    OP_POS()         => [  0,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
     );
 
 our %CONTEXT =
@@ -837,6 +838,16 @@ use warnings;
 use base qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(left right);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
+package Language::P::ParseTree::RXBackreference;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(group);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 

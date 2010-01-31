@@ -322,7 +322,7 @@ dot_dot_dot         0       same                 2   1  context=i1
 dup                 0       same                 1   2  noattr
 end                 0       same                 0   0  noattr
 eval                u       same                 1   1  context=i1,hints=i,warnings=su,package=s,lexicals=eval_my,globals=eval_our
-eval_regex          u       same                 1   1  context=i1
+eval_regex          u       same                 1   1  context=i1,flags=i
 exists              u       same                 1   1  context=i1
 exists_array        u       same                 2   1  context=i1
 exists_hash         u       same                 2   1  context=i1
@@ -402,7 +402,7 @@ log_xor             0       same                 2   1  context=i1
 make_closure        0       same                 1   1  noattr
 make_list           0       same                -1   1  noattr
 map                 0       same                 1   1  context=i1
-match               0       rx_match             2   1  context=i1,index=i
+match               0       rx_match             2   1  context=i1,flags=i,index=i
 minus               0       negate               1   1  context=i1
 modulus             0       same                 2   1  context=i1
 modulus_assign      0       same                 2   1  context=i1
@@ -424,6 +424,7 @@ phi                 0       same                -1  -1  noattr
 pipe                0       same                 2   1  context=i1
 plus                0       same                 1   1  noattr
 pop                 0       same                 1   0  noattr
+pos                 0       same                 1   1  noattr
 postdec             0       same                 1   1  context=i1
 postinc             0       same                 1   1  context=i1
 power               0       same                 2   1  context=i1
@@ -443,11 +444,13 @@ reference           u       same                 1   1  context=i1
 reftype             u       same                 1   1  context=i1
 repeat              0       same                 2   1  context=i1
 repeat_assign       0       same                 2   1  context=i1
+replace             0       rx_replace           2   1  context=i1,index=i,flags=i,to=b
 require_file        u       same                 1   1  context=i1
 restore_glob_slot   0       same                 0   0  name=s,index=i,slot=i_sigil
 return              0       same                 1   0  context=i1
 rmdir               u       same                 1   1  context=i1
 set                 0       same                 1   0  index=i
+stop                0       same                 1   0  noattr
 str_cmp             0       same                 2   1  noattr
 str_eq              0       compare_s_eq_scalar  2   1  noattr
 str_ge              0       compare_s_ge_scalar  2   1  noattr
@@ -469,13 +472,13 @@ vivify_scalar       0       same                 1   1  context=i1
 wantarray           u       want                 0   1  context=i1
 
 rx_accept           0       same                 0   0  groups=i
+rx_beginning        0       same                 0   0  noattr
 rx_capture_end      0       same                 0   0  group=i
 rx_capture_start    0       same                 0   0  group=i
-rx_end_special      0       same                 0   0  noattr
+rx_end_or_newline   0       same                 0   0  noattr
 rx_exact            0       same                 0   0  string=s,length=i
 rx_quantifier       0       same                 0   0  min=i,max=i,greedy=i1,group=i,to=b,subgroups_start=i,subgroups_end=i
 rx_start_group      0       same                 0   0  to=b
 rx_start_match      0       same                 0   0  noattr
-rx_start_special    0       same                 0   0  noattr
-rx_try              0       same                 0   0  to=b
 rx_state_restore    0       same                 0   0  index=i
+rx_try              0       same                 0   0  to=b
