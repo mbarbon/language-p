@@ -259,7 +259,7 @@ namespace org.mbarbon.p.runtime
 
                     break;
                 }
-                case Opcode.OpNumber.OP_RX_START_SPECIAL:
+                case Opcode.OpNumber.OP_RX_BEGINNING:
                 {
                     if (cxt.Pos != 0)
                         index = Backtrack(ref cxt);

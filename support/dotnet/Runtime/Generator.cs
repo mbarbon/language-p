@@ -152,8 +152,8 @@ namespace org.mbarbon.p.runtime
                 {
                     switch (op.Number)
                     {
-                    case Opcode.OpNumber.OP_RX_START_SPECIAL:
-                    case Opcode.OpNumber.OP_RX_END_SPECIAL:
+                    case Opcode.OpNumber.OP_RX_BEGINNING:
+                    case Opcode.OpNumber.OP_RX_END_OR_NEWLINE:
                     case Opcode.OpNumber.OP_RX_START_MATCH:
                         ops.Add(new Regex.Op(op.Number));
                         break;
@@ -1697,7 +1697,7 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_MATCH:
             {
-                RegexState rs = (RegexState)op;
+                RegexMatch rm = (RegexMatch)op;
 
                 return Expression.New(
                     typeof(P5Scalar).GetConstructor(ProtoRuntimeBool),
@@ -1707,7 +1707,7 @@ namespace org.mbarbon.p.runtime
                         typeof(Regex).GetMethod("Match"),
                         Runtime,
                         Generate(sub, op.Childs[0]),
-                        GetSavedRxState(rs.Index)));
+                        GetSavedRxState(rm.Index)));
             }
             case Opcode.OpNumber.OP_NOT_MATCH:
             {

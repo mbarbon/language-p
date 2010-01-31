@@ -15,6 +15,7 @@ namespace org.mbarbon.p.runtime
                 files = new List<string>();
 
                 int count = reader.ReadInt32();
+                int has_data = reader.ReadInt32();
                 cu = new CompilationUnit(file_name, count);
 
                 for (int i = 0; i < count; ++i)
@@ -340,6 +341,12 @@ namespace org.mbarbon.p.runtime
     public class RegexState : Opcode
     {
         public int Index;
+    }
+
+    public class RegexMatch : Opcode
+    {
+        public int Index;
+        public int Flags;
     }
 
     public class Scope
