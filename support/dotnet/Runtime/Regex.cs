@@ -181,7 +181,7 @@ namespace org.mbarbon.p.runtime
 
         private void StartCapture(ref RxContext cxt, int group)
         {
-            for (int i = cxt.LastOpenCapture; i >= 0 && i < group; ++i)
+            for (int i = cxt.LastOpenCapture + 1; i < group; ++i)
                 cxt.Captures[i].Start = cxt.Captures[i].End = -1;
 
             cxt.Captures[group].Start = cxt.Pos;
@@ -364,7 +364,7 @@ namespace org.mbarbon.p.runtime
                 }
                 case Opcode.OpNumber.OP_RX_ACCEPT:
                 {
-                    for (int i = cxt.LastOpenCapture; i >= 0 && i < Ops[index].Index; ++i)
+                    for (int i = cxt.LastOpenCapture + 1; i < Ops[index].Index; ++i)
                         cxt.Captures[i].Start = cxt.Captures[i].End = -1;
 
                     if (cxt.Captures != null)
