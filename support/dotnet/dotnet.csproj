@@ -59,6 +59,7 @@
     <Compile Include="Values\Hash.cs" />
     <Compile Include="Values\Reference.cs" />
     <Compile Include="Values\Exception.cs" />
+    <Compile Include="Values\ActiveScalar.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
