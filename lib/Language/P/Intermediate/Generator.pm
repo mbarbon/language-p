@@ -784,9 +784,9 @@ sub _binary_op {
                       opcode_npm( $tree->op, $tree->pos,
                                   context => _context( $tree ) );
     } elsif( $tree->op == OP_MATCH || $tree->op == OP_NOT_MATCH ) {
-        my $scope_id = $self->_code_segments->[0]->scopes->[-1]->{id};
+        my $scope_id = $self->_current_block->{id};
 
-        unless( $self->_code_segments->[0]->scopes->[-1]->{flags} & SCOPE_REGEX ) {
+        unless( $self->_code_segments->[0]->scopes->[$scope_id]->{flags} & SCOPE_REGEX ) {
             $self->_code_segments->[0]->scopes->[$scope_id]->{flags} |= SCOPE_REGEX;
             push @{$self->_current_block->{bytecode}},
                  [ opcode_nm( OP_RX_STATE_RESTORE, index => $scope_id ) ];
