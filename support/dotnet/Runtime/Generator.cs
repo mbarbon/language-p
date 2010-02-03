@@ -562,7 +562,7 @@ namespace org.mbarbon.p.runtime
             if (RxStates[index] == null)
             {
                 RxStates[index] =
-                    Expression.Variable(typeof(RxContext));
+                    Expression.Variable(typeof(RxResult));
             }
 
             return RxStates[index];

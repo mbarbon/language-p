@@ -72,6 +72,12 @@ namespace org.mbarbon.p.runtime
         public List<RxState> States;
         public List<int> StateBacktrack;
         public RxCapture[] Captures;
+    }
+
+    public struct RxResult
+    {
+        public int Start, End;
+        public RxCapture[] Captures;
         public string[] StringCaptures;
         public bool Matched;
     }
@@ -173,8 +179,6 @@ namespace org.mbarbon.p.runtime
             }
             else
             {
-                cxt.Matched = false;
-
                 return -1;
             }
         }
@@ -198,19 +202,22 @@ namespace org.mbarbon.p.runtime
             cxt.LastClosedCapture = group;
         }
 
-        public bool Match(Runtime runtime, IP5Any value, ref RxContext oldState)
+        public bool Match(Runtime runtime, IP5Any value, ref RxResult oldState)
         {
-            string str = value.AsString(runtime);
+            return MatchString(runtime, value.AsString(runtime), ref oldState);
+        }
 
+        public bool MatchString(Runtime runtime, string str, ref RxResult oldState)
+        {
             for (int i = 0; i < str.Length; ++i)
             {
-                RxContext cxt;
-                MatchAt(runtime, str, i, out cxt);
+                RxResult res;
+                MatchAt(runtime, str, i, out res);
 
-                if (cxt.Matched)
+                if (res.Matched)
                 {
                     oldState = runtime.LastMatch;
-                    runtime.LastMatch = cxt;
+                    runtime.LastMatch = res;
 
                     return true;
                 }
@@ -220,20 +227,25 @@ namespace org.mbarbon.p.runtime
         }
 
         public bool MatchAt(Runtime runtime, string str, int pos,
-                            out RxContext cxt)
+                            out RxResult res)
         {
             int len = str.Length;
+
+            res.Matched = false;
+            res.Start = res.End = -1;
+            res.Captures = null;
+            res.StringCaptures = null;
+
+            RxContext cxt;
 
             cxt.Pos = pos;
             cxt.Groups = new List<RxGroup>();
             cxt.States = new List<RxState>();
             cxt.StateBacktrack = new List<int>();
-            cxt.Matched = false;
             if (Captures > 0)
                 cxt.Captures = new RxCapture[Captures];
             else
                 cxt.Captures = null;
-            cxt.StringCaptures = null;
             cxt.LastOpenCapture = cxt.LastClosedCapture = -1;
 
             for (int index = 0; index >= 0;)
@@ -375,15 +387,19 @@ namespace org.mbarbon.p.runtime
 
                     if (cxt.Captures != null)
                     {
-                        cxt.StringCaptures = new string[cxt.Captures.Length];
+                        res.StringCaptures = new string[cxt.Captures.Length];
                         for (int i = 0; i < cxt.Captures.Length; ++i)
                             if (cxt.Captures[i].End != -1)
-                                cxt.StringCaptures[i] =
+                                res.StringCaptures[i] =
                                     str.Substring(cxt.Captures[i].Start,
                                                   cxt.Captures[i].End - cxt.Captures[i].Start);
                     }
 
-                    cxt.Matched = true;
+                    res.Start = pos;
+                    res.End = cxt.Pos;
+                    res.Captures = cxt.Captures;
+                    res.Matched = true;
+
                     index = -1;
 
                     break;
@@ -396,7 +412,7 @@ namespace org.mbarbon.p.runtime
                 }
             }
 
-            return cxt.Matched;
+            return res.Matched;
         }
 
         private Op[] Ops;
