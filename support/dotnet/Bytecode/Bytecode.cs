@@ -347,6 +347,7 @@ namespace org.mbarbon.p.runtime
     {
         public int Index;
         public int Flags;
+        public int To; // for replace only
     }
 
     public class Scope

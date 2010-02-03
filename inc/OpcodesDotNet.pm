@@ -61,6 +61,7 @@ my %dotnet_classes =
     'OP_RX_QUANTIFIER'     => 'RegexQuantifier',
     'OP_RX_STATE_RESTORE'  => 'RegexState',
     'OP_MATCH'             => 'RegexMatch',
+    'OP_REPLACE'           => 'RegexMatch',
     'OP_RX_TRY'            => 'RegexTry',
     'OP_RX_CAPTURE_START'  => 'RegexCapture',
     'OP_RX_CAPTURE_END'    => 'RegexCapture',
