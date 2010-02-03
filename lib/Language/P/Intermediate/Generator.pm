@@ -1300,6 +1300,20 @@ sub _ternary {
     _add_blocks $self, $end;
 }
 
+sub _emit_lexical_state {
+    my( $self, $tree ) = @_;
+
+    if( $tree->get_attribute( 'lexical_state' ) ) {
+        my $scope_id = $self->_current_block->{id};
+        my $lex_state = $self->_code_segments->[0]->scopes->[$scope_id]->{lexical_state};
+
+        _add_bytecode $self,
+            opcode_nm( OP_LEXICAL_STATE_SAVE, index => $lex_state );
+        push @{$self->_current_block->{bytecode}},
+             [ opcode_nm( OP_LEXICAL_STATE_RESTORE, index => $lex_state ) ];
+    }
+}
+
 sub _block {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
@@ -1308,15 +1322,7 @@ sub _block {
     my $is_eval = $tree->isa( 'Language::P::ParseTree::EvalBlock' );
     $self->push_block( $is_eval ? SCOPE_EVAL : 0, $tree->pos_s, $tree->pos_e,
                        $is_eval ? _context( $tree ) : 0 );
-
-    my $lex_state;
-    if( $tree->get_attribute( 'lexical_state' ) ) {
-        $lex_state = $self->_code_segments->[0]->scopes->[-1]->{lexical_state};
-        _add_bytecode $self,
-            opcode_nm( OP_LEXICAL_STATE_SAVE, index => $lex_state );
-        push @{$self->_current_block->{bytecode}},
-             [ opcode_nm( OP_LEXICAL_STATE_RESTORE, index => $lex_state ) ];
-    }
+    _emit_lexical_state( $self, $tree );
 
     foreach my $line ( @{$tree->lines} ) {
         $self->dispatch( $line );
@@ -1342,16 +1348,7 @@ sub _bare_block {
     _add_blocks $self, $start_loop;
 
     $self->push_block( 0, $tree->pos_s, $tree->pos_e );
-
-    my $lex_state;
-    if( $tree->get_attribute( 'lexical_state' ) ) {
-        $lex_state = $self->_code_segments->[0]->scopes->[-1]->{lexical_state};
-
-        _add_bytecode $self,
-            opcode_nm( OP_LEXICAL_STATE_SAVE, index => $lex_state );
-        push @{$self->_current_block->{bytecode}},
-             [ opcode_nm( OP_LEXICAL_STATE_RESTORE, index => $lex_state ) ];
-    }
+    _emit_lexical_state( $self, $tree );
 
     foreach my $line ( @{$tree->lines} ) {
         $self->dispatch( $line );
