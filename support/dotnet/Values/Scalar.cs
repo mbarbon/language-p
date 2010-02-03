@@ -45,7 +45,7 @@ namespace org.mbarbon.p.values
         public virtual IP5Any ConcatAssign(Runtime runtime, IP5Any other)
         {
             P5StringNumber sn = body as P5StringNumber;
-            if (sn == null || (sn.flags & P5StringNumber.HasString) == 0)
+            if (sn == null)
                 body = sn = new P5StringNumber(runtime, body.AsString(runtime));
             else
                 sn.flags = P5StringNumber.HasString;
