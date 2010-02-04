@@ -738,12 +738,26 @@ sub _substitution {
     my $block = _new_block( $self );
     _add_blocks $self, $block;
 
-    $self->dispatch( $tree->replacement );
+    $self->push_block( SCOPE_VALUE, $tree->replacement->pos_s,
+                       $tree->replacement->pos_e,
+                       CXT_SCALAR );
+
+    if( $tree->replacement->isa( 'Language::P::ParseTree::Block' ) ) {
+        _emit_lexical_state( $self, $tree->replacement );
+        $self->dispatch( $_ )
+          foreach @{$tree->replacement->lines};
+    } else {
+        $self->dispatch( $tree->replacement );
+    }
+
+    _exit_scope( $self, $self->_current_block );
+    $self->pop_block;
 
     # OP_STOP marks the end of a sequence of opcodes that are run in a
     # secondary run loop; it is currently used only for regex
     # substitutions; maybe can be removed
     _add_bytecode $self, opcode_n( OP_STOP );
+
     $self->_current_basic_block( $current );
 
     return $block;
