@@ -445,6 +445,7 @@ namespace org.mbarbon.p.runtime
             Temporaries = new List<ParameterExpression>();
             BlockLabels = new List<LabelTarget>();
             Blocks = new List<Expression>();
+            ValueBlocks = new Dictionary<int, Expression>();
             LexStates = new List<ParameterExpression>();
             RxStates = new List<ParameterExpression>();
             ModuleGenerator = module_generator;
@@ -601,12 +602,13 @@ namespace org.mbarbon.p.runtime
 
         public void GenerateScope(Subroutine sub, Scope scope)
         {
-            if (scope.Outer != -1)
+            if (scope.Outer != -1 && (scope.Flags & Scope.SCOPE_VALUE) == 0)
                 GenerateScope(sub, sub.Scopes[scope.Outer]);
             if (GeneratedScopes.ContainsKey(scope.Id))
                 return;
             GeneratedScopes.Add(scope.Id, true);
 
+            int first_block = -1;
             for (int i = 0; i < sub.BasicBlocks.Length; ++i)
             {
                 var block = sub.BasicBlocks[i];
@@ -645,6 +647,10 @@ namespace org.mbarbon.p.runtime
                                     Expression.Constant(true)
                                     )));
                     }
+                    // TODO should not rely on block order
+                    if (first_block == -1)
+                        first_block = i;
+
                     Generate(sub, block, exps);
 
                     Expression body = null;
@@ -697,7 +703,10 @@ namespace org.mbarbon.p.runtime
                         body = Expression.Block(typeof(IP5Any), exps);
                     }
 
-                    Blocks.Add(body);
+                    if ((scope.Flags & Scope.SCOPE_VALUE) != 0)
+                        ValueBlocks[first_block] = body;
+                    else
+                        Blocks.Add(body);
                 }
             }
         }
@@ -710,6 +719,9 @@ namespace org.mbarbon.p.runtime
 
             for (int i = 0; i < sub.BasicBlocks.Length; ++i)
                 BlockLabels.Add(Expression.Label("L" + i.ToString()));
+            for (int i = 0; i < sub.Scopes.Length; ++i)
+                if ((sub.Scopes[i].Flags & Scope.SCOPE_VALUE) != 0)
+                    GenerateScope(sub, sub.Scopes[i]);
             GenerateScope(sub, sub.Scopes[0]);
 
             // remove the dummy entry for @_ if present
@@ -957,6 +969,11 @@ namespace org.mbarbon.p.runtime
                         SubLabel,
                         Expression.Constant(null, typeof(IP5Any)),
                         typeof(IP5Any));
+            }
+            case Opcode.OpNumber.OP_STOP:
+            {
+                // TODO remove STOP
+                return Generate(sub, op.Childs[0]);
             }
             case Opcode.OpNumber.OP_DIE:
             {
@@ -1720,6 +1737,77 @@ namespace org.mbarbon.p.runtime
                         Runtime,
                         Generate(sub, op.Childs[0])));
             }
+            case Opcode.OpNumber.OP_REPLACE:
+            {
+                RegexMatch rm = (RegexMatch)op;
+
+                var scalar = Expression.Variable(typeof(P5Scalar));
+                var str = Expression.Variable(typeof(string));
+                var replace = Expression.Variable(typeof(IP5Any));
+                var init_scalar =
+                    Expression.Assign(scalar, Generate(sub, op.Childs[0]));
+                var init_str =
+                    Expression.Assign(
+                        str,
+                        Expression.Call(
+                            scalar,
+                            typeof(IP5Any).GetMethod("AsString"),
+                            Runtime));
+
+                var replace_list = new List<Expression>();
+
+                // at this point all nested scopes have been generated
+                replace_list.Add(
+                    Expression.Assign(replace, ValueBlocks[rm.To]));
+
+                // replace in string
+                var rxstate = Expression.Field(
+                    Runtime,
+                    typeof(Runtime).GetField("LastMatch"));
+
+                replace_list.Add(
+                    Expression.Call(
+                        scalar,
+                        typeof(P5Scalar).GetMethod("SpliceSubstring"),
+                        Runtime,
+                        Expression.Field(
+                            rxstate,
+                            typeof(RxResult).GetField("Start")),
+                        Expression.Field(
+                            rxstate,
+                            typeof(RxResult).GetField("End")),
+                        replace));
+
+                // return true at end of replacement
+                replace_list.Add(Expression.Constant(true));
+
+                var match = Expression.Call(
+                    Generate(sub, op.Childs[1]),
+                    typeof(Regex).GetMethod("MatchString"),
+                    Runtime,
+                    str,
+                    GetSavedRxState(rm.Index));
+                var repl = Expression.Condition(
+                    match,
+                    Expression.Block(typeof(bool), replace_list),
+                    Expression.Constant(false));
+
+                var vars = new List<ParameterExpression>();
+                vars.Add(scalar);
+                vars.Add(str);
+                vars.Add(replace);
+
+                var exps = new List<Expression>();
+                exps.Add(init_scalar);
+                exps.Add(init_str);
+                exps.Add(
+                    Expression.New(
+                        typeof(P5Scalar).GetConstructor(ProtoRuntimeBool),
+                        Runtime,
+                        repl));
+
+                return Expression.Block(typeof(P5Scalar), vars, exps);
+            }
             default:
                 throw new System.Exception(string.Format("Unhandled opcode {0:S} in generation", op.Number.ToString()));
             }
@@ -1730,6 +1818,7 @@ namespace org.mbarbon.p.runtime
         private List<ParameterExpression> Variables, Lexicals, Temporaries, LexStates, RxStates;
         private List<LabelTarget> BlockLabels;
         private List<Expression> Blocks;
+        private Dictionary<int, Expression> ValueBlocks;
         private bool IsMain;
         private ModuleGenerator ModuleGenerator;
         private List<ModuleGenerator.SubInfo> Subroutines;

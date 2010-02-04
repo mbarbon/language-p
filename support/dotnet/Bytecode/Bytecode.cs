@@ -356,6 +356,8 @@ namespace org.mbarbon.p.runtime
         public const int SCOPE_EVAL      = 2;
         public const int SCOPE_MAIN      = 4;
         public const int SCOPE_LEX_STATE = 8;
+        public const int SCOPE_REGEX     = 16;
+        public const int SCOPE_VALUE     = 32;
 
         public int Outer;
         public int Id;
