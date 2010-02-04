@@ -55,6 +55,23 @@ namespace org.mbarbon.p.values
             return this;
         }
 
+        public virtual IP5Any SpliceSubstring(Runtime runtime,
+                                              int start, int end,
+                                              IP5Any replace)
+        {
+            P5StringNumber sn = body as P5StringNumber;
+            if (sn == null)
+                body = sn = new P5StringNumber(runtime, body.AsString(runtime));
+            else
+                sn.flags = P5StringNumber.HasString;
+
+            // TODO handle the various corner cases for start/end
+            sn.stringValue = sn.stringValue.Substring(0, start)
+                + replace.AsString(runtime) + sn.stringValue.Substring(end);
+
+            return this;
+        }
+
         public virtual P5Scalar AsScalar(Runtime runtime) { return this; }
         public virtual string AsString(Runtime runtime) { return body.AsString(runtime); }
         public virtual int AsInteger(Runtime runtime) { return body.AsInteger(runtime); }
