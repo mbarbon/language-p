@@ -113,6 +113,15 @@ sub unlex {
     push @{$self->tokens}, $token;
 }
 
+sub _lexer_error {
+    my( $self, $pos, $message, @args ) = @_;
+
+    throw Language::P::Parser::Exception
+        ( message  => sprintf( $message, @args ),
+          position => $pos,
+          );
+}
+
 my %ops =
   ( ';'   => T_SEMICOLON,
     ':'   => T_COLON,
@@ -976,7 +985,12 @@ sub lex {
     return [ $self->{pos}, T_EOF, '' ] unless length $$_;
 
     # numbers
-    $$_ =~ /^\d|^\.\d/ and return $self->lex_number;
+    $$_ =~ /^\d|^\.\d/ and do {
+        _lexer_error( $self, $self->{pos},
+                      "Number found where operator expected" )
+            if $expect == X_OPERATOR;
+        return $self->lex_number;
+    };
     # quote and quote-like operators
     $$_ =~ s/^(q|qq|qx|qw|m|qr|s|tr|y)(?=\W)//x and
         return _prepare_sublex( $self, $1, undef );
@@ -1054,7 +1068,12 @@ sub lex {
         }
         return [ $pos, T_ID, $ids, $type ];
     };
-    $$_ =~ s/^(["'`])//x and return _prepare_sublex( $self, $1, $1 );
+    $$_ =~ s/^(["'`])//x and do {
+        _lexer_error( $self, $self->{pos},
+                      "String found where operator expected" )
+            if $expect == X_OPERATOR;
+        return _prepare_sublex( $self, $1, $1 );
+    };
     # < when not operator (<> glob, <> file read, << here doc)
     $$_ =~ /^</ and $expect != X_OPERATOR and do {
         $$_ =~ s/^(<<|<)//x;
@@ -1073,6 +1092,9 @@ sub lex {
                 |\+=|\-=|\*=|\/=|\.=|x=|%=|\*\*=|&=|\|=|\^=|&&=|\|\|=
                 |\&\&|\|\|)//x and return [ $self->{pos}, $ops{$1}, $1 ];
     $$_ =~ s/^\$//x and do {
+        _lexer_error( $self, $self->{pos},
+                      "Scalar found where operator expected" )
+            if $expect == X_OPERATOR;
         if( $$_ =~ s/^\#(?=[{\$])//x ) {
             return [ $self->{pos}, $ops{'$#'}, '$#' ];
         } elsif( $$_ =~ /^\#/ ) {
@@ -1165,6 +1187,12 @@ sub lex {
         }
 
         return [ $self->{pos}, T_FILETEST, $op, $filetest{$op} ];
+    };
+    $$_ =~ s/^\@// and do {
+        _lexer_error( $self, $self->{pos},
+                      "Array found where operator expected" )
+            if $expect == X_OPERATOR;
+        return [ $self->{pos}, T_AT, '@' ];
     };
     # single char operators
     $$_ =~ s/^([:;,()\?<>!~=\/\\\+\-\.\|^\*%@&])//x and return [ $self->{pos}, $ops{$1}, $1 ];

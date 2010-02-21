@@ -705,7 +705,7 @@ sub _parse_cond {
 sub _parse_for {
     my( $self ) = @_;
     my $keyword = _lex_token( $self, T_ID );
-    my $token = $self->lexer->lex( X_OPERATOR );
+    my $token = $self->lexer->lex( X_NOTHING );
     my( $foreach_var, $foreach_expr );
 
     $self->_enter_scope;
@@ -2028,7 +2028,7 @@ sub _parse_listop {
 sub _parse_listop_like {
     my( $self, $op, $declared, $call ) = @_;
     my $proto = $call ? $call->parsing_prototype : undef;
-    my $expect = !$declared                                      ? X_BLOCK :
+    my $expect = !$declared                                      ? X_OPERATOR :
                  !$proto                                         ? X_TERM :
                  $proto->[2] & (PROTO_FILEHANDLE|PROTO_INDIROBJ) ? X_REF :
                  $proto->[2] & (PROTO_BLOCK|PROTO_SUB)           ? X_BLOCK :
