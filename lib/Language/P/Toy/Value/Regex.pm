@@ -27,7 +27,7 @@ sub match {
     # make space for the values
     push @{$runtime->{_stack}}, 0, $string;
     foreach my $i ( $start .. length( $string ) ) {
-        local $SIG{__WARN__} = sub { Carp::confess @_ };
+        local $SIG{__WARN__} = sub { Carp::confess( @_ ) };
         $runtime->{_stack}[-2] = $i;
         # print "Start: $i\n";
         $self->call( $runtime, -2, CXT_VOID ); # -2 so we can blindly add 1

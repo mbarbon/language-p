@@ -959,7 +959,7 @@ sub _prepare_sublex_heredoc {
         }
     }
 
-    Carp::confess "EOF while looking for terminator '$end'" unless $finished;
+    Carp::confess( "EOF while looking for terminator '$end'" ) unless $finished;
 
     return [ $pos, T_QUOTE, $quote eq "`" ? OP_QL_QX : 0, $quote ne "'", \$str ];
 }

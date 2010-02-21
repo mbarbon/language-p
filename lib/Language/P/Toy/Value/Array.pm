@@ -112,7 +112,7 @@ sub iterator_from {
 sub get_item {
     my( $self, $runtime, $index ) = @_;
 
-    Carp::confess "Array index out of range ($index > $#{$self->{array}})"
+    Carp::confess( "Array index out of range ($index > $#{$self->{array}})" )
         if $index < 0 || $index > $#{$self->{array}};
 
     return $self->{array}->[$index];

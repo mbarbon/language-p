@@ -34,7 +34,7 @@ sub _find_method {
         $method = $map->{$class} = $map->{DEFAULT}
     }
 
-    Carp::confess "No method for '$class'" unless $method;
+    Carp::confess( "No method for '$class'" ) unless $method;
 
     # use the map as a cache to speed-up lookup
     return $map->{$class} = $method;

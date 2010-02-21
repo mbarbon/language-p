@@ -146,13 +146,13 @@ sub _parse {
                                        } );
                 }
             } else {
-                Carp::confess $value->[O_TYPE], ' ', $value->[O_VALUE], ' ',
-                              $value->[O_RX_REST]->[0];
+                Carp::confess( $value->[O_TYPE], ' ', $value->[O_VALUE], ' ',
+                               $value->[O_RX_REST]->[0] );
             }
         } elsif( $value->[O_TYPE] == T_EOF ) {
             last;
         } elsif( $value->[O_TYPE] == T_DOLLAR || $value->[O_TYPE] == T_AT ) {
-                Carp::confess $value->[O_TYPE], ' ', $value->[O_VALUE];
+                Carp::confess( $value->[O_TYPE], ' ', $value->[O_VALUE] );
         }
     }
 
