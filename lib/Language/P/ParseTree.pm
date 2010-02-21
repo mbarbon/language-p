@@ -125,6 +125,7 @@ our %PROTOTYPE =
     OP_DO_FILE()     => [  1,  1, 0, PROTO_ANY ],
     OP_REQUIRE_FILE()=> [  1,  1, 0, PROTO_ANY ],
     OP_MAP()         => [  2, -1, PROTO_INDIROBJ, PROTO_ARRAY ],
+    OP_GREP()        => [  2, -1, PROTO_INDIROBJ, PROTO_ARRAY ],
     ( map { $_ => [ 1, 1, PROTO_DEFAULT_ARG, PROTO_MAKE_GLOB ] }
           ( OP_FT_EREADABLE,
             OP_FT_EWRITABLE,
