@@ -363,8 +363,10 @@ global              0       same                 0   1  name=s,slot=i_sigil
 grep                0       same                 1   1  context=i1
 hash_element        0       same                 2   1  context=i1,create=i1
 hash_slice          0       same                 2   1  context=i1,create=i1
+hex                 0       same                 1   1  context=i1
 iterator            0       same                 1   1  noattr
 iterator_next       0       same                 1   1  noattr
+join                0       same                 1   1  context=i1
 jump                0       same                 0   0  to=b
 jump_if_f_eq        0       same                 2   0  to=b
 jump_if_f_ge        0       same                 2   0  to=b
@@ -419,6 +421,8 @@ num_le              0       compare_f_le_scalar  2   1  noattr
 num_lt              0       compare_f_lt_scalar  2   1  noattr
 num_ne              0       compare_f_ne_scalar  2   1  noattr
 open                0       same                 1   1  context=i1
+oct                 0       same                 1   1  context=i1
+ord                 0       same                 1   1  context=i1
 parentheses         0       same                -1  -1  noattr
 phi                 0       same                -1  -1  noattr
 pipe                0       same                 2   1  context=i1
@@ -447,11 +451,16 @@ repeat_assign       0       same                 2   1  context=i1
 replace             0       rx_replace           2   1  context=i1,index=i,flags=i,to=b
 require_file        u       same                 1   1  context=i1
 restore_glob_slot   0       same                 0   0  name=s,index=i,slot=i_sigil
+reverse             0       same                 1   1  context=i1
 return              0       same                 1   0  context=i1
 rmdir               u       same                 1   1  context=i1
+scalar              u       same                 1   1  context=i1
 set                 0       same                 1   0  index=i
 shift_left          0       same                 2   1  context=i1
 shift_right         0       same                 2   1  context=i1
+splice              v       same                -1   1  context=i1,arg_count=i1
+split               v       same                -1   1  context=i1,arg_count=i1
+sprintf             0       same                 1   1  context=i1
 stop                0       same                 1   0  noattr
 str_cmp             0       same                 2   1  noattr
 str_eq              0       compare_s_eq_scalar  2   1  noattr

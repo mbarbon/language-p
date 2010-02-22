@@ -167,6 +167,9 @@ our %PROTOTYPE =
     OP_BINMODE()     => [  0,  2, 0, PROTO_MAKE_GLOB, PROTO_SCALAR ],
     OP_ABS()         => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
     OP_CHR()         => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
+    OP_ORD()         => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
+    OP_OCT()         => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
+    OP_HEX()         => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
     OP_WANTARRAY()   => [  0,  0, 0 ],
     OP_REFTYPE()     => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
     OP_BLESS()       => [  1,  2, 0, PROTO_SCALAR, PROTO_SCALAR ],
@@ -177,6 +180,12 @@ our %PROTOTYPE =
     OP_EXISTS()      => [  1,  1, PROTO_AMPER, PROTO_AMPER ],
     OP_CALLER()      => [  0,  1, 0, PROTO_SCALAR ],
     OP_POS()         => [  0,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
+    OP_SPRINTF()     => [  1, -1, 0, PROTO_SCALAR, PROTO_ARRAY ],
+    OP_JOIN()        => [  1, -1, 0, PROTO_SCALAR, PROTO_ARRAY ],
+    OP_REVERSE()     => [  0, -1, PROTO_DEFAULT, PROTO_ARRAY ],
+    OP_SPLICE()      => [  1, -1, 0, PROTO_MAKE_ARRAY|PROTO_REFERENCE, PROTO_SCALAR, PROTO_SCALAR, PROTO_ARRAY ],
+    OP_SPLIT()       => [  0,  4, 0, PROTO_SCALAR, PROTO_SCALAR, PROTO_SCALAR, PROTO_SCALAR ],
+    OP_SCALAR()      => [  1,  1, 0, PROTO_SCALAR ],
     );
 
 our %CONTEXT =

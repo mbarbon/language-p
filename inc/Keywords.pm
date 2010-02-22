@@ -126,7 +126,9 @@ undef               b
 map                 b       
 grep                b       
 exists              b       
+scalar              b       
 pos                 b       
+split               b       
 unlink              o       
 glob                o       
 readline            o       
@@ -141,6 +143,9 @@ binmode             o
 abs                 o       
 wantarray           o       
 chr                 o       
+ord                 o       
+oct                 o       
+hex                 o       
 ref                 o       KEY_REFTYPE
 bless               o       
 push                o       
@@ -148,3 +153,7 @@ pop                 o
 shift               o       
 unshift             o       
 caller              o       
+sprintf             o       
+join                o       
+reverse             o       
+splice              o       
