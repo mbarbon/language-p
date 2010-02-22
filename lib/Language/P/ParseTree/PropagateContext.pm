@@ -280,9 +280,9 @@ sub _foreach {
 sub _for {
     my( $self, $tree, $cxt ) = @_;
 
-    $self->visit( $tree->condition, CXT_SCALAR );
-    $self->visit( $tree->initializer, CXT_VOID );
-    $self->visit( $tree->step, CXT_VOID );
+    $self->visit( $tree->condition, CXT_SCALAR ) if $tree->condition;
+    $self->visit( $tree->initializer, CXT_VOID ) if $tree->initializer;
+    $self->visit( $tree->step, CXT_VOID ) if $tree->step;
     $self->visit( $tree->block, CXT_VOID );
 }
 
