@@ -46,11 +46,11 @@ BEGIN {
 
 use constant
   { X_NOTHING  => 0,
-    X_STATE    => 1,
+    X_STATE    => 1,  # at the start of a new line
     X_TERM     => 2,
     X_OPERATOR => 3,
-    X_BLOCK    => 4,
-    X_REF      => 5,
+    X_BLOCK    => 4,  # bracketed block
+    X_REF      => 5,  # filehandle/indirect argument of print/map/grep
 
     O_POS             => 0,
     O_TYPE            => 1,

@@ -63,15 +63,15 @@ use constant
     PROTO_SUB          => 8,
     PROTO_GLOB         => 16,
     PROTO_ANY          => 1|2|4|8|16,
-    PROTO_REFERENCE    => 32,
-    PROTO_BLOCK        => 64,
-    PROTO_AMPER        => 128,
-    PROTO_INDIROBJ     => 256,
-    PROTO_FILEHANDLE   => 512,
-    PROTO_MAKE_ARRAY   => 1024|2,
-    PROTO_MAKE_HASH    => 1024|4,
-    PROTO_MAKE_GLOB    => 1024|16,
-    PROTO_DEFAULT_ARG  => 2048,
+    PROTO_REFERENCE    => 32,      # \<something> prototype
+    PROTO_BLOCK        => 64,      # eval {}
+    PROTO_AMPER        => 128,     # defined &foo, exists &foo
+    PROTO_INDIROBJ     => 256,     # map/grep
+    PROTO_FILEHANDLE   => 512,     # print/printf
+    PROTO_MAKE_ARRAY   => 1024|2,  # push a
+    PROTO_MAKE_HASH    => 1024|4,  # keys a
+    PROTO_MAKE_GLOB    => 1024|16, # pipe a, a
+    PROTO_DEFAULT_ARG  => 2048,    # adds $_ if no arg specified
     PROTO_DEFAULT      => [ -1, -1, 0, 2 ],
 
     # sigils, anonymous array/hash constructors, dereferences
