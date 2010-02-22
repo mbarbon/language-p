@@ -250,7 +250,7 @@ left: !parsetree:Symbol
   context: CXT_SCALAR
   name: _
   sigil: VALUE_SCALAR
-op: 134
+op: OP_MATCH
 right: !parsetree:InterpolatedPattern
   context: CXT_SCALAR
   flags: 0
@@ -277,7 +277,7 @@ left: !parsetree:Symbol
   context: CXT_SCALAR
   name: _
   sigil: VALUE_SCALAR
-op: 134
+op: OP_MATCH
 right: !parsetree:InterpolatedPattern
   context: CXT_SCALAR
   flags: 0
