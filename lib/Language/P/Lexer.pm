@@ -840,6 +840,8 @@ sub _find_end {
                 }
 
                 next;
+            } elsif( $c eq "\n" ) {
+                ++$self->{line};
             } elsif( $paired && $c eq $quote_start ) {
                 ++$delim_count;
             } elsif( $c eq $quote_end ) {
