@@ -99,6 +99,7 @@ t/parser/expressions/002_method_call.t
 t/parser/expressions/003_pre_post_inc_dec.t
 t/parser/expressions/005_unary.t
 t/parser/expressions/007_repeat.t
+t/parser/expressions/009_shift.t
 t/parser/expressions/010_do.t
 t/parser/expressions/010_eval.t
 t/parser/expressions/010_filtetest.t

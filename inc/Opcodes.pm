@@ -450,6 +450,8 @@ restore_glob_slot   0       same                 0   0  name=s,index=i,slot=i_si
 return              0       same                 1   0  context=i1
 rmdir               u       same                 1   1  context=i1
 set                 0       same                 1   0  index=i
+shift_left          0       same                 2   1  context=i1
+shift_right         0       same                 2   1  context=i1
 stop                0       same                 1   0  noattr
 str_cmp             0       same                 2   1  noattr
 str_eq              0       compare_s_eq_scalar  2   1  noattr

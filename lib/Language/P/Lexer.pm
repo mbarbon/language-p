@@ -25,7 +25,7 @@ our @TOKENS;
 BEGIN {
   our @TOKENS =
     qw(T_ID T_FQ_ID T_SUB_ID T_EOF T_PACKAGE T_FILETEST
-       T_PATTERN T_STRING T_NUMBER T_QUOTE T_OR T_XOR
+       T_PATTERN T_STRING T_NUMBER T_QUOTE T_OR T_XOR T_SHIFT_LEFT T_SHIFT_RIGHT
        T_SEMICOLON T_COLON T_COMMA T_OPPAR T_CLPAR T_OPSQ T_CLSQ
        T_OPBRK T_CLBRK T_OPHASH T_OPAN T_CLPAN T_INTERR
        T_NOT T_SLESS T_CLAN T_SGREAT T_EQUAL T_LESSEQUAL T_SLESSEQUAL
@@ -135,6 +135,8 @@ my %ops =
     '}'   => T_CLBRK,
     '?'   => T_INTERR,
     '!'   => T_NOT,
+    '>>'  => T_SHIFT_RIGHT,
+    '<<'  => T_SHIFT_LEFT,
     '<'   => T_OPAN,
     'lt'  => T_SLESS,
     '>'   => T_CLAN,
@@ -1085,7 +1087,7 @@ sub lex {
         }
     };
     # multi char operators
-    $$_ =~ s/^(<=|>=|==|!=|=>|->
+    $$_ =~ s/^(<=|>=|==|!=|=>|->|<<|>>
                 |=~|!~
                 |\.\.|\.\.\.
                 |\+\+|\-\-
