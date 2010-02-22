@@ -966,7 +966,7 @@ sub _parse_maybe_subscript_rest {
     # array/hash element
     if( $next->[O_TYPE] == T_ARROW ) {
         _lex_token( $self, T_ARROW );
-        my $bracket = $self->lexer->peek( X_OPERATOR );
+        my $bracket = $self->lexer->peek( X_METHOD_SUBSCRIPT );
 
         if(    $bracket->[O_TYPE] == T_OPPAR
             || $bracket->[O_TYPE] == T_OPSQ
@@ -2041,7 +2041,7 @@ sub _parse_listop_like {
     if( !$call || !$declared || $call->is_plain_function ) {
         if( $next->[O_TYPE] == T_ARROW ) {
             _lex_token( $self, T_ARROW );
-            my $la = $self->lexer->peek( X_OPERATOR );
+            my $la = $self->lexer->peek( X_METHOD_SUBSCRIPT );
 
             if( $la->[O_TYPE] == T_ID || $la->[O_TYPE] == T_DOLLAR ) {
                 # here we are calling the method on a bareword

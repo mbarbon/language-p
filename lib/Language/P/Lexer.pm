@@ -51,6 +51,7 @@ use constant
     X_OPERATOR => 3,
     X_BLOCK    => 4,  # bracketed block
     X_REF      => 5,  # filehandle/indirect argument of print/map/grep
+    X_METHOD_SUBSCRIPT => 6, # saw an arrow, expecting method/subscript
 
     O_POS             => 0,
     O_TYPE            => 1,
@@ -73,7 +74,7 @@ use constant
 use Exporter 'import';
 
 our @EXPORT_OK =
-  ( qw(X_NOTHING X_STATE X_TERM X_OPERATOR X_BLOCK X_REF
+  ( qw(X_NOTHING X_STATE X_TERM X_OPERATOR X_BLOCK X_REF X_METHOD_SUBSCRIPT
        O_POS O_TYPE O_VALUE O_ID_TYPE O_FT_OP O_QS_INTERPOLATE O_QS_BUFFER
        O_RX_REST O_RX_SECOND_HALF O_RX_FLAGS O_RX_INTERPOLATED O_NUM_FLAGS
        LEX_NO_PACKAGE
@@ -1138,7 +1139,7 @@ sub lex {
         if( $brack eq '{' ) {
             if( $expect == X_TERM ) {
                 return [ $self->{pos}, T_OPHASH, '{' ];
-            } elsif( $expect == X_OPERATOR ) {
+            } elsif( $expect == X_OPERATOR || $expect == X_METHOD_SUBSCRIPT ) {
                 # autoquote literal strings in hash subscripts
                 if( $$_ =~ s/^[ \t]*([[:alpha:]_]+)[ \t]*\}// ) {
                     $self->unlex( [ $self->{pos}, T_CLBRK, '}' ] );
