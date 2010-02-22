@@ -9,6 +9,7 @@ lib/Language/P/Keywords.pm
 lib/Language/P/Opcodes.pm
 lib/Language/P/Intermediate/SerializeGenerated.pm
 META.yml
+MYMETA.yml
 
 # Misc
 TAGS
