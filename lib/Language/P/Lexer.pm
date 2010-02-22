@@ -825,7 +825,7 @@ sub _find_end {
     my( $interpolated, $delim_count, $str ) = ( 0, 1, '' );
     SCAN_END: for(;;) {
         $self->_fill_buffer unless length $$_;
-        die "EOF while parsing quoted string" unless length $$_;
+        _lexer_error( $self, $pos, "Can't find string terminator '$quote_end' anywhere before EOF" ) unless length $$_;
 
         while( length $$_ ) {
             my $c = substr $$_, 0, 1, '';
