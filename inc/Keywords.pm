@@ -47,7 +47,7 @@ BEGIN {
 };
 
 our @EXPORT = ( @KEYWORDS, @BUILTINS, @OVERRIDABLES,
-                qw(@KEYWORDS @BUILTINS @OVERRIDABLES %ID_TO_KEYWORD),
+                qw(@KEYWORDS @BUILTINS @OVERRIDABLES %%ID_TO_KEYWORD),
                 qw(is_keyword is_builtin is_overridable is_id)
                 );
 our %%EXPORT_TAGS =
