@@ -2137,7 +2137,9 @@ sub _apply_prototype {
         $args = $call->arguments;
     }
 
-    if( @$args < $proto->[0] ) {
+    my $indirect =    $call->isa( 'Language::P::ParseTree::BuiltinIndirect' )
+                   && $call->indirect ? 1 : 0;
+    if( $indirect + @$args < $proto->[0] ) {
         _parse_error( $self, $pos, "Too few arguments for %s",
                       _function_name( $call->function ) );
     }
