@@ -1478,8 +1478,8 @@ sub _parse_term_terminal_maybe_subscripts {
 }
 
 sub _parse_indirobj_maybe_subscripts {
-    my( $self, $token ) = @_;
-    my $indir = _parse_indirobj( $self, 0 );
+    my( $self, $token, $indir ) = @_;
+    $indir ||= _parse_indirobj( $self, 0 );
     my $sigil = $token_to_sigil{$token->[O_TYPE]};
     my $is_id = ref( $indir ) eq 'ARRAY' && $indir->[O_TYPE] == T_ID;
 
@@ -2030,7 +2030,7 @@ sub _parse_listop {
 sub _parse_listop_like {
     my( $self, $op, $declared, $call ) = @_;
     my $proto = $call ? $call->parsing_prototype : undef;
-    my $expect = !$declared                                      ? X_OPERATOR :
+    my $expect = !$declared                                      ? X_OPERATOR_INDIROBJ :
                  !$proto                                         ? X_TERM :
                  $proto->[2] & (PROTO_FILEHANDLE|PROTO_INDIROBJ) ? X_REF :
                  $proto->[2] & (PROTO_BLOCK|PROTO_SUB)           ? X_BLOCK :
@@ -2248,8 +2248,30 @@ sub _parse_arglist {
                                 pos   => $la->[O_POS],
                                 } );
             }
-        } else {
-            $term = _parse_term( $self, $term_prec );
+        } elsif( $proto_char & PROTO_FILEHANDLE ) {
+            if( $la->[O_TYPE] == T_DOLLAR ) {
+                _lex_token( $self, T_DOLLAR );
+
+                $term = _parse_indirobj( $self, 0 );
+                # used to peek after the indirect object without failing
+                # in the print $foo $bar case: _parse_term_n would lex using
+                # X_OPERATOR and trigger the "Scalar found where operator
+                # expected" check
+                my $la2 = $self->lexer->peek( X_OPERATOR_INDIROBJ );
+                my $tt = $la2->[O_TYPE];
+
+                # TODO Perl disambiguates the second case for */% using
+                # whitespace and some heuristics, while here it always
+                # assumes that what looks like a binary operator, is a
+                # binary operator
+                $term = _parse_indirobj_maybe_subscripts( $self, $la, $term );
+                if( $prec_assoc_bin{$tt}
+                    || $tt == T_PLUSPLUS || $tt == T_MINUSMINUS ) {
+                    $term = _parse_term_n( $self, $term_prec, $term );
+                }
+            } else {
+                $term = _parse_term( $self, $term_prec );
+            }
 
             if( !$term ) {
                 $indirect_term = 0;

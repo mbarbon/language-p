@@ -52,6 +52,7 @@ use constant
     X_BLOCK    => 4,  # bracketed block
     X_REF      => 5,  # filehandle/indirect argument of print/map/grep
     X_METHOD_SUBSCRIPT => 6, # saw an arrow, expecting method/subscript
+    X_OPERATOR_INDIROBJ => 7, # saw a bareword, expect operator/indirect object
 
     O_POS             => 0,
     O_TYPE            => 1,
@@ -75,6 +76,7 @@ use Exporter 'import';
 
 our @EXPORT_OK =
   ( qw(X_NOTHING X_STATE X_TERM X_OPERATOR X_BLOCK X_REF X_METHOD_SUBSCRIPT
+       X_OPERATOR_INDIROBJ
        O_POS O_TYPE O_VALUE O_ID_TYPE O_FT_OP O_QS_INTERPOLATE O_QS_BUFFER
        O_RX_REST O_RX_SECOND_HALF O_RX_FLAGS O_RX_INTERPOLATED O_NUM_FLAGS
        LEX_NO_PACKAGE
@@ -986,6 +988,11 @@ sub lex {
 
     local $_ = $self->buffer;
     return [ $self->{pos}, T_EOF, '' ] unless length $$_;
+    my $indir;
+    if( $expect == X_OPERATOR_INDIROBJ ) {
+        $indir = 1;
+        $expect = X_OPERATOR;
+    }
 
     # numbers
     $$_ =~ /^\d|^\.\d/ and do {
@@ -1097,7 +1104,7 @@ sub lex {
     $$_ =~ s/^\$//x and do {
         _lexer_error( $self, $self->{pos},
                       "Scalar found where operator expected" )
-            if $expect == X_OPERATOR;
+            if $expect == X_OPERATOR && !$indir;
         if( $$_ =~ s/^\#(?=[{\$])//x ) {
             return [ $self->{pos}, $ops{'$#'}, '$#' ];
         } elsif( $$_ =~ /^\#/ ) {
