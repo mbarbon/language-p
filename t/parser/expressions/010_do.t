@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 9;
+use Test::More tests => 10;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -185,4 +185,26 @@ lines:
     function: OP_RETURN
 name: foo
 prototype: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+do { 1 } while( 1 );
+EOP
+--- !parsetree:ConditionalLoop
+block: !parsetree:DoBlock
+  context: CXT_VOID
+  lines:
+    - !parsetree:Constant
+      context: CXT_VOID
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 1
+block_type: while
+condition: !parsetree:Parentheses
+  context: CXT_SCALAR
+  left: !parsetree:Constant
+    context: CXT_SCALAR
+    flags: CONST_NUMBER|NUM_INTEGER
+    value: 1
+  op: OP_PARENTHESES
+continue: ~
 EOE

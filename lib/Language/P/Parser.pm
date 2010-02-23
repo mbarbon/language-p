@@ -843,9 +843,8 @@ sub _parse_continue {
     return _parse_block_rest( $self, $brack->[O_POS], BLOCK_OPEN_SCOPE );
 }
 
-sub _parse_sideff {
-    my( $self ) = @_;
-    my $expr = _parse_expr( $self );
+sub _parse_statement_modifier {
+    my( $self, $expr ) = @_;
     my $keyword = $self->lexer->peek( X_TERM );
 
     if( $keyword->[O_TYPE] == T_ID && is_keyword( $keyword->[O_ID_TYPE] ) ) {
@@ -889,6 +888,14 @@ sub _parse_sideff {
                             } );
         }
     }
+
+    return $expr;
+}
+
+sub _parse_sideff {
+    my( $self ) = @_;
+    my $expr = _parse_expr( $self );
+    $expr = _parse_statement_modifier( $self, $expr );
 
     _lex_semicolon( $self );
     $self->_add_pending_lexicals;
@@ -2327,8 +2334,9 @@ sub _parse_do {
     my $next = $self->lexer->peek( X_BLOCK );
     if( $next->[O_TYPE] == T_OPBRK ) {
         _lex_token( $self );
-        return _parse_block_rest( $self, $next->[O_POS],
-                                  BLOCK_OPEN_SCOPE|BLOCK_DO );
+        my $block = _parse_block_rest( $self, $next->[O_POS],
+                                       BLOCK_OPEN_SCOPE|BLOCK_DO );
+        return _parse_statement_modifier( $self, $block );
     }
 
     my $call = Language::P::ParseTree::Builtin->new
