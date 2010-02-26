@@ -40,7 +40,7 @@ BEGIN {
        T_ANDANDEQUAL T_OROREQUAL
 
        T_CLASS_START T_CLASS_END T_CLASS T_QUANTIFIER T_ASSERTION T_ALTERNATE
-       T_CLGROUP T_BACKREFERENCE
+       T_CLGROUP T_BACKREFERENCE T_POSIX
        );
 };
 
@@ -433,6 +433,8 @@ sub lex_charclass {
         return [ $self->{pos}, T_MINUS, '-' ];
     } elsif( $c eq ']' ) {
         return [ $self->{pos}, T_CLASS_END ];
+    } elsif( $c eq '[' && $$buffer =~ s/^:(\w+):\]// ) {
+        return [ $self->{pos}, T_POSIX, $1 ];
     } else {
         return [ $self->{pos}, T_STRING, $c ];
     }

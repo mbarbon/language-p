@@ -161,6 +161,10 @@ sub _parse {
     return \@values;
 }
 
+my %posix_charclasses = map { $_ => 1 } qw(alpha alnum ascii blank cntrl digit
+                                           graph lower print punct space upper
+                                           word xdigit);
+
 sub _parse_charclass {
     my( $self, $class ) = @_;
     my $st = $class->elements;
@@ -186,6 +190,19 @@ sub _parse_charclass {
             } else {
                 push @la, $next;
             }
+        } elsif( $value->[O_TYPE] == T_POSIX ) {
+            if( !$posix_charclasses{$value->[O_VALUE]} ) {
+                throw Language::P::Parser::Exception
+                  ( message  => sprintf( "Invalid POSIX character class '%s'",
+                                         $value->[O_VALUE] ),
+                    position => $value->[O_POS],
+                    );
+            }
+
+            push @$st, Language::P::ParseTree::RXPosixClass->new
+                           ( { type => $value->[O_VALUE],
+                                } );
+            next;
         } elsif( $value->[O_TYPE] == T_CLASS ) {
             push @$st, Language::P::ParseTree::RXSpecialClass->new
                            ( { type => $value->[O_VALUE],

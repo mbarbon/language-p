@@ -831,6 +831,16 @@ our @FIELDS = qw(type);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+package Language::P::ParseTree::RXPosixClass;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(type);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
 package Language::P::ParseTree::RXRange;
 
 use strict;
