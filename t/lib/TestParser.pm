@@ -5,7 +5,7 @@ use warnings;
 
 use Exporter 'import';
 
-use Language::P::Parser;
+use Language::P::Parser qw(:all);
 use Language::P::Keywords;
 use Language::P::ParseTree qw(:all);
 use Language::P::ParseTree::PropagateContext;
@@ -13,7 +13,7 @@ use Language::P::Toy::Value::MainSymbolTable;
 
 use YAML qw(Bless Dump);
 
-our @EXPORT_OK = qw(fresh_parser parsed_program
+our @EXPORT_OK = qw(fresh_parser parsed_program parse_ok
                     parse_and_diff_yaml parse_string);
 our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,
@@ -83,6 +83,37 @@ sub fresh_parser {
 
 sub parsed_program {
     return \@lines;
+}
+
+sub parse_ok {
+    my( $dirs, $module ) = @_;
+    ( my $file = $module ) =~ s{::}{/}g;
+    my $parser = fresh_parser;
+
+    require File::Spec;
+
+    my $path;
+    foreach my $dir ( ref $dirs ? @$dirs : $dirs ) {
+        $path = File::Spec->catfile( $dir, $file . '.pm' );
+        last if -f $path
+    }
+    eval {
+        $parser->parse_file( $path, PARSE_ADD_RETURN|PARSE_MAIN );
+    };
+    if( my $e = $@ ) {
+        Test::More::ok( 0, $module );
+
+        if( ref $e && $e->isa( 'Language::P::Exception' ) ) {
+            my $pos = $e->position || [ 'some file', 'not known' ];
+            Test::More::diag( $e->message . ' at ' . $pos->[0] .
+                              ' line ' . $pos->[1] );
+        } else {
+            Test::More::diag( "Abnormal parser faiure:" );
+            Test::More::diag( "$e" );
+        }
+    } else {
+        Test::More::ok( 1, $module );
+    }
 }
 
 sub parse_string {
