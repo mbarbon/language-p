@@ -55,6 +55,26 @@ sub _parse {
                                    ( { components => [],
                                        capture    => 0,
                                        } );
+                } elsif( $type->[O_VALUE] eq '=' ) {
+                    push @$st, Language::P::ParseTree::RXAssertionGroup->new
+                                   ( { components => [],
+                                       type       => 'POSITIVE_LOOKAHEAD',
+                                       } );
+                } elsif( $type->[O_VALUE] eq '!' ) {
+                    push @$st, Language::P::ParseTree::RXAssertionGroup->new
+                                   ( { components => [],
+                                       type       => 'NEGATIVE_LOKAHEAD',
+                                       } );
+                } elsif( $type->[O_VALUE] eq '<=' ) {
+                    push @$st, Language::P::ParseTree::RXAssertionGroup->new
+                                   ( { components => [],
+                                       type       => 'POSITIVE_LOOKBEHIND',
+                                       } );
+                } elsif( $type->[O_VALUE] eq '<!' ) {
+                    push @$st, Language::P::ParseTree::RXAssertionGroup->new
+                                   ( { components => [],
+                                       type       => 'NEGATIVE_LOOKBEHIND',
+                                       } );
                 } else {
                     # remaining (?...) constructs
                     die "Unhandled (?" . $type->[O_VALUE] . ") in regex";
