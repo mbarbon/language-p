@@ -1589,6 +1589,9 @@ sub _parse_lexical {
     return _process_declaration( $self, $term, $keyword, $force_closed );
 }
 
+# takes a my $foo or my( $foo, $bar ) declaration, turns each ::Symbol
+# node into either a fully-qualified symbol (our) or a lexical
+# declaration (my)
 sub _process_declaration {
     my( $self, $decl, $keyword, $force_closed ) = @_;
 
@@ -1621,6 +1624,10 @@ sub _process_declaration {
         push @{$self->_pending_lexicals}, $sym;
 
         return $sym;
+    } elsif(    $decl->isa( 'Language::P::ParseTree::Builtin' )
+             && $decl->function == OP_UNDEF ) {
+        # allow undef in my declarations, to be able to assign lists
+        return $decl;
     } else {
         die 'Invalid node ', ref( $decl ), ' in declaration';
     }
