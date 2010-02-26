@@ -266,8 +266,7 @@ my %pattern_special =
     '??' => [ T_QUANTIFIER, 0,  1, 0 ],
     ')'  => [ T_CLGROUP ],
     '|'  => [ T_ALTERNATE ],
-    '['  => [ T_CLASS_START ],
-    ']'  => [ T_CLASS_END ],
+    '['  => [ T_CLASS_START ], # ']' handled in lex_charclass
     );
 
 sub _skip_space {
