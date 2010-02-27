@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Exporter 'import';
+use Test::More ();
 
 use Language::P::Parser qw(:all);
 use Language::P::Keywords;
@@ -162,6 +163,17 @@ sub parse_and_diff_yaml {
 
     local $Test::Builder::Level = $Test::Builder::Level + 1;
     Test::Differences::eq_or_diff( $got, $expected );
+}
+
+package t::lib::TestParser;
+
+sub import {
+    shift;
+
+    strict->import;
+    warnings->import;
+    Test::More->import( @_ );
+    Exporter::export( 'TestParser', scalar caller, ':all' );
 }
 
 1;
