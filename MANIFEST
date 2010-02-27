@@ -153,6 +153,7 @@ t/parser/terms/053_local.t
 t/parser/terms/080_quoted_string.t
 t/parser/terms/081_quote_like.t
 t/parser/terms/082_heredoc.t
+t/parser/terms/083_quoting.t
 t/parser/terms/085_pattern.t
 t/parser/terms/086_substitution.t
 t/parser/terms/105_dereference.t

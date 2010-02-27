@@ -1216,6 +1216,9 @@ sub _parse_substitution {
 sub _parse_string_rest {
     my( $self, $token, $pattern, $substitution ) = @_;
     my @values;
+    my $parts = \@values;
+    my $concat;
+
     local $self->{lexer} = Language::P::Lexer->new
                                ( { string       => $token->[O_QS_BUFFER],
                                    file         => $token->[O_POS][0],
@@ -1232,7 +1235,7 @@ sub _parse_string_rest {
         my $value = $self->lexer->lex_quote;
 
         if( $value->[O_TYPE] == T_STRING ) {
-            push @values, Language::P::ParseTree::Constant->new
+            push @$parts, Language::P::ParseTree::Constant->new
                               ( { flags => CONST_STRING,
                                   value => $value->[O_VALUE],
                                   pos   => $value->[O_POS],
@@ -1242,9 +1245,29 @@ sub _parse_string_rest {
         } elsif(    $value->[O_TYPE] == T_DOLLAR
                  || $value->[O_TYPE] == T_AT
                  || $value->[O_TYPE] == T_ARYLEN ) {
-            push @values, _parse_indirobj_maybe_subscripts( $self, $value );
+            push @$parts, _parse_indirobj_maybe_subscripts( $self, $value );
+        } elsif( $value->[O_TYPE] == T_QUOTE ) {
+            if( $value->[O_VALUE] == 0 ) {
+                $concat = 0;
+                $parts = \@values;
+            } else {
+                $concat = 1;
+                push @$parts, Language::P::ParseTree::Overridable->new
+                                  ( { function  => $value->[O_VALUE],
+                                      arguments => [],
+                                      } );
+                $parts = $parts->[-1]->arguments;
+            }
         } else {
             _syntax_error( $self, $value );
+        }
+
+        if( $concat && @$parts == 2 ) {
+            @$parts = Language::P::ParseTree::BinOp->new
+                          ( { function => OP_CONCATENATE,
+                              left     => $parts->[0],
+                              right    => $parts->[1],
+                              } );
         }
     }
 

@@ -549,6 +549,28 @@ sub lex_quote {
                         } else {
                             $v .= "\0";
                         }
+                    } elsif(    $qc eq 'Q' || $qc eq 'E' || $qc eq 'l'
+                             || $qc eq 'u' || $qc eq 'L' || $qc eq 'U' ) {
+                        if( $qc eq 'Q' ) {
+                            $to_return = [ $self->{pos}, T_QUOTE, OP_QUOTEMETA ];
+                        } elsif( $qc eq 'l' ) {
+                            $to_return = [ $self->{pos}, T_QUOTE, OP_LCFIRST ];
+                        } elsif( $qc eq 'u' ) {
+                            $to_return = [ $self->{pos}, T_QUOTE, OP_UCFIRST ];
+                        } elsif( $qc eq 'L' ) {
+                            $to_return = [ $self->{pos}, T_QUOTE, OP_LC ];
+                        } elsif( $qc eq 'U' ) {
+                            $to_return = [ $self->{pos}, T_QUOTE, OP_UC ];
+                        } elsif( $qc eq 'E' ) {
+                            $to_return = [ $self->{pos}, T_QUOTE, 0 ];
+                        }
+
+                        if( length $v ) {
+                            $self->unlex( $to_return );
+                            return [ $self->{pos}, T_STRING, $v, 1 ];
+                        } else {
+                            return $to_return;
+                        }
                     } else {
                         die "Invalid escape '$qc'";
                     }

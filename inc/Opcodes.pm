@@ -383,6 +383,8 @@ jump_if_s_lt        0       same                 2   0  to=b
 jump_if_s_ne        0       same                 2   0  to=b
 jump_if_true        0       same                 1   0  to=b
 jump_if_null        0       same                 1   0  to=b
+lc                  0       same                 1   1  noattr
+lcfirst             0       same                 1   1  noattr
 lexical             0       same                 0   1  index=ls
 lexical_clear       0       same                 0   0  index=ls
 lexical_set         0       same                 1   0  index=ls
@@ -443,6 +445,7 @@ ql_qw               0       same                -1  -1  noattr
 ql_qx               0       same                -1  -1  noattr
 ql_s                0       same                -1  -1  noattr
 ql_tr               0       same                -1  -1  noattr
+quotemeta           0       same                 1   1  noattr
 readline            u       same                 1   1  context=i1
 reference           u       same                 1   1  context=i1
 reftype             u       same                 1   1  context=i1
@@ -475,6 +478,8 @@ subtract_assign     0       same                 2   1  context=i1
 swap                0       same                 2   2  noattr
 temporary           0       same                 0   1  index=i,slot=i_sigil
 temporary_set       0       same                 1   0  index=i,slot=i_sigil
+uc                  0       same                 1   1  noattr
+ucfirst             0       same                 1   1  noattr
 undef               u       same                -1   1  context=i1
 unlink              0       same                 1   1  context=i1
 vivify_array        0       same                 1   1  context=i1
