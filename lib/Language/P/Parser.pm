@@ -2130,9 +2130,11 @@ sub _apply_prototype {
     my( $self, $pos, $call ) = @_;
     my $proto = $call->parsing_prototype;
     my $args = $call->arguments || [];
+    my $func = $call->function;
+    my $is_opcode = !ref( $call->function );
 
     if( !$call->arguments && ( $proto->[2] & PROTO_DEFAULT_ARG ) ) {
-        my $op = !ref( $call->function ) ? $call->function : 0;
+        my $op = $is_opcode ? $func : 0;
 
         if( $op == OP_FT_ISTTY ) {
             $call->{arguments} = [ _find_symbol( $self, undef, VALUE_GLOB,
@@ -2155,20 +2157,20 @@ sub _apply_prototype {
                    && $call->indirect ? 1 : 0;
     if( $indirect + @$args < $proto->[0] ) {
         _parse_error( $self, $pos, "Too few arguments for %s",
-                      _function_name( $call->function ) );
+                      _function_name( $func ) );
     }
     if( $proto->[1] != -1 && @$args > $proto->[1] ) {
         _parse_error( $self, $pos, "Too many arguments for %s",
-                      _function_name( $call->function ) );
+                      _function_name( $func ) );
     }
 
-    if(    !ref( $call->function )
-        && $call->function == OP_EXISTS
+    if(    $is_opcode
+        && $func == OP_EXISTS
         && !(    $args->[0]->isa( 'Language::P::ParseTree::SpecialFunctionCall' )
               || $args->[0]->isa( 'Language::P::ParseTree::Subscript' ) ) ) {
         _parse_error( $self, $pos, 'exists argument is not a HASH or ARRAY element or a subroutine' );
-    } elsif(    !ref( $call->function )
-             && $call->function == OP_BLESS
+    } elsif(    $is_opcode
+             && $func == OP_BLESS
              && @{$args} == 1 ) {
         $args->[1] = Language::P::ParseTree::Constant->new
                          ( { value => $self->{_lexical_state}[-1]{package},
@@ -2222,7 +2224,7 @@ sub _apply_prototype {
             } else {
                 _parse_error( $self, $pos,
                               "Invalid argument for reference prototype %s",
-                              _function_name( $call->function ) );
+                              _function_name( $func ) );
             }
         }
     }
