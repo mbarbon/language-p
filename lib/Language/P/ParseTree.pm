@@ -194,6 +194,7 @@ our %CONTEXT =
     OP_DO_FILE()     => [ CXT_SCALAR ],
     OP_REQUIRE_FILE()=> [ CXT_SCALAR ],
     OP_REFTYPE()     => [ CXT_SCALAR ],
+    OP_BLESS()       => [ CXT_SCALAR, CXT_SCALAR ],
     );
 
 package Language::P::ParseTree::Node;

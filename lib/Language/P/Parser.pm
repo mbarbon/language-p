@@ -2167,6 +2167,14 @@ sub _apply_prototype {
         && !(    $args->[0]->isa( 'Language::P::ParseTree::SpecialFunctionCall' )
               || $args->[0]->isa( 'Language::P::ParseTree::Subscript' ) ) ) {
         _parse_error( $self, $pos, 'exists argument is not a HASH or ARRAY element or a subroutine' );
+    } elsif(    !ref( $call->function )
+             && $call->function == OP_BLESS
+             && @{$args} == 1 ) {
+        $args->[1] = Language::P::ParseTree::Constant->new
+                         ( { value => $self->{_lexical_state}[-1]{package},
+                             flags => CONST_STRING,
+                             pos   => $call->pos,
+                             } );
     }
 
     foreach my $i ( 3 .. $#$proto ) {
