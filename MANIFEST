@@ -112,6 +112,7 @@ t/parser/expressions/019_assignment.t
 t/parser/expressions/020_fat_arrow.t
 t/parser/expressions/020_sequence.t
 t/parser/expressions/021_builtins.t
+t/parser/expressions/021_builtins/ref.t
 t/parser/expressions/021_call_proto.t
 t/parser/expressions/021_indirect_method.t
 t/parser/expressions/021_list_op.t
