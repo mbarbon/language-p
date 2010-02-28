@@ -104,8 +104,10 @@ t/parser/expressions/010_do.t
 t/parser/expressions/010_eval.t
 t/parser/expressions/010_filtetest.t
 t/parser/expressions/010_named_unary.t
+t/parser/expressions/010_named_unary/chr.t
 t/parser/expressions/010_named_unary/defined.t
 t/parser/expressions/010_named_unary/exists.t
+t/parser/expressions/010_named_unary/ref.t
 t/parser/expressions/010_require.t
 t/parser/expressions/011_relational.t
 t/parser/expressions/013_bitand.t
@@ -114,11 +116,9 @@ t/parser/expressions/019_assignment.t
 t/parser/expressions/020_fat_arrow.t
 t/parser/expressions/020_sequence.t
 t/parser/expressions/021_builtins/bless.t
-t/parser/expressions/021_builtins/chr.t
 t/parser/expressions/021_builtins/filetest.t
 t/parser/expressions/021_builtins/pop.t
 t/parser/expressions/021_builtins/push.t
-t/parser/expressions/021_builtins/ref.t
 t/parser/expressions/021_builtins/return.t
 t/parser/expressions/021_builtins/shift.t
 t/parser/expressions/021_builtins/warn.t
