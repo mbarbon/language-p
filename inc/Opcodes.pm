@@ -486,6 +486,7 @@ vivify_array        0       same                 1   1  context=i1
 vivify_hash         0       same                 1   1  context=i1
 vivify_scalar       0       same                 1   1  context=i1
 wantarray           u       want                 0   1  context=i1
+warn                v       same                 1   0  noattr
 
 rx_accept           0       same                 0   0  groups=i
 rx_beginning        0       same                 0   0  noattr

@@ -191,6 +191,7 @@ our %PROTOTYPE =
     OP_SPLICE()      => [  1, -1, 0, PROTO_MAKE_ARRAY|PROTO_REFERENCE, PROTO_SCALAR, PROTO_SCALAR, PROTO_ARRAY ],
     OP_SPLIT()       => [  0,  4, 0, PROTO_SCALAR, PROTO_SCALAR, PROTO_SCALAR, PROTO_SCALAR ],
     OP_SCALAR()      => [  1,  1, 0, PROTO_SCALAR ],
+    OP_WARN()        => [ -1, -1, 0, PROTO_ARRAY ],
     );
 
 our %CONTEXT =

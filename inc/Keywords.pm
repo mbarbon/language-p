@@ -157,3 +157,4 @@ sprintf             o
 join                o       
 reverse             o       
 splice              o       
+warn                o       
