@@ -63,7 +63,7 @@ left: !parsetree:Overridable
       name: FILE
       sigil: VALUE_GLOB
     - !parsetree:Constant
-      context: CXT_LIST
+      context: CXT_SCALAR
       flags: CONST_STRING
       value: '>foo'
   context: CXT_SCALAR
