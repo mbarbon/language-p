@@ -747,6 +747,12 @@ our @FIELDS = qw(indirect);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub runtime_context {
+    return $CONTEXT{$_[0]->function} if $_[0]->function != Language::P::ParseTree::OP_GREP;
+    return $_[0]->indirect ? [ Language::P::ParseTree::CXT_LIST ] :
+                             [ Language::P::ParseTree::CXT_SCALAR, Language::P::ParseTree::CXT_LIST ];
+}
+
 package Language::P::ParseTree::Overridable;
 
 use strict;

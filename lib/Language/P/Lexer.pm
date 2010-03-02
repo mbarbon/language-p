@@ -1207,7 +1207,7 @@ sub lex {
     };
     # / (either regex start or division operator)
     $$_ =~ s/^\///x and do {
-        if( $expect == X_TERM || $expect == X_STATE ) {
+        if( $expect == X_TERM || $expect == X_STATE || $expect == X_REF ) {
             return _prepare_sublex( $self, 'm', '/' );
         } else {
             return [ $self->{pos}, T_SLASH, '/' ];
