@@ -107,7 +107,12 @@ t/parser/expressions/010_named_unary.t
 t/parser/expressions/010_named_unary/chr.t
 t/parser/expressions/010_named_unary/defined.t
 t/parser/expressions/010_named_unary/exists.t
+t/parser/expressions/010_named_unary/lc.t
+t/parser/expressions/010_named_unary/lcfirst.t
+t/parser/expressions/010_named_unary/quotemeta.t
 t/parser/expressions/010_named_unary/ref.t
+t/parser/expressions/010_named_unary/uc.t
+t/parser/expressions/010_named_unary/ucfirst.t
 t/parser/expressions/010_require.t
 t/parser/expressions/011_relational.t
 t/parser/expressions/013_bitand.t

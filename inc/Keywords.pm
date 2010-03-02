@@ -59,7 +59,7 @@ use constant +
   { ID_MASK          => 0x00003, # 2
     KEYWORD_MASK     => 0x0007c, # 5
     BUILTIN_MASK     => 0x00f80, # 5
-    OVERRIDABLE_MASK => 0x1f000, # 5
+    OVERRIDABLE_MASK => 0x3f000, # 6
     };
 
 use constant +
@@ -158,3 +158,8 @@ join                o
 reverse             o       
 splice              o       
 warn                o       
+uc                  o       
+lc                  o       
+ucfirst             o       
+lcfirst             o       
+quotemeta           o       
