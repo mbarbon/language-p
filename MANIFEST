@@ -121,6 +121,7 @@ t/parser/expressions/021_builtins/pop.t
 t/parser/expressions/021_builtins/push.t
 t/parser/expressions/021_builtins/return.t
 t/parser/expressions/021_builtins/shift.t
+t/parser/expressions/021_builtins/split.t
 t/parser/expressions/021_builtins/warn.t
 t/parser/expressions/021_call_proto.t
 t/parser/expressions/021_grep.t

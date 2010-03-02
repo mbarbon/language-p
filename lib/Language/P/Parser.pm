@@ -2341,6 +2341,12 @@ sub _parse_arglist {
             return [$term] if $next->[O_TYPE] == T_COMMA;
             $self->lexer->unlex( [ -1, T_COMMA, ',' ] );
         }
+    } elsif(    $proto_char & PROTO_PATTERN
+             && $la->[O_TYPE] == T_PATTERN
+             && $la->[O_VALUE] == OP_QL_M ) {
+        _lex_token( $self );
+
+        $term = _parse_match( $self, $la );
     }
 
     $term ||= _parse_term( $self, $term_prec );

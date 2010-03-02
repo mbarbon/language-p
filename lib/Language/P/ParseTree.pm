@@ -16,7 +16,7 @@ our @EXPORT_OK =
        PROTO_DEFAULT PROTO_SCALAR PROTO_ARRAY PROTO_HASH PROTO_SUB
        PROTO_GLOB PROTO_REFERENCE PROTO_BLOCK PROTO_AMPER PROTO_ANY
        PROTO_INDIROBJ PROTO_FILEHANDLE PROTO_MAKE_GLOB PROTO_MAKE_ARRAY
-       PROTO_MAKE_HASH PROTO_DEFAULT_ARG
+       PROTO_MAKE_HASH PROTO_DEFAULT_ARG PROTO_PATTERN
 
        FLAG_IMPLICITARGUMENTS FLAG_ERASEFRAME
        FLAG_RX_MULTI_LINE FLAG_RX_SINGLE_LINE FLAG_RX_CASE_INSENSITIVE
@@ -72,6 +72,7 @@ use constant
     PROTO_MAKE_HASH    => 1024|4,  # keys a
     PROTO_MAKE_GLOB    => 1024|16, # pipe a, a
     PROTO_DEFAULT_ARG  => 2048,    # adds $_ if no arg specified
+    PROTO_PATTERN      => 4096,    # split /foo/
     PROTO_DEFAULT      => [ -1, -1, 0, 2 ],
 
     # sigils, anonymous array/hash constructors, dereferences
@@ -189,7 +190,7 @@ our %PROTOTYPE =
     OP_JOIN()        => [  1, -1, 0, PROTO_SCALAR, PROTO_ARRAY ],
     OP_REVERSE()     => [  0, -1, PROTO_DEFAULT, PROTO_ARRAY ],
     OP_SPLICE()      => [  1, -1, 0, PROTO_MAKE_ARRAY|PROTO_REFERENCE, PROTO_SCALAR, PROTO_SCALAR, PROTO_ARRAY ],
-    OP_SPLIT()       => [  0,  4, 0, PROTO_SCALAR, PROTO_SCALAR, PROTO_SCALAR, PROTO_SCALAR ],
+    OP_SPLIT()       => [  0,  4, PROTO_PATTERN, PROTO_SCALAR, PROTO_SCALAR, PROTO_SCALAR, PROTO_SCALAR ],
     OP_SCALAR()      => [  1,  1, 0, PROTO_SCALAR ],
     OP_WARN()        => [ -1, -1, 0, PROTO_ARRAY ],
     );
@@ -207,6 +208,7 @@ our %CONTEXT =
     OP_REFTYPE()     => [ CXT_SCALAR ],
     OP_BLESS()       => [ CXT_SCALAR, CXT_SCALAR ],
     OP_CHR()         => [ CXT_SCALAR ],
+    OP_SPLIT()       => [ CXT_SCALAR, CXT_SCALAR ],
     );
 
 package Language::P::ParseTree::Node;
