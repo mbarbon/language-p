@@ -2019,10 +2019,16 @@ sub _declared_id {
         if( $rt->get_symbol( _qualify( $self, $op->[O_VALUE], $opidt ), '&' ) ) {
             die "Overriding '" . $op->[O_VALUE] . "' not implemented";
         }
-        $call = Language::P::ParseTree::Overridable->new
-                    ( { function  => $KEYWORD_TO_OP{$opidt},
-                        pos       => $op->[O_POS],
-                        } );
+        if( $opidt == KEY_GLOB ) {
+            $call = Language::P::ParseTree::Glob->new
+                        ( { pos       => $op->[O_POS],
+                            } );
+        } else {
+            $call = Language::P::ParseTree::Overridable->new
+                        ( { function  => $KEYWORD_TO_OP{$opidt},
+                            pos       => $op->[O_POS],
+                            } );
+        }
 
         return ( $call, 1 );
     } elsif( is_builtin( $opidt ) ) {

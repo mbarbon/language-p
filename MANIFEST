@@ -107,6 +107,7 @@ t/parser/expressions/010_named_unary.t
 t/parser/expressions/010_named_unary/chr.t
 t/parser/expressions/010_named_unary/defined.t
 t/parser/expressions/010_named_unary/exists.t
+t/parser/expressions/010_named_unary/glob.t
 t/parser/expressions/010_named_unary/lc.t
 t/parser/expressions/010_named_unary/lcfirst.t
 t/parser/expressions/010_named_unary/quotemeta.t

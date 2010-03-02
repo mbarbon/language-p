@@ -242,7 +242,7 @@ arguments:
         context: CXT_SCALAR
         name: y
         sigil: VALUE_SCALAR
-    context: CXT_LIST
+    context: CXT_SCALAR
 context: CXT_VOID
 function: OP_GLOB
 EOE
@@ -292,7 +292,7 @@ EOP
 --- !parsetree:Glob
 arguments:
   - !parsetree:Constant
-    context: CXT_LIST
+    context: CXT_SCALAR
     flags: CONST_STRING
     value: 'foo '
 context: CXT_VOID
@@ -352,7 +352,7 @@ arguments:
         context: CXT_SCALAR
         flags: CONST_STRING
         value: "'"
-    context: CXT_LIST
+    context: CXT_SCALAR
 context: CXT_VOID
 function: OP_GLOB
 EOE

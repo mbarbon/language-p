@@ -208,6 +208,7 @@ our %CONTEXT =
     OP_REFTYPE()     => [ CXT_SCALAR ],
     OP_BLESS()       => [ CXT_SCALAR, CXT_SCALAR ],
     OP_CHR()         => [ CXT_SCALAR ],
+    OP_GLOB()        => [ CXT_SCALAR ],
     OP_SPLIT()       => [ CXT_SCALAR, CXT_SCALAR ],
     );
 
