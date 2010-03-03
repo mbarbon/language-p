@@ -265,7 +265,7 @@ EOT
 __DATA__
 
 # flags:
-# u: named unary
+# u: do not pass parameters as a list
 # v: variadic
 
 # opcode            flags   name                in out  attrs
@@ -283,7 +283,7 @@ array_slice         0       same                 2   1  context=i1,create=i1
 array_unshift       0       same                 2   1  context=i1
 assign              0       same                 2   1  context=i1
 backtick            0       same                 1   1  context=i1
-binmode             u       same                 1   1  context=i1
+binmode             0       same                 1   1  context=i1
 bit_and             0       same                 2   1  context=i1
 bit_and_assign      0       same                 2   1  context=i1
 bit_or              0       same                 2   1  context=i1
@@ -363,7 +363,7 @@ global              0       same                 0   1  name=s,slot=i_sigil
 grep                0       same                 1   1  context=i1
 hash_element        0       same                 2   1  context=i1,create=i1
 hash_slice          0       same                 2   1  context=i1,create=i1
-hex                 0       same                 1   1  context=i1
+hex                 u       same                 1   1  context=i1
 iterator            0       same                 1   1  noattr
 iterator_next       0       same                 1   1  noattr
 join                0       same                 1   1  context=i1
@@ -383,8 +383,8 @@ jump_if_s_lt        0       same                 2   0  to=b
 jump_if_s_ne        0       same                 2   0  to=b
 jump_if_true        0       same                 1   0  to=b
 jump_if_null        0       same                 1   0  to=b
-lc                  0       same                 1   1  noattr
-lcfirst             0       same                 1   1  noattr
+lc                  u       same                 1   1  noattr
+lcfirst             u       same                 1   1  noattr
 lexical             0       same                 0   1  index=ls
 lexical_clear       0       same                 0   0  index=ls
 lexical_set         0       same                 1   0  index=ls
@@ -423,14 +423,14 @@ num_le              0       compare_f_le_scalar  2   1  noattr
 num_lt              0       compare_f_lt_scalar  2   1  noattr
 num_ne              0       compare_f_ne_scalar  2   1  noattr
 open                0       same                 1   1  context=i1
-oct                 0       same                 1   1  context=i1
-ord                 0       same                 1   1  context=i1
+oct                 u       same                 1   1  context=i1
+ord                 u       same                 1   1  context=i1
 parentheses         0       same                -1  -1  noattr
 phi                 0       same                -1  -1  noattr
 pipe                0       same                 2   1  context=i1
 plus                0       same                 1   1  noattr
 pop                 0       same                 1   0  noattr
-pos                 0       same                 1   1  noattr
+pos                 u       same                 1   1  noattr
 postdec             0       same                 1   1  context=i1
 postinc             0       same                 1   1  context=i1
 power               0       same                 2   1  context=i1
@@ -445,7 +445,7 @@ ql_qw               0       same                -1  -1  noattr
 ql_qx               0       same                -1  -1  noattr
 ql_s                0       same                -1  -1  noattr
 ql_tr               0       same                -1  -1  noattr
-quotemeta           0       same                 1   1  noattr
+quotemeta           u       same                 1   1  noattr
 readline            u       same                 1   1  context=i1
 reference           u       same                 1   1  context=i1
 reftype             u       same                 1   1  context=i1
@@ -454,7 +454,7 @@ repeat_assign       0       same                 2   1  context=i1
 replace             0       rx_replace           2   1  context=i1,index=i,flags=i,to=b
 require_file        u       same                 1   1  context=i1
 restore_glob_slot   0       same                 0   0  name=s,index=i,slot=i_sigil
-reverse             0       same                 1   1  context=i1
+reverse             u       same                 1   1  context=i1
 return              0       same                 1   0  context=i1
 rmdir               u       same                 1   1  context=i1
 scalar              u       same                 1   1  context=i1
@@ -478,8 +478,8 @@ subtract_assign     0       same                 2   1  context=i1
 swap                0       same                 2   2  noattr
 temporary           0       same                 0   1  index=i,slot=i_sigil
 temporary_set       0       same                 1   0  index=i,slot=i_sigil
-uc                  0       same                 1   1  noattr
-ucfirst             0       same                 1   1  noattr
+uc                  u       same                 1   1  noattr
+ucfirst             u       same                 1   1  noattr
 undef               u       same                -1   1  context=i1
 unlink              0       same                 1   1  context=i1
 vivify_array        0       same                 1   1  context=i1
