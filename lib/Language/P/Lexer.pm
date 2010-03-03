@@ -469,21 +469,16 @@ sub lex_quote {
                 if( $c eq '\\' ) {
                     my $qc = substr $$buffer, 0, 1;
 
-                    if( my $qp = $quoted_pattern{$qc} ) {
+                    if( $interpolated_pattern ) {
                         substr $$buffer, 0, 1, ''; # eat character
-                        if( $pattern ) {
-                            $to_return = [ $self->{pos}, T_PATTERN, $qc, $qp ];
-                        } else {
-                            $v .= $c . $qc;
-                            next;
-                        }
+                        $v .= $c . $qc;
+                        next;
+                    } elsif( my $qp = $quoted_pattern{$qc} ) {
+                        substr $$buffer, 0, 1, ''; # eat character
+                        $to_return = [ $self->{pos}, T_PATTERN, $qc, $qp ];
                     } elsif( $pattern_special{$qc} ) {
                         substr $$buffer, 0, 1, ''; # eat character
-                        if( $pattern ) {
-                            $v .= $qc;
-                        } else {
-                            $v .= $c . $qc;
-                        }
+                        $v .= $qc;
                         next;
                     } elsif( $qc =~ /[1-9]/ ) {
                         $$buffer =~ s/^([0-9]+)//;
