@@ -833,6 +833,19 @@ sub o_postdec {
     return $pc + 1;
 }
 
+sub o_quotemeta {
+    my( $op, $runtime, $pc ) = @_;
+    my $v = pop @{$runtime->{_stack}};
+    my $r = $v->as_string( $runtime );
+
+    $r =~ s{(\W)}{\\$1}g;
+
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::Scalar->new_string( $runtime, $r );
+
+    return $pc + 1;
+}
+
 sub o_assign {
     my( $op, $runtime, $pc ) = @_;
     my $vr = pop @{$runtime->{_stack}};
