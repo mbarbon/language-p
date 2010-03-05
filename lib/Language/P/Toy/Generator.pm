@@ -607,6 +607,7 @@ sub _match {
     my( $self, $bytecode, $op ) = @_;
     my %params = $op->{attributes} ? %{$op->{attributes}} : ();
     $params{pos} = $op->{pos} if $op->{pos};
+    $params{index} = _temporary_index( $self, IDX_REGEX, $op->{attributes}{index} );
 
     push @$bytecode,
          o( ( $params{flags} & FLAG_RX_GLOBAL ) ? 'rx_match_global' :
