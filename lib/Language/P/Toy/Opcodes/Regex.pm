@@ -10,7 +10,7 @@ our @EXPORT_OK = qw(o_rx_start_match o_rx_accept o_rx_exact o_rx_start_group
                     o_rx_quantifier o_rx_capture_start o_rx_capture_end o_rx_try
                     o_rx_beginning o_rx_end_or_newline o_rx_state_restore
                     o_rx_match o_rx_match_global o_rx_replace
-                    o_rx_replace_global);
+                    o_rx_replace_global o_rx_class);
 
 our %EXPORT_TAGS =
   ( opcodes => \@EXPORT_OK,
@@ -416,6 +416,20 @@ sub o_rx_exact {
         return _backtrack( $runtime, $cxt );
     }
     $cxt->{pos} += $op->{length};
+
+    return $pc + 1;
+}
+
+sub o_rx_class {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    v "Class '$op->{elements}' at $cxt->{pos}\n";
+    my $chr = substr $cxt->{string}, $cxt->{pos}, 1;
+    if( index( $op->{elements}, $chr ) < 0 ) {
+        return _backtrack( $runtime, $cxt );
+    }
+    $cxt->{pos} += 1;
 
     return $pc + 1;
 }

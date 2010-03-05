@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..29\n";
+print "1..31\n";
 
 $text = 'abbcccddddeeeeeffffff';
 
@@ -22,6 +22,10 @@ print $text =~ /(a|b)*/ ? "ok\n" : "not ok\n";
 
 # alternation
 print $text =~ /(a|b|c)d/ ? "ok\n" : "not ok\n";
+
+# character classes
+print $text =~ /^([ab]+)/ ? "ok\n" : "not ok\n";
+print $1 eq 'abb' ? "ok\n" : "not ok - $1\n";
 
 # captures
 print $text =~ /(a|b|c)d/ ? "ok\n" : "not ok\n";
