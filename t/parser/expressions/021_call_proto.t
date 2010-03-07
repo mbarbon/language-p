@@ -62,6 +62,7 @@ arguments:
             value: 1
         context: CXT_CALLER
         function: OP_RETURN
+    prototype: ~
   - !parsetree:Constant
     context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
@@ -106,6 +107,7 @@ arguments:
             value: 1
         context: CXT_CALLER
         function: OP_RETURN
+    prototype: ~
   - !parsetree:Constant
     context: CXT_LIST
     flags: CONST_NUMBER|NUM_INTEGER
@@ -153,6 +155,7 @@ expressions:
                 value: 1
             context: CXT_CALLER
             function: OP_RETURN
+        prototype: ~
     context: CXT_VOID
     function: !parsetree:Symbol
       context: CXT_SCALAR

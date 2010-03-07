@@ -1,11 +1,6 @@
 #!/usr/bin/perl -w
 
-use strict;
-use warnings;
-use Test::More tests => 6;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 7;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 sub x();
@@ -16,6 +11,24 @@ prototype:
   - 0
   - 0
   - 0
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+$a = sub () { };
+EOP
+--- !parsetree:BinOp
+context: CXT_VOID
+left: !parsetree:Symbol
+  context: CXT_SCALAR|CXT_LVALUE
+  name: a
+  sigil: VALUE_SCALAR
+op: OP_ASSIGN
+right: !parsetree:AnonymousSubroutine
+  lines: []
+  prototype:
+    - 0
+    - 0
+    - 0
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

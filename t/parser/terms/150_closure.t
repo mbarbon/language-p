@@ -34,6 +34,7 @@ right: !parsetree:AnonymousSubroutine
           value: 1
       context: CXT_CALLER
       function: OP_RETURN
+  prototype: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -77,6 +78,7 @@ right: !parsetree:AnonymousSubroutine
           sigil: VALUE_SCALAR
       context: CXT_CALLER
       function: OP_RETURN
+  prototype: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -192,8 +194,10 @@ lines:
                           sigil: VALUE_SCALAR
                     context: CXT_CALLER
                     function: OP_RETURN
+                prototype: ~
             context: CXT_CALLER
             function: OP_RETURN
+        prototype: ~
     context: CXT_CALLER
     function: OP_RETURN
 name: add3

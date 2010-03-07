@@ -526,7 +526,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(lines);
+our @FIELDS = qw(lines prototype);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -541,7 +541,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Subroutine);
 
-our @FIELDS = qw(name prototype);
+our @FIELDS = qw(name);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -567,7 +567,6 @@ use warnings;
 use base qw(Language::P::ParseTree::Subroutine);
 
 sub name { undef }
-sub prototype { undef }
 
 package Language::P::ParseTree::BinOp;
 

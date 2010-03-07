@@ -71,4 +71,5 @@ lines:
         function: OP_ARRAY_SHIFT
     context: CXT_CALLER
     function: OP_RETURN
+prototype: ~
 EOE

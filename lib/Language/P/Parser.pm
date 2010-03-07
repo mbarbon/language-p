@@ -517,15 +517,15 @@ sub _parse_sub {
     my $fqname = $name ? _qualify( $self, $name->[O_VALUE], $name->[O_ID_TYPE] ) : undef;
     my( $proto, $next );
 
+    $next = $self->lexer->lex( X_BLOCK );
+    if( $next->[O_TYPE] == T_OPPAR ) {
+        $proto = _parse_sub_proto( $self );
+        $next = $self->lexer->lex( X_BLOCK );
+    }
+
     if( $fqname ) {
         _parse_error( $self, $name->[O_POS], "Named sub not allowed" )
           unless $flags & 1;
-
-        $next = $self->lexer->lex( X_BLOCK );
-        if( $next->[O_TYPE] == T_OPPAR ) {
-            $proto = _parse_sub_proto( $self );
-            $next = $self->lexer->lex( X_BLOCK );
-        }
 
         if( $next->[O_TYPE] == T_SEMICOLON ) {
             $self->generator->add_declaration( $fqname, $proto );
@@ -539,7 +539,6 @@ sub _parse_sub {
             _syntax_error( $self, $next );
         }
     } else {
-        $next = _lex_token( $self, T_OPBRK, undef, X_BLOCK );
         _parse_error( "Anonymous sub not allowed" )
           unless $flags & 2;
     }
@@ -551,7 +550,9 @@ sub _parse_sub {
                                 pos_s     => $pos,
                                 } ) :
                         Language::P::ParseTree::AnonymousSubroutine->new
-                            ( { pos_s     => $pos } );
+                            ( { pos_s     => $pos,
+                                prototype => $proto,
+                                } );
     # add @_ to lexical scope
     $self->_lexicals->add_name( VALUE_ARRAY, '_' );
     my $lex_state = _lexical_state_node( $self, 1 );
