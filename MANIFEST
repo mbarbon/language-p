@@ -166,6 +166,7 @@ t/parser/regex/011_character_class_posix.t
 t/parser/regex/020_quantifiers.t
 t/parser/regex/030_backreferences.t
 t/parser/regex/040_assertions.t
+t/parser/regex/200_transliteration.t
 t/parser/statements/020_labels.t
 t/parser/statements/025_goto.t
 t/parser/statements/026_loop_control.t
@@ -194,6 +195,7 @@ t/parser/terms/082_heredoc.t
 t/parser/terms/083_quoting.t
 t/parser/terms/085_pattern.t
 t/parser/terms/086_substitution.t
+t/parser/terms/087_transliteration.t
 t/parser/terms/105_dereference.t
 t/parser/terms/106_dereference_sub.t
 t/parser/terms/110_brackets.t

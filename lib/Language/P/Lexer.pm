@@ -440,6 +440,44 @@ sub lex_charclass {
     }
 }
 
+sub lex_transliteration {
+    my( $self ) = @_;
+
+    my $buffer = $self->buffer;
+    return [ $self->{pos}, T_EOF, '' ] unless length $$buffer;
+
+    my $c = substr $$buffer, 0, 1, '';
+    if( $c eq '\\' ) {
+        my $qc = substr $$buffer, 0, 1, '';
+
+        # this is a partial duplicate of lex_quote below, but it's
+        # cleaner than putting transliteration special cases in
+        # lex_quote
+        if( $quoted_chars{$qc} ) {
+            $c = $quoted_chars{$qc};
+        } elsif( $qc =~ /^[0-7]$/ ) {
+            if( $$buffer =~ s/^([0-7]{1,2})// ) {
+                $qc .= $1;
+            }
+
+            $c = chr( oct '0' . $qc );
+        } elsif( $qc eq 'c' ) {
+            my $next = uc substr $$buffer, 0, 1, '';
+            $c = chr( ord( $next ) ^ 0x40 );
+        } elsif( $qc eq 'x' ) {
+            if( $$buffer =~ s/^([0-9a-fA-F]{1,2})// ) {
+                $c = chr( oct '0x' . $1 );
+            } else {
+                $c = "\0";
+            }
+        } else {
+            $c = $qc;
+        }
+    }
+
+    return [ $self->{pos}, T_STRING, $c, 1 ];
+}
+
 sub lex_quote {
     my( $self ) = @_;
 

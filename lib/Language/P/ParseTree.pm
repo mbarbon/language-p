@@ -819,6 +819,16 @@ our @FIELDS = qw(pattern replacement);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+package Language::P::ParseTree::Transliteration;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(match replacement flags);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
 package Language::P::ParseTree::RXGroup;
 
 use strict;

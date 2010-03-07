@@ -40,6 +40,7 @@ my %dispatch =
     'Language::P::ParseTree::Pattern'                => '_noop',
     'Language::P::ParseTree::InterpolatedPattern'    => '_pattern',
     'Language::P::ParseTree::Substitution'           => '_substitution',
+    'Language::P::ParseTree::Transliteration'        => '_noop',
     'Language::P::ParseTree::Foreach'                => '_foreach',
     'Language::P::ParseTree::For'                    => '_for',
     'Language::P::ParseTree::LexicalState'           => '_noop',

@@ -1214,6 +1214,53 @@ sub _parse_substitution {
     return $sub;
 }
 
+sub _parse_transliteration {
+    my( $self, $token ) = @_;
+    my $tr = Language::P::ParseTree::Transliteration->new
+                 ( { flags   => $token->[O_RX_FLAGS],
+                     pos     => $token->[O_POS],
+                     } );
+    $tr->{match} = _parse_transliteration_part( $self, $token->[O_POS],
+                                                $token->[O_QS_BUFFER] );
+    $tr->{replacement} = _parse_transliteration_part( $self, $token->[O_POS],
+                                                      $token->[O_RX_SECOND_HALF]->[O_QS_BUFFER] );
+
+    return $tr;
+}
+
+sub _parse_transliteration_part {
+    my( $self, $pos, $buffer ) = @_;
+    my $lexer = Language::P::Lexer->new
+                    ( { string       => $buffer,
+                        file         => $pos->[0],
+                        line         => $pos->[1],
+                        runtime      => $self->runtime,
+                        } );
+
+    my @parts;
+    for(;;) {
+        my $token = $lexer->lex_transliteration;
+        last if $token->[O_TYPE] == T_EOF;
+        die 'Internal error in transliteration' unless $token->[O_TYPE] == T_STRING;
+
+        my $c = $token->[O_VALUE];
+        if( $c eq '-' && @parts && !ref( $parts[-1] ) ) {
+            my $next = $lexer->lex_transliteration;
+
+            if( $token->[O_TYPE] == T_EOF ) {
+                push @parts, $c;
+                last;
+            } else {
+                $parts[-1] = [ $parts[-1], $next->[O_VALUE] ];
+            }
+        } else {
+            push @parts, $c;
+        }
+    }
+
+    return \@parts;
+}
+
 sub _parse_string_rest {
     my( $self, $token, $pattern, $substitution ) = @_;
     my @values;
@@ -1370,6 +1417,8 @@ sub _parse_term_terminal {
             $pattern = _parse_match( $self, $token );
         } elsif( $token->[O_VALUE] == OP_QL_S ) {
             $pattern = _parse_substitution( $self, $token );
+        } elsif( $token->[O_VALUE] == OP_QL_TR ) {
+            $pattern = _parse_transliteration( $self, $token );
         } else {
             _parse_error( $self, $token->[O_POS], "Unknown pattern" );
         }
