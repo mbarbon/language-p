@@ -10,7 +10,7 @@ use Language::P::Toy::Value::Array;
 use Language::P::Toy::Value::List;
 use Language::P::Toy::Value::Pos;
 use Language::P::Toy::Exception;
-use Language::P::ParseTree qw(:all);
+use Language::P::Constants qw(:all);
 
 use Language::P::Toy::Opcodes::Regex qw(:opcodes);
 

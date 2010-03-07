@@ -11,6 +11,7 @@ inc/Opcodes.pm
 inc/p_parrot
 lib/Language/P.pm
 lib/Language/P/Assembly.pm
+lib/Language/P/Constants.pm
 lib/Language/P/Docs/Architecture.pod
 lib/Language/P/Docs/Roadmap.pod
 lib/Language/P/Docs/TOC.pod

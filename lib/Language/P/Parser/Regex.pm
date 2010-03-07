@@ -5,8 +5,9 @@ use warnings;
 
 use base qw(Class::Accessor::Fast);
 
+use Language::P::Constants qw(:all);
 use Language::P::Lexer qw(:all);
-use Language::P::ParseTree qw(:all);
+use Language::P::ParseTree;
 
 __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime
                                  interpolate flags _group_count) );

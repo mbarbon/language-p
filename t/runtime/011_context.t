@@ -7,7 +7,7 @@ use Test::More tests => 4;
 use Language::P::Toy::Runtime;
 use Language::P::Toy::Opcodes qw(o);
 use Language::P::Toy::Value::Subroutine;
-use Language::P::ParseTree qw(:all);
+use Language::P::Constants qw(:all);
 
 my $runtime = Language::P::Toy::Runtime->new;
 

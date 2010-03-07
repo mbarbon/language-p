@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Exporter 'import';
 
-use Language::P::ParseTree qw(:all);
+use Language::P::Constants qw(:all);
 
 our @EXPORT_OK = qw(o_rx_start_match o_rx_accept o_rx_exact o_rx_start_group
                     o_rx_quantifier o_rx_capture_start o_rx_capture_end o_rx_try

@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use base qw(Language::P::Toy::Value::Code);
 
-use Language::P::ParseTree qw(:all);
+use Language::P::Constants qw(:all);
 
 use constant
   { REGEXP_NO_MORE_MATCHES => -1,

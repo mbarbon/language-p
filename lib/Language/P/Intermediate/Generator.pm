@@ -14,7 +14,7 @@ use Language::P::Intermediate::Code qw(:all);
 use Language::P::Intermediate::BasicBlock;
 use Language::P::Opcodes qw(:all);
 use Language::P::ParseTree::PropagateContext;
-use Language::P::ParseTree qw(:all);
+use Language::P::Constants qw(:all);
 use Language::P::Keywords qw(:all);
 use Language::P::Assembly qw(:all);
 

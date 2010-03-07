@@ -6,13 +6,14 @@ use base qw(Class::Accessor::Fast);
 
 use Exporter 'import';
 
+use Language::P::Constants qw(:all);
 use Language::P::Lexer qw(:all);
-use Language::P::ParseTree qw(:all);
+use Language::P::ParseTree;
 use Language::P::Parser::Regex;
 use Language::P::Parser::Lexicals;
 use Language::P::Parser::Exception;
 use Language::P::Keywords;
-use Language::P::Opcodes qw(%OP_TO_KEYWORD);
+use Language::P::Opcodes qw(:all);
 
 our @EXPORT_OK = qw(PARSE_MAIN PARSE_ADD_RETURN);
 our %EXPORT_TAGS =

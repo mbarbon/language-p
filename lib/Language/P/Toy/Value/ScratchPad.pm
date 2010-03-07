@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use base qw(Language::P::Toy::Value::Any);
 
-use Language::P::ParseTree qw(VALUE_SCALAR VALUE_ARRAY VALUE_HASH);
+use Language::P::Constants qw(VALUE_SCALAR VALUE_ARRAY VALUE_HASH);
 use Language::P::Toy::Value::Undef;
 
 __PACKAGE__->mk_ro_accessors( qw(outer names values clear) );

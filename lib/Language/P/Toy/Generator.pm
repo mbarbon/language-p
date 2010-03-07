@@ -19,7 +19,7 @@ use Language::P::Toy::Value::Handle;
 use Language::P::Toy::Value::ScratchPad;
 use Language::P::Toy::Value::Code;
 use Language::P::Toy::Value::Regex;
-use Language::P::ParseTree qw(:all);
+use Language::P::Constants qw(:all);
 use Language::P::Keywords qw(:all);
 
 use constant

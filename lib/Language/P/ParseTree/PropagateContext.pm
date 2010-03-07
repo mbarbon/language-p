@@ -4,7 +4,9 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Visitor);
 
-use Language::P::ParseTree qw(:all);
+use Language::P::Constants qw(:all);
+use Language::P::Opcodes qw(:all);
+use Language::P::ParseTree;
 
 my %dispatch =
   ( 'Language::P::ParseTree::FunctionCall'           => '_function_call',

@@ -8,7 +8,8 @@ use Test::More ();
 
 use Language::P::Parser qw(:all);
 use Language::P::Keywords;
-use Language::P::ParseTree qw(:all);
+use Language::P::Constants qw(:all);
+use Language::P::Opcodes qw(:all);
 use Language::P::ParseTree::PropagateContext;
 use Language::P::Toy::Value::MainSymbolTable;
 
@@ -135,7 +136,7 @@ sub parse_and_diff_yaml {
     my( $expr, $expected ) = @_;
 
     $expected =~ s{ ((?:NUM|CXT|FLAG|CONST|STRING|VALUE|OP|DECLARATION|PROTO|CHANGED)_[A-Z_ \|]+)}
-                  {" " . eval $1 or die $@}eg;
+                  {" " . ( eval $1 or die $@ )}eg;
 
     require Language::P::ParseTree::DumpYAML;
 

@@ -18,7 +18,8 @@ sub data_handle {
     return $data;
 }
 
-use Language::P::ParseTree qw(:all);
+use Language::P::Constants qw(:all);
+use Language::P::Opcodes;
 use Language::P::Keywords;
 
 our @TOKENS;
