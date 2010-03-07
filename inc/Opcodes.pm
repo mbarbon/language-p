@@ -385,6 +385,7 @@ jump_if_true        0       same                 1   0  to=b
 jump_if_null        0       same                 1   0  to=b
 lc                  u       same                 1   1  noattr
 lcfirst             u       same                 1   1  noattr
+length              u       same                 1   1  noattr
 lexical             0       same                 0   1  index=ls
 lexical_clear       0       same                 0   0  index=ls
 lexical_set         0       same                 1   0  index=ls

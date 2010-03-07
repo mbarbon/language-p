@@ -163,3 +163,4 @@ lc                  o
 ucfirst             o       
 lcfirst             o       
 quotemeta           o       
+length              o       

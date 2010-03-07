@@ -193,6 +193,7 @@ our %PROTOTYPE =
     OP_SPLIT()       => [  0,  4, PROTO_PATTERN, PROTO_SCALAR, PROTO_SCALAR, PROTO_SCALAR, PROTO_SCALAR ],
     OP_SCALAR()      => [  1,  1, 0, PROTO_SCALAR ],
     OP_WARN()        => [ -1, -1, 0, PROTO_ARRAY ],
+    OP_LENGTH()      => [  0,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
     );
 
 our %CONTEXT =
@@ -226,6 +227,7 @@ our %CONTEXT =
     OP_CLOSE()       => [ CXT_SCALAR ],
     OP_SPLIT()       => [ CXT_SCALAR, CXT_SCALAR ],
     OP_OPEN()        => [ CXT_SCALAR, CXT_SCALAR, CXT_LIST ],
+    OP_LENGTH()      => [ CXT_SCALAR ],
     );
 
 package Language::P::ParseTree::Node;
