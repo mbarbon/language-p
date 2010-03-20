@@ -6,120 +6,6 @@ use warnings;
 use Language::P::Constants qw(:all);
 use Language::P::Opcodes qw(:all);
 
-
-our %PROTOTYPE =
-  ( OP_PRINT()       => [  0, -1, PROTO_FILEHANDLE|PROTO_DEFAULT_ARG, PROTO_ARRAY ],
-    OP_DEFINED()     => [  1,  1, PROTO_AMPER|PROTO_DEFAULT_ARG, PROTO_AMPER|PROTO_ANY ],
-    OP_RETURN()      => [  0, -1, 0, PROTO_ARRAY ],
-    OP_UNDEF()       => [  0,  1, 0, PROTO_ANY ],
-    OP_EVAL()        => [  1,  1, PROTO_BLOCK|PROTO_DEFAULT_ARG, PROTO_ANY ],
-    OP_DO_FILE()     => [  1,  1, 0, PROTO_ANY ],
-    OP_REQUIRE_FILE()=> [  1,  1, 0, PROTO_ANY ],
-    OP_MAP()         => [  2, -1, PROTO_INDIROBJ, PROTO_ARRAY ],
-    OP_GREP()        => [  2, -1, PROTO_INDIROBJ, PROTO_ARRAY ],
-    ( map { $_ => [ 1, 1, PROTO_DEFAULT_ARG, PROTO_MAKE_GLOB ] }
-          ( OP_FT_EREADABLE,
-            OP_FT_EWRITABLE,
-            OP_FT_EEXECUTABLE,
-            OP_FT_EOWNED,
-            OP_FT_RREADABLE,
-            OP_FT_RWRITABLE,
-            OP_FT_REXECUTABLE,
-            OP_FT_ROWNED,
-            OP_FT_EXISTS,
-            OP_FT_EMPTY,
-            OP_FT_NONEMPTY,
-            OP_FT_ISFILE,
-            OP_FT_ISDIR,
-            OP_FT_ISSYMLINK,
-            OP_FT_ISPIPE,
-            OP_FT_ISSOCKET,
-            OP_FT_ISBLOCKSPECIAL,
-            OP_FT_ISCHARSPECIAL,
-            OP_FT_ISTTY,
-            OP_FT_SETUID,
-            OP_FT_SETGID,
-            OP_FT_STICKY,
-            OP_FT_ISASCII,
-            OP_FT_ISBINARY,
-            OP_FT_MTIME,
-            OP_FT_ATIME,
-            OP_FT_CTIME,
-            ) ),
-    OP_UNLINK()      => [  1, -1, PROTO_DEFAULT_ARG, PROTO_ARRAY ],
-    OP_DIE()         => [  0, -1, 0, PROTO_ARRAY ],
-    OP_OPEN()        => [  1, -1, 0, PROTO_MAKE_GLOB, PROTO_SCALAR, PROTO_ARRAY ],
-    OP_PIPE()        => [  2,  2, 0, PROTO_MAKE_GLOB, PROTO_MAKE_GLOB ],
-    OP_CHDIR()       => [  0,  1, 0, PROTO_SCALAR|PROTO_MAKE_GLOB ],
-    OP_RMDIR()       => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
-    OP_READLINE()    => [  0,  1, 0, PROTO_MAKE_GLOB ],
-    OP_GLOB()        => [  1, -1, PROTO_DEFAULT_ARG, PROTO_ARRAY ],
-    OP_CLOSE()       => [  0,  1, 0, PROTO_MAKE_GLOB ],
-    OP_BINMODE()     => [  1,  2, 0, PROTO_MAKE_GLOB, PROTO_SCALAR ],
-    OP_ABS()         => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
-    OP_CHR()         => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
-    OP_ORD()         => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
-    OP_OCT()         => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
-    OP_HEX()         => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
-    OP_WANTARRAY()   => [  0,  0, 0 ],
-    OP_REFTYPE()     => [  1,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
-    OP_BLESS()       => [  1,  2, 0, PROTO_SCALAR, PROTO_SCALAR ],
-    OP_ARRAY_PUSH()  => [  1, -1, 0, PROTO_MAKE_ARRAY|PROTO_REFERENCE, PROTO_ARRAY ],
-    OP_ARRAY_UNSHIFT()=>[  1, -1, 0, PROTO_MAKE_ARRAY|PROTO_REFERENCE, PROTO_ARRAY ],
-    OP_ARRAY_POP()   => [  1,  1, PROTO_DEFAULT_ARG, PROTO_MAKE_ARRAY|PROTO_REFERENCE ],
-    OP_ARRAY_SHIFT() => [  1,  1, PROTO_DEFAULT_ARG, PROTO_MAKE_ARRAY|PROTO_REFERENCE ],
-    OP_EXISTS()      => [  1,  1, PROTO_AMPER, PROTO_AMPER ],
-    OP_CALLER()      => [  0,  1, 0, PROTO_SCALAR ],
-    OP_POS()         => [  0,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
-    OP_LC()          => [  0,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
-    OP_LCFIRST()     => [  0,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
-    OP_UC()          => [  0,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
-    OP_UCFIRST()     => [  0,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
-    OP_QUOTEMETA()   => [  0,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
-    OP_SPRINTF()     => [  1, -1, 0, PROTO_SCALAR, PROTO_ARRAY ],
-    OP_JOIN()        => [  1, -1, 0, PROTO_SCALAR, PROTO_ARRAY ],
-    OP_REVERSE()     => [  0, -1, 0, PROTO_ARRAY ],
-    OP_SPLICE()      => [  1, -1, 0, PROTO_MAKE_ARRAY|PROTO_REFERENCE, PROTO_SCALAR, PROTO_SCALAR, PROTO_ARRAY ],
-    OP_SPLIT()       => [  0,  4, PROTO_PATTERN, PROTO_SCALAR, PROTO_SCALAR, PROTO_SCALAR, PROTO_SCALAR ],
-    OP_SCALAR()      => [  1,  1, 0, PROTO_SCALAR ],
-    OP_WARN()        => [ -1, -1, 0, PROTO_ARRAY ],
-    OP_LENGTH()      => [  0,  1, PROTO_DEFAULT_ARG, PROTO_SCALAR ],
-    );
-
-our %CONTEXT =
-  ( OP_DEFINED()     => [ CXT_SCALAR ],
-    OP_RETURN()      => [ CXT_CALLER ],
-    OP_DO_FILE()     => [ CXT_SCALAR ],
-    OP_REQUIRE_FILE()=> [ CXT_SCALAR ],
-    OP_QUOTEMETA()   => [ CXT_SCALAR ],
-    OP_UC()          => [ CXT_SCALAR ],
-    OP_UCFIRST()     => [ CXT_SCALAR ],
-    OP_LC()          => [ CXT_SCALAR ],
-    OP_LCFIRST()     => [ CXT_SCALAR ],
-    OP_REFTYPE()     => [ CXT_SCALAR ],
-    OP_BLESS()       => [ CXT_SCALAR, CXT_SCALAR ],
-    OP_CHR()         => [ CXT_SCALAR ],
-    OP_ORD()         => [ CXT_SCALAR ],
-    OP_ABS()         => [ CXT_SCALAR ],
-    OP_OCT()         => [ CXT_SCALAR ],
-    OP_HEX()         => [ CXT_SCALAR ],
-    OP_CALLER()      => [ CXT_SCALAR ],
-    OP_JOIN()        => [ CXT_SCALAR, CXT_LIST ],
-    OP_CHDIR()       => [ CXT_SCALAR ],
-    OP_RMDIR()       => [ CXT_SCALAR ],
-    OP_SPRINTF()     => [ CXT_SCALAR, CXT_LIST ],
-    OP_SCALAR()      => [ CXT_SCALAR ],
-    OP_BINMODE()     => [ CXT_SCALAR, CXT_SCALAR ],
-    OP_SPLICE()      => [ CXT_LIST, CXT_SCALAR, CXT_SCALAR, CXT_LIST ],
-    OP_GLOB()        => [ CXT_SCALAR ],
-    OP_READLINE()    => [ CXT_SCALAR ],
-    OP_POS()         => [ CXT_SCALAR ],
-    OP_CLOSE()       => [ CXT_SCALAR ],
-    OP_SPLIT()       => [ CXT_SCALAR, CXT_SCALAR ],
-    OP_OPEN()        => [ CXT_SCALAR, CXT_SCALAR, CXT_LIST ],
-    OP_LENGTH()      => [ CXT_SCALAR ],
-    );
-
 package Language::P::ParseTree::Node;
 
 use strict;
@@ -642,8 +528,8 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::FunctionCall);
 
-sub parsing_prototype { return $PROTOTYPE{$_[0]->function} }
-sub runtime_context { return $CONTEXT{$_[0]->function} }
+sub parsing_prototype { return $Language::P::Opcodes::PROTOTYPE{$_[0]->function} }
+sub runtime_context { return $Language::P::Opcodes::CONTEXT{$_[0]->function} }
 sub can_implicit_return { return $_[0]->function == Language::P::ParseTree::OP_RETURN ? 0 : 1 }
 sub is_plain_function { 0 }
 
@@ -658,7 +544,7 @@ our @FIELDS = qw(indirect);
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub runtime_context {
-    return $CONTEXT{$_[0]->function} if $_[0]->function != Language::P::ParseTree::OP_GREP;
+    return $Language::P::Opcodes::CONTEXT{$_[0]->function} if $_[0]->function != Language::P::ParseTree::OP_GREP;
     return $_[0]->indirect ? [ Language::P::ParseTree::CXT_LIST ] :
                              [ Language::P::ParseTree::CXT_SCALAR, Language::P::ParseTree::CXT_LIST ];
 }
@@ -669,8 +555,8 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::FunctionCall);
 
-sub parsing_prototype { return $PROTOTYPE{$_[0]->function} }
-sub runtime_context { return $CONTEXT{$_[0]->function} }
+sub parsing_prototype { return $Language::P::Opcodes::PROTOTYPE{$_[0]->function} }
+sub runtime_context { return $Language::P::Opcodes::CONTEXT{$_[0]->function} }
 sub is_plain_function { 0 }
 
 package Language::P::ParseTree::Glob;

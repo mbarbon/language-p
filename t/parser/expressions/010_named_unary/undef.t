@@ -8,7 +8,7 @@ EOP
 --- !parsetree:Builtin
 arguments:
   - !parsetree:Symbol
-    context: CXT_LIST
+    context: CXT_SCALAR
     name: x
     sigil: VALUE_ARRAY
 context: CXT_VOID

@@ -6,7 +6,9 @@ use Exporter 'import';
 
 our @EXPORT = qw(write_opcodes write_perl_serializer);
 
+use Language::P::Constants qw(:all);
 use Language::P::Keywords qw(:all);
+use Keywords qw();
 use Data::Dumper;
 
 my %flag_map =
@@ -62,6 +64,8 @@ sub write_opcodes {
     my( $file ) = @ARGV;
 
     my %op = %{parse_opdesc()};
+    my %kw = %{(Keywords::parse_table())[0]};
+    my %op_key_map;
 
     open my $out, '>', $file;
 
@@ -85,7 +89,7 @@ EOT
 }
 
 our @EXPORT = ( qw(%%KEYWORD_TO_OP %%OP_TO_KEYWORD %%NUMBER_TO_NAME @OPERATIONS
-                   %%OP_ATTRIBUTES), @OPERATIONS );
+                   %%OP_ATTRIBUTES %%PROTOTYPE), @OPERATIONS );
 our %%EXPORT_TAGS =
   ( all => \@EXPORT,
     );
@@ -126,6 +130,7 @@ EOT
     foreach my $k ( sort @OVERRIDABLES, @BUILTINS ) {
         ( my $o = $k ) =~ s/KEY_/OP_/;
         $o =~ s/^OP_(PUSH|POP|SHIFT|UNSHIFT)/OP_ARRAY_$1/;
+        $op_key_map{$o} = $k;
         printf $out <<'EOT', $k, $o;
     %s() => %s(),
 EOT
@@ -153,6 +158,79 @@ EOT
         },
 EOT
             $k, $v->[1], $v->[2], $named, $v->[4];
+    }
+
+    my( $any, $topic, $mkglob ) =
+      ( PROTO_ANY, PROTO_DEFAULT_ARG, PROTO_MAKE_GLOB );
+
+    printf $out <<'EOT', $any;
+    );
+
+our %%PROTOTYPE =
+  (
+    OP_DO_FILE() =>
+        [  1,  1, 0, %d ],
+EOT
+
+    foreach my $ft ( grep /^OP_FT/, keys %op ) {
+        printf $out <<'EOT', $ft, $topic, $mkglob;
+    %s() =>
+        [ 1, 1, %d, %d ],
+EOT
+    }
+
+    my %attrs = map { $_->[1] => $_ } values %kw;
+
+    while( my( $op, $key ) = each %op_key_map ) {
+        my $attr = $attrs{$key} or die "Unknown builtin '$key'";
+        my $cxt = join ', ', @{$attr->[5]};
+
+        printf $out <<'EOT',
+    %s() =>
+        [ %d, %d, %d, %s ],
+EOT
+            $op, $attr->[2], $attr->[3], $attr->[4], $cxt;
+    }
+
+    printf $out <<'EOT', CXT_SCALAR, CXT_CALLER;
+    );
+
+our %%CONTEXT =
+  (
+    OP_DO_FILE() =>
+        [ %d ],
+    OP_RETURN() =>
+        [ %d ],
+EOT
+
+    foreach my $ft ( grep /^OP_FT/, keys %op ) {
+        printf $out <<'EOT', $ft, CXT_SCALAR;
+    %s() =>
+        [ %d ],
+EOT
+    }
+
+    while( my( $op, $key ) = each %op_key_map ) {
+        next if $op eq 'OP_RETURN';
+        my $attr = $attrs{$key} or die "Unknown builtin '$key'";
+        my @cxt;
+        foreach my $a ( @{$attr->[5]} ) {
+            if(    $a == PROTO_ARRAY || $a == PROTO_MAKE_ARRAY
+                || $a == ( PROTO_MAKE_ARRAY|PROTO_REFERENCE ) ) {
+                push @cxt, CXT_LIST;
+            } elsif( $a & PROTO_REFERENCE ) {
+                push @cxt, CXT_SCALAR;
+            } else {
+                push @cxt, CXT_SCALAR;
+            }
+        }
+        my $cxt = join ', ', @cxt;
+
+        printf $out <<'EOT',
+    %s() =>
+        [ %s ],
+EOT
+            $op, $cxt;
     }
 
     printf $out <<'EOT';
