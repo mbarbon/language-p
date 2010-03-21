@@ -1734,17 +1734,6 @@ namespace org.mbarbon.p.runtime
                         Generate(sub, op.Childs[0]),
                         GetSavedRxState(rm.Index)));
             }
-            case Opcode.OpNumber.OP_NOT_MATCH:
-            {
-                return Expression.New(
-                    typeof(P5Scalar).GetConstructor(ProtoRuntimeBool),
-                    Runtime,
-                    Expression.Call(
-                        Generate(sub, op.Childs[1]),
-                        typeof(Regex).GetMethod("Match"),
-                        Runtime,
-                        Generate(sub, op.Childs[0])));
-            }
             case Opcode.OpNumber.OP_REPLACE:
             {
                 RegexMatch rm = (RegexMatch)op;
