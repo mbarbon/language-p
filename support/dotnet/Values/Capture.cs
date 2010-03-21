@@ -17,7 +17,7 @@ namespace org.mbarbon.p.values
             Index = index - 1;
         }
 
-        protected override P5Scalar Get(Runtime runtime)
+        public override P5Scalar Get(Runtime runtime)
         {
             if (   runtime.LastMatch.StringCaptures != null
                 && Index < runtime.LastMatch.StringCaptures.Length)

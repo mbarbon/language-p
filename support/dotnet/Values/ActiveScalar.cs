@@ -79,12 +79,12 @@ namespace org.mbarbon.p.values
             return Get(runtime).Length(runtime);
         }
 
-        protected virtual void Set(Runtime runtime, IP5Any other)
+        public virtual void Set(Runtime runtime, IP5Any other)
         {
             throw new System.Exception("Ouch!");
         }
 
-        protected virtual P5Scalar Get(Runtime runtime)
+        public virtual P5Scalar Get(Runtime runtime)
         {
             throw new System.Exception("Ouch!");
         }
