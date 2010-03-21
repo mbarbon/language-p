@@ -105,6 +105,16 @@ namespace org.mbarbon.p.values
                 throw new System.Exception("Not a CODE reference");
         }
 
+        public virtual int GetPos(Runtime runtime)
+        {
+            return pos;
+        }
+
+        public virtual void SetPos(Runtime runtime, int p)
+        {
+            pos = p;
+        }
+
         internal IP5Referrable Referred
         {
             get
@@ -113,6 +123,7 @@ namespace org.mbarbon.p.values
             }
         }
 
+        private int pos = -1;
         private IP5Referrable referred;
     }
 }

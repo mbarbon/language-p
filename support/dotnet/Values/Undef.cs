@@ -48,5 +48,15 @@ namespace org.mbarbon.p.values
         {
             throw new System.InvalidOperationException("Not a reference");
         }
+
+        public virtual int GetPos(Runtime runtime)
+        {
+            return -1;
+        }
+
+        public virtual void SetPos(Runtime runtime, int pos)
+        {
+            // ignored
+        }
     }
 }

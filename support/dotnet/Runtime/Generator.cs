@@ -430,6 +430,8 @@ namespace org.mbarbon.p.runtime
             new Type[] { typeof(Runtime), typeof(IP5Any[]) };
         private static Type[] ProtoRuntimeP5Array =
             new Type[] { typeof(Runtime), typeof(P5Array) };
+        private static Type[] ProtoRuntimeAny =
+            new Type[] { typeof(Runtime), typeof(IP5Any) };
         private static Type[] ProtoStringString =
             new Type[] { typeof(string), typeof(string) };
 
@@ -979,8 +981,7 @@ namespace org.mbarbon.p.runtime
             {
                 return Expression.Throw(
                     Expression.New(
-                        typeof(P5Exception).GetConstructor(
-                            new Type[] { typeof(Runtime), typeof(IP5Any) }),
+                        typeof(P5Exception).GetConstructor(ProtoRuntimeAny),
                         Runtime,
                         Generate(sub, op.Childs[0])));
             }
@@ -1703,6 +1704,13 @@ namespace org.mbarbon.p.runtime
                 ConstantSub cs = (ConstantSub)op;
 
                 return Expression.Field(null, Subroutines[cs.Value].CodeField);
+            }
+            case Opcode.OpNumber.OP_POS:
+            {
+                return Expression.New(
+                    typeof(P5Pos).GetConstructor(ProtoRuntimeAny),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
             }
             case Opcode.OpNumber.OP_RX_STATE_RESTORE:
             {

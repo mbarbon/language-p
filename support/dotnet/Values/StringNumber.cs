@@ -80,6 +80,8 @@ namespace org.mbarbon.p.values
 
         internal void Increment(Runtime runtime)
         {
+            pos = -1;
+
             if ((flags & HasFloat) != 0)
                 floatValue = floatValue + 1.0;
             if ((flags & HasInteger) != 0)
@@ -89,6 +91,8 @@ namespace org.mbarbon.p.values
 
         internal void Decrement(Runtime runtime)
         {
+            pos = -1;
+
             if ((flags & HasFloat) != 0)
                 floatValue = floatValue - 1.0;
             if ((flags & HasInteger) != 0)
@@ -126,7 +130,18 @@ namespace org.mbarbon.p.values
             throw new System.InvalidOperationException("Not a reference");
         }
 
+        public virtual int GetPos(Runtime runtime)
+        {
+            return pos;
+        }
+
+        public virtual void SetPos(Runtime runtime, int p)
+        {
+            pos = p;
+        }
+
         internal int flags;
+        internal int pos = -1;
         internal string stringValue;
         internal int integerValue;
         internal double floatValue;

@@ -187,6 +187,17 @@ namespace org.mbarbon.p.values
             return hash;
         }
 
+        public virtual int GetPos(Runtime runtime)
+        {
+            return pos;
+        }
+
+        public virtual void SetPos(Runtime runtime, int p)
+        {
+            pos = p;
+        }
+
+        private int pos = -1;
         private P5Scalar scalar;
         private P5Array array;
         private P5Hash hash;

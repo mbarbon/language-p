@@ -51,6 +51,7 @@ namespace org.mbarbon.p.values
                 sn.flags = P5StringNumber.HasString;
 
             sn.stringValue = sn.stringValue + other.AsScalar(runtime).AsString(runtime);
+            sn.pos = -1;
 
             return this;
         }
@@ -194,6 +195,25 @@ namespace org.mbarbon.p.values
             return body.DereferenceHash(runtime);
         }
 
+        public virtual int GetPos(Runtime runtime)
+        {
+            return body.GetPos(runtime);
+        }
+
+        public virtual void SetPos(Runtime runtime, int pos)
+        {
+            int length = body.Length(runtime);
+
+            if (pos < 0 && -pos >= length)
+                pos = 0;
+            else if (pos < 0)
+                pos = length + pos;
+            else if (pos > length)
+                pos = length;
+
+            body.SetPos(runtime, pos);
+        }
+
         public virtual void Bless(Runtime runtime, P5SymbolTable stash)
         {
             blessed = stash;
@@ -255,6 +275,9 @@ namespace org.mbarbon.p.values
         double AsFloat(Runtime runtime);
         bool AsBoolean(Runtime runtime);
         int Length(Runtime runtime);
+
+        int GetPos(Runtime runtime);
+        void SetPos(Runtime runtime, int pos);
 
         P5Scalar ReferenceType(Runtime runtime);
 

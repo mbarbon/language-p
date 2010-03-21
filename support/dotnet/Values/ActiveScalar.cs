@@ -74,9 +74,19 @@ namespace org.mbarbon.p.values
             return Get(runtime).DereferenceSubroutine(runtime);
         }
 
+        public virtual int GetPos(Runtime runtime)
+        {
+            return Get(runtime).GetPos(runtime);
+        }
+
         public virtual int Length(Runtime runtime)
         {
             return Get(runtime).Length(runtime);
+        }
+
+        public virtual void SetPos(Runtime runtime, int pos)
+        {
+            Get(runtime).SetPos(runtime, pos);
         }
 
         public virtual void Set(Runtime runtime, IP5Any other)
