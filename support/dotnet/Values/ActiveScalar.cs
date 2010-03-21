@@ -74,6 +74,11 @@ namespace org.mbarbon.p.values
             return Get(runtime).DereferenceSubroutine(runtime);
         }
 
+        public virtual int Length(Runtime runtime)
+        {
+            return Get(runtime).Length(runtime);
+        }
+
         protected virtual void Set(Runtime runtime, IP5Any other)
         {
             throw new System.Exception("Ouch!");

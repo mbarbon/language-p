@@ -79,6 +79,11 @@ namespace org.mbarbon.p.values
         public virtual bool AsBoolean(Runtime runtime) { return body.AsBoolean(runtime); }
         public virtual bool IsDefined(Runtime runtime) { return !(body is P5Undef); }
 
+        public virtual int Length(Runtime runtime)
+        {
+            return body.Length(runtime);
+        }
+
         public virtual P5Scalar PreIncrement(Runtime runtime)
         {
             var sb = body as P5StringNumber;
@@ -249,6 +254,7 @@ namespace org.mbarbon.p.values
         int AsInteger(Runtime runtime);
         double AsFloat(Runtime runtime);
         bool AsBoolean(Runtime runtime);
+        int Length(Runtime runtime);
 
         P5Scalar ReferenceType(Runtime runtime);
 

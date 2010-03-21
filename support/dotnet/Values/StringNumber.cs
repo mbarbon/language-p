@@ -68,6 +68,11 @@ namespace org.mbarbon.p.values
                    || ((flags & HasFloat) != 0 && floatValue != 0);
         }
 
+        public virtual int Length(Runtime runtime)
+        {
+            return AsString(runtime).Length;
+        }
+
         public virtual IP5ScalarBody CloneBody(Runtime runtime)
         {
             return new P5StringNumber(runtime, flags, integerValue, stringValue, floatValue);

@@ -128,6 +128,11 @@ namespace org.mbarbon.p.values
             return true;
         }
 
+        public virtual int Length(Runtime runtime)
+        {
+            return AsString(runtime).Length;
+        }
+
         public virtual P5Scalar ReferenceType(Runtime runtime)
         {
             return new P5Scalar(runtime);
