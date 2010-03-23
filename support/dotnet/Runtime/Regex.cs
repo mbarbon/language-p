@@ -202,29 +202,94 @@ namespace org.mbarbon.p.runtime
             cxt.LastClosedCapture = group;
         }
 
-        public bool Match(Runtime runtime, IP5Any value, int flags,
-                          ref RxResult oldState)
-        {
-            return MatchString(runtime, value.AsString(runtime),
-                               -1, ref oldState);
-        }
-
-        public bool MatchGlobal(Runtime runtime, IP5Any value, int flags,
-                                ref RxResult oldState)
+        public IP5Any Match(Runtime runtime, IP5Any value, int flags,
+                            Opcode.ContextValues cxt, ref RxResult oldState)
         {
             bool match = MatchString(runtime, value.AsString(runtime),
-                                     value.GetPos(runtime), ref oldState);
-            var scalar = value as P5Scalar;
+                                     -1, ref oldState);
 
-            if (scalar != null)
+            if (cxt != Opcode.ContextValues.LIST)
             {
-                if (match)
-                    scalar.SetPos(runtime, runtime.LastMatch.End);
-                else if ((flags & Opcode.RX_KEEP) == 0)
-                    scalar.UnsetPos(runtime);
+                return new P5Scalar(runtime, match);
+            }
+            else if (match && runtime.LastMatch.StringCaptures.Length > 0)
+            {
+                var res = new IP5Any[runtime.LastMatch.StringCaptures.Length];
+                for (int i = 0; i < runtime.LastMatch.StringCaptures.Length; ++i)
+                    res[i] = new P5Scalar(runtime, runtime.LastMatch.StringCaptures[i]);
+
+                return new P5List(runtime, res);
+            }
+            else
+            {
+                return new P5List(runtime, match);
+            }
+        }
+
+        public IP5Any MatchGlobal(Runtime runtime, IP5Any value, int flags,
+                                  Opcode.ContextValues cxt, ref RxResult oldState)
+        {
+            var scalar = value as P5Scalar;
+            int pos = value.GetPos(runtime);
+            string str = value.AsString(runtime);
+            bool match;
+            IP5Any result;
+
+            if (cxt != Opcode.ContextValues.LIST)
+            {
+                match = MatchString(runtime, str,
+                                    pos, ref oldState);
+
+                result = new P5Scalar(runtime, match);
+
+                if (scalar != null)
+                {
+                    if (match)
+                        scalar.SetPos(runtime, runtime.LastMatch.End);
+                    else if ((flags & Opcode.RX_KEEP) == 0)
+                        scalar.UnsetPos(runtime);
+                }
+            }
+            else
+            {
+                var capt = new List<IP5Any>();
+
+                for (;;)
+                {
+                    match = MatchString(runtime, str,
+                                        pos, ref oldState);
+                    if (match)
+                    {
+                        if (runtime.LastMatch.StringCaptures != null)
+                        {
+                            foreach (var s in runtime.LastMatch.StringCaptures)
+                                capt.Add(new P5Scalar(runtime, s));
+                        }
+                        else
+                        {
+                            string s = str.Substring(runtime.LastMatch.Start,
+                                                     runtime.LastMatch.End - runtime.LastMatch.Start);
+                            capt.Add(new P5Scalar(runtime, s));
+                        }
+                    }
+                    else
+                        break;
+
+                    pos = runtime.LastMatch.End;
+                }
+
+                if (scalar != null)
+                {
+                    if ((flags & Opcode.RX_KEEP) != 0)
+                        scalar.SetPos(runtime, pos);
+                    else
+                        scalar.UnsetPos(runtime);
+                }
+
+                result = new P5List(runtime, capt);
             }
 
-            return match;
+            return result;
         }
 
         public bool MatchString(Runtime runtime, string str, int pos, ref RxResult oldState)

@@ -1726,16 +1726,15 @@ namespace org.mbarbon.p.runtime
                 bool global = (rm.Flags & Opcode.RX_GLOBAL) != 0;
                 var meth = typeof(Regex).GetMethod(global ? "MatchGlobal" : "Match");
 
-                return Expression.New(
-                    typeof(P5Scalar).GetConstructor(ProtoRuntimeBool),
-                    Runtime,
+                return
                     Expression.Call(
                         Generate(sub, op.Childs[1]),
                         meth,
                         Runtime,
                         Generate(sub, op.Childs[0]),
                         Expression.Constant(rm.Flags & Opcode.RX_KEEP),
-                        GetSavedRxState(rm.Index)));
+                        OpContext(rm),
+                        GetSavedRxState(rm.Index));
             }
             case Opcode.OpNumber.OP_REPLACE:
             {
