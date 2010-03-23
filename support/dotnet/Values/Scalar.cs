@@ -200,6 +200,11 @@ namespace org.mbarbon.p.values
             return body.GetPos(runtime);
         }
 
+        public virtual void UnsetPos(Runtime runtime)
+        {
+            body.SetPos(runtime, -1);
+        }
+
         public virtual void SetPos(Runtime runtime, int pos)
         {
             int length = body.Length(runtime);
