@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..31\n";
+print "1..33\n";
 
 $text = 'abbcccddddeeeeeffffff';
 
@@ -11,6 +11,9 @@ print $text =~ /de+f/ ? "ok\n" : "not ok\n";
 
 # not match
 print $text !~ /bac/ ? "ok\n" : "not ok\n";
+
+# empty quantifier
+print "" =~ /a*/ ? "ok\n" : "not ok\n";
 
 # quantifiers
 print $text =~ /eg*f/ ? "ok\n" : "not ok\n";
@@ -52,8 +55,10 @@ print "$x[0] $x[1]" eq "bbccc c" ? "ok\n" : "not ok - $x[0] $x[1]\n";
 @x = $text =~ /b+|d+|f+/g;
 
 print "$x[0] $x[1] $x[2]" eq "bb dddd ffffff" ? "ok\n" : "not ok - $x[0] $x[1] $x[2]\n";
+print defined pos $text ? "not ok\n" : "ok\n";
 
 # global match in scalar context
+pos $text = undef; # in case the test above fails
 print $text =~ /b+|d+|f+/g ? "ok\n" : "not ok\n";
 print pos $text == 3 ? "ok\n" : "not ok\n";
 
@@ -71,4 +76,4 @@ print defined pos $text ? "not ok\n" : "ok\n";
 
 # global match the empty string
 ++$x, "\n" while $text =~ /z*/g;
-print $x == 22 ? "ok\n" : "not ok\n";
+print $x == 22 ? "ok\n" : "not ok - $x\n";
