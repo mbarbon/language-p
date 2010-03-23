@@ -204,18 +204,27 @@ namespace org.mbarbon.p.runtime
 
         public bool Match(Runtime runtime, IP5Any value, ref RxResult oldState)
         {
-            return MatchString(runtime, value.AsString(runtime), ref oldState);
+            return MatchString(runtime, value.AsString(runtime),
+                               -1, ref oldState);
         }
 
-        public bool MatchString(Runtime runtime, string str, ref RxResult oldState)
+        public bool MatchString(Runtime runtime, string str, int pos, ref RxResult oldState)
         {
-            for (int i = 0; i < str.Length; ++i)
+            int st = pos >= 0 ? pos : 0;
+
+            for (int i = st; i <= str.Length; ++i)
             {
                 RxResult res;
                 MatchAt(runtime, str, i, out res);
 
                 if (res.Matched)
                 {
+                    if (pos >= 0 && pos == res.End)
+                    {
+                        res.Matched = false;
+                        continue;
+                    }
+
                     oldState = runtime.LastMatch;
                     runtime.LastMatch = res;
 

@@ -19,6 +19,8 @@ namespace org.mbarbon.p.values
         bool AsBoolean(Runtime runtime);
         bool IsDefined(Runtime runtime);
 
+        int GetPos(Runtime runtime);
+
         IP5Any Assign(Runtime runtime, IP5Any other);
         IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> e);
         IP5Any ConcatAssign(Runtime runtime, IP5Any other);

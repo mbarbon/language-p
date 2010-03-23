@@ -25,6 +25,11 @@ namespace org.mbarbon.p.values
         public virtual bool AsBoolean(Runtime runtime) { return true; }
         public virtual bool IsDefined(Runtime runtime) { return true; }
 
+        public virtual int GetPos(Runtime runtime)
+        {
+            return 0;
+        }
+
         public virtual IP5Any Clone(Runtime runtime, int depth)
         {
             return new P5Handle(runtime);
