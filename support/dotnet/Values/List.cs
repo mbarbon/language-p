@@ -10,6 +10,16 @@ namespace org.mbarbon.p.values
         {
         }
 
+        public P5List(Runtime runtime, bool value) : base(runtime)
+        {
+            if (value)
+                array.Add(new P5Scalar(runtime, 1));
+        }
+
+        public P5List(Runtime runtime, List<IP5Any> data) : base(runtime, data)
+        {
+        }
+
         public P5List(Runtime runtime, params IP5Any[] data) : base(runtime)
         {
             foreach (var i in data)

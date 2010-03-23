@@ -16,6 +16,11 @@ namespace org.mbarbon.p.values
             array = new List<IP5Any>(data);
         }
 
+        public P5Array(Runtime runtime, List<IP5Any> data)
+        {
+            array = data;
+        }
+
         public P5Array(Runtime runtime, P5Array array) : this(runtime)
         {
             AssignIterator(runtime, array.GetEnumerator(runtime));
