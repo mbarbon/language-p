@@ -195,6 +195,11 @@ namespace org.mbarbon.p.runtime
             LIST   = 8,
         }
 
+        public const int RX_CASE_INSENSITIVE = 4;
+        public const int RX_ONCE             = 16;
+        public const int RX_GLOBAL           = 32;
+        public const int RX_KEEP             = 64;
+
         public enum Sigil
         {
             SCALAR    = 1,

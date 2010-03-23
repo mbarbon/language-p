@@ -202,10 +202,29 @@ namespace org.mbarbon.p.runtime
             cxt.LastClosedCapture = group;
         }
 
-        public bool Match(Runtime runtime, IP5Any value, ref RxResult oldState)
+        public bool Match(Runtime runtime, IP5Any value, int flags,
+                          ref RxResult oldState)
         {
             return MatchString(runtime, value.AsString(runtime),
                                -1, ref oldState);
+        }
+
+        public bool MatchGlobal(Runtime runtime, IP5Any value, int flags,
+                                ref RxResult oldState)
+        {
+            bool match = MatchString(runtime, value.AsString(runtime),
+                                     value.GetPos(runtime), ref oldState);
+            var scalar = value as P5Scalar;
+
+            if (scalar != null)
+            {
+                if (match)
+                    scalar.SetPos(runtime, runtime.LastMatch.End);
+                else if ((flags & Opcode.RX_KEEP) == 0)
+                    scalar.UnsetPos(runtime);
+            }
+
+            return match;
         }
 
         public bool MatchString(Runtime runtime, string str, int pos, ref RxResult oldState)

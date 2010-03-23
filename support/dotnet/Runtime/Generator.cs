@@ -1723,15 +1723,18 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_MATCH:
             {
                 RegexMatch rm = (RegexMatch)op;
+                bool global = (rm.Flags & Opcode.RX_GLOBAL) != 0;
+                var meth = typeof(Regex).GetMethod(global ? "MatchGlobal" : "Match");
 
                 return Expression.New(
                     typeof(P5Scalar).GetConstructor(ProtoRuntimeBool),
                     Runtime,
                     Expression.Call(
                         Generate(sub, op.Childs[1]),
-                        typeof(Regex).GetMethod("Match"),
+                        meth,
                         Runtime,
                         Generate(sub, op.Childs[0]),
+                        Expression.Constant(rm.Flags & Opcode.RX_KEEP),
                         GetSavedRxState(rm.Index)));
             }
             case Opcode.OpNumber.OP_REPLACE:
