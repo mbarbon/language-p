@@ -1739,12 +1739,124 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_REPLACE:
             {
                 RegexMatch rm = (RegexMatch)op;
+                bool global = (rm.Flags & Opcode.RX_GLOBAL) != 0;
 
-                return GenerateSubstitution(sub, rm);
+                if (global)
+                    return GenerateGlobalSubstitution(sub, rm);
+                else
+                    return GenerateSubstitution(sub, rm);
             }
             default:
                 throw new System.Exception(string.Format("Unhandled opcode {0:S} in generation", op.Number.ToString()));
             }
+        }
+
+        private Expression GenerateGlobalSubstitution(Subroutine sub, RegexMatch rm)
+        {
+            var scalar = Expression.Variable(typeof(P5Scalar));
+            var init_scalar =
+                Expression.Assign(scalar, Generate(sub, rm.Childs[0]));
+            var pos = Expression.Variable(typeof(int));
+            var count = Expression.Variable(typeof(int));
+            var matched = Expression.Variable(typeof(bool));
+            var str = Expression.Variable(typeof(string));
+            var replace = Expression.Variable(typeof(string));
+            var repl_list = Expression.Variable(typeof(List<RxReplacement>));
+            var init_str =
+                Expression.Assign(
+                    str,
+                    Expression.Call(
+                        scalar,
+                        typeof(IP5Any).GetMethod("AsString"),
+                        Runtime));
+            var match = Expression.Call(
+                Generate(sub, rm.Childs[1]),
+                typeof(Regex).GetMethod("MatchString"),
+                Runtime,
+                str,
+                pos,
+                GetSavedRxState(rm.Index));
+            var rxstate = Expression.Field(
+                Runtime,
+                typeof(Runtime).GetField("LastMatch"));
+            var rx_end =
+                Expression.Field(
+                    rxstate,
+                    typeof(RxResult).GetField("End"));
+            var rx_start =
+                Expression.Field(
+                    rxstate,
+                    typeof(RxResult).GetField("Start"));
+
+            var if_match = new List<Expression>();
+
+            if_match.Add(Expression.Increment(count));
+            if_match.Add(Expression.Assign(matched, Expression.Constant(true)));
+            if_match.Add(Expression.Assign(pos, rx_end));
+
+            // at this point all nested scopes have been generated
+            if_match.Add(Expression.Assign(
+                             replace,
+                             Expression.Call(
+                                 ValueBlocks[rm.To],
+                                 typeof(IP5Any).GetMethod("AsString"),
+                                 Runtime)));
+
+            if_match.Add(
+                Expression.Call(
+                    repl_list,
+                    typeof(List<RxReplacement>).GetMethod("Add"),
+                    Expression.New(
+                        typeof(RxReplacement).GetConstructor(
+                            new Type[] { typeof(string), typeof(int), typeof(int) }),
+                        replace, rx_start, rx_end)));
+
+            var break_to = Expression.Label(typeof(void));
+            var loop =
+                Expression.Loop(
+                    Expression.Block(
+                        Expression.IfThenElse(
+                            match,
+                            Expression.Block(typeof(void), if_match),
+                            Expression.Break(break_to))),
+                    break_to);
+
+            // TODO run replacement
+
+            // TODO save last match
+
+            // TODO return value
+
+            var vars = new List<ParameterExpression>();
+            vars.Add(scalar);
+            vars.Add(pos);
+            vars.Add(count);
+            vars.Add(matched);
+            vars.Add(str);
+            vars.Add(replace);
+            vars.Add(repl_list);
+
+            var body = new List<Expression>();
+            body.Add(init_scalar);
+            body.Add(init_str);
+            body.Add(Expression.Assign(pos, Expression.Constant(-1)));
+            body.Add(Expression.Assign(count, Expression.Constant(0)));
+            body.Add(Expression.Assign(matched, Expression.Constant(false)));
+            body.Add(Expression.Assign(
+                         repl_list,
+                         Expression.New(
+                             typeof(List<RxReplacement>).GetConstructor(
+                                 new Type[0]))));
+            body.Add(loop);
+            body.Add(
+                Expression.Call(
+                    typeof(Regex).GetMethod("ReplaceSubstrings"),
+                    Runtime,
+                    scalar,
+                    str,
+                    repl_list));
+
+            return Expression.Block(typeof(void), vars, body);
         }
 
         private Expression GenerateSubstitution(Subroutine sub, RegexMatch rm)

@@ -82,6 +82,19 @@ namespace org.mbarbon.p.runtime
         public bool Matched;
     }
 
+    public struct RxReplacement
+    {
+        public RxReplacement(string str, int st, int en)
+        {
+            String = str;
+            Start = st;
+            End = en;
+        }
+
+        public string String;
+        public int Start, End;
+    }
+
     [Serializable]
     public class Regex
     {
@@ -506,6 +519,21 @@ namespace org.mbarbon.p.runtime
             }
 
             return res.Matched;
+        }
+
+        public static void ReplaceSubstrings(Runtime runtime, P5Scalar value,
+                                             string str,
+                                             List<RxReplacement> substrings)
+        {
+            for (int i = substrings.Count - 1; i >= 0; --i)
+            {
+                // TODO optimize
+                str = str.Substring(0, substrings[i].Start)
+                    + substrings[i].String + str.Substring(substrings[i].End);
+
+            }
+
+            value.Assign(runtime, new P5Scalar(runtime, str));
         }
 
         private Op[] Ops;
