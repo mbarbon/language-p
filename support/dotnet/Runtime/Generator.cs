@@ -1740,77 +1740,82 @@ namespace org.mbarbon.p.runtime
             {
                 RegexMatch rm = (RegexMatch)op;
 
-                var scalar = Expression.Variable(typeof(P5Scalar));
-                var str = Expression.Variable(typeof(string));
-                var replace = Expression.Variable(typeof(IP5Any));
-                var init_scalar =
-                    Expression.Assign(scalar, Generate(sub, op.Childs[0]));
-                var init_str =
-                    Expression.Assign(
-                        str,
-                        Expression.Call(
-                            scalar,
-                            typeof(IP5Any).GetMethod("AsString"),
-                            Runtime));
-
-                var replace_list = new List<Expression>();
-
-                // at this point all nested scopes have been generated
-                replace_list.Add(
-                    Expression.Assign(replace, ValueBlocks[rm.To]));
-
-                // replace in string
-                var rxstate = Expression.Field(
-                    Runtime,
-                    typeof(Runtime).GetField("LastMatch"));
-
-                replace_list.Add(
-                    Expression.Call(
-                        scalar,
-                        typeof(P5Scalar).GetMethod("SpliceSubstring"),
-                        Runtime,
-                        Expression.Field(
-                            rxstate,
-                            typeof(RxResult).GetField("Start")),
-                        Expression.Field(
-                            rxstate,
-                            typeof(RxResult).GetField("End")),
-                        replace));
-
-                // return true at end of replacement
-                replace_list.Add(Expression.Constant(true));
-
-                var match = Expression.Call(
-                    Generate(sub, op.Childs[1]),
-                    typeof(Regex).GetMethod("MatchString"),
-                    Runtime,
-                    str,
-                    Expression.Constant(-1),
-                    GetSavedRxState(rm.Index));
-                var repl = Expression.Condition(
-                    match,
-                    Expression.Block(typeof(bool), replace_list),
-                    Expression.Constant(false));
-
-                var vars = new List<ParameterExpression>();
-                vars.Add(scalar);
-                vars.Add(str);
-                vars.Add(replace);
-
-                var exps = new List<Expression>();
-                exps.Add(init_scalar);
-                exps.Add(init_str);
-                exps.Add(
-                    Expression.New(
-                        typeof(P5Scalar).GetConstructor(ProtoRuntimeBool),
-                        Runtime,
-                        repl));
-
-                return Expression.Block(typeof(P5Scalar), vars, exps);
+                return GenerateSubstitution(sub, rm);
             }
             default:
                 throw new System.Exception(string.Format("Unhandled opcode {0:S} in generation", op.Number.ToString()));
             }
+        }
+
+        private Expression GenerateSubstitution(Subroutine sub, RegexMatch rm)
+        {
+            var scalar = Expression.Variable(typeof(P5Scalar));
+            var str = Expression.Variable(typeof(string));
+            var replace = Expression.Variable(typeof(IP5Any));
+            var init_scalar =
+                Expression.Assign(scalar, Generate(sub, rm.Childs[0]));
+            var init_str =
+                Expression.Assign(
+                    str,
+                    Expression.Call(
+                        scalar,
+                        typeof(IP5Any).GetMethod("AsString"),
+                        Runtime));
+
+            var replace_list = new List<Expression>();
+
+            // at this point all nested scopes have been generated
+            replace_list.Add(
+                Expression.Assign(replace, ValueBlocks[rm.To]));
+
+            // replace in string
+            var rxstate = Expression.Field(
+                Runtime,
+                typeof(Runtime).GetField("LastMatch"));
+
+            replace_list.Add(
+                Expression.Call(
+                    scalar,
+                    typeof(P5Scalar).GetMethod("SpliceSubstring"),
+                    Runtime,
+                    Expression.Field(
+                        rxstate,
+                        typeof(RxResult).GetField("Start")),
+                    Expression.Field(
+                        rxstate,
+                        typeof(RxResult).GetField("End")),
+                    replace));
+
+            // return true at end of replacement
+            replace_list.Add(Expression.Constant(true));
+
+            var match = Expression.Call(
+                Generate(sub, rm.Childs[1]),
+                typeof(Regex).GetMethod("MatchString"),
+                Runtime,
+                str,
+                Expression.Constant(-1),
+                GetSavedRxState(rm.Index));
+            var repl = Expression.Condition(
+                match,
+                Expression.Block(typeof(bool), replace_list),
+                Expression.Constant(false));
+
+            var vars = new List<ParameterExpression>();
+            vars.Add(scalar);
+            vars.Add(str);
+            vars.Add(replace);
+
+            var exps = new List<Expression>();
+            exps.Add(init_scalar);
+            exps.Add(init_str);
+            exps.Add(
+                Expression.New(
+                    typeof(P5Scalar).GetConstructor(ProtoRuntimeBool),
+                    Runtime,
+                    repl));
+
+            return Expression.Block(typeof(P5Scalar), vars, exps);
         }
 
         private LabelTarget SubLabel;
