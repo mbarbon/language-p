@@ -1785,6 +1785,7 @@ namespace org.mbarbon.p.runtime
                     typeof(Regex).GetMethod("MatchString"),
                     Runtime,
                     str,
+                    Expression.Constant(-1),
                     GetSavedRxState(rm.Index));
                 var repl = Expression.Condition(
                     match,
