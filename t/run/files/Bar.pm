@@ -1,6 +1,6 @@
 package Bar;
 
-if( __FILE !~ /[a]/ ) {
+if( __FILE__ !~ /[a]/ ) {
     die "Something is wrong";
 }
 
