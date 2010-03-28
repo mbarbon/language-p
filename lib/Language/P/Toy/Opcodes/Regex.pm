@@ -426,7 +426,8 @@ sub o_rx_class {
 
     v "Class '$op->{elements}' at $cxt->{pos}\n";
     my $chr = substr $cxt->{string}, $cxt->{pos}, 1;
-    if( index( $op->{elements}, $chr ) < 0 ) {
+    if(    $cxt->{pos} >= length( $cxt->{string} )
+        || index( $op->{elements}, $chr ) < 0 ) {
         return _backtrack( $runtime, $cxt );
     }
     $cxt->{pos} += 1;
