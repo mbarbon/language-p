@@ -377,6 +377,21 @@ namespace org.mbarbon.p.runtime
 
                     break;
                 }
+                case Opcode.OpNumber.OP_RX_CLASS:
+                {
+                    var s = Exact[Ops[index].Index];
+
+                    if (   cxt.Pos >= len
+                        || s.IndexOf(str[cxt.Pos]) < 0)
+                        index = Backtrack(ref cxt);
+                    else
+                    {
+                        ++cxt.Pos;
+                        ++index;
+                    }
+
+                    break;
+                }
                 case Opcode.OpNumber.OP_RX_BEGINNING:
                 {
                     if (cxt.Pos != 0)

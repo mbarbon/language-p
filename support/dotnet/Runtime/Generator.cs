@@ -172,6 +172,14 @@ namespace org.mbarbon.p.runtime
                         exact.Add(ex.String);
                         break;
                     }
+                    case Opcode.OpNumber.OP_RX_CLASS:
+                    {
+                        var cl = (RegexClass)op;
+
+                        ops.Add(new Regex.Op(cl.Number, exact.Count));
+                        exact.Add(cl.Elements);
+                        break;
+                    }
                     case Opcode.OpNumber.OP_RX_START_GROUP:
                     {
                         var gr = (RegexStartGroup)op;
