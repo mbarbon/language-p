@@ -16,6 +16,11 @@ namespace org.mbarbon.p.values
                 array.Add(new P5Scalar(runtime, 1));
         }
 
+        public P5List(Runtime runtime, IP5Any value) :
+            base(runtime, new IP5Any[] { value })
+        {
+        }
+
         public P5List(Runtime runtime, List<IP5Any> data) : base(runtime, data)
         {
         }
