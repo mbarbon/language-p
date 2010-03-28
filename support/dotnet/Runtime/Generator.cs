@@ -1790,7 +1790,7 @@ namespace org.mbarbon.p.runtime
 
             var if_match = new List<Expression>();
 
-            if_match.Add(Expression.Increment(count));
+            if_match.Add(Expression.PreIncrementAssign(count));
             if_match.Add(Expression.Assign(matched, Expression.Constant(true)));
             if_match.Add(Expression.Assign(pos, rx_end));
 
