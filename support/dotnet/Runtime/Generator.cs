@@ -1821,11 +1821,7 @@ namespace org.mbarbon.p.runtime
                             Expression.Break(break_to))),
                     break_to);
 
-            // TODO run replacement
-
             // TODO save last match
-
-            // TODO return value
 
             var vars = new List<ParameterExpression>();
             vars.Add(scalar);
@@ -1848,6 +1844,8 @@ namespace org.mbarbon.p.runtime
                              typeof(List<RxReplacement>).GetConstructor(
                                  new Type[0]))));
             body.Add(loop);
+
+            // replace substrings
             body.Add(
                 Expression.Call(
                     typeof(Regex).GetMethod("ReplaceSubstrings"),
@@ -1856,7 +1854,25 @@ namespace org.mbarbon.p.runtime
                     str,
                     repl_list));
 
-            return Expression.Block(typeof(void), vars, body);
+            // return value
+            var result =
+                Expression.New(
+                    typeof(P5Scalar).GetConstructor(ProtoRuntimeInt),
+                    Runtime,
+                    count);
+
+            body.Add(
+                Expression.Condition(
+                    Expression.Equal(
+                        OpContext(rm),
+                        Expression.Constant(Opcode.ContextValues.LIST)),
+                    Expression.New(
+                        typeof(P5List).GetConstructor(ProtoRuntimeAny),
+                        Runtime,
+                        result),
+                    result, typeof(IP5Any)));
+
+            return Expression.Block(typeof(IP5Any), vars, body);
         }
 
         private Expression GenerateSubstitution(Subroutine sub, RegexMatch rm)
