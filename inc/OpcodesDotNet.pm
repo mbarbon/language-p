@@ -65,6 +65,7 @@ my %dotnet_classes =
     'OP_RX_TRY'            => 'RegexTry',
     'OP_RX_CAPTURE_START'  => 'RegexCapture',
     'OP_RX_CAPTURE_END'    => 'RegexCapture',
+    'OP_RX_CLASS'          => 'RegexClass',
     );
 
 sub write_dotnet_deserializer {

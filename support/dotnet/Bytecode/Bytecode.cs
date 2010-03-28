@@ -314,6 +314,11 @@ namespace org.mbarbon.p.runtime
         public int Length;
     }
 
+    public class RegexClass : Opcode
+    {
+        public string Elements;
+    }
+
     public class RegexAccept : Opcode
     {
         public int Groups;
