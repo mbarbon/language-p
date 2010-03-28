@@ -4,16 +4,18 @@ use strict;
 use warnings;
 
 use Exporter 'import';
+use Test::More ();
 
-use Language::P::Parser;
+use Language::P::Parser qw(:all);
 use Language::P::Keywords;
-use Language::P::ParseTree qw(:all);
+use Language::P::Constants qw(:all);
+use Language::P::Opcodes qw(:all);
 use Language::P::ParseTree::PropagateContext;
 use Language::P::Toy::Value::MainSymbolTable;
 
 use YAML qw(Bless Dump);
 
-our @EXPORT_OK = qw(fresh_parser parsed_program
+our @EXPORT_OK = qw(fresh_parser parsed_program parse_ok
                     parse_and_diff_yaml parse_string);
 our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,
@@ -85,6 +87,37 @@ sub parsed_program {
     return \@lines;
 }
 
+sub parse_ok {
+    my( $dirs, $module ) = @_;
+    ( my $file = $module ) =~ s{::}{/}g;
+    my $parser = fresh_parser;
+
+    require File::Spec;
+
+    my $path;
+    foreach my $dir ( ref $dirs ? @$dirs : $dirs ) {
+        $path = File::Spec->catfile( $dir, $file . '.pm' );
+        last if -f $path
+    }
+    eval {
+        $parser->parse_file( $path, PARSE_ADD_RETURN|PARSE_MAIN );
+    };
+    if( my $e = $@ ) {
+        Test::More::ok( 0, $module );
+
+        if( ref $e && $e->isa( 'Language::P::Exception' ) ) {
+            my $pos = $e->position || [ 'some file', 'not known' ];
+            Test::More::diag( $e->message . ' at ' . $pos->[0] .
+                              ' line ' . $pos->[1] );
+        } else {
+            Test::More::diag( "Abnormal parser faiure:" );
+            Test::More::diag( "$e" );
+        }
+    } else {
+        Test::More::ok( 1, $module );
+    }
+}
+
 sub parse_string {
     my( $expr, $package ) = @_;
 
@@ -103,7 +136,7 @@ sub parse_and_diff_yaml {
     my( $expr, $expected ) = @_;
 
     $expected =~ s{ ((?:NUM|CXT|FLAG|CONST|STRING|VALUE|OP|DECLARATION|PROTO|CHANGED)_[A-Z_ \|]+)}
-                  {" " . eval $1 or die $@}eg;
+                  {" " . ( eval $1 or die $@ )}eg;
 
     require Language::P::ParseTree::DumpYAML;
 
@@ -131,6 +164,17 @@ sub parse_and_diff_yaml {
 
     local $Test::Builder::Level = $Test::Builder::Level + 1;
     Test::Differences::eq_or_diff( $got, $expected );
+}
+
+package t::lib::TestParser;
+
+sub import {
+    shift;
+
+    strict->import;
+    warnings->import;
+    Test::More->import( @_ );
+    Exporter::export( 'TestParser', scalar caller, ':all' );
 }
 
 1;

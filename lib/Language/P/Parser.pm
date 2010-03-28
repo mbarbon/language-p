@@ -6,13 +6,14 @@ use base qw(Class::Accessor::Fast);
 
 use Exporter 'import';
 
+use Language::P::Constants qw(:all);
 use Language::P::Lexer qw(:all);
-use Language::P::ParseTree qw(:all);
+use Language::P::ParseTree;
 use Language::P::Parser::Regex;
 use Language::P::Parser::Lexicals;
 use Language::P::Parser::Exception;
 use Language::P::Keywords;
-use Language::P::Opcodes qw(%OP_TO_KEYWORD);
+use Language::P::Opcodes qw(:all);
 
 our @EXPORT_OK = qw(PARSE_MAIN PARSE_ADD_RETURN);
 our %EXPORT_TAGS =
@@ -77,6 +78,8 @@ my %prec_assoc_bin =
     T_PLUS()            => [ 8,  ASSOC_LEFT,  OP_ADD ],
     T_MINUS()           => [ 8,  ASSOC_LEFT,  OP_SUBTRACT ],
     T_DOT()             => [ 8,  ASSOC_LEFT,  OP_CONCATENATE ],
+    T_SHIFT_LEFT()      => [ 9,  ASSOC_LEFT,  OP_SHIFT_LEFT ],
+    T_SHIFT_RIGHT()     => [ 9,  ASSOC_LEFT,  OP_SHIFT_RIGHT ],
     T_OPAN()            => [ 11, ASSOC_NON,   OP_NUM_LT ],
     T_CLAN()            => [ 11, ASSOC_NON,   OP_NUM_GT ],
     T_LESSEQUAL()       => [ 11, ASSOC_NON,   OP_NUM_LE ],
@@ -515,15 +518,15 @@ sub _parse_sub {
     my $fqname = $name ? _qualify( $self, $name->[O_VALUE], $name->[O_ID_TYPE] ) : undef;
     my( $proto, $next );
 
+    $next = $self->lexer->lex( X_BLOCK );
+    if( $next->[O_TYPE] == T_OPPAR ) {
+        $proto = _parse_sub_proto( $self );
+        $next = $self->lexer->lex( X_BLOCK );
+    }
+
     if( $fqname ) {
         _parse_error( $self, $name->[O_POS], "Named sub not allowed" )
           unless $flags & 1;
-
-        $next = $self->lexer->lex( X_BLOCK );
-        if( $next->[O_TYPE] == T_OPPAR ) {
-            $proto = _parse_sub_proto( $self );
-            $next = $self->lexer->lex( X_BLOCK );
-        }
 
         if( $next->[O_TYPE] == T_SEMICOLON ) {
             $self->generator->add_declaration( $fqname, $proto );
@@ -537,7 +540,6 @@ sub _parse_sub {
             _syntax_error( $self, $next );
         }
     } else {
-        $next = _lex_token( $self, T_OPBRK, undef, X_BLOCK );
         _parse_error( "Anonymous sub not allowed" )
           unless $flags & 2;
     }
@@ -549,7 +551,9 @@ sub _parse_sub {
                                 pos_s     => $pos,
                                 } ) :
                         Language::P::ParseTree::AnonymousSubroutine->new
-                            ( { pos_s     => $pos } );
+                            ( { pos_s     => $pos,
+                                prototype => $proto,
+                                } );
     # add @_ to lexical scope
     $self->_lexicals->add_name( VALUE_ARRAY, '_' );
     my $lex_state = _lexical_state_node( $self, 1 );
@@ -705,7 +709,7 @@ sub _parse_cond {
 sub _parse_for {
     my( $self ) = @_;
     my $keyword = _lex_token( $self, T_ID );
-    my $token = $self->lexer->lex( X_OPERATOR );
+    my $token = $self->lexer->lex( X_NOTHING );
     my( $foreach_var, $foreach_expr );
 
     $self->_enter_scope;
@@ -841,9 +845,8 @@ sub _parse_continue {
     return _parse_block_rest( $self, $brack->[O_POS], BLOCK_OPEN_SCOPE );
 }
 
-sub _parse_sideff {
-    my( $self ) = @_;
-    my $expr = _parse_expr( $self );
+sub _parse_statement_modifier {
+    my( $self, $expr ) = @_;
     my $keyword = $self->lexer->peek( X_TERM );
 
     if( $keyword->[O_TYPE] == T_ID && is_keyword( $keyword->[O_ID_TYPE] ) ) {
@@ -887,6 +890,14 @@ sub _parse_sideff {
                             } );
         }
     }
+
+    return $expr;
+}
+
+sub _parse_sideff {
+    my( $self ) = @_;
+    my $expr = _parse_expr( $self );
+    $expr = _parse_statement_modifier( $self, $expr );
 
     _lex_semicolon( $self );
     $self->_add_pending_lexicals;
@@ -964,7 +975,7 @@ sub _parse_maybe_subscript_rest {
     # array/hash element
     if( $next->[O_TYPE] == T_ARROW ) {
         _lex_token( $self, T_ARROW );
-        my $bracket = $self->lexer->peek( X_OPERATOR );
+        my $bracket = $self->lexer->peek( X_METHOD_SUBSCRIPT );
 
         if(    $bracket->[O_TYPE] == T_OPPAR
             || $bracket->[O_TYPE] == T_OPSQ
@@ -1204,9 +1215,59 @@ sub _parse_substitution {
     return $sub;
 }
 
+sub _parse_transliteration {
+    my( $self, $token ) = @_;
+    my $tr = Language::P::ParseTree::Transliteration->new
+                 ( { flags   => $token->[O_RX_FLAGS],
+                     pos     => $token->[O_POS],
+                     } );
+    $tr->{match} = _parse_transliteration_part( $self, $token->[O_POS],
+                                                $token->[O_QS_BUFFER] );
+    $tr->{replacement} = _parse_transliteration_part( $self, $token->[O_POS],
+                                                      $token->[O_RX_SECOND_HALF]->[O_QS_BUFFER] );
+
+    return $tr;
+}
+
+sub _parse_transliteration_part {
+    my( $self, $pos, $buffer ) = @_;
+    my $lexer = Language::P::Lexer->new
+                    ( { string       => $buffer,
+                        file         => $pos->[0],
+                        line         => $pos->[1],
+                        runtime      => $self->runtime,
+                        } );
+
+    my @parts;
+    for(;;) {
+        my $token = $lexer->lex_transliteration;
+        last if $token->[O_TYPE] == T_EOF;
+        die 'Internal error in transliteration' unless $token->[O_TYPE] == T_STRING;
+
+        my $c = $token->[O_VALUE];
+        if( $c eq '-' && @parts && !ref( $parts[-1] ) ) {
+            my $next = $lexer->lex_transliteration;
+
+            if( $token->[O_TYPE] == T_EOF ) {
+                push @parts, $c;
+                last;
+            } else {
+                $parts[-1] = [ $parts[-1], $next->[O_VALUE] ];
+            }
+        } else {
+            push @parts, $c;
+        }
+    }
+
+    return \@parts;
+}
+
 sub _parse_string_rest {
     my( $self, $token, $pattern, $substitution ) = @_;
     my @values;
+    my $parts = \@values;
+    my $concat;
+
     local $self->{lexer} = Language::P::Lexer->new
                                ( { string       => $token->[O_QS_BUFFER],
                                    file         => $token->[O_POS][0],
@@ -1223,7 +1284,7 @@ sub _parse_string_rest {
         my $value = $self->lexer->lex_quote;
 
         if( $value->[O_TYPE] == T_STRING ) {
-            push @values, Language::P::ParseTree::Constant->new
+            push @$parts, Language::P::ParseTree::Constant->new
                               ( { flags => CONST_STRING,
                                   value => $value->[O_VALUE],
                                   pos   => $value->[O_POS],
@@ -1233,9 +1294,29 @@ sub _parse_string_rest {
         } elsif(    $value->[O_TYPE] == T_DOLLAR
                  || $value->[O_TYPE] == T_AT
                  || $value->[O_TYPE] == T_ARYLEN ) {
-            push @values, _parse_indirobj_maybe_subscripts( $self, $value );
+            push @$parts, _parse_indirobj_maybe_subscripts( $self, $value );
+        } elsif( $value->[O_TYPE] == T_QUOTE ) {
+            if( $value->[O_VALUE] == 0 ) {
+                $concat = 0;
+                $parts = \@values;
+            } else {
+                $concat = 1;
+                push @$parts, Language::P::ParseTree::Overridable->new
+                                  ( { function  => $value->[O_VALUE],
+                                      arguments => [],
+                                      } );
+                $parts = $parts->[-1]->arguments;
+            }
         } else {
             _syntax_error( $self, $value );
+        }
+
+        if( $concat && @$parts == 2 ) {
+            @$parts = Language::P::ParseTree::BinOp->new
+                          ( { function => OP_CONCATENATE,
+                              left     => $parts->[0],
+                              right    => $parts->[1],
+                              } );
         }
     }
 
@@ -1337,6 +1418,8 @@ sub _parse_term_terminal {
             $pattern = _parse_match( $self, $token );
         } elsif( $token->[O_VALUE] == OP_QL_S ) {
             $pattern = _parse_substitution( $self, $token );
+        } elsif( $token->[O_VALUE] == OP_QL_TR ) {
+            $pattern = _parse_transliteration( $self, $token );
         } else {
             _parse_error( $self, $token->[O_POS], "Unknown pattern" );
         }
@@ -1476,8 +1559,8 @@ sub _parse_term_terminal_maybe_subscripts {
 }
 
 sub _parse_indirobj_maybe_subscripts {
-    my( $self, $token ) = @_;
-    my $indir = _parse_indirobj( $self, 0 );
+    my( $self, $token, $indir ) = @_;
+    $indir ||= _parse_indirobj( $self, 0 );
     my $sigil = $token_to_sigil{$token->[O_TYPE]};
     my $is_id = ref( $indir ) eq 'ARRAY' && $indir->[O_TYPE] == T_ID;
 
@@ -1580,6 +1663,9 @@ sub _parse_lexical {
     return _process_declaration( $self, $term, $keyword, $force_closed );
 }
 
+# takes a my $foo or my( $foo, $bar ) declaration, turns each ::Symbol
+# node into either a fully-qualified symbol (our) or a lexical
+# declaration (my)
 sub _process_declaration {
     my( $self, $decl, $keyword, $force_closed ) = @_;
 
@@ -1612,6 +1698,10 @@ sub _process_declaration {
         push @{$self->_pending_lexicals}, $sym;
 
         return $sym;
+    } elsif(    $decl->isa( 'Language::P::ParseTree::Builtin' )
+             && $decl->function == OP_UNDEF ) {
+        # allow undef in my declarations, to be able to assign lists
+        return $decl;
     } else {
         die 'Invalid node ', ref( $decl ), ' in declaration';
     }
@@ -1980,10 +2070,16 @@ sub _declared_id {
         if( $rt->get_symbol( _qualify( $self, $op->[O_VALUE], $opidt ), '&' ) ) {
             die "Overriding '" . $op->[O_VALUE] . "' not implemented";
         }
-        $call = Language::P::ParseTree::Overridable->new
-                    ( { function  => $KEYWORD_TO_OP{$opidt},
-                        pos       => $op->[O_POS],
-                        } );
+        if( $opidt == KEY_GLOB ) {
+            $call = Language::P::ParseTree::Glob->new
+                        ( { pos       => $op->[O_POS],
+                            } );
+        } else {
+            $call = Language::P::ParseTree::Overridable->new
+                        ( { function  => $KEYWORD_TO_OP{$opidt},
+                            pos       => $op->[O_POS],
+                            } );
+        }
 
         return ( $call, 1 );
     } elsif( is_builtin( $opidt ) ) {
@@ -2028,7 +2124,7 @@ sub _parse_listop {
 sub _parse_listop_like {
     my( $self, $op, $declared, $call ) = @_;
     my $proto = $call ? $call->parsing_prototype : undef;
-    my $expect = !$declared                                      ? X_BLOCK :
+    my $expect = !$declared                                      ? X_OPERATOR_INDIROBJ :
                  !$proto                                         ? X_TERM :
                  $proto->[2] & (PROTO_FILEHANDLE|PROTO_INDIROBJ) ? X_REF :
                  $proto->[2] & (PROTO_BLOCK|PROTO_SUB)           ? X_BLOCK :
@@ -2039,7 +2135,7 @@ sub _parse_listop_like {
     if( !$call || !$declared || $call->is_plain_function ) {
         if( $next->[O_TYPE] == T_ARROW ) {
             _lex_token( $self, T_ARROW );
-            my $la = $self->lexer->peek( X_OPERATOR );
+            my $la = $self->lexer->peek( X_METHOD_SUBSCRIPT );
 
             if( $la->[O_TYPE] == T_ID || $la->[O_TYPE] == T_DOLLAR ) {
                 # here we are calling the method on a bareword
@@ -2114,9 +2210,11 @@ sub _apply_prototype {
     my( $self, $pos, $call ) = @_;
     my $proto = $call->parsing_prototype;
     my $args = $call->arguments || [];
+    my $func = $call->function;
+    my $is_opcode = !ref( $call->function );
 
     if( !$call->arguments && ( $proto->[2] & PROTO_DEFAULT_ARG ) ) {
-        my $op = !ref( $call->function ) ? $call->function : 0;
+        my $op = $is_opcode ? $func : 0;
 
         if( $op == OP_FT_ISTTY ) {
             $call->{arguments} = [ _find_symbol( $self, undef, VALUE_GLOB,
@@ -2135,20 +2233,30 @@ sub _apply_prototype {
         $args = $call->arguments;
     }
 
-    if( @$args < $proto->[0] ) {
+    my $indirect =    $call->isa( 'Language::P::ParseTree::BuiltinIndirect' )
+                   && $call->indirect ? 1 : 0;
+    if( $indirect + @$args < $proto->[0] ) {
         _parse_error( $self, $pos, "Too few arguments for %s",
-                      _function_name( $call->function ) );
+                      _function_name( $func ) );
     }
     if( $proto->[1] != -1 && @$args > $proto->[1] ) {
         _parse_error( $self, $pos, "Too many arguments for %s",
-                      _function_name( $call->function ) );
+                      _function_name( $func ) );
     }
 
-    if(    !ref( $call->function )
-        && $call->function == OP_EXISTS
+    if(    $is_opcode
+        && $func == OP_EXISTS
         && !(    $args->[0]->isa( 'Language::P::ParseTree::SpecialFunctionCall' )
               || $args->[0]->isa( 'Language::P::ParseTree::Subscript' ) ) ) {
         _parse_error( $self, $pos, 'exists argument is not a HASH or ARRAY element or a subroutine' );
+    } elsif(    $is_opcode
+             && $func == OP_BLESS
+             && @{$args} == 1 ) {
+        $args->[1] = Language::P::ParseTree::Constant->new
+                         ( { value => $self->{_lexical_state}[-1]{package},
+                             flags => CONST_STRING,
+                             pos   => $call->pos,
+                             } );
     }
 
     foreach my $i ( 3 .. $#$proto ) {
@@ -2196,7 +2304,7 @@ sub _apply_prototype {
             } else {
                 _parse_error( $self, $pos,
                               "Invalid argument for reference prototype %s",
-                              _function_name( $call->function ) );
+                              _function_name( $func ) );
             }
         }
     }
@@ -2246,8 +2354,30 @@ sub _parse_arglist {
                                 pos   => $la->[O_POS],
                                 } );
             }
-        } else {
-            $term = _parse_term( $self, $term_prec );
+        } elsif( $proto_char & PROTO_FILEHANDLE ) {
+            if( $la->[O_TYPE] == T_DOLLAR ) {
+                _lex_token( $self, T_DOLLAR );
+
+                $term = _parse_indirobj( $self, 0 );
+                # used to peek after the indirect object without failing
+                # in the print $foo $bar case: _parse_term_n would lex using
+                # X_OPERATOR and trigger the "Scalar found where operator
+                # expected" check
+                my $la2 = $self->lexer->peek( X_OPERATOR_INDIROBJ );
+                my $tt = $la2->[O_TYPE];
+
+                # TODO Perl disambiguates the second case for */% using
+                # whitespace and some heuristics, while here it always
+                # assumes that what looks like a binary operator, is a
+                # binary operator
+                $term = _parse_indirobj_maybe_subscripts( $self, $la, $term );
+                if( $prec_assoc_bin{$tt}
+                    || $tt == T_PLUSPLUS || $tt == T_MINUSMINUS ) {
+                    $term = _parse_term_n( $self, $term_prec, $term );
+                }
+            } else {
+                $term = _parse_term( $self, $term_prec );
+            }
 
             if( !$term ) {
                 $indirect_term = 0;
@@ -2268,6 +2398,12 @@ sub _parse_arglist {
             return [$term] if $next->[O_TYPE] == T_COMMA;
             $self->lexer->unlex( [ -1, T_COMMA, ',' ] );
         }
+    } elsif(    $proto_char & PROTO_PATTERN
+             && $la->[O_TYPE] == T_PATTERN
+             && $la->[O_VALUE] == OP_QL_M ) {
+        _lex_token( $self );
+
+        $term = _parse_match( $self, $la );
     }
 
     $term ||= _parse_term( $self, $term_prec );
@@ -2301,8 +2437,9 @@ sub _parse_do {
     my $next = $self->lexer->peek( X_BLOCK );
     if( $next->[O_TYPE] == T_OPBRK ) {
         _lex_token( $self );
-        return _parse_block_rest( $self, $next->[O_POS],
-                                  BLOCK_OPEN_SCOPE|BLOCK_DO );
+        my $block = _parse_block_rest( $self, $next->[O_POS],
+                                       BLOCK_OPEN_SCOPE|BLOCK_DO );
+        return _parse_statement_modifier( $self, $block );
     }
 
     my $call = Language::P::ParseTree::Builtin->new

@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 6;
+use Test::More tests => 7;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -15,6 +15,23 @@ context: CXT_VOID
 flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
 name: foo
 sigil: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+my( $foo, undef );
+EOP
+--- !parsetree:List
+context: CXT_VOID
+expressions:
+  - !parsetree:LexicalDeclaration
+    context: CXT_VOID
+    flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
+    name: foo
+    sigil: VALUE_SCALAR
+  - !parsetree:Builtin
+    arguments: ~
+    context: CXT_VOID
+    function: OP_UNDEF
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

@@ -5,8 +5,9 @@ use warnings;
 
 use base qw(Class::Accessor::Fast);
 
+use Language::P::Constants qw(:all);
 use Language::P::Lexer qw(:all);
-use Language::P::ParseTree qw(:all);
+use Language::P::ParseTree;
 
 __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime
                                  interpolate flags _group_count) );
@@ -54,6 +55,26 @@ sub _parse {
                     push @$st, Language::P::ParseTree::RXGroup->new
                                    ( { components => [],
                                        capture    => 0,
+                                       } );
+                } elsif( $type->[O_VALUE] eq '=' ) {
+                    push @$st, Language::P::ParseTree::RXAssertionGroup->new
+                                   ( { components => [],
+                                       type       => 'POSITIVE_LOOKAHEAD',
+                                       } );
+                } elsif( $type->[O_VALUE] eq '!' ) {
+                    push @$st, Language::P::ParseTree::RXAssertionGroup->new
+                                   ( { components => [],
+                                       type       => 'NEGATIVE_LOKAHEAD',
+                                       } );
+                } elsif( $type->[O_VALUE] eq '<=' ) {
+                    push @$st, Language::P::ParseTree::RXAssertionGroup->new
+                                   ( { components => [],
+                                       type       => 'POSITIVE_LOOKBEHIND',
+                                       } );
+                } elsif( $type->[O_VALUE] eq '<!' ) {
+                    push @$st, Language::P::ParseTree::RXAssertionGroup->new
+                                   ( { components => [],
+                                       type       => 'NEGATIVE_LOOKBEHIND',
                                        } );
                 } else {
                     # remaining (?...) constructs
@@ -146,13 +167,13 @@ sub _parse {
                                        } );
                 }
             } else {
-                Carp::confess $value->[O_TYPE], ' ', $value->[O_VALUE], ' ',
-                              $value->[O_RX_REST]->[0];
+                Carp::confess( $value->[O_TYPE], ' ', $value->[O_VALUE], ' ',
+                               $value->[O_RX_REST]->[0] );
             }
         } elsif( $value->[O_TYPE] == T_EOF ) {
             last;
         } elsif( $value->[O_TYPE] == T_DOLLAR || $value->[O_TYPE] == T_AT ) {
-                Carp::confess $value->[O_TYPE], ' ', $value->[O_VALUE];
+                Carp::confess( $value->[O_TYPE], ' ', $value->[O_VALUE] );
         }
     }
 
@@ -160,6 +181,10 @@ sub _parse {
 
     return \@values;
 }
+
+my %posix_charclasses = map { $_ => 1 } qw(alpha alnum ascii blank cntrl digit
+                                           graph lower print punct space upper
+                                           word xdigit);
 
 sub _parse_charclass {
     my( $self, $class ) = @_;
@@ -186,6 +211,19 @@ sub _parse_charclass {
             } else {
                 push @la, $next;
             }
+        } elsif( $value->[O_TYPE] == T_POSIX ) {
+            if( !$posix_charclasses{$value->[O_VALUE]} ) {
+                throw Language::P::Parser::Exception
+                  ( message  => sprintf( "Invalid POSIX character class '%s'",
+                                         $value->[O_VALUE] ),
+                    position => $value->[O_POS],
+                    );
+            }
+
+            push @$st, Language::P::ParseTree::RXPosixClass->new
+                           ( { type => $value->[O_VALUE],
+                                } );
+            next;
         } elsif( $value->[O_TYPE] == T_CLASS ) {
             push @$st, Language::P::ParseTree::RXSpecialClass->new
                            ( { type => $value->[O_VALUE],

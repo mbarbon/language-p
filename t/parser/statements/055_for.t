@@ -2,10 +2,29 @@
 
 use strict;
 use warnings;
-use Test::More tests => 7;
+use Test::More tests => 8;
 
 use lib 't/lib';
 use TestParser qw(:all);
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+for(;;) {
+    1;
+}
+EOP
+--- !parsetree:For
+block: !parsetree:Block
+  lines:
+    - !parsetree:Constant
+      context: CXT_VOID
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 1
+block_type: for
+condition: ~
+continue: ~
+initializer: ~
+step: ~
+EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 foreach ( my $i = 0; $i < 10; $i = $i + 1 ) {

@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use base qw(Language::P::Toy::Value::Any);
 
-use Language::P::ParseTree qw(VALUE_SCALAR VALUE_ARRAY VALUE_HASH);
+use Language::P::Constants qw(VALUE_SCALAR VALUE_ARRAY VALUE_HASH);
 
 __PACKAGE__->mk_ro_accessors( qw(bytecode stack_size lexicals closed
                                  lexical_init scopes) );

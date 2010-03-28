@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 15;
+use Test::More tests => 17;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -63,7 +63,7 @@ left: !parsetree:Overridable
       name: FILE
       sigil: VALUE_GLOB
     - !parsetree:Constant
-      context: CXT_LIST
+      context: CXT_SCALAR
       flags: CONST_STRING
       value: '>foo'
   context: CXT_SCALAR
@@ -305,4 +305,47 @@ arguments:
     sigil: VALUE_GLOB
 context: CXT_VOID
 function: OP_PIPE
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print $foo $foo;
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: foo
+    sigil: VALUE_SCALAR
+context: CXT_VOID
+function: OP_PRINT
+indirect: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: foo
+  sigil: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print $foo{1}, 1;
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:Subscript
+    context: CXT_LIST
+    reference: 0
+    subscript: !parsetree:Constant
+      context: CXT_SCALAR
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 1
+    subscripted: !parsetree:Symbol
+      context: CXT_LIST
+      name: foo
+      sigil: VALUE_HASH
+    type: VALUE_HASH
+  - !parsetree:Constant
+    context: CXT_LIST
+    flags: CONST_NUMBER|NUM_INTEGER
+    value: 1
+context: CXT_VOID
+function: OP_PRINT
+indirect: ~
 EOE

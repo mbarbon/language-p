@@ -12,6 +12,7 @@
 ^support/dotnet/(?:configure|dotnet\.in|.*\.make|Makefile\.include)$
 ^support/dotnet/Bytecode/BytecodeGenerated\.cs$
 ^lib/Language/P/Intermediate/SerializeGenerated\.pm$
+^MYMETA.yml$
 
 # Avoid version control files.
 \bRCS\b

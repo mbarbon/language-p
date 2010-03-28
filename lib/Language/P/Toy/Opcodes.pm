@@ -10,7 +10,7 @@ use Language::P::Toy::Value::Array;
 use Language::P::Toy::Value::List;
 use Language::P::Toy::Value::Pos;
 use Language::P::Toy::Exception;
-use Language::P::ParseTree qw(:all);
+use Language::P::Constants qw(:all);
 
 use Language::P::Toy::Opcodes::Regex qw(:opcodes);
 
@@ -19,10 +19,10 @@ our @EXPORT_OK = qw(o);
 sub o {
     my( $name, %args ) = @_;
 
-    Carp::confess "Invalid opcode '$name'"
+    Carp::confess( "Invalid opcode '$name'" )
         unless defined $Language::P::Toy::Opcodes::{"o_$name"};
     my $fun = *{$Language::P::Toy::Opcodes::{"o_$name"}}{CODE};
-    Carp::confess "Invalid opcode '$name'"
+    Carp::confess( "Invalid opcode '$name'" )
         unless defined $fun;
 
     return { %args,
@@ -829,6 +829,19 @@ sub o_postdec {
     my $v = pop @{$runtime->{_stack}};
 
     push @{$runtime->{_stack}}, $v->post_decrement( $runtime );
+
+    return $pc + 1;
+}
+
+sub o_quotemeta {
+    my( $op, $runtime, $pc ) = @_;
+    my $v = pop @{$runtime->{_stack}};
+    my $r = $v->as_string( $runtime );
+
+    $r =~ s{(\W)}{\\$1}g;
+
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::Scalar->new_string( $runtime, $r );
 
     return $pc + 1;
 }

@@ -5,7 +5,7 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 use Language::P::Toy::Value::MainSymbolTable;
-use Language::P::ParseTree qw(:all);
+use Language::P::Constants qw(:all);
 use Language::P::Parser qw(:all);
 
 __PACKAGE__->mk_ro_accessors( qw(symbol_table _variables _parser) );

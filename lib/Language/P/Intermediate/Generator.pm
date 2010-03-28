@@ -14,7 +14,7 @@ use Language::P::Intermediate::Code qw(:all);
 use Language::P::Intermediate::BasicBlock;
 use Language::P::Opcodes qw(:all);
 use Language::P::ParseTree::PropagateContext;
-use Language::P::ParseTree qw(:all);
+use Language::P::Constants qw(:all);
 use Language::P::Keywords qw(:all);
 use Language::P::Assembly qw(:all);
 
@@ -439,6 +439,7 @@ my %dispatch_regex =
     'Language::P::ParseTree::Constant'       => '_regex_exact',
     'Language::P::ParseTree::RXAlternation'  => '_regex_alternate',
     'Language::P::ParseTree::RXAssertion'    => '_regex_assertion',
+    'Language::P::ParseTree::RXClass'        => '_regex_class',
     );
 
 sub dispatch {
@@ -1745,6 +1746,13 @@ sub _regex_exact {
     _add_bytecode $self,
         opcode_nm( OP_RX_EXACT, string => $tree->value,
                    length => length( $tree->value ) );
+}
+
+sub _regex_class {
+    my( $self, $tree ) = @_;
+
+    _add_bytecode $self,
+        opcode_nm( OP_RX_CLASS, elements => join '', @{$tree->elements} );
 }
 
 sub _regex_alternate {

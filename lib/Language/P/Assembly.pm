@@ -123,7 +123,7 @@ __PACKAGE__->mk_ro_accessors( qw(label literal opcode opcode_n
                                  parameters attributes) );
 
 use Scalar::Util qw(blessed);
-use Language::P::ParseTree qw(VALUE_SCALAR VALUE_ARRAY VALUE_HASH);
+use Language::P::Constants qw(VALUE_SCALAR VALUE_ARRAY VALUE_HASH);
 
 my %sigil_to_name =
   ( VALUE_SCALAR() => 'scalar',

@@ -18,14 +18,15 @@ sub data_handle {
     return $data;
 }
 
-use Language::P::ParseTree qw(:all);
+use Language::P::Constants qw(:all);
+use Language::P::Opcodes;
 use Language::P::Keywords;
 
 our @TOKENS;
 BEGIN {
   our @TOKENS =
     qw(T_ID T_FQ_ID T_SUB_ID T_EOF T_PACKAGE T_FILETEST
-       T_PATTERN T_STRING T_NUMBER T_QUOTE T_OR T_XOR
+       T_PATTERN T_STRING T_NUMBER T_QUOTE T_OR T_XOR T_SHIFT_LEFT T_SHIFT_RIGHT
        T_SEMICOLON T_COLON T_COMMA T_OPPAR T_CLPAR T_OPSQ T_CLSQ
        T_OPBRK T_CLBRK T_OPHASH T_OPAN T_CLPAN T_INTERR
        T_NOT T_SLESS T_CLAN T_SGREAT T_EQUAL T_LESSEQUAL T_SLESSEQUAL
@@ -40,17 +41,19 @@ BEGIN {
        T_ANDANDEQUAL T_OROREQUAL
 
        T_CLASS_START T_CLASS_END T_CLASS T_QUANTIFIER T_ASSERTION T_ALTERNATE
-       T_CLGROUP T_BACKREFERENCE
+       T_CLGROUP T_BACKREFERENCE T_POSIX
        );
 };
 
 use constant
   { X_NOTHING  => 0,
-    X_STATE    => 1,
+    X_STATE    => 1,  # at the start of a new line
     X_TERM     => 2,
     X_OPERATOR => 3,
-    X_BLOCK    => 4,
-    X_REF      => 5,
+    X_BLOCK    => 4,  # bracketed block
+    X_REF      => 5,  # filehandle/indirect argument of print/map/grep
+    X_METHOD_SUBSCRIPT => 6, # saw an arrow, expecting method/subscript
+    X_OPERATOR_INDIROBJ => 7, # saw a bareword, expect operator/indirect object
 
     O_POS             => 0,
     O_TYPE            => 1,
@@ -73,7 +76,8 @@ use constant
 use Exporter 'import';
 
 our @EXPORT_OK =
-  ( qw(X_NOTHING X_STATE X_TERM X_OPERATOR X_BLOCK X_REF
+  ( qw(X_NOTHING X_STATE X_TERM X_OPERATOR X_BLOCK X_REF X_METHOD_SUBSCRIPT
+       X_OPERATOR_INDIROBJ
        O_POS O_TYPE O_VALUE O_ID_TYPE O_FT_OP O_QS_INTERPOLATE O_QS_BUFFER
        O_RX_REST O_RX_SECOND_HALF O_RX_FLAGS O_RX_INTERPOLATED O_NUM_FLAGS
        LEX_NO_PACKAGE
@@ -113,6 +117,15 @@ sub unlex {
     push @{$self->tokens}, $token;
 }
 
+sub _lexer_error {
+    my( $self, $pos, $message, @args ) = @_;
+
+    throw Language::P::Parser::Exception
+        ( message  => sprintf( $message, @args ),
+          position => $pos,
+          );
+}
+
 my %ops =
   ( ';'   => T_SEMICOLON,
     ':'   => T_COLON,
@@ -126,6 +139,8 @@ my %ops =
     '}'   => T_CLBRK,
     '?'   => T_INTERR,
     '!'   => T_NOT,
+    '>>'  => T_SHIFT_RIGHT,
+    '<<'  => T_SHIFT_LEFT,
     '<'   => T_OPAN,
     'lt'  => T_SLESS,
     '>'   => T_CLAN,
@@ -252,8 +267,7 @@ my %pattern_special =
     '??' => [ T_QUANTIFIER, 0,  1, 0 ],
     ')'  => [ T_CLGROUP ],
     '|'  => [ T_ALTERNATE ],
-    '['  => [ T_CLASS_START ],
-    ']'  => [ T_CLASS_END ],
+    '['  => [ T_CLASS_START ], # ']' handled in lex_charclass
     );
 
 sub _skip_space {
@@ -420,9 +434,49 @@ sub lex_charclass {
         return [ $self->{pos}, T_MINUS, '-' ];
     } elsif( $c eq ']' ) {
         return [ $self->{pos}, T_CLASS_END ];
+    } elsif( $c eq '[' && $$buffer =~ s/^:(\w+):\]// ) {
+        return [ $self->{pos}, T_POSIX, $1 ];
     } else {
         return [ $self->{pos}, T_STRING, $c ];
     }
+}
+
+sub lex_transliteration {
+    my( $self ) = @_;
+
+    my $buffer = $self->buffer;
+    return [ $self->{pos}, T_EOF, '' ] unless length $$buffer;
+
+    my $c = substr $$buffer, 0, 1, '';
+    if( $c eq '\\' ) {
+        my $qc = substr $$buffer, 0, 1, '';
+
+        # this is a partial duplicate of lex_quote below, but it's
+        # cleaner than putting transliteration special cases in
+        # lex_quote
+        if( $quoted_chars{$qc} ) {
+            $c = $quoted_chars{$qc};
+        } elsif( $qc =~ /^[0-7]$/ ) {
+            if( $$buffer =~ s/^([0-7]{1,2})// ) {
+                $qc .= $1;
+            }
+
+            $c = chr( oct '0' . $qc );
+        } elsif( $qc eq 'c' ) {
+            my $next = uc substr $$buffer, 0, 1, '';
+            $c = chr( ord( $next ) ^ 0x40 );
+        } elsif( $qc eq 'x' ) {
+            if( $$buffer =~ s/^([0-9a-fA-F]{1,2})// ) {
+                $c = chr( oct '0x' . $1 );
+            } else {
+                $c = "\0";
+            }
+        } else {
+            $c = $qc;
+        }
+    }
+
+    return [ $self->{pos}, T_STRING, $c, 1 ];
 }
 
 sub lex_quote {
@@ -454,21 +508,16 @@ sub lex_quote {
                 if( $c eq '\\' ) {
                     my $qc = substr $$buffer, 0, 1;
 
-                    if( my $qp = $quoted_pattern{$qc} ) {
+                    if( $interpolated_pattern ) {
                         substr $$buffer, 0, 1, ''; # eat character
-                        if( $pattern ) {
-                            $to_return = [ $self->{pos}, T_PATTERN, $qc, $qp ];
-                        } else {
-                            $v .= $c . $qc;
-                            next;
-                        }
+                        $v .= $c . $qc;
+                        next;
+                    } elsif( my $qp = $quoted_pattern{$qc} ) {
+                        substr $$buffer, 0, 1, ''; # eat character
+                        $to_return = [ $self->{pos}, T_PATTERN, $qc, $qp ];
                     } elsif( $pattern_special{$qc} ) {
                         substr $$buffer, 0, 1, ''; # eat character
-                        if( $pattern ) {
-                            $v .= $qc;
-                        } else {
-                            $v .= $c . $qc;
-                        }
+                        $v .= $qc;
                         next;
                     } elsif( $qc =~ /[1-9]/ ) {
                         $$buffer =~ s/^([0-9]+)//;
@@ -533,6 +582,28 @@ sub lex_quote {
                             $v .= chr( oct '0x' . $1 );
                         } else {
                             $v .= "\0";
+                        }
+                    } elsif(    $qc eq 'Q' || $qc eq 'E' || $qc eq 'l'
+                             || $qc eq 'u' || $qc eq 'L' || $qc eq 'U' ) {
+                        if( $qc eq 'Q' ) {
+                            $to_return = [ $self->{pos}, T_QUOTE, OP_QUOTEMETA ];
+                        } elsif( $qc eq 'l' ) {
+                            $to_return = [ $self->{pos}, T_QUOTE, OP_LCFIRST ];
+                        } elsif( $qc eq 'u' ) {
+                            $to_return = [ $self->{pos}, T_QUOTE, OP_UCFIRST ];
+                        } elsif( $qc eq 'L' ) {
+                            $to_return = [ $self->{pos}, T_QUOTE, OP_LC ];
+                        } elsif( $qc eq 'U' ) {
+                            $to_return = [ $self->{pos}, T_QUOTE, OP_UC ];
+                        } elsif( $qc eq 'E' ) {
+                            $to_return = [ $self->{pos}, T_QUOTE, 0 ];
+                        }
+
+                        if( length $v ) {
+                            $self->unlex( $to_return );
+                            return [ $self->{pos}, T_STRING, $v, 1 ];
+                        } else {
+                            return $to_return;
                         }
                     } else {
                         die "Invalid escape '$qc'";
@@ -811,7 +882,7 @@ sub _find_end {
     my( $interpolated, $delim_count, $str ) = ( 0, 1, '' );
     SCAN_END: for(;;) {
         $self->_fill_buffer unless length $$_;
-        die "EOF while parsing quoted string" unless length $$_;
+        _lexer_error( $self, $pos, "Can't find string terminator '$quote_end' anywhere before EOF" ) unless length $$_;
 
         while( length $$_ ) {
             my $c = substr $$_, 0, 1, '';
@@ -826,6 +897,8 @@ sub _find_end {
                 }
 
                 next;
+            } elsif( $c eq "\n" ) {
+                ++$self->{line};
             } elsif( $paired && $c eq $quote_start ) {
                 ++$delim_count;
             } elsif( $c eq $quote_end ) {
@@ -959,7 +1032,7 @@ sub _prepare_sublex_heredoc {
         }
     }
 
-    Carp::confess "EOF while looking for terminator '$end'" unless $finished;
+    Carp::confess( "EOF while looking for terminator '$end'" ) unless $finished;
 
     return [ $pos, T_QUOTE, $quote eq "`" ? OP_QL_QX : 0, $quote ne "'", \$str ];
 }
@@ -974,9 +1047,19 @@ sub lex {
 
     local $_ = $self->buffer;
     return [ $self->{pos}, T_EOF, '' ] unless length $$_;
+    my $indir;
+    if( $expect == X_OPERATOR_INDIROBJ ) {
+        $indir = 1;
+        $expect = X_OPERATOR;
+    }
 
     # numbers
-    $$_ =~ /^\d|^\.\d/ and return $self->lex_number;
+    $$_ =~ /^\d|^\.\d/ and do {
+        _lexer_error( $self, $self->{pos},
+                      "Number found where operator expected" )
+            if $expect == X_OPERATOR;
+        return $self->lex_number;
+    };
     # quote and quote-like operators
     $$_ =~ s/^(q|qq|qx|qw|m|qr|s|tr|y)(?=\W)//x and
         return _prepare_sublex( $self, $1, undef );
@@ -1054,7 +1137,12 @@ sub lex {
         }
         return [ $pos, T_ID, $ids, $type ];
     };
-    $$_ =~ s/^(["'`])//x and return _prepare_sublex( $self, $1, $1 );
+    $$_ =~ s/^(["'`])//x and do {
+        _lexer_error( $self, $self->{pos},
+                      "String found where operator expected" )
+            if $expect == X_OPERATOR;
+        return _prepare_sublex( $self, $1, $1 );
+    };
     # < when not operator (<> glob, <> file read, << here doc)
     $$_ =~ /^</ and $expect != X_OPERATOR and do {
         $$_ =~ s/^(<<|<)//x;
@@ -1066,13 +1154,16 @@ sub lex {
         }
     };
     # multi char operators
-    $$_ =~ s/^(<=|>=|==|!=|=>|->
+    $$_ =~ s/^(<=|>=|==|!=|=>|->|<<|>>
                 |=~|!~
                 |\.\.|\.\.\.
                 |\+\+|\-\-
                 |\+=|\-=|\*=|\/=|\.=|x=|%=|\*\*=|&=|\|=|\^=|&&=|\|\|=
                 |\&\&|\|\|)//x and return [ $self->{pos}, $ops{$1}, $1 ];
     $$_ =~ s/^\$//x and do {
+        _lexer_error( $self, $self->{pos},
+                      "Scalar found where operator expected" )
+            if $expect == X_OPERATOR && !$indir;
         if( $$_ =~ s/^\#(?=[{\$])//x ) {
             return [ $self->{pos}, $ops{'$#'}, '$#' ];
         } elsif( $$_ =~ /^\#/ ) {
@@ -1114,7 +1205,7 @@ sub lex {
         if( $brack eq '{' ) {
             if( $expect == X_TERM ) {
                 return [ $self->{pos}, T_OPHASH, '{' ];
-            } elsif( $expect == X_OPERATOR ) {
+            } elsif( $expect == X_OPERATOR || $expect == X_METHOD_SUBSCRIPT ) {
                 # autoquote literal strings in hash subscripts
                 if( $$_ =~ s/^[ \t]*([[:alpha:]_]+)[ \t]*\}// ) {
                     $self->unlex( [ $self->{pos}, T_CLBRK, '}' ] );
@@ -1150,7 +1241,7 @@ sub lex {
     };
     # / (either regex start or division operator)
     $$_ =~ s/^\///x and do {
-        if( $expect == X_TERM || $expect == X_STATE ) {
+        if( $expect == X_TERM || $expect == X_STATE || $expect == X_REF ) {
             return _prepare_sublex( $self, 'm', '/' );
         } else {
             return [ $self->{pos}, T_SLASH, '/' ];
@@ -1165,6 +1256,12 @@ sub lex {
         }
 
         return [ $self->{pos}, T_FILETEST, $op, $filetest{$op} ];
+    };
+    $$_ =~ s/^\@// and do {
+        _lexer_error( $self, $self->{pos},
+                      "Array found where operator expected" )
+            if $expect == X_OPERATOR;
+        return [ $self->{pos}, T_AT, '@' ];
     };
     # single char operators
     $$_ =~ s/^([:;,()\?<>!~=\/\\\+\-\.\|^\*%@&])//x and return [ $self->{pos}, $ops{$1}, $1 ];

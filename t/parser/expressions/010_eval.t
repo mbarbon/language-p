@@ -52,7 +52,7 @@ EOP
 --- !parsetree:Builtin
 arguments:
   - !parsetree:UnOp
-    context: CXT_LIST
+    context: CXT_SCALAR
     left: !parsetree:ReferenceConstructor
       expression: !parsetree:List
         context: CXT_LIST

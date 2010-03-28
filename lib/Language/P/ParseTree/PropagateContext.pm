@@ -4,7 +4,9 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Visitor);
 
-use Language::P::ParseTree qw(:all);
+use Language::P::Constants qw(:all);
+use Language::P::Opcodes qw(:all);
+use Language::P::ParseTree;
 
 my %dispatch =
   ( 'Language::P::ParseTree::FunctionCall'           => '_function_call',
@@ -40,6 +42,7 @@ my %dispatch =
     'Language::P::ParseTree::Pattern'                => '_noop',
     'Language::P::ParseTree::InterpolatedPattern'    => '_pattern',
     'Language::P::ParseTree::Substitution'           => '_substitution',
+    'Language::P::ParseTree::Transliteration'        => '_noop',
     'Language::P::ParseTree::Foreach'                => '_foreach',
     'Language::P::ParseTree::For'                    => '_for',
     'Language::P::ParseTree::LexicalState'           => '_noop',
@@ -190,8 +193,7 @@ sub _builtin_indirect {
 
     $self->_function_call( $tree, $cxt );
     if( $tree->indirect ) {
-        my $arg_cxt = $tree->function == OP_MAP || $tree->function == OP_GREP ?
-                          CXT_LIST : CXT_SCALAR;
+        my $arg_cxt = $tree->function == OP_MAP ? CXT_LIST : CXT_SCALAR;
         $self->visit( $tree->indirect, $arg_cxt );
     }
 }
@@ -280,9 +282,9 @@ sub _foreach {
 sub _for {
     my( $self, $tree, $cxt ) = @_;
 
-    $self->visit( $tree->condition, CXT_SCALAR );
-    $self->visit( $tree->initializer, CXT_VOID );
-    $self->visit( $tree->step, CXT_VOID );
+    $self->visit( $tree->condition, CXT_SCALAR ) if $tree->condition;
+    $self->visit( $tree->initializer, CXT_VOID ) if $tree->initializer;
+    $self->visit( $tree->step, CXT_VOID ) if $tree->step;
     $self->visit( $tree->block, CXT_VOID );
 }
 

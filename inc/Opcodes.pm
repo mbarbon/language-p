@@ -6,7 +6,9 @@ use Exporter 'import';
 
 our @EXPORT = qw(write_opcodes write_perl_serializer parse_opdesc);
 
+use Language::P::Constants qw(:all);
 use Language::P::Keywords qw(:all);
+use Keywords qw();
 use Data::Dumper;
 
 my %flag_map =
@@ -62,6 +64,8 @@ sub write_opcodes {
     my( $file ) = @ARGV;
 
     my %op = %{parse_opdesc()};
+    my %kw = %{(Keywords::parse_table())[0]};
+    my %op_key_map;
 
     open my $out, '>', $file;
 
@@ -85,7 +89,7 @@ EOT
 }
 
 our @EXPORT = ( qw(%%KEYWORD_TO_OP %%OP_TO_KEYWORD %%NUMBER_TO_NAME @OPERATIONS
-                   %%OP_ATTRIBUTES), @OPERATIONS );
+                   %%OP_ATTRIBUTES %%PROTOTYPE), @OPERATIONS );
 our %%EXPORT_TAGS =
   ( all => \@EXPORT,
     );
@@ -126,6 +130,7 @@ EOT
     foreach my $k ( sort @OVERRIDABLES, @BUILTINS ) {
         ( my $o = $k ) =~ s/KEY_/OP_/;
         $o =~ s/^OP_(PUSH|POP|SHIFT|UNSHIFT)/OP_ARRAY_$1/;
+        $op_key_map{$o} = $k;
         printf $out <<'EOT', $k, $o;
     %s() => %s(),
 EOT
@@ -153,6 +158,79 @@ EOT
         },
 EOT
             $k, $v->[1], $v->[2], $named, $v->[4];
+    }
+
+    my( $any, $topic, $mkglob ) =
+      ( PROTO_ANY, PROTO_DEFAULT_ARG, PROTO_MAKE_GLOB );
+
+    printf $out <<'EOT', $any;
+    );
+
+our %%PROTOTYPE =
+  (
+    OP_DO_FILE() =>
+        [  1,  1, 0, %d ],
+EOT
+
+    foreach my $ft ( grep /^OP_FT/, keys %op ) {
+        printf $out <<'EOT', $ft, $topic, $mkglob;
+    %s() =>
+        [ 1, 1, %d, %d ],
+EOT
+    }
+
+    my %attrs = map { $_->[1] => $_ } values %kw;
+
+    while( my( $op, $key ) = each %op_key_map ) {
+        my $attr = $attrs{$key} or die "Unknown builtin '$key'";
+        my $cxt = join ', ', @{$attr->[5]};
+
+        printf $out <<'EOT',
+    %s() =>
+        [ %d, %d, %d, %s ],
+EOT
+            $op, $attr->[2], $attr->[3], $attr->[4], $cxt;
+    }
+
+    printf $out <<'EOT', CXT_SCALAR, CXT_CALLER;
+    );
+
+our %%CONTEXT =
+  (
+    OP_DO_FILE() =>
+        [ %d ],
+    OP_RETURN() =>
+        [ %d ],
+EOT
+
+    foreach my $ft ( grep /^OP_FT/, keys %op ) {
+        printf $out <<'EOT', $ft, CXT_SCALAR;
+    %s() =>
+        [ %d ],
+EOT
+    }
+
+    while( my( $op, $key ) = each %op_key_map ) {
+        next if $op eq 'OP_RETURN';
+        my $attr = $attrs{$key} or die "Unknown builtin '$key'";
+        my @cxt;
+        foreach my $a ( @{$attr->[5]} ) {
+            if(    $a == PROTO_ARRAY || $a == PROTO_MAKE_ARRAY
+                || $a == ( PROTO_MAKE_ARRAY|PROTO_REFERENCE ) ) {
+                push @cxt, CXT_LIST;
+            } elsif( $a & PROTO_REFERENCE ) {
+                push @cxt, CXT_SCALAR;
+            } else {
+                push @cxt, CXT_SCALAR;
+            }
+        }
+        my $cxt = join ', ', @cxt;
+
+        printf $out <<'EOT',
+    %s() =>
+        [ %s ],
+EOT
+            $op, $cxt;
     }
 
     printf $out <<'EOT';
@@ -265,7 +343,7 @@ EOT
 __DATA__
 
 # flags:
-# u: named unary
+# u: do not pass parameters as a list
 # v: variadic
 
 # opcode            flags   name                in out  attrs
@@ -283,7 +361,7 @@ array_slice         0       same                 2   1  context=i1,create=i1
 array_unshift       0       same                 2   1  context=i1
 assign              0       same                 2   1  context=i1
 backtick            0       same                 1   1  context=i1
-binmode             u       same                 1   1  context=i1
+binmode             0       same                 1   1  context=i1
 bit_and             0       same                 2   1  context=i1
 bit_and_assign      0       same                 2   1  context=i1
 bit_or              0       same                 2   1  context=i1
@@ -363,8 +441,10 @@ global              0       same                 0   1  name=s,slot=i_sigil
 grep                0       same                 1   1  context=i1
 hash_element        0       same                 2   1  context=i1,create=i1
 hash_slice          0       same                 2   1  context=i1,create=i1
+hex                 u       same                 1   1  context=i1
 iterator            0       same                 1   1  noattr
 iterator_next       0       same                 1   1  noattr
+join                0       same                 1   1  context=i1
 jump                0       same                 0   0  to=b
 jump_if_f_eq        0       same                 2   0  to=b
 jump_if_f_ge        0       same                 2   0  to=b
@@ -381,6 +461,9 @@ jump_if_s_lt        0       same                 2   0  to=b
 jump_if_s_ne        0       same                 2   0  to=b
 jump_if_true        0       same                 1   0  to=b
 jump_if_null        0       same                 1   0  to=b
+lc                  u       same                 1   1  noattr
+lcfirst             u       same                 1   1  noattr
+length              u       same                 1   1  noattr
 lexical             0       same                 0   1  index=ls
 lexical_clear       0       same                 0   0  index=ls
 lexical_set         0       same                 1   0  index=ls
@@ -419,12 +502,14 @@ num_le              0       compare_f_le_scalar  2   1  noattr
 num_lt              0       compare_f_lt_scalar  2   1  noattr
 num_ne              0       compare_f_ne_scalar  2   1  noattr
 open                0       same                 1   1  context=i1
+oct                 u       same                 1   1  context=i1
+ord                 u       same                 1   1  context=i1
 parentheses         0       same                -1  -1  noattr
 phi                 0       same                -1  -1  noattr
 pipe                0       same                 2   1  context=i1
 plus                0       same                 1   1  noattr
 pop                 0       same                 1   0  noattr
-pos                 0       same                 1   1  noattr
+pos                 u       same                 1   1  noattr
 postdec             0       same                 1   1  context=i1
 postinc             0       same                 1   1  context=i1
 power               0       same                 2   1  context=i1
@@ -439,6 +524,7 @@ ql_qw               0       same                -1  -1  noattr
 ql_qx               0       same                -1  -1  noattr
 ql_s                0       same                -1  -1  noattr
 ql_tr               0       same                -1  -1  noattr
+quotemeta           u       same                 1   1  noattr
 readline            u       same                 1   1  context=i1
 reference           u       same                 1   1  context=i1
 reftype             u       same                 1   1  context=i1
@@ -447,9 +533,16 @@ repeat_assign       0       same                 2   1  context=i1
 replace             0       rx_replace           2   1  context=i1,index=i,flags=i,to=b
 require_file        u       same                 1   1  context=i1
 restore_glob_slot   0       same                 0   0  name=s,index=i,slot=i_sigil
+reverse             u       same                 1   1  context=i1
 return              0       same                 1   0  context=i1
 rmdir               u       same                 1   1  context=i1
+scalar              u       same                 1   1  context=i1
 set                 0       same                 1   0  index=i
+shift_left          0       same                 2   1  context=i1
+shift_right         0       same                 2   1  context=i1
+splice              v       same                -1   1  context=i1,arg_count=i1
+split               v       same                -1   1  context=i1,arg_count=i1
+sprintf             0       same                 1   1  context=i1
 stop                0       same                 1   0  noattr
 str_cmp             0       same                 2   1  noattr
 str_eq              0       compare_s_eq_scalar  2   1  noattr
@@ -464,17 +557,21 @@ subtract_assign     0       same                 2   1  context=i1
 swap                0       same                 2   2  noattr
 temporary           0       same                 0   1  index=i,slot=i_sigil
 temporary_set       0       same                 1   0  index=i,slot=i_sigil
+uc                  u       same                 1   1  noattr
+ucfirst             u       same                 1   1  noattr
 undef               u       same                -1   1  context=i1
 unlink              0       same                 1   1  context=i1
 vivify_array        0       same                 1   1  context=i1
 vivify_hash         0       same                 1   1  context=i1
 vivify_scalar       0       same                 1   1  context=i1
 wantarray           u       want                 0   1  context=i1
+warn                v       same                 1   0  noattr
 
 rx_accept           0       same                 0   0  groups=i
 rx_beginning        0       same                 0   0  noattr
 rx_capture_end      0       same                 0   0  group=i
 rx_capture_start    0       same                 0   0  group=i
+rx_class            0       same                 0   0  elements=s
 rx_end_or_newline   0       same                 0   0  noattr
 rx_exact            0       same                 0   0  string=s,length=i
 rx_quantifier       0       same                 0   0  min=i,max=i,greedy=i1,group=i,to=b,subgroups_start=i,subgroups_end=i

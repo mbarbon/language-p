@@ -7,7 +7,7 @@ Revision history for Perl extension Language::P.
 	    - Make eval 'string' capture all lexicals in scope.
 	    - Various fixes to the parsing of $#, $#foo and $#{foo} in
 	      quoted strings.
-	    - Octal and hexadecimal string escapes.
+	    - Octal and hexadecimal string escapes, \[QlLuUE] escapes.
 	    - our() declarations.
 	    - Subroutine prototypes (parsing and context).
 	    - List slices.
@@ -16,29 +16,37 @@ Revision history for Perl extension Language::P.
 	    - Lexically-scoped hints and warnings.
 	    - Fix return context to always be 'caller'.
 	    - Save file/line information in the parse tree.
+	    - Basic regular expression parsing (doesn't handle ?{}, ?{{}}
+	      code blocks).
+	    - Fixes the parsing of map, grep, split and print.
+	    - Transliteration operator.
+	    - Added test that the parser can parse itself and the IR generator.
 	- Intermediate representation:
 	    - Fix code generation for nested if-then-else constructs.
 	    - Code generation for use/no and BEGIN blocks.
 	    - Check arguments for \<thing> prototypes.
-	    - Refactor representation: positional parameters are always opcodes,
-	      fixed values are always named attributes.
+	    - Refactor representation of opcodes: positional parameters
+	      are always opcodes, fixed values are always named attributes.
 	    - Moved lexical variable allocation and closure/eval handling
 	      to the IR generator.
 	    - Store the type of lexical variables in lexical access opcodes.
 	    - Store file/line information.
 	    - Add scope and unwinding information.
+	    - Implemented bytecode serialization (useful for bootstrapping).
 	- Toy runtime
 	    - Execute BEGIN blocks as soon as they are parsed.
 	    - Implemented do 'file', require, use and eval 'string'.
 	    - Basic hash implementation.
 	    - Basic autovivification implementation.
+	    - Partial implementation of regular expressions.
 	    - Interpolated regular expressions.
 	    - Autoincrement and autodecrement.
 	    - Anonymous array/hash references.
 	    - Basic object and method call implementation.
 	    - DATA filehandle.
-	    - Stack unwinding, catch exception with eval.
+	    - Stack unwinding and die(), catch exceptions with eval.
 	    - Array/hash/list slices.
+	    - Partial caller() implementation.
 	- Misc
 	    - Implemented the '-e' command line switch.
 

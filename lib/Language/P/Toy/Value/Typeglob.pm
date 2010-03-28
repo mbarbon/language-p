@@ -24,7 +24,7 @@ sub set_slot {
 sub get_slot {
     my( $self, $runtime, $slot ) = @_;
 
-    Carp::confess unless $slot;
+    Carp::confess() unless $slot;
 
     return $self->body->$slot;
 }

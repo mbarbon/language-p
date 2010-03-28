@@ -1,4 +1,5 @@
 Parsing:
+- 5.10 syntax
 - context handling
   - splice/substr/lvalue subroutines
   - non-lvaluable expressions
@@ -10,10 +11,6 @@ Parsing:
 - scoping (check if/while conditions, for loop headers, etc.)
 - attributes
 - formats
-- add operator descriptor and do parse tree modifications based on that
-  - like: defined &foo; pipe X, Y; etc.
-  - implicit $_
-  - implict package in bless
 - indirect method calls
   - find more corner cases
 - test all unary/binary operator
@@ -34,27 +31,19 @@ Parsing:
 - => auto-quoting
   - => quoting of -foo => 1
 - quoted strings
-  - \Q\L\U\E in quoted strings/patterns
   - \x{af}, when lexing quoted strings
   - Unicode handling
 - regexp
   - char classes
-    - [a-\w] is not a range
-    - [a-] is not a range
-    - [[] is a "["
-    - ^ negation
     - euristic for $foo[...] (intuit_more)
-    - POSIX char classes
   - other metacharacters
     - \p{}, \P{}, \X
-  - backreferences, also in substitution; backref vs. octal escaper
   - magic variables
   - (?...) syntax and grouping
   - empty pattern
   - flags
   - context-dependent bexaviour
   - always a pattern after =~/!~
-  - tr/// lexing/parsing
 - vstrings and versions in 'use' and 'no'
 
 IR:

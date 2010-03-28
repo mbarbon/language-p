@@ -7,13 +7,13 @@ use base qw(Language::P::Toy::Value::Scalar);
 sub _get {
     my( $self, $runtime ) = @_;
 
-    Carp::confess "Implement active _get";
+    Carp::confess( "Implement active _get" );
 }
 
 sub _set {
     my( $self, $runtime, $other ) = @_;
 
-    Carp::confess "Implement active _set";
+    Carp::confess( "Implement active _set" );
 }
 
 sub as_scalar {

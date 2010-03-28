@@ -84,11 +84,13 @@ sub ACTION_code {
 
     if( !$self->up_to_date( [ 'inc/Keywords.pm' ],
                             [ 'lib/Language/P/Keywords.pm' ] ) ) {
-        $self->do_system( $^X, '-Iinc', '-MKeywords', '-e', 'write_keywords',
+        $self->do_system( $^X, '-Iinc', '-Ilib',
+                          '-MKeywords', '-e', 'write_keywords',
                           '--', 'lib/Language/P/Keywords.pm' );
         $self->add_to_cleanup( 'lib/Language/P/Keywords.pm' );
     }
-    if( !$self->up_to_date( [ 'inc/Opcodes.pm', 'lib/Language/P/Keywords.pm' ],
+    if( !$self->up_to_date( [ 'inc/Opcodes.pm', 'inc/Keywords.pm',
+                              'lib/Language/P/Keywords.pm' ],
                             [ 'lib/Language/P/Opcodes.pm' ] ) ) {
         $self->do_system( $^X, '-Iinc', '-Ilib',
                           '-MOpcodes', '-e', 'write_opcodes()',

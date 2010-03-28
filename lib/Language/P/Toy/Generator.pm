@@ -19,7 +19,7 @@ use Language::P::Toy::Value::Handle;
 use Language::P::Toy::Value::ScratchPad;
 use Language::P::Toy::Value::Code;
 use Language::P::Toy::Value::Regex;
-use Language::P::ParseTree qw(:all);
+use Language::P::Constants qw(:all);
 use Language::P::Keywords qw(:all);
 
 use constant
@@ -612,6 +612,7 @@ sub _match {
     my( $self, $bytecode, $op ) = @_;
     my %params = $op->{attributes} ? %{$op->{attributes}} : ();
     $params{pos} = $op->{pos} if $op->{pos};
+    $params{index} = _temporary_index( $self, IDX_REGEX, $op->{attributes}{index} );
 
     push @$bytecode,
          o( ( $params{flags} & FLAG_RX_GLOBAL ) ? 'rx_match_global' :
