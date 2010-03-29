@@ -12,7 +12,7 @@ namespace org.mbarbon.p
         public static void Main(string[] args)
         {
             var runtime = new Runtime();
-            var cu = Serializer.ReadCompilationUnit(args[0]);
+            var cu = Serializer.ReadCompilationUnit(runtime, args[0]);
 
             P5Code main = new Generator(runtime).Generate(null, cu);
             main.Call(runtime, Opcode.ContextValues.VOID, null);

@@ -1,11 +1,13 @@
 using System.IO;
 using System.Collections.Generic;
+using P5Handle = org.mbarbon.p.values.P5Handle;
 
 namespace org.mbarbon.p.runtime
 {
     public partial class Serializer
     {
-        public static CompilationUnit ReadCompilationUnit(string file_name)
+        public static CompilationUnit ReadCompilationUnit(Runtime runtime,
+                                                          string file_name)
         {
             CompilationUnit cu;
 
@@ -21,6 +23,16 @@ namespace org.mbarbon.p.runtime
                 for (int i = 0; i < count; ++i)
                 {
                     cu.Subroutines[i] = ReadSubroutine(reader);
+                }
+
+                if (has_data != 0)
+                {
+                    var name = ReadString(reader);
+                    var value = ReadString(reader);
+                    var glob = runtime.SymbolTable.GetOrCreateGlob(runtime, name + "::DATA");
+                    var input = new System.IO.StringReader(value);
+
+                    glob.Handle = new P5Handle(runtime, input, null);
                 }
             }
             files = null;

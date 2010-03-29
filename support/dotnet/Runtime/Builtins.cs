@@ -93,7 +93,7 @@ namespace org.mbarbon.p.runtime
             if (path == null)
                 return new P5Scalar(runtime);
 
-            var cu = Serializer.ReadCompilationUnit(path);
+            var cu = Serializer.ReadCompilationUnit(runtime, path);
             P5Code main = new Generator(runtime).Generate(null, cu);
             var ret = main.Call(runtime, context, null);
 
@@ -117,7 +117,7 @@ namespace org.mbarbon.p.runtime
             if (path == null)
                 throw new System.Exception("File not found");
 
-            var cu = Serializer.ReadCompilationUnit(path);
+            var cu = Serializer.ReadCompilationUnit(runtime, path);
             P5Code main = new Generator(runtime).Generate(null, cu);
             var ret = main.Call(runtime, context, null);
 
