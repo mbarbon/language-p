@@ -972,6 +972,18 @@ namespace org.mbarbon.p.runtime
                             Generate(sub, op.Childs[1]),
                             typeof(P5List)));
             }
+            case Opcode.OpNumber.OP_READLINE:
+            {
+                return
+                    Expression.Call(
+                        typeof(Builtins).GetMethod("Readline"),
+                        Runtime,
+                        Expression.Call(
+                            Generate(sub, op.Childs[0]),
+                            typeof(IP5Any).GetMethod("AsHandle"),
+                            Runtime),
+                        OpContext(op));
+            }
             case Opcode.OpNumber.OP_END:
             {
                 return

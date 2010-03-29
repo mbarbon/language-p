@@ -1,6 +1,7 @@
 using org.mbarbon.p.values;
 using Path = System.IO.Path;
 using File = System.IO.File;
+using System.Collections.Generic;
 
 namespace org.mbarbon.p.runtime
 {
@@ -33,6 +34,28 @@ namespace org.mbarbon.p.runtime
                 return new P5Scalar(runtime);
 
             return new P5Scalar(runtime, cxt == Opcode.ContextValues.LIST);
+        }
+
+        public static IP5Any Readline(Runtime runtime, P5Handle handle,
+                                      Opcode.ContextValues cxt)
+        {
+            if (cxt == Opcode.ContextValues.LIST)
+            {
+                P5Scalar line;
+                var lines = new List<IP5Any>();
+
+                while (handle.Readline(runtime, out line))
+                    lines.Add(line);
+
+                return new P5List(runtime, lines);
+            }
+            else
+            {
+                P5Scalar line;
+                handle.Readline(runtime, out line);
+
+                return line;
+            }
         }
 
         internal static string SearchFile(Runtime runtime, string file)

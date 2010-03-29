@@ -19,6 +19,19 @@ namespace org.mbarbon.p.values
             return 1;
         }
 
+        public bool Readline(Runtime runtime, out P5Scalar result)
+        {
+            // TODO rewrite and optimize
+            var line = Input.ReadLine();
+
+            if (line == null)
+                result = new P5Scalar(runtime);
+            else
+                result = new P5Scalar(runtime, line + "\n");
+
+            return line != null;
+        }
+
         // FIXME proper implementation
         public virtual P5Scalar AsScalar(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual string AsString(Runtime runtime) { throw new System.NotImplementedException(); }
