@@ -47,7 +47,7 @@ namespace org.mbarbon.p.values
             var glob = GetOrCreateGlob(runtime, name);
             P5Handle handle;
             if ((handle = glob.Handle) == null)
-                handle = glob.Handle = new P5Handle(runtime);
+                handle = glob.Handle = new P5Handle(runtime, null, null);
 
             return handle;
         }
@@ -193,7 +193,13 @@ namespace org.mbarbon.p.values
         public P5MainSymbolTable(Runtime runtime) : base(runtime)
         {
             var stdout = GetOrCreateGlob(runtime, "STDOUT");
-            stdout.Handle = new P5Handle(runtime);
+            stdout.Handle = new P5Handle(runtime, null, System.Console.Out);
+
+            var stdin = GetOrCreateGlob(runtime, "STDIN");
+            stdin.Handle = new P5Handle(runtime, System.Console.In, null);
+
+            var stderr = GetOrCreateGlob(runtime, "STDERR");
+            stderr.Handle = new P5Handle(runtime, null, System.Console.Error);
         }
     }
 }

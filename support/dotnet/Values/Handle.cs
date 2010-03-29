@@ -5,14 +5,16 @@ namespace org.mbarbon.p.values
 {
     public class P5Handle : IP5Any
     {
-        public P5Handle(Runtime runtime)
+        public P5Handle(Runtime runtime, System.IO.TextReader input, System.IO.TextWriter output)
         {
+            Input = input;
+            Output = output;
         }
 
         public int Write(Runtime runtime, IP5Any scalar, int offset, int length)
         {
-            // FIXME cheating
-            System.Console.Write(scalar.AsString(runtime));
+            // TODO use offset/length
+            Output.Write(scalar.AsString(runtime));
 
             return 1;
         }
@@ -37,7 +39,7 @@ namespace org.mbarbon.p.values
 
         public virtual IP5Any Clone(Runtime runtime, int depth)
         {
-            return new P5Handle(runtime);
+            return new P5Handle(runtime, Input, Output);
         }
 
         public virtual IP5Any Localize(Runtime runtime)
@@ -124,5 +126,8 @@ namespace org.mbarbon.p.values
         {
             return null;
         }
+
+        private System.IO.TextReader Input;
+        private System.IO.TextWriter Output;
     }
 }
