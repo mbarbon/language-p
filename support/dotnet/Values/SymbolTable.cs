@@ -138,7 +138,10 @@ namespace org.mbarbon.p.values
             P5SymbolTable current = this, next;
 
             int last = packs.Length + (skip_last ? -1 : 0);
-            for (int i = 0; i < last; ++i)
+            int first = 0;
+            if (IsMain && last > 0 && packs[0] == "main")
+                first = 1;
+            for (int i = first; i < last; ++i)
             {
                 if (!current.packages.TryGetValue(packs[i], out next))
                 {
@@ -183,6 +186,10 @@ namespace org.mbarbon.p.values
             return null;
         }
 
+        public virtual bool IsMain {
+            get { return false; }
+        }
+
         protected readonly string[] separator = new string [] {"::"};
         protected Dictionary<string, P5Typeglob> symbols;
         protected Dictionary<string, P5SymbolTable> packages;
@@ -200,6 +207,10 @@ namespace org.mbarbon.p.values
 
             var stderr = GetOrCreateGlob(runtime, "STDERR");
             stderr.Handle = new P5Handle(runtime, null, System.Console.Error);
+        }
+
+        public override bool IsMain {
+            get { return true; }
         }
     }
 }
