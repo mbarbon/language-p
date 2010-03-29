@@ -13,6 +13,7 @@ namespace org.mbarbon.p.values
     public interface IP5Any : IP5Referrable
     {
         P5Scalar AsScalar(Runtime runtime);
+        P5Handle AsHandle(Runtime runtime);
         string AsString(Runtime runtime);
         int AsInteger(Runtime runtime);
         double AsFloat(Runtime runtime);

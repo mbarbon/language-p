@@ -25,6 +25,11 @@ namespace org.mbarbon.p.values
         public virtual bool AsBoolean(Runtime runtime) { return true; }
         public virtual bool IsDefined(Runtime runtime) { return true; }
 
+        public virtual P5Handle AsHandle(Runtime runtime)
+        {
+            return this;
+        }
+
         public virtual int GetPos(Runtime runtime)
         {
             return 0;

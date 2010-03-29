@@ -39,6 +39,11 @@ namespace org.mbarbon.p.values
             set { globBody.Code = value; }
         }
 
+        public override P5Handle AsHandle(Runtime runtime)
+        {
+            return Handle;
+        }
+
         public override IP5Any Assign(Runtime runtime, IP5Any other)
         {
             var ob = other.AsScalar(runtime).Body;

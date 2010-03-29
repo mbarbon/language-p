@@ -80,6 +80,11 @@ namespace org.mbarbon.p.values
         public virtual bool AsBoolean(Runtime runtime) { return body.AsBoolean(runtime); }
         public virtual bool IsDefined(Runtime runtime) { return !(body is P5Undef); }
 
+        public virtual P5Handle AsHandle(Runtime runtime)
+        {
+            throw new System.NotImplementedException("No AsHandle for P5Scalar");
+        }
+
         public virtual int Length(Runtime runtime)
         {
             return body.Length(runtime);
