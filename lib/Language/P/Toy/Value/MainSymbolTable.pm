@@ -31,6 +31,10 @@ sub new {
     my $interpreter = Language::P::Toy::Value::Scalar->new_string( $runtime, $^X );
     $self->set_symbol( $runtime, "\030", '$', $interpreter );
 
+    # TODO make readonly
+    my $version = Language::P::Toy::Value::Scalar->new_float( $runtime, $] );
+    $self->set_symbol( $runtime, ']', '$', $version );
+
     my $inc = Language::P::Toy::Value::Array->new( $runtime );
     $inc->push_value( $runtime, Language::P::Toy::Value::Scalar->new_string( $runtime, $_ ) )
         foreach grep !m{/$Config{archname}$}, @INC;
