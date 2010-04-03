@@ -97,6 +97,8 @@ our @FIELDS = qw(changed package hints warnings);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub can_implicit_return { 0 }
+
 package Language::P::ParseTree::Use;
 
 use strict;
@@ -106,6 +108,8 @@ use base qw(Language::P::ParseTree::Node);
 our @FIELDS = qw(package version import is_no);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
+
+sub can_implicit_return { 0 }
 
 package Language::P::ParseTree::Empty;
 
