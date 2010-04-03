@@ -210,7 +210,7 @@ sub generate_use {
 
     my $head = $self->_new_block;
     my $empty = $self->_new_block;
-    my $call_import = $self->_new_block;
+    my $body = $self->_new_block;
     my $return = $self->_new_block;
 
     push @{$self->_code_segments},
@@ -226,7 +226,47 @@ sub generate_use {
     _add_blocks $self, $head;
     $self->push_block( SCOPE_SUB|SCOPE_MAIN, $tree->pos_s, $tree->pos_e );
 
-    # TODO require perl version
+    # check the Perl version
+    if( $tree->version && !$tree->package ) {
+        # compare version
+        _add_bytecode $self,
+                      opcode_nm( OP_CONSTANT_INTEGER, value => $tree->version ),
+                      opcode_npm( OP_GLOBAL, $tree->pos,
+                                  name => ']',
+                                  slot => VALUE_SCALAR );
+        _add_jump $self,
+                  opcode_nm( OP_JUMP_IF_F_LT,
+                             true  => $return,
+                             false => $body ),
+            $return, $body;
+
+        # TODO use version objects
+        # Perl v6.0.0 required--this is only v5.10.1, stopped
+        _add_blocks $self, $body;
+        _add_bytecode $self,
+                      opcode_nm( OP_FRESH_STRING, value => 'Perl ' ),
+                      opcode_nm( OP_CONSTANT_FLOAT, value => $tree->version ),
+                      opcode_nm( OP_CONSTANT_STRING, value => ' required--this is only ' ),
+                      opcode_nm( OP_GLOBAL, name => ']', slot => VALUE_SCALAR ),
+                      opcode_nm( OP_CONSTANT_STRING, value => ', stopped' ),
+                      opcode_nm( OP_CONCATENATE ),
+                      opcode_nm( OP_CONCATENATE ),
+                      opcode_nm( OP_CONCATENATE ),
+                      opcode_nm( OP_CONCATENATE ),
+                      opcode_nm( OP_MAKE_LIST, count => 1 ),
+                      opcode_np( OP_DIE, $tree->pos );
+        _add_jump $self,
+                  opcode_nm( OP_JUMP, to => $return ),
+            $return;
+
+        # return
+        _add_blocks $self, $return;
+        $self->pop_block;
+        _add_bytecode $self, opcode_n( OP_END );
+
+        return $self->_code_segments;
+    }
+
     ( my $file = $tree->package ) =~ s{::}{/}g;
     _add_bytecode $self,
          opcode_nm( OP_CONSTANT_STRING, value => "$file.pm" ),
@@ -257,8 +297,8 @@ sub generate_use {
     _add_jump $self,
         opcode_nm( OP_JUMP_IF_NULL,
                    true  => $empty,
-                   false => $call_import ),
-        $empty, $call_import;
+                   false => $body ),
+        $empty, $body;
 
     # empty block, for SSA conversion
     _add_blocks $self, $empty;
@@ -270,7 +310,7 @@ sub generate_use {
         $return;
 
     # call the import method
-    _add_blocks $self, $call_import;
+    _add_blocks $self, $body;
 
     _add_bytecode $self,
         opcode_npm( OP_CALL, $tree->pos, context => CXT_VOID ),
