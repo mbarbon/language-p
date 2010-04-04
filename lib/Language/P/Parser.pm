@@ -1746,6 +1746,13 @@ sub _parse_term_p {
     } elsif( my $p = $prec_assoc_un{$token->[O_TYPE]} ) {
         my $rest = _parse_term_n( $self, $p->[0] );
 
+        # \&foo => reference, \&foo( ) => function call
+        if(     $p->[2] == OP_REFERENCE
+            && $rest->isa( 'Language::P::ParseTree::SpecialFunctionCall' )
+            && !$rest->arguments ) {
+            $rest = $rest->function;
+        }
+
         return Language::P::ParseTree::UnOp->new
                    ( { op    => $p->[2],
                        left  => $rest,

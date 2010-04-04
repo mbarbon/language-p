@@ -1,11 +1,6 @@
 #!/usr/bin/perl -w
 
-use strict;
-use warnings;
-use Test::More tests => 7;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 9;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 +12
@@ -79,6 +74,33 @@ left: !parsetree:Symbol
   context: CXT_SCALAR
   name: a
   sigil: VALUE_SCALAR
+op: OP_REFERENCE
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+\&a
+EOP
+--- !parsetree:UnOp
+context: CXT_VOID
+left: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: a
+  sigil: VALUE_SUB
+op: OP_REFERENCE
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+\&a()
+EOP
+--- !parsetree:UnOp
+context: CXT_VOID
+left: !parsetree:FunctionCall
+  arguments: ~
+  context: CXT_SCALAR
+  function: !parsetree:Symbol
+    context: CXT_SCALAR
+    name: a
+    sigil: VALUE_SUB
 op: OP_REFERENCE
 EOE
 
