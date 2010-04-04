@@ -1307,6 +1307,61 @@ sub o_make_closure {
     return $pc + 1;
 }
 
+sub o_localize_array_element {
+    my( $op, $runtime, $pc ) = @_;
+    my $array = pop @{$runtime->{_stack}};
+    my $index = pop @{$runtime->{_stack}};
+    my $int_index = $index->as_integer( $runtime );
+
+    my $saved = $array->localize_element( $runtime, $int_index );
+    my $new = $array->get_item_or_undef( $runtime, $int_index );
+
+    $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] =
+        [ $array, $int_index, $saved ];
+
+    push @{$runtime->{_stack}}, $new;
+
+    return $pc + 1;
+}
+
+sub o_restore_array_element {
+    my( $op, $runtime, $pc ) = @_;
+    my $saved = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
+
+    $saved->[0]->restore_item( $runtime, $saved->[1], $saved->[2] );
+    $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = undef;
+
+    return $pc + 1;
+}
+
+sub o_localize_hash_element {
+    my( $op, $runtime, $pc ) = @_;
+    my $hash = pop @{$runtime->{_stack}};
+    my $index = pop @{$runtime->{_stack}};
+    my $str_key = $index->as_string( $runtime );
+
+    my $saved = $hash->localize_element( $runtime, $str_key );
+    my $new = $hash->get_item_or_undef( $runtime, $str_key );
+
+    $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] =
+        [ $hash, $str_key, $saved ];
+
+    push @{$runtime->{_stack}}, $new;
+
+    return $pc + 1;
+}
+
+sub o_restore_hash_element {
+    my( $op, $runtime, $pc ) = @_;
+    my $saved = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
+
+    # an undef values deletes the key
+    $saved->[0]->restore_item( $runtime, $saved->[1], $saved->[2] );
+    $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = undef;
+
+    return $pc + 1;
+}
+
 sub o_localize_glob_slot {
     my( $op, $runtime, $pc ) = @_;
     my $glob = $runtime->symbol_table->get_symbol( $runtime, $op->{name}, '*', 1 );

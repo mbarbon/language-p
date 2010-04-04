@@ -39,6 +39,17 @@ sub localize {
     return __PACKAGE__->new( $runtime );
 }
 
+sub localize_element {
+    my( $self, $runtime, $index ) = @_;
+    my $value = $self->get_item_or_undef( $runtime, $index );
+    my $new = Language::P::Toy::Value::Undef->new( $runtime );
+
+    # no need to check boundaries after get_item_or_undef
+    $self->{array}->[$index] = $new;
+
+    return $value;
+}
+
 sub assign {
     my( $self, $runtime, $other ) = @_;
 
@@ -116,6 +127,15 @@ sub get_item {
         if $index < 0 || $index > $#{$self->{array}};
 
     return $self->{array}->[$index];
+}
+
+sub restore_item {
+    my( $self, $runtime, $index, $value ) = @_;
+
+    Carp::confess( "Array index out of range ($index > $#{$self->{array}})" )
+        if $index < 0 || $index > $#{$self->{array}};
+
+    $self->{array}->[$index] = $value;
 }
 
 sub get_item_or_undef {

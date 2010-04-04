@@ -154,6 +154,10 @@ my %opcode_map =
     OP_TEMPORARY_SET()               => \&_temporary_set,
     OP_LOCALIZE_GLOB_SLOT()          => \&_map_slot_index,
     OP_RESTORE_GLOB_SLOT()           => \&_map_slot_index,
+    OP_LOCALIZE_HASH_ELEMENT()       => \&_map_index,
+    OP_RESTORE_HASH_ELEMENT()        => \&_map_index,
+    OP_LOCALIZE_ARRAY_ELEMENT()      => \&_map_index,
+    OP_RESTORE_ARRAY_ELEMENT()       => \&_map_index,
     OP_END()                         => \&_end,
     OP_STOP()                        => \&_stop,
 
@@ -572,6 +576,15 @@ sub _temporary_set {
 
     push @$bytecode,
          o( 'lexical_set', index => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ) );
+}
+
+sub _map_index {
+    my( $self, $bytecode, $op ) = @_;
+
+    push @$bytecode,
+         o( $NUMBER_TO_NAME{$op->{opcode_n}},
+            index => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ),
+            );
 }
 
 sub _map_slot_index {

@@ -39,6 +39,17 @@ sub localize {
     return __PACKAGE__->new( $runtime );
 }
 
+sub localize_element {
+    my( $self, $runtime, $key ) = @_;
+    # if there is no key, it is ok to return undef
+    my $value = $self->{hash}->{$key};
+    my $new = Language::P::Toy::Value::Undef->new( $runtime );
+
+    $self->{hash}->{$key} = $new;
+
+    return $value;
+}
+
 sub assign {
     my( $self, $runtime, $other ) = @_;
 
@@ -56,6 +67,16 @@ sub assign_iterator {
         $iter->next;
         my $v = $iter->item;
         $self->{hash}{$k->as_string( $runtime )} = $v;
+    }
+}
+
+sub restore_item {
+    my( $self, $runtime, $key, $value ) = @_;
+
+    if( !defined $value ) {
+        delete $self->{hash}->{$key};
+    } else {
+        $self->{hash}->{$key} = $value;
     }
 }
 

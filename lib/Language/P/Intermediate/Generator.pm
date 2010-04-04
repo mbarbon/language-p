@@ -745,24 +745,60 @@ sub _local {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
-    die "Can only localize global for now"
-        unless $tree->left->isa( 'Language::P::ParseTree::Symbol' );
+    my $left = $tree->left;
 
-    my $index = $self->{_temporary_count}++;
-    _add_bytecode $self,
-         opcode_npm( OP_LOCALIZE_GLOB_SLOT, $tree->pos,
-                     name  => $tree->left->name,
-                     slot  => $tree->left->sigil,
-                     index => $index,
-                     );
+    # TODO to work as in Perl, it needs to push the local() down the
+    #      expression tree, i.e.
+    #      local ( $a ? $b : $c ) => $a ? local $b : local $c
+    if( $left->isa( 'Language::P::ParseTree::Subscript' ) ) {
+        my $index = $self->{_temporary_count}++;
+        my $op_save = $left->type == VALUE_ARRAY ? OP_LOCALIZE_ARRAY_ELEMENT :
+                                                   OP_LOCALIZE_HASH_ELEMENT;
+        my $op_rest = $left->type == VALUE_ARRAY ? OP_RESTORE_ARRAY_ELEMENT :
+                                                   OP_RESTORE_HASH_ELEMENT;
+        my $vivify = !$left->reference           ? 0 :
+                     $left->type == VALUE_ARRAY  ? OP_VIVIFY_ARRAY :
+                                                   OP_VIVIFY_HASH;
 
-    push @{$self->_current_block->{bytecode}},
-         [ opcode_npm( OP_RESTORE_GLOB_SLOT, $self->_current_block->{pos},
-                       name  => $tree->left->name,
-                       slot  => $tree->left->sigil,
-                       index => $index,
-                       ),
-           ];
+        $self->dispatch( $left->subscript );
+        $self->dispatch( $left->subscripted );
+
+        if( $vivify ) {
+            _add_bytecode $self,
+                opcode_np( $vivify, $tree->pos );
+        }
+
+        _add_bytecode $self,
+            opcode_npm( $op_save, $left->pos,
+                        index => $index,
+                        );
+
+        push @{$self->_current_block->{bytecode}},
+             [ opcode_npm( $op_rest, $self->_current_block->{pos},
+                           index => $index,
+                           ),
+               ];
+    } elsif( $left->isa( 'Language::P::ParseTree::Slice' ) ) {
+        die;
+    } elsif( $left->isa( 'Language::P::ParseTree::Symbol' ) ) {
+        my $index = $self->{_temporary_count}++;
+        _add_bytecode $self,
+            opcode_npm( OP_LOCALIZE_GLOB_SLOT, $tree->pos,
+                        name  => $left->name,
+                        slot  => $left->sigil,
+                        index => $index,
+                        );
+
+        push @{$self->_current_block->{bytecode}},
+             [ opcode_npm( OP_RESTORE_GLOB_SLOT, $self->_current_block->{pos},
+                           name  => $left->name,
+                           slot  => $left->sigil,
+                           index => $index,
+                           ),
+               ];
+    } else {
+        die "Internal error, handle localized lvalue expressions";
+    }
 }
 
 sub _parentheses {
@@ -1630,7 +1666,8 @@ sub _jump {
     my( $self, $tree ) = @_;
     my $target = _find_jump_target( $self, $tree );
 
-    die "Jump without static target" unless $target; # requires stack unwinding
+    die "Jump without static target at ", $tree->pos->[0], ' line ', $tree->pos->[1], "\n"
+      unless $target; # requires stack unwinding
 
     my $unwind_to = $tree->op == OP_GOTO ?
                         _find_ancestor( $self, $tree, $target ) :

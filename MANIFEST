@@ -223,6 +223,7 @@ t/run/021_regexp.t
 t/run/021_substitution.t
 t/run/025_begin.t
 t/run/035_local.t
+t/run/035_local_element.t
 t/run/038_goto.t
 t/run/039_loop_control.t
 t/run/070_objects.t
