@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
-use strict;
-use warnings;
-use Test::More tests => 11;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 12;
+use Test::More import => [ qw(is) ];
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 goto FOO;
@@ -23,6 +19,20 @@ left: !parsetree:Symbol
   context: CXT_SCALAR
   name: foo
   sigil: VALUE_SCALAR
+op: OP_GOTO
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+goto &foo;
+EOP
+--- !parsetree:Jump
+left: !parsetree:UnOp
+  context: CXT_SCALAR
+  left: !parsetree:Symbol
+    context: CXT_SCALAR
+    name: foo
+    sigil: VALUE_SUB
+  op: OP_REFERENCE
 op: OP_GOTO
 EOE
 

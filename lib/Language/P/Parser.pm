@@ -1509,6 +1509,15 @@ sub _parse_term_terminal {
                     $dest = $dest->left
                         if $dest->isa( 'Language::P::ParseTree::Parentheses' );
                     $dest = $dest->value if $dest->is_constant;
+                    # goto &foo is sugar for goto \&foo
+                    if(    $tokidt == OP_GOTO
+                        && $dest->isa( 'Language::P::ParseTree::SpecialFunctionCall' )
+                        && !$dest->arguments ) {
+                        $dest = Language::P::ParseTree::UnOp->new
+                                    ( { left => $dest->function,
+                                        op   => OP_REFERENCE,
+                                        } );
+                    }
                 }
             }
 
