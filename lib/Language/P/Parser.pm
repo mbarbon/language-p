@@ -1502,7 +1502,7 @@ sub _parse_term_terminal {
             my $dest;
             if( $id->[O_TYPE] == T_ID && $id->[O_ID_TYPE] == T_ID ) {
                 $dest = $id->[O_VALUE];
-            } else {
+            } elsif( $tokidt == OP_GOTO ) {
                 $self->lexer->unlex( $id );
                 $dest = _parse_term( $self, PREC_LOWEST );
                 if( $dest ) {
@@ -1518,18 +1518,33 @@ sub _parse_term_terminal {
                                         op   => OP_REFERENCE,
                                         } );
                     }
+                } else {
+                    _parse_error( $self, $token->[O_POS],
+                                  "goto without target" );
                 }
+            } elsif( $dest ) {
+                _parse_error( $self, $token->[O_POS],
+                              "Can only use a static label for last/redo/next" );
+            } else {
+                $self->lexer->unlex( $id );
             }
 
-            my $jump = Language::P::ParseTree::Jump->new
-                           ( { op   => $tokidt,
-                               left => $dest,
-                               pos  => $token->[O_POS],
-                               } );
-            push @{$self->_lexical_state->[-1]{sub}{jumps}}, $jump
-              if $tokidt == OP_GOTO && !ref( $dest );
+            if( !ref( $dest ) ) {
+                my $jump = Language::P::ParseTree::Jump->new
+                               ( { op   => $tokidt,
+                                   left => $dest,
+                                   pos  => $token->[O_POS],
+                                   } );
+                push @{$self->_lexical_state->[-1]{sub}{jumps}}, $jump
+                    if $tokidt == OP_GOTO;
 
-            return $jump;
+                return $jump;
+            } else {
+                return Language::P::ParseTree::Builtin->new
+                           ( { function  => OP_DYNAMIC_GOTO,
+                               arguments => [ $dest ],
+                               } );
+            }
         } elsif( $tokidt == KEY_LOCAL ) {
             return Language::P::ParseTree::Local->new
                        ( { left => _parse_term_list_if_parens( $self, PREC_NAMED_UNOP ),

@@ -14,26 +14,30 @@ EOE
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 goto $foo;
 EOP
---- !parsetree:Jump
-left: !parsetree:Symbol
-  context: CXT_SCALAR
-  name: foo
-  sigil: VALUE_SCALAR
-op: OP_GOTO
+--- !parsetree:Builtin
+arguments:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: foo
+    sigil: VALUE_SCALAR
+context: CXT_VOID
+function: OP_DYNAMIC_GOTO
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 goto &foo;
 EOP
---- !parsetree:Jump
-left: !parsetree:UnOp
-  context: CXT_SCALAR
-  left: !parsetree:Symbol
+--- !parsetree:Builtin
+arguments:
+  - !parsetree:UnOp
     context: CXT_SCALAR
-    name: foo
-    sigil: VALUE_SUB
-  op: OP_REFERENCE
-op: OP_GOTO
+    left: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: foo
+      sigil: VALUE_SUB
+    op: OP_REFERENCE
+context: CXT_VOID
+function: OP_DYNAMIC_GOTO
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -55,19 +59,21 @@ EOE
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 goto ("FOO", "X");
 EOP
---- !parsetree:Jump
-left: !parsetree:List
-  context: CXT_SCALAR
-  expressions:
-    - !parsetree:Constant
-      context: CXT_VOID
-      flags: CONST_STRING
-      value: FOO
-    - !parsetree:Constant
-      context: CXT_SCALAR
-      flags: CONST_STRING
-      value: X
-op: OP_GOTO
+--- !parsetree:Builtin
+arguments:
+  - !parsetree:List
+    context: CXT_SCALAR
+    expressions:
+      - !parsetree:Constant
+        context: CXT_VOID
+        flags: CONST_STRING
+        value: FOO
+      - !parsetree:Constant
+        context: CXT_SCALAR
+        flags: CONST_STRING
+        value: X
+context: CXT_VOID
+function: OP_DYNAMIC_GOTO
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

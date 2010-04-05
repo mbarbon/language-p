@@ -192,7 +192,7 @@ EOT
             $op, $attr->[2], $attr->[3], $attr->[4], $cxt;
     }
 
-    printf $out <<'EOT', CXT_SCALAR, CXT_CALLER;
+    printf $out <<'EOT', CXT_SCALAR, CXT_CALLER, CXT_SCALAR;
     );
 
 our %%CONTEXT =
@@ -200,6 +200,8 @@ our %%CONTEXT =
     OP_DO_FILE() =>
         [ %d ],
     OP_RETURN() =>
+        [ %d ],
+    OP_DYNAMIC_GOTO() =>
         [ %d ],
 EOT
 
@@ -398,6 +400,7 @@ do_file             u       same                 1   1  context=i1
 dot_dot             0       same                 2   1  context=i1
 dot_dot_dot         0       same                 2   1  context=i1
 dup                 0       same                 1   2  noattr
+dynamic_goto        u       same                 1   0  noattr
 end                 0       same                 0   0  noattr
 eval                u       same                 1   1  context=i1,hints=i,warnings=su,package=s,lexicals=eval_my,globals=eval_our
 eval_regex          u       same                 1   1  context=i1,flags=i
