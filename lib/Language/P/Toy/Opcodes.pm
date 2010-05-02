@@ -338,6 +338,20 @@ sub o_caller {
     return $pc + 1;
 }
 
+sub o_dynamic_goto {
+    my( $op, $runtime, $pc ) = @_;
+    my $value = pop @{$runtime->{_stack}};
+
+    if(    $value->isa( 'Language::P::Toy::Value::Reference' )
+        && $value->reference->isa( 'Language::P::Toy::Value::Subroutine' ) ) {
+        $value->reference->tail_call( $runtime, $pc, _context( undef, $runtime ) );
+
+        return 0;
+    } else {
+        die "Can't use goto with dynamic label yet";
+    }
+}
+
 sub o_call {
     my( $op, $runtime, $pc ) = @_;
     my $sub = pop @{$runtime->{_stack}};

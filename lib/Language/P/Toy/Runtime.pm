@@ -460,7 +460,34 @@ sub throw_exception {
         $self->{_pc} = $rpc + 1;
     }
 
-   die $exc;
+    die $exc;
+}
+
+sub exit_subroutine {
+    my( $self ) = @_;
+
+    my $info = $self->current_frame_info;
+    my $scope;
+
+    foreach my $s ( @{$info->{code}->scopes} ) {
+        if( $s->{start} <= $self->{_pc} && $s->{end} > $self->{_pc} ) {
+            $scope = $s;
+        }
+    }
+
+    while( $scope ) {
+        eval {
+            # TODO catch exceptions during stack unwinding
+            local $self->{_pc};
+            local $self->{_bytecode};
+
+            $self->run_bytecode( $scope->{bytecode} );
+        };
+        die "Exception during stack unwind: $@" if $@;
+
+        last if $scope->{outer} < 0;
+        $scope = $info->{code}->scopes->[$scope->{outer}];
+    }
 }
 
 sub get_symbol {

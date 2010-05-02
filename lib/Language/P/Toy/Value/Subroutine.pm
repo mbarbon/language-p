@@ -30,6 +30,20 @@ sub call {
     $stack->[$frame - 3] = $args;
 }
 
+sub tail_call {
+    my( $self, $runtime, $pc, $context ) = @_;
+    my $args = $runtime->{_stack}->[$runtime->{_frame} - 3 - 0];
+    # TODO check that we're in a subroutine and outside an eval
+    $runtime->exit_subroutine;
+    my $rpc = $runtime->call_return;
+
+    $self->SUPER::call( $runtime, $rpc, $context );
+
+    my( $stack, $frame ) = ( $runtime->{_stack}, $runtime->{_frame} );
+
+    $stack->[$frame - 3] = $args;
+}
+
 package Language::P::Toy::Value::Subroutine::Stub;
 
 use strict;

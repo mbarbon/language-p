@@ -238,6 +238,7 @@ t/run/115_data_handle.t
 t/run/120_stack_unwind.t
 t/run/121_eval_block.t
 t/run/123_caller.t
+t/run/125_tail_call.t
 t/run/900_corelibs.t
 t/run/files/Bar.pm
 t/run/files/Moo.pm
