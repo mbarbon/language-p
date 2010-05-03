@@ -41,7 +41,7 @@ sub _tied_to_regex_capture {
     return Language::P::Toy::Value::ActiveScalarCallbacks->new
                ( $runtime,
                  { get_callback => $get,
-                   set_callback => sub { die "Readonly"; },
+                   set_callback => sub { die "Readonly capture"; },
                    } );
 }
 

@@ -56,6 +56,7 @@ sub _tied_to_rt_variable {
     return Language::P::Toy::Value::ActiveScalarCallbacks->new
                ( $runtime,
                  { get_callback => $get,
+                   set_callback => sub { die "Readonly $name" },
                    } )
 }
 
