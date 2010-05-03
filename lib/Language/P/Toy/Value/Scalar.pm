@@ -47,7 +47,8 @@ sub assign {
 
     Carp::confess() if ref( $other ) eq __PACKAGE__;
     # avoid the need to special-case scalar context everywhere
-    if( !$other->isa( 'Language::P::Toy::Value::Scalar' ) ) {
+    if(    !$other->isa( 'Language::P::Toy::Value::Scalar' )
+        || $other->isa( 'Language::P::Toy::Value::ActiveScalar' ) ) {
         assign( $self, $runtime, $other->as_scalar );
         return;
     }
