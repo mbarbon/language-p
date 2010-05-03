@@ -55,6 +55,7 @@ lib/Language/P/Toy/Value/Subroutine.pm
 lib/Language/P/Toy/Value/SymbolTable.pm
 lib/Language/P/Toy/Value/Typeglob.pm
 lib/Language/P/Toy/Value/Undef.pm
+lib/Language/P/Toy/Value/Vec.pm
 support/parrot/runtime/p5array.pir
 support/parrot/runtime/p5float.pir
 support/parrot/runtime/p5glob.pir

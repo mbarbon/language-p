@@ -9,6 +9,7 @@ use Language::P::Toy::Value::Reference;
 use Language::P::Toy::Value::Array;
 use Language::P::Toy::Value::List;
 use Language::P::Toy::Value::Pos;
+use Language::P::Toy::Value::Vec;
 use Language::P::Toy::Exception;
 use Language::P::Constants qw(:all);
 
@@ -877,6 +878,23 @@ sub o_pos {
     my $pos = Language::P::Toy::Value::Pos->new( $runtime, $sc );
 
     push @{$runtime->{_stack}}, $pos;
+
+    return $pc + 1;
+}
+
+sub o_vec {
+    my( $op, $runtime, $pc ) = @_;
+    my $bits = pop @{$runtime->{_stack}};
+    my $offset = pop @{$runtime->{_stack}};
+    my $val = pop @{$runtime->{_stack}};
+
+    my $vec = Language::P::Toy::Value::Vec->new
+                  ( $runtime, $val->as_scalar( $runtime ),
+                    $offset->as_integer( $runtime ),
+                    $bits->as_integer( $runtime ),
+                    );
+
+    push @{$runtime->{_stack}}, $vec;
 
     return $pc + 1;
 }
