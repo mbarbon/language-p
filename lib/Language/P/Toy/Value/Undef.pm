@@ -42,6 +42,27 @@ sub assign {
     # nothing to do
 }
 
+sub set_string {
+    my( $self, $runtime, $value ) = @_;
+
+    bless $self, 'Language::P::Toy::Value::StringNumber';
+    $self->{string} = $value;
+}
+
+sub set_integer {
+    my( $self, $runtime, $value ) = @_;
+
+    bless $self, 'Language::P::Toy::Value::StringNumber';
+    $self->{integer} = $value;
+}
+
+sub set_float {
+    my( $self, $runtime, $value ) = @_;
+
+    bless $self, 'Language::P::Toy::Value::StringNumber';
+    $self->{float} = $value;
+}
+
 sub as_boolean_int {
     my( $self, $runtime ) = @_;
 
