@@ -568,6 +568,7 @@ uc                  u       same                 1   1  noattr
 ucfirst             u       same                 1   1  noattr
 undef               u       same                -1   1  context=i1
 unlink              0       same                 1   1  context=i1
+vec                 u       same                 3   1  context=i1
 vivify_array        0       same                 1   1  context=i1
 vivify_hash         0       same                 1   1  context=i1
 vivify_scalar       0       same                 1   1  context=i1

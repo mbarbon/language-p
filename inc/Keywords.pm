@@ -255,5 +255,6 @@ uc                  o       same                 1   1  topic         scalar
 ucfirst             o       same                 1   1  topic         scalar
 unlink              o       same                 1  -1  topic         list
 unshift             o       same                 1  -1  0             make_array+reference
+vec                 o       same                 3   3  0             scalar,scalar,scalar
 wantarray           o       same                 0   0  0             0
 warn                o       default
