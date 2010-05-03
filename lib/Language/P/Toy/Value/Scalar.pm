@@ -62,8 +62,12 @@ sub assign {
 sub assign_iterator {
     my( $self, $runtime, $iter ) = @_;
 
-    die unless $iter->next; # FIXME, must assign undef
-    $self->assign( $runtime, $iter->item );
+    if( $iter->next ) {
+        $self->assign( $runtime, $iter->item );
+    } else {
+        $self->assign( $runtime,
+                       Language::P::Toy::Value::Undef->new( $runtime ) );
+    }
 }
 
 sub set_pos { $_[0]->{pos} = $_[2] }
