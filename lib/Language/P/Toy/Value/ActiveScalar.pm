@@ -22,6 +22,12 @@ sub as_scalar {
     return $self->_get( $runtime );
 }
 
+sub as_boolean_int {
+    my( $self, $runtime ) = @_;
+
+    return $self->_get( $runtime )->as_boolean_int( $runtime );
+}
+
 sub get_length_int {
     my( $self, $runtime ) = @_;
 
