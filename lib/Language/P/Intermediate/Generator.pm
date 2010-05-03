@@ -1609,7 +1609,6 @@ sub _ref_constructor {
 sub _find_jump_target {
     my( $self, $node ) = @_;
     return $node->get_attribute( 'target' ) if $node->has_attribute( 'target' );
-    return if ref $node->left; # dynamic jump
     return if $node->op == OP_GOTO;
 
     # search for the closest loop (for unlabeled jumps) or the closest
@@ -1665,9 +1664,6 @@ sub _find_ancestor {
 sub _jump {
     my( $self, $tree ) = @_;
     my $target = _find_jump_target( $self, $tree );
-
-    die "Jump without static target at ", $tree->pos->[0], ' line ', $tree->pos->[1], "\n"
-      unless $target; # requires stack unwinding
 
     my $unwind_to = $tree->op == OP_GOTO ?
                         _find_ancestor( $self, $tree, $target ) :
