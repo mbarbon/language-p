@@ -495,7 +495,7 @@ sub _const_integer {
     my( $self, $bytecode, $op ) = @_;
 
     my $v = Language::P::Toy::Value::StringNumber->new
-                ( $self->runtime, { integer => $op->{attributes}{value} } );
+                ( $self->runtime, { integer => $op->{attributes}{value} + 0 } );
     push @$bytecode,
          o( 'constant', value => $v );
 }
@@ -504,7 +504,7 @@ sub _const_float {
     my( $self, $bytecode, $op ) = @_;
 
     my $v = Language::P::Toy::Value::StringNumber->new
-                ( $self->runtime, { float => $op->{attributes}{value} } );
+                ( $self->runtime, { float => $op->{attributes}{value} + 0.0 } );
     push @$bytecode,
          o( 'constant', value => $v );
 }
