@@ -152,7 +152,7 @@ sub %s {
     my( $op, $runtime, $pc ) = @_;
     my $vr = pop @{$runtime->{_stack}};
     my $vl = pop @{$runtime->{_stack}};
-    my $r = $vl->%s %s $vr->%s;
+    my $r = $vl->%s( $runtime ) %s $vr->%s( $runtime );
 
     push @{$runtime->{_stack}},
          Language::P::Toy::Value::StringNumber->new( $runtime, { %s => $r } );
@@ -173,7 +173,7 @@ sub %s_assign {
     my( $op, $runtime, $pc ) = @_;
     my $vr = pop @{$runtime->{_stack}};
     my $vl = $runtime->{_stack}[-1];
-    my $r = $vl->%s %s $vr->%s;
+    my $r = $vl->%s( $runtime ) %s $vr->%s( $runtime );
 
     $vl->set_%s( $runtime, $r );
 
