@@ -207,10 +207,15 @@ _make_binary_op( $_ ), _make_binary_op_assign( $_ ) foreach
       operator => '/',
       new_type => 'float',
       },
-    { name     => 'o_bit_or',
+    { name     => '_bit_or_default',
       convert  => 'as_integer',
       operator => '|',
       new_type => 'integer',
+      },
+    { name     => '_bit_or_string',
+      convert  => 'as_string',
+      operator => '|',
+      new_type => 'string',
       },
     { name     => 'o_bit_and',
       convert  => 'as_integer',
@@ -233,6 +238,93 @@ _make_binary_op( $_ ), _make_binary_op_assign( $_ ) foreach
       new_type => 'string',
       },
     );
+
+sub _bit_or_string_number {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = pop @{$runtime->{_stack}};
+    my $vl = pop @{$runtime->{_stack}};
+
+    if( $vl->is_string && $vr->is_string ) {
+        my $r = $vl->as_string( $runtime ) | $vr->as_string( $runtime );
+
+        push @{$runtime->{_stack}},
+             Language::P::Toy::Value::StringNumber->new( $runtime,
+                                                         { string => $r } );
+    } else {
+        my $r = $vl->as_integer( $runtime ) | $vr->as_integer( $runtime );
+
+        push @{$runtime->{_stack}},
+             Language::P::Toy::Value::StringNumber->new( $runtime,
+                                                         { integer => $r } );
+    }
+
+    return $pc + 1;
+}
+
+sub _bit_or_assign_string_number {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = pop @{$runtime->{_stack}};
+    my $vl = $runtime->{_stack}[-1];
+
+    if( $vl->is_string && $vr->is_string ) {
+        my $r = $vl->as_string( $runtime ) | $vr->as_string( $runtime );
+
+        $vl->set_string( $runtime, $r );
+    } else {
+        my $r = $vl->as_integer( $runtime ) | $vr->as_integer( $runtime );
+
+        $vl->set_integer( $runtime, $r );
+    }
+
+    return $pc + 1;
+}
+
+my %dispatch_bit_or =
+  ( -1  => { -1  => \&_bit_or_default,
+              11 => \&_bit_or_string_number,
+             },
+     11 => { -1  => \&_bit_or_string_number,
+             },
+    );
+
+my %dispatch_bit_or_assign =
+  ( -1  => { -1  => \&_bit_or_assign_default,
+              11 => \&_bit_or_assign_string_number,
+             },
+     11 => { -1  => \&_bit_or_assign_string_number,
+             },
+    );
+
+sub _dispatch {
+    my( $table, $l, $r ) = @_;
+    my $lt = $l->type;
+    my $rt = $r->type;
+    my $sub;
+
+    return $sub
+        if $sub = $table->{$lt}{$rt};
+    return $table->{$lt}{$rt} = $sub
+        if $sub = $table->{$lt}{-1};
+    return $table->{$lt}{$rt} = $sub
+        if $sub = $table->{-1}{$rt};
+    die "Unable to dispatch types $lt, $rt";
+}
+
+sub o_bit_or {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = $runtime->{_stack}[-1];
+    my $vl = $runtime->{_stack}[-2];
+
+    return _dispatch( \%dispatch_bit_or, $vl, $vr )->( $op, $runtime, $pc );
+}
+
+sub o_bit_or_assign {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = $runtime->{_stack}[-1];
+    my $vl = $runtime->{_stack}[-2];
+
+    return _dispatch( \%dispatch_bit_or_assign, $vl, $vr )->( $op, $runtime, $pc );
+}
 
 sub o_make_list {
     my( $op, $runtime, $pc ) = @_;

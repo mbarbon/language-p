@@ -38,6 +38,7 @@ sub new {
 
 sub type { 1 }
 sub is_defined { 1 }
+sub is_string { 0 }
 sub is_blessed { $_[0]->{stash} ? 1 : 0 }
 sub set_stash { $_[0]->{stash} = $_[1] }
 

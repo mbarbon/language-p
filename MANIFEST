@@ -213,6 +213,7 @@ t/run/006_brackets.t
 t/run/007_if.t
 t/run/008_loops.t
 t/run/010_arithmetic.t
+t/run/010_binary.t
 t/run/011_call.t
 t/run/015_array_ops.t
 t/run/015_defined.t

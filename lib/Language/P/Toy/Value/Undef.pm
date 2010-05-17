@@ -12,6 +12,8 @@ sub clone {
     return Language::P::Toy::Value::Undef->new( $runtime );
 }
 
+sub is_string { 1 }
+
 sub as_string {
     my( $self, $runtime ) = @_;
 

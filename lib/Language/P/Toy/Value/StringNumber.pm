@@ -19,6 +19,8 @@ sub clone {
                    } );
 }
 
+sub is_string { defined $_[0]->{string} }
+
 sub as_string {
     my( $self, $runtime ) = @_;
 

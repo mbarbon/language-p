@@ -16,6 +16,8 @@ sub new {
                                  } );
 }
 
+sub is_string { 1 }
+
 sub _get {
     my( $self, $runtime ) = @_;
 
