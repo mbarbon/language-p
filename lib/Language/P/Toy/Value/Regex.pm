@@ -11,6 +11,8 @@ use constant
     REGEXP_SCAN_ALL        => -2,
     };
 
+sub type { 15 }
+
 sub next_start {
     my( $self, $start ) = @_;
 

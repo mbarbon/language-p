@@ -6,6 +6,8 @@ use base qw(Language::P::Toy::Value::Any);
 
 __PACKAGE__->mk_ro_accessors( qw(body) );
 
+sub type { 16 }
+
 sub new {
     my( $class, $runtime, $args ) = @_;
     my $self = $class->SUPER::new( $runtime, $args );
@@ -34,6 +36,8 @@ sub get_or_create_slot {
 
     return $self->body->get_or_create( $runtime, $slot );
 }
+
+sub is_string { 1 }
 
 sub as_boolean_int {
     my( $self, $runtime ) = @_;

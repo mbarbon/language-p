@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use base qw(Language::P::Toy::Value::Scalar);
 
+sub type { 14 }
+
 sub _get {
     my( $self, $runtime ) = @_;
 
