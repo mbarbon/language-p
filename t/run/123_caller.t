@@ -12,15 +12,15 @@ sub c2 {
     return caller;
 }
 
-print defined caller() ? "not ok 1\n" : "ok 1\n";
-print c1() eq 'p1' ? "ok 2\n" : "not ok 2\n";
-print c2() eq 'main' ? "ok 3\n" : "not ok 3\n";
+print defined caller() ? "not ok\n" : "ok\n";
+print c1() eq 'p1' ? "ok\n" : "not ok\n";
+print c2() eq 'main' ? "ok\n" : "not ok\n";
 
 ( $cp1, $cf1, $cl1 ) = c1();
 ( $cp2, $cf2, $cl2 ) = c2();
 
-print "$cp1 $cf1 $cl1" eq 'p1 t/run/123_caller.t 7' ? "ok 4\n" : "not ok 4\n";
-print "$cp2 $cf2 $cl2" eq 'main t/run/123_caller.t 20' ? "ok 5\n" : "not ok 5\n";
+print "$cp1 $cf1 $cl1" eq 'p1 t/run/123_caller.t 7' ? "ok\n" : "not ok\n";
+print "$cp2 $cf2 $cl2" eq 'main t/run/123_caller.t 20' ? "ok\n" : "not ok\n";
 
 sub cc_scalar {
     my $c = ( caller 0 )[5];
@@ -37,7 +37,7 @@ sub cc_void {
 }
 
 sub subname { return ( caller 1 )[3]; }
-sub hints { return ( caller 0 )[8]; }
+sub hints { return ( caller 0 )[8] & 0xff; }
 
 # context
 cc_void();
@@ -52,7 +52,7 @@ sub foo {
 foo();
 
 # hints/warnings
-print hints() == 0 ? "ok\n" : "not ok\n";;
+print hints() == 0 ? "ok - hints\n" : "not ok - hints\n";;
 {
     use strict;
     print hints() == 2 ? "ok\n" : "not ok\n";;
@@ -68,7 +68,7 @@ print hints() == 0 ? "ok\n" : "not ok\n";;;
 eval {
     print subname() eq '(eval)' ? "ok\n" : "not ok\n";
     package x;
-    print caller eq 'main' ? "ok 15\n" : "not ok 15\n";
+    print caller eq 'main' ? "ok\n" : "not ok\n";
 };
 
 eval q{
