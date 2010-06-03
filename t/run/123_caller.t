@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..16\n";
+BEGIN { print "1..17\n"; };
 
 sub c1 {
     package p1;
@@ -75,3 +75,10 @@ eval q{
     print subname() eq '(eval)' ? "ok\n" : "not ok\n";
 };
 
+# caller in BEGIN blocks
+package W;
+BEGIN {
+    my( $cp, $cf, $cl ) = caller;
+
+    print "$cp $cf $cl" eq 'main t/run/123_caller.t 84' ? "ok\n" : "not ok - $cp $cf $cl\n";
+}

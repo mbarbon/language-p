@@ -57,7 +57,7 @@ sub run_last_file {
     # FIXME duplicates Language::P::Toy::Value::Code::call
     my $frame = $self->push_frame( $code->stack_size + 3 );
     my $stack = $self->{_stack};
-    $stack->[$frame - 2] = [ -2, $self->{_bytecode}, $context, $self->{_code}, $self->{_lex} ];
+    $stack->[$frame - 2] = [ -2, $self->{_bytecode}, $context, $self->{_code}, $self->{_lex}, undef ];
     $stack->[$frame - 1] = $code->lexicals || 'no_pad';
     $self->set_bytecode( $code->bytecode );
     $self->{_pc} = 0;
@@ -71,17 +71,41 @@ sub run_last_file {
     $self->run;
 }
 
+sub _before_parse {
+    my( $self, $program_name ) = @_;
+
+    $self->{_code} = undef;
+    $self->{_bytecode} = undef;
+    $self->{_pc} = 0;
+    $self->{_lex} =
+        { package  => 'main',
+          hints    => 0,
+          warnings => undef,
+          };
+}
+
+sub _after_parse {
+    my( $self, $program_name ) = @_;
+
+    $self->{_code} = undef;
+    $self->{_bytecode} = undef;
+    $self->{_pc} = 0;
+    $self->{_lex} = undef;
+}
+
 sub run_file {
     my( $self, $program, $is_main, $context ) = @_;
 
     $context ||= CXT_VOID;
     my $parser = $self->parser->safe_instance;
+    $self->_before_parse( $program ) if $is_main;
     my $code = do {
         local $self->{_parser} = $parser;
         my $flags =   PARSE_ADD_RETURN
                     | ( $is_main             ? PARSE_MAIN : 0 );
         $parser->parse_file( $program, $flags );
     };
+    $self->_after_parse( $program ) if $is_main;
     $self->run_last_file( $code, $context );
 }
 
@@ -90,12 +114,14 @@ sub run_string {
 
     $context ||= CXT_VOID;
     my $parser = $self->parser->safe_instance;
+    $self->_before_parse( $program_name ) if $is_main;
     my $code = do {
         local $self->{_parser} = $parser;
         my $flags =   ( $context != CXT_VOID ? PARSE_ADD_RETURN : 0 )
                     | ( $is_main             ? PARSE_MAIN : 0 );
         $parser->parse_string( $program, $flags, $program_name );
     };
+    $self->_after_parse( $program ) if $is_main;
     $self->run_last_file( $code, $context );
 }
 
@@ -179,10 +205,12 @@ sub search_file {
 }
 
 sub call_subroutine {
-    my( $self, $code, $context, $args ) = @_;
+    my( $self, $code, $context, $args, $pos ) = @_;
 
     push @{$self->{_stack}}, $args;
     $code->call( $self, -2, $context );
+    # TODO allow setting hints and warnings as well?
+    local $self->{_stack}->[$self->{_frame} - 2][5] = $pos if $pos;
     $self->run;
 }
 
@@ -253,9 +281,10 @@ sub _frame_info {
     my $op = $stack->[$frame - 2][1][$stack->[$frame - 2][0]];
     my $lex = $stack->[$frame - 2][4];
     my $code = $stack->[$frame - 2][3];
+    my $pos = $stack->[$frame - 2][5] || $op->{pos};
 
-    return { file       => $op->{pos}[0],
-             line       => $op->{pos}[1],
+    return { file       => $pos->[0],
+             line       => $pos->[1],
              code       => $code,
              code_name  => $code && $code->name,
              context    => $stack->[$frame - 2][2],
