@@ -619,4 +619,22 @@ sub wrap_method {
     return $sub;
 }
 
+sub add_overload {
+    my( $self, $runtime, $pc, $context, $args ) = @_;
+    my $pack = $args->get_item( $runtime, 0 )->as_string( $runtime );
+    my $list = $args->get_item( $runtime, 1 )->reference;
+    my %val;
+
+    for( my $iter = $list->iterator( $runtime ); $iter->next; ) {
+        my $key = $iter->item->as_string( $runtime );
+        $iter->next;
+        my $code = $iter->item;
+
+        $val{$key} = $code;
+    }
+
+    my $stash = $runtime->symbol_table->get_package( $runtime, $pack, 0 );
+    $stash->{overload} = \%val;
+}
+
 1;

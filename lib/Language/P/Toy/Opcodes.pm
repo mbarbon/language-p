@@ -187,10 +187,10 @@ EOT
 
 # fixme integer arithmetic
 _make_binary_op( $_ ), _make_binary_op_assign( $_ ) foreach
-  ( { name     => 'o_add',
-      convert  => 'as_float',
+  ( { name     => '_add_default',
+      convert  => 'as_integer',
       operator => '+',
-      new_type => 'float',
+      new_type => 'integer',
       },
     { name     => 'o_subtract',
       convert  => 'as_float',
@@ -279,6 +279,113 @@ sub _bit_or_assign_string_number {
     return $pc + 1;
 }
 
+sub _do_add_string_number {
+    my( $runtime, $vl, $vr ) = @_;
+
+    if( $vl->is_float || $vr->is_float ) {
+        my $r = $vl->as_float( $runtime ) + $vr->as_float( $runtime );
+
+        push @{$runtime->{_stack}},
+             Language::P::Toy::Value::StringNumber->new( $runtime,
+                                                         { float => $r } );
+    } else {
+        my $r = $vl->as_integer( $runtime ) + $vr->as_integer( $runtime );
+
+        # TODO detect overflow and promote to float
+        push @{$runtime->{_stack}},
+             Language::P::Toy::Value::StringNumber->new( $runtime,
+                                                         { integer => $r } );
+    }
+}
+
+sub _do_add_assign_string_number {
+    my( $runtime, $vl, $vr ) = @_;
+
+    if( $vl->is_float || $vr->is_float ) {
+        my $r = $vl->as_float( $runtime ) + $vr->as_float( $runtime );
+
+        $vl->set_float( $runtime, $r );
+    } else {
+        my $r = $vl->as_integer( $runtime ) + $vr->as_integer( $runtime );
+
+        # TODO detect overflow and promote to float
+        $vl->set_integer( $runtime, $r );
+    }
+}
+
+sub _do_dispatch_overload {
+    my( $runtime, $op, $vl, $vr, $reversed ) = @_;
+    my $table = $vl->reference->overload_table;
+
+    # TODO push all this down to an implementation detail and keep the
+    #      interface generic
+    # TODO implement the full overload semantics
+    die "Missing operator '$op' for overloaded object"
+      unless exists $table->{$op};
+    my $rev = Language::P::Toy::Value::Scalar->new_boolean( $runtime, $reversed );
+    my $args = Language::P::Toy::Value::List->new
+                   ( $runtime,
+                     { array => [ $vl, $vr, $rev ] } );
+    # leaves the result on the stack, as expected by the caller
+    $runtime->call_subroutine( $table->{$op}->reference, CXT_SCALAR, $args );
+}
+
+sub _add_string_number {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = pop @{$runtime->{_stack}};
+    my $vl = pop @{$runtime->{_stack}};
+
+    _do_add_string_number( $runtime, $vl, $vr );
+
+    return $pc + 1;
+}
+
+sub _add_maybe_overload {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = pop @{$runtime->{_stack}};
+    my $vl = pop @{$runtime->{_stack}};
+    my $lo = $vl->is_overloaded;
+    my $ro = $vr->is_overloaded;
+
+    if( $lo || $ro ) {
+        _do_dispatch_overload( $runtime, '+',
+                               $lo ? $vl : $vr,
+                               $lo ? $vr : $vl, !$lo );
+    } else {
+        _do_add_string_number( $runtime, $vl, $vr );
+    }
+
+    return $pc + 1;
+}
+
+sub _add_assign_string_number {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = pop @{$runtime->{_stack}};
+    my $vl = $runtime->{_stack}[-1];
+
+    _do_add_assign_string_number( $runtime, $vl, $vr );
+
+    return $pc + 1;
+}
+
+sub _add_assign_maybe_overload {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = pop @{$runtime->{_stack}};
+    my $vl = $runtime->{_stack}[-1];
+    my $lo = $vl->is_overloaded;
+    my $ro = $vr->is_overloaded;
+
+    if( $lo || $ro ) {
+        _do_dispatch_overload( $runtime, '+=',
+                               $lo ? $vl : $vr,
+                               $lo ? $vr : $vl, !$lo );
+    } else {
+        _do_add_assign_string_number( $runtime, $vl, $vr );
+    }
+
+    return $pc + 1;
+}
+
 my %dispatch_bit_or =
   ( -1  => { -1  => \&_bit_or_default,
               11 => \&_bit_or_string_number,
@@ -292,6 +399,30 @@ my %dispatch_bit_or_assign =
               11 => \&_bit_or_assign_string_number,
              },
      11 => { -1  => \&_bit_or_assign_string_number,
+             },
+    );
+
+my %dispatch_add =
+  ( -1  => { -1  => \&_add_default,
+              10 => \&_add_maybe_overload,
+              11 => \&_add_string_number,
+             },
+     10 => { -1  => \&_add_maybe_overload,
+             },
+     11 => { -1  => \&_add_string_number,
+              10 => \&_add_maybe_overload,
+             },
+    );
+
+my %dispatch_add_assign =
+  ( -1  => { -1  => \&_add_assign_default,
+              10 => \&_add_assign_maybe_overload,
+              11 => \&_add_assign_string_number,
+             },
+     10 => { -1  => \&_add_assign_maybe_overload,
+             },
+     11 => { -1  => \&_add_assign_string_number,
+              10 => \&_add_assign_maybe_overload,
              },
     );
 
@@ -324,6 +455,22 @@ sub o_bit_or_assign {
     my $vl = $runtime->{_stack}[-2];
 
     return _dispatch( \%dispatch_bit_or_assign, $vl, $vr )->( $op, $runtime, $pc );
+}
+
+sub o_add {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = $runtime->{_stack}[-1];
+    my $vl = $runtime->{_stack}[-2];
+
+    return _dispatch( \%dispatch_add, $vl, $vr )->( $op, $runtime, $pc );
+}
+
+sub o_add_assign {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = $runtime->{_stack}[-1];
+    my $vl = $runtime->{_stack}[-2];
+
+    return _dispatch( \%dispatch_add_assign, $vl, $vr )->( $op, $runtime, $pc );
 }
 
 sub o_make_list {

@@ -37,8 +37,10 @@ sub new {
 
     my $inc = Language::P::Toy::Value::Array->new( $runtime );
     $inc->push_value( $runtime, Language::P::Toy::Value::Scalar->new_string( $runtime, $_ ) )
-        foreach grep !m{/$Config{archname}$}, @INC;
+        foreach 'support/toy/lib', grep !m{/$Config{archname}$}, @INC;
     $self->set_symbol( $runtime, 'INC', '@', $inc );
+    $self->set_symbol( $runtime, 'Internals::add_overload', '&',
+                       $runtime->wrap_method( $runtime, 'add_overload' ) );
 
     return $self;
 }

@@ -10,6 +10,9 @@ use Language::P::Toy::Value::Typeglob;
 
 sub type { 7 }
 sub is_main { 0 }
+# TODO inheritance
+sub has_overloading { $_[0]->{overload} ? 1 : 0 }
+sub overload_table { $_[0]->{overload} }
 
 sub new {
     my( $class, $runtime, $args ) = @_;

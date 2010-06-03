@@ -39,7 +39,11 @@ sub new {
 sub type { 1 }
 sub is_defined { 1 }
 sub is_string { 0 }
+sub is_float { 0 }
+sub is_overloaded { 0 }
 sub is_blessed { $_[0]->{stash} ? 1 : 0 }
+sub is_overloaded_value { $_[0]->{stash} && $_[0]->{stash}->has_overloading }
+sub overload_table { $_[0]->{stash}->overload_table }
 sub set_stash { $_[0]->{stash} = $_[1] }
 
 sub get_length_int {

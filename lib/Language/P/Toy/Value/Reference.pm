@@ -7,6 +7,7 @@ use base qw(Language::P::Toy::Value::Scalar);
 __PACKAGE__->mk_ro_accessors( qw(reference) );
 
 sub type { 10 }
+sub is_overloaded { $_[0]->{reference}->is_overloaded_value }
 
 sub clone {
     my( $self, $runtime, $level ) = @_;

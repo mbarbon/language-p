@@ -20,6 +20,7 @@ sub clone {
 }
 
 sub is_string { defined $_[0]->{string} }
+sub is_float { defined $_[0]->{float} }
 
 sub as_string {
     my( $self, $runtime ) = @_;
