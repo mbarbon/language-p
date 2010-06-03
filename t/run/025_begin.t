@@ -4,28 +4,34 @@ sub ok_1 {
     print "ok 1\n";
 }
 
-sub ok_6 {
-    print "ok 6\n";
+sub ok_7 {
+    print "ok 7\n";
 }
 
 my $x;
 
 print "ok $x\n";
 
-$x = 5;
+$x = 6;
 
 BEGIN {
-    print "1..6\n";
+    print "1..7\n";
     ok_1();
     $x = 2;
 }
 
-print "ok 4\n";
+print "ok 5\n";
 print "ok $x\n";
 
 BEGIN {
     print "ok $x\n";
-    $x = 3;
+    $x = 4;
 }
 
-ok_6();
+ok_7();
+
+package X;
+
+BEGIN {
+    print "ok 3\n";
+}

@@ -100,7 +100,7 @@ sub process {
         my $sub = _generate_segment( $self, $sub_int->[0] );
 
         # run right away if it is a begin block
-        if( $tree->name eq 'BEGIN' ) {
+        if( $tree->name eq 'BEGIN' || $tree->name =~ /::BEGIN$/ ) {
             my $args = Language::P::Toy::Value::List->new( $self->runtime );
             $self->runtime->call_subroutine( $sub, CXT_VOID, $args );
         }
