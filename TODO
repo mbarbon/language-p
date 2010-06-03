@@ -99,7 +99,13 @@ Runtime:
   - $foo->Bar::baz( ... )
   - $foo->SUPER::baz( ... )
   - magic ISA, method caching, pluggable MRO
-- tie, overload
+- tie
+- overload
+  - all the available operators
+  - implement inheritance
+  - implement using a method as overload handler
+  - implement mutators, copy operator
+  - implement fallback
 - for all runtime functions, define which take/return perl types and which
   are only overloads on top of the others
 - pass a runtime instance into all methods
