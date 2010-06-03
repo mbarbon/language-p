@@ -459,6 +459,7 @@ sub _parse_line_rest {
                            import  => $args,
                            is_no   => $tokidt == KEY_NO ? 1 : 0,
                            pos     => $token->[O_POS],
+                           lexical_state => _lexical_state_node( $self, 1 ),
                            } );
         } elsif(    $tokidt == OP_MY
                  || $tokidt == OP_OUR

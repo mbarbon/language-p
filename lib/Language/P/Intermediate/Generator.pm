@@ -226,6 +226,8 @@ sub generate_use {
     _add_blocks $self, $head;
     $self->push_block( SCOPE_SUB|SCOPE_MAIN, $tree->pos_s, $tree->pos_e );
 
+    _lexical_state( $self, $tree->lexical_state );
+
     # check the Perl version
     if( $tree->version && !$tree->package ) {
         # compare version

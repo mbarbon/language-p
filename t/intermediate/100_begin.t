@@ -43,6 +43,7 @@ L2:
   end
 # BEGIN
 L1:
+  lexical_state_set index=1
   require_file context=2 (constant_string value="Foo.pm")
   set index=1 (find_method method="import" (constant_string value="Foo"))
   set index=2 (make_list (constant_string value="Foo"), (constant_integer value=1), (constant_integer value=2))

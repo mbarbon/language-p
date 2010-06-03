@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-BEGIN { print "1..17\n"; };
+BEGIN { print "1..18\n"; unshift @INC, 't/run/files'; };
 
 sub c1 {
     package p1;
@@ -82,3 +82,5 @@ BEGIN {
 
     print "$cp $cf $cl" eq 'main t/run/123_caller.t 84' ? "ok\n" : "not ok - $cp $cf $cl\n";
 }
+
+use Foo;

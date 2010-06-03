@@ -105,7 +105,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(package version import is_no);
+our @FIELDS = qw(package version import is_no lexical_state);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 

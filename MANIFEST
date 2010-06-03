@@ -244,6 +244,7 @@ t/run/123_caller.t
 t/run/125_tail_call.t
 t/run/900_corelibs.t
 t/run/files/Bar.pm
+t/run/files/Foo.pm
 t/run/files/Moo.pm
 t/run/files/foo.pl
 t/runtime/001_load.t
