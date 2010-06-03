@@ -12,9 +12,15 @@ sub new {
     my( $class, $runtime, $args ) = @_;
     my $self = $class->SUPER::new( $runtime, $args );
 
-    $self->{body} ||= Language::P::Toy::Value::Typeglob::Body->new( $runtime );
+    $self->{body} ||= Language::P::Toy::Value::Typeglob::Body->new( $args );
 
     return $self;
+}
+
+sub as_string {
+    my( $self, $runtime ) = @_;
+
+    return '*' . $self->body->name;
 }
 
 sub set_slot {
@@ -119,7 +125,7 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
-__PACKAGE__->mk_ro_accessors( qw(scalar array hash io format subroutine) );
+__PACKAGE__->mk_ro_accessors( qw(scalar array hash io format subroutine name) );
 
 use Language::P::Toy::Value::Scalar;
 use Language::P::Toy::Value::Array;
@@ -132,7 +138,7 @@ my %types =
   ( scalar     => 'Language::P::Toy::Value::Undef',
     array      => 'Language::P::Toy::Value::Array',
     hash       => 'Language::P::Toy::Value::Hash',
-    subroutine => 'Language::P::Toy::Value::Undef',
+    subroutine => 'Language::P::Toy::Value::Subroutine::Stub',
     io         => 'Language::P::Toy::Value::Handle',
     format     => 'Language::P::Toy::Value::Format',
     );
@@ -148,6 +154,9 @@ sub set_slot {
 sub get_or_create {
     my( $self, $runtime, $slot ) = @_;
 
+    return $self->{$slot} ||= $types{$slot}->new
+                                  ( $runtime, { name => $self->name } )
+        if $slot eq 'subroutine';
     return $self->{$slot} ||= $types{$slot}->new( $runtime );
 }
 

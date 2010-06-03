@@ -85,8 +85,10 @@ sub get_symbol {
 sub _get_symbol {
     my( $self, $runtime, $name, $sigil, $create ) = @_;
     my( @packages ) = split /::/, $name;
-    if( $self->is_main && ( $packages[0] eq '' || $packages[0] eq 'main' ) ) {
-        shift @packages;
+    my $name_prefix = '';
+    if( $self->is_main ) {
+        shift @packages if $packages[0] eq '' || $packages[0] eq 'main';
+        $name_prefix = 'main::' if @packages == 1;
     }
 
     my $index = 0;
@@ -99,7 +101,8 @@ sub _get_symbol {
             if( !$glob ) {
                 $created = 1;
                 $glob = $current->{symbols}{$package} =
-                    Language::P::Toy::Value::Typeglob->new( $runtime );
+                    Language::P::Toy::Value::Typeglob->new
+                        ( $runtime, { name => $name_prefix . $name } );
             }
             return ( $glob, $created ) if $sigil eq '*';
             return ( $create ? $glob->get_or_create_slot( $runtime, $sigils{$sigil}[0] ) :
