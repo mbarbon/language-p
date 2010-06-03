@@ -243,11 +243,11 @@ sub run {
         }
     };
     if( my $e = $@ ) {
-        if( $e->isa( 'Language::P::Exception' ) ) {
+        if( ref( $e ) && $e->isa( 'Language::P::Exception' ) ) {
             $self->{_pc} = $self->throw_exception( $e );
             goto &run;
         } else {
-            die;
+            die $e;
         }
     }
 }
