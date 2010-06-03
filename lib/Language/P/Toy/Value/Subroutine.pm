@@ -50,7 +50,14 @@ use strict;
 use warnings;
 use base qw(Language::P::Toy::Value::Subroutine);
 
-sub call { Carp::confess( "Called subroutine stub" ) }
+sub call {
+    my( $self, $runtime, $pc, $context ) = @_;
+    my $msg = sprintf "Undefined subroutine &%s called", $self->name;
+    my $exc = Language::P::Toy::Exception->throw( message => $msg );
+
+    $runtime->throw_exception( $exc, 1 );
+}
+
 sub is_defined { 0 }
 
 1;
