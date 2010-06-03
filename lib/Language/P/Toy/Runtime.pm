@@ -594,4 +594,29 @@ sub get_last_match {
     return $self->{_last_match};
 }
 
+sub wrap_method {
+    {
+        package Language::P::Toy::Value::WrappedSub;
+
+        sub prototype { Language::P::Constants::PROTO_DEFAULT }
+        sub call { shift->( @_ ) }
+    }
+
+    my( $self, $receiver, $method ) = @_;
+
+    my $sub = sub {
+        my( $self, $runtime, $pc, $context ) = @_;
+        my $args = pop @{$runtime->{_stack}};
+
+        $receiver->$method( $runtime, $pc, $context, $args );
+        push @{$runtime->{_stack}},
+             Language::P::Toy::Value::List->new( $runtime );
+
+        return $pc + 1;
+    };
+    bless $sub, 'Language::P::Toy::Value::WrappedSub';
+
+    return $sub;
+}
+
 1;

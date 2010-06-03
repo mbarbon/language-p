@@ -70,6 +70,7 @@ my @lines;
     sub get_package { $_[0]->_symbol_table->get_package( $_[0], $_[1] ) }
     sub _symbol_table { $_[0]->{symbol_table} }
     sub set_bytecode { }
+    sub wrap_method { }
 }
 
 sub fresh_parser {
