@@ -19,6 +19,15 @@ sub new {
     return $self;
 }
 
+sub assign {
+    my( $self, $runtime, $other ) = @_;
+
+    die "PANIC" unless $other->isa( 'Language::P::Toy::Value::Subroutine' );
+
+    bless $self, ref $other;
+    %$self = %$other;
+}
+
 sub call {
     my( $self, $runtime, $pc, $context ) = @_;
     my $args = pop @{$runtime->{_stack}};

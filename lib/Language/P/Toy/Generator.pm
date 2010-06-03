@@ -119,7 +119,16 @@ sub add_declaration {
                     { name      => _qualify( $name ),
                       prototype => $prototype,
                       } );
-    $self->runtime->symbol_table->set_symbol( $self->runtime, $name, '&', $sub );
+    my $slot = $self->runtime->symbol_table->get_symbol( $self->runtime, $name, '&' );
+
+    if( $slot && $slot->is_defined ) {
+        # TODO warn about prototype mismatch
+    } elsif( $slot ) {
+        # TODO warn about prototype mismatch
+        $slot->assign( $self->runtime, $sub );
+    } else {
+        $self->runtime->symbol_table->set_symbol( $self->runtime, $name, '&', $sub );
+    }
 }
 
 my %opcode_map =
@@ -324,8 +333,15 @@ sub _generate_segment {
 
     $self->_allocate_lexicals( $segment, $code )
       if $segment->lexicals;
-    $self->runtime->symbol_table->set_symbol( $self->runtime, $segment->name, '&', $code )
-      if defined $segment->name;
+    # install into the symbol table; use assignment in case something
+    # took a reference
+    if( defined $segment->name && $segment->name ne 'BEGIN' ) {
+        my $slot = $self->runtime->symbol_table->get_symbol( $self->runtime, $segment->name, '&' );
+
+        # TODO warn redefinition
+        $slot->assign( $self->runtime, $code );
+    }
+
     pop @{$self->{_processing}};
 
     return $code;
