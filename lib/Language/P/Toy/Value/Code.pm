@@ -54,6 +54,8 @@ sub call {
     $runtime->set_bytecode( $self->bytecode );
     # FIXME encapsulation
     $runtime->{_code} = $self;
+
+    return 0;
 }
 
 sub as_boolean_int { return 1 }

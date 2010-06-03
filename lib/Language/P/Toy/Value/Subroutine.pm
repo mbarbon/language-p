@@ -28,6 +28,8 @@ sub call {
     my( $stack, $frame ) = ( $runtime->{_stack}, $runtime->{_frame} );
 
     $stack->[$frame - 3] = $args;
+
+    return 0;
 }
 
 sub tail_call {
@@ -42,6 +44,8 @@ sub tail_call {
     my( $stack, $frame ) = ( $runtime->{_stack}, $runtime->{_frame} );
 
     $stack->[$frame - 3] = $args;
+
+    return 0;
 }
 
 package Language::P::Toy::Value::Subroutine::Stub;

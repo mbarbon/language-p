@@ -437,9 +437,7 @@ sub o_dynamic_goto {
 
     if(    $value->isa( 'Language::P::Toy::Value::Reference' )
         && $value->reference->isa( 'Language::P::Toy::Value::Subroutine' ) ) {
-        $value->reference->tail_call( $runtime, $pc, _context( undef, $runtime ) );
-
-        return 0;
+        return $value->reference->tail_call( $runtime, $pc, _context( undef, $runtime ) );
     } else {
         die "Can't use goto with dynamic label yet";
     }
@@ -449,9 +447,7 @@ sub o_call {
     my( $op, $runtime, $pc ) = @_;
     my $sub = pop @{$runtime->{_stack}};
 
-    $sub->call( $runtime, $pc, _context( $op, $runtime ) );
-
-    return 0;
+    return $sub->call( $runtime, $pc, _context( $op, $runtime ) );
 }
 
 sub o_call_method {
@@ -462,9 +458,7 @@ sub o_call_method {
 
     die "Can't find method $op->{method}" unless $sub;
 
-    $sub->call( $runtime, $pc, _context( $op, $runtime ) );
-
-    return 0;
+    return $sub->call( $runtime, $pc, _context( $op, $runtime ) );
 }
 
 sub o_find_method {
