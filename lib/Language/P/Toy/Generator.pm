@@ -305,7 +305,7 @@ sub _generate_segment {
     $self->_generated->{$segment} = $code;
 
     foreach my $inner ( @{$segment->inner} ) {
-        next unless $inner;
+        next if !$inner || $self->_generated->{$inner};
         _generate_segment( $self, $inner );
     }
 
@@ -379,6 +379,7 @@ sub finished {
 
     # perform code generation before serializing, for regexes
     my $head = pop @{$self->{_processing}};
+
     my $res = _generate_segment( $self, $main_int->[0], $head );
     $main_int->[0]->weaken; # allow GC to happen
     $self->_cleanup;
