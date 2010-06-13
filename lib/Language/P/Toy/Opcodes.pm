@@ -999,8 +999,16 @@ _make_unary( $_ ) foreach
       expression => 'chr $v->as_integer( $runtime )',
       },
     { name       => 'o_bit_not',
-      type       => 'int',
+      type       => 'integer',
       expression => '~ $v->as_integer( $runtime )',
+      },
+    { name       => 'o_length',
+      type       => 'integer',
+      expression => '$v->get_length_int( $runtime )',
+      },
+    { name       => 'o_int',
+      type       => 'integer',
+      expression => '$v->as_integer( $runtime )',
       },
     );
 
