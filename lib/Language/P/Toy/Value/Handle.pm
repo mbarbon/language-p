@@ -37,14 +37,27 @@ sub close {
     return Language::P::Toy::Value::Scalar->new_boolean( $runtime, $ret );
 }
 
+sub _irs_value {
+    my( $runtime, $irs ) = @_;
+
+    return !$irs->is_defined( $runtime ) ? undef :
+           $irs->isa( 'Language::P::Toy::Value::Reference' ) ?
+             \$irs->reference->as_integer( $runtime ) :
+             $irs->as_string( $runtime );
+}
+
 sub read_line {
     my( $self, $runtime ) = @_;
+    my $irs = $runtime->symbol_table->get_symbol( $runtime, '/', '$', 1 );
+    local $/ = _irs_value( $runtime, $irs );
 
     return scalar readline $self->handle;
 }
 
 sub read_lines {
     my( $self, $runtime ) = @_;
+    my $irs = $runtime->symbol_table->get_symbol( $runtime, '/', '$', 1 );
+    local $/ = _irs_value( $runtime, $irs );
 
     return [ readline $self->handle ];
 }
