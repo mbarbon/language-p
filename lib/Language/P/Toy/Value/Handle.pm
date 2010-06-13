@@ -8,6 +8,12 @@ __PACKAGE__->mk_ro_accessors( qw(handle) );
 
 sub type { 4 }
 
+sub as_handle {
+    my( $self, $runtime ) = @_;
+
+    return $self;
+}
+
 sub write {
     my( $self, $runtime, $scalar, $offset, $length ) = @_;
     local $\;

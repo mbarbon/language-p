@@ -98,7 +98,8 @@ sub o_pop {
 sub o_print {
     my( $op, $runtime, $pc ) = @_;
     my $args = pop @{$runtime->{_stack}};
-    my $fh = pop @{$runtime->{_stack}};
+    my $arg_fh = pop @{$runtime->{_stack}};
+    my $fh = $arg_fh->as_handle( $runtime );
 
     for( my $iter = $args->iterator( $runtime ); $iter->next( $runtime ); ) {
         $fh->write( $runtime, $iter->item( $runtime ) );
@@ -112,8 +113,8 @@ sub o_print {
 
 sub o_readline {
     my( $op, $runtime, $pc ) = @_;
-    my $glob = pop @{$runtime->{_stack}};
-    my $fh = $glob->get_slot( $runtime, 'io' );
+    my $arg_fh = pop @{$runtime->{_stack}};
+    my $fh = $arg_fh->as_handle( $runtime );
     my $cxt = _context( $op, $runtime );
 
     if( $cxt == CXT_LIST ) {
@@ -1205,7 +1206,7 @@ sub o_rmdir {
 sub o_binmode {
     my( $op, $runtime, $pc ) = @_;
     my $args = pop @{$runtime->{_stack}};
-    my $handle = $args->get_item( $runtime, 0 );
+    my $handle = $args->get_item( $runtime, 0 )->as_handle( $runtime );
     my $layer = $args->get_count( $runtime ) == 2 ? $args->get_item( $runtime, 1 )->as_string( $runtime ) : ':raw';
 
     push @{$runtime->{_stack}}, $handle->set_layer( $runtime, $layer );
@@ -1228,7 +1229,7 @@ sub o_open {
     }
     my $dest = $args->get_item( $runtime, 0 );
     my $pfh = Language::P::Toy::Value::Handle->new( $runtime, { handle => $fh } );
-    $dest->set_slot( $runtime, 'io', $pfh );
+    $dest->set_handle( $runtime, $pfh );
 
     push @{$runtime->{_stack}}, Language::P::Toy::Value::Scalar
                                     ->new_boolean( $runtime, $ret );
@@ -1239,7 +1240,8 @@ sub o_close {
     my( $op, $runtime, $pc ) = @_;
     my $handle = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $handle->close( $runtime );
+    push @{$runtime->{_stack}},
+         $handle->as_handle( $runtime )->close( $runtime );
 
     return $pc + 1;
 }

@@ -116,4 +116,15 @@ sub vivify_hash {
     return $self->dereference_hash( $runtime );
 }
 
+sub set_handle {
+    my( $self, $runtime, $handle ) = @_;
+    # TODO propagate the name
+    my $new = Language::P::Toy::Value::Reference->new
+                  ( $runtime,
+                    { reference => Language::P::Toy::Value::Typeglob->new,
+                      } );
+    $self->assign( $runtime, $new );
+    $self->set_handle( $runtime, $handle );
+}
+
 1;

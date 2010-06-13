@@ -132,4 +132,18 @@ sub find_method {
     return $self->reference->stash->find_method( $runtime, $name );
 }
 
+sub as_handle {
+    my( $self, $runtime ) = @_;
+    my $glob = $self->dereference_glob( $runtime );
+
+    return $glob->as_handle( $runtime );
+}
+
+sub set_handle {
+    my( $self, $runtime, $handle ) = @_;
+    my $glob = $self->dereference_glob( $runtime );
+
+    $glob->set_handle( $runtime, $handle );
+}
+
 1;

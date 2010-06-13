@@ -23,6 +23,18 @@ sub as_string {
     return '*' . $self->body->name;
 }
 
+sub as_handle {
+    my( $self, $runtime ) = @_;
+
+    return $self->get_slot( $runtime, 'io' );
+}
+
+sub set_handle {
+    my( $self, $runtime, $handle ) = @_;
+
+    return $self->set_slot( $runtime, 'io', $handle );
+}
+
 sub set_slot {
     my( $self, $runtime, $slot, $value ) = @_;
 
