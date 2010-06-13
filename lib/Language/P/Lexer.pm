@@ -568,7 +568,16 @@ sub lex_quote {
                 }
             }
 
-            if( $c eq '\\' && $self->quote->{interpolate} ) {
+            if( $c eq '\\' && !$self->quote->{interpolate} ) {
+                my $qc = substr $$buffer, 0, 1;
+
+                if( $qc eq '\\' ) {
+                    # eat character
+                    substr $$buffer, 0, 1, '';
+                }
+
+                $v .= '\\';
+            } elsif( $c eq '\\' && $self->quote->{interpolate} ) {
                 my $qc = substr $$buffer, 0, 1, '';
 
                 if( $qc =~ /^[a-zA-Z]$/ ) {
