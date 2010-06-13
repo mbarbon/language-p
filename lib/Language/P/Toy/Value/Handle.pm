@@ -47,7 +47,7 @@ sub set_layer {
     my( $self, $runtime, $layer ) = @_;
     my $ret = binmode $self->handle, $layer;
 
-    return Language::P::Toy::Scalar->new_string( $runtime, $ret );
+    return Language::P::Toy::Value::Scalar->new_string( $runtime, $ret );
 }
 
 1;
