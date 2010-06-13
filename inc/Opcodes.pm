@@ -445,6 +445,7 @@ grep                0       same                 1   1  context=i1
 hash_element        0       same                 2   1  context=i1,create=i1
 hash_slice          0       same                 2   1  context=i1,create=i1
 hex                 u       same                 1   1  context=i1
+int                 u       same                 1   1  context=i1
 iterator            0       same                 1   1  noattr
 iterator_next       0       same                 1   1  noattr
 join                0       same                 1   1  context=i1

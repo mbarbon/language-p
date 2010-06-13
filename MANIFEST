@@ -117,6 +117,7 @@ t/parser/expressions/010_named_unary/defined.t
 t/parser/expressions/010_named_unary/exists.t
 t/parser/expressions/010_named_unary/glob.t
 t/parser/expressions/010_named_unary/hex.t
+t/parser/expressions/010_named_unary/int.t
 t/parser/expressions/010_named_unary/lc.t
 t/parser/expressions/010_named_unary/lcfirst.t
 t/parser/expressions/010_named_unary/length.t

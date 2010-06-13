@@ -233,6 +233,7 @@ close               o       same                 0   1  0             make_glob
 die                 o       default
 glob                o       same                 1  -1  topic         scalar
 hex                 o       same                 1   1  topic         scalar
+int                 o       same                 1   1  topic         scalar
 join                o       same                 1  -1  0             scalar,list
 lc                  o       same                 1   1  topic         scalar
 lcfirst             o       same                 1   1  topic         scalar
