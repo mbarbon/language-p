@@ -46,6 +46,7 @@ lib/Language/P/Toy/Value/Hash.pm
 lib/Language/P/Toy/Value/List.pm
 lib/Language/P/Toy/Value/MainSymbolTable.pm
 lib/Language/P/Toy/Value/Pos.pm
+lib/Language/P/Toy/Value/Range.pm
 lib/Language/P/Toy/Value/Reference.pm
 lib/Language/P/Toy/Value/Regex.pm
 lib/Language/P/Toy/Value/Scalar.pm
@@ -221,6 +222,7 @@ t/run/011_call.t
 t/run/015_array_ops.t
 t/run/015_defined.t
 t/run/015_pos.t
+t/run/015_range.t
 t/run/017_references.t
 t/run/018_vivification.t
 t/run/020_lexicals.t

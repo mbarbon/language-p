@@ -34,6 +34,7 @@ sub push_value {
 
     foreach my $value ( @values ) {
         if(    $value->isa( 'Language::P::Toy::Value::Array' )
+            || $value->isa( 'Language::P::Toy::Value::Range' )
             || $value->isa( 'Language::P::Toy::Value::Hash' ) ) {
             for( my $it = $value->iterator( $runtime ); $it->next( $runtime ); ) {
                 push @{$self->{array}}, $it->item( $runtime );

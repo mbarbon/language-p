@@ -170,6 +170,7 @@ my %opcode_map =
     OP_RESTORE_ARRAY_ELEMENT()       => \&_map_index,
     OP_END()                         => \&_end,
     OP_STOP()                        => \&_stop,
+    OP_DOT_DOT()                     => \&_dot_dot,
 
     OP_RX_QUANTIFIER()               => \&_rx_quantifier,
     OP_RX_START_GROUP()              => \&_direct_jump,
@@ -466,6 +467,13 @@ sub _stop {
     my( $self, $bytecode, $op ) = @_;
 
     push @$bytecode, o( 'end' );
+}
+
+sub _dot_dot {
+    my( $self, $bytecode, $op ) = @_;
+    die "Can only generate ranges for now" if $op->{attributes}{context} != CXT_LIST;
+
+    push @$bytecode, o( 'range' );
 }
 
 sub _global {

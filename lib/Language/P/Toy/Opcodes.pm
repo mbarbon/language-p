@@ -10,6 +10,7 @@ use Language::P::Toy::Value::Array;
 use Language::P::Toy::Value::List;
 use Language::P::Toy::Value::Pos;
 use Language::P::Toy::Value::Vec;
+use Language::P::Toy::Value::Range;
 use Language::P::Toy::Exception;
 use Language::P::Constants qw(:all);
 
@@ -1430,6 +1431,18 @@ sub o_array_shift {
     my $v = $arr->shift_value( $runtime );
 
     push @{$runtime->{_stack}}, $v;
+
+    return $pc + 1;
+}
+
+sub o_range {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = pop @{$runtime->{_stack}};
+    my $vl = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::Range->new
+             ( $runtime, { start => $vl, end => $vr } );
 
     return $pc + 1;
 }
