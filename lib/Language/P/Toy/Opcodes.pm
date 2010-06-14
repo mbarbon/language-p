@@ -95,6 +95,25 @@ sub o_pop {
     return $pc + 1;
 }
 
+sub o_join {
+    my( $op, $runtime, $pc ) = @_;
+    my $args = pop @{$runtime->{_stack}};
+    my $str = $args->get_item( $runtime, 0 )->as_string( $runtime );
+    my $res = '';
+    my $first = 1;
+
+    for( my $iter = $args->iterator_from( $runtime, 1 ); $iter->next( $runtime ); ) {
+        $res .= $str unless $first;
+        $first = 0;
+        $res .= $iter->item( $runtime )->as_string( $runtime );
+    }
+
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::Scalar->new_string( $runtime, $res );
+
+    return $pc + 1;
+}
+
 sub o_print {
     my( $op, $runtime, $pc ) = @_;
     my $args = pop @{$runtime->{_stack}};
