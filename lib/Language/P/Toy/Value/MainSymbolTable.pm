@@ -28,6 +28,9 @@ sub new {
     my $irs = Language::P::Toy::Value::Scalar->new_string( $runtime, "\n" );
     $self->set_symbol( $runtime, '/', '$', $irs );
 
+    my $ais = Language::P::Toy::Value::Scalar->new_string( $runtime, " " );
+    $self->set_symbol( $runtime, '"', '$', $ais );
+
     my $out = Language::P::Toy::Value::Handle->new( $runtime, { handle => \*STDOUT } );
     $self->set_symbol( $runtime, 'STDOUT', 'I', $out );
 

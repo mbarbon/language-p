@@ -1528,7 +1528,20 @@ sub _quoted_string {
 
     _add_bytecode $self, opcode_nm( OP_FRESH_STRING, value => '' );
     for( my $i = 0; $i < @{$tree->components}; ++$i ) {
-        $self->dispatch( $tree->components->[$i] );
+        my $c = $tree->components->[$i];
+        if(    ( $c->is_symbol && $c->sigil == VALUE_ARRAY )
+            || (    $c->isa( 'Language::P::ParseTree::Dereference' )
+                 && $c->op == OP_DEREFERENCE_ARRAY ) ) {
+            _add_bytecode $self,
+                opcode_npm( OP_GLOBAL, $tree->pos,
+                            name => '"', slot => VALUE_SCALAR );
+            $self->dispatch( $c );
+            _add_bytecode $self,
+                opcode_nm( OP_MAKE_LIST, count => 2 ),
+                opcode_npm( OP_JOIN, $tree->pos );
+        } else {
+            $self->dispatch( $c );
+        }
 
         _add_bytecode $self, opcode_npm( OP_CONCATENATE_ASSIGN, $tree->pos,
                                          context => CXT_SCALAR );
