@@ -1007,7 +1007,7 @@ sub _prepare_sublex_heredoc {
         }
     } else {
         # <<\EOT, <<EOT
-        if( $$_ =~ s/\\// ) {
+        if( $$_ =~ s/^\\// ) {
             $quote = "'";
         }
 
@@ -1025,7 +1025,7 @@ sub _prepare_sublex_heredoc {
     my $finished = 0;
     if( !$lex->stream ) {
         $_ = $lex->buffer;
-        if( $$_ =~ s/(.*)^$end//m ) {
+        if( $$_ =~ s/(.*\n)^$end//m ) {
             $str .= $1;
             $finished = 1;
         }
