@@ -321,6 +321,7 @@ sub _skip_space {
             next;
         }
 
+        $self->{_start_of_line} = 0;
         last if length $$buffer;
     }
 
