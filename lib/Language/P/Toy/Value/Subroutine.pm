@@ -66,7 +66,7 @@ use base qw(Language::P::Toy::Value::Subroutine);
 sub call {
     my( $self, $runtime, $pc, $context ) = @_;
     my $msg = sprintf "Undefined subroutine &%s called", $self->name;
-    my $exc = Language::P::Toy::Exception->throw( message => $msg );
+    my $exc = Language::P::Toy::Exception->new( { message => $msg } );
 
     $runtime->throw_exception( $exc, 1 );
 }
