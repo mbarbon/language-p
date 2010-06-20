@@ -5,7 +5,7 @@ BEGIN { print "1..1\n" }
 # load some misc "very important" modules included in core
 use strict;
 use warnings;
-# use warnings::register;
+use warnings::register;
 # use vars;
 # use subs;
 # use base;
