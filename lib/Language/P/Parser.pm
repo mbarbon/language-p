@@ -956,6 +956,21 @@ sub _find_symbol {
     my $lex = _find_lexical( $self, $sigil, $name );
     return $lex if $lex;
 
+    # special case for $a, $b, punctuation and ${^FOO} variables
+    if( $sigil == VALUE_SCALAR && ( $name eq 'a' || $name eq 'b' ) ) {
+        return Language::P::ParseTree::Symbol->new
+                   ( { name  => _qualify( $self, $name, $type ),
+                       sigil => $sigil,
+                       pos   => $pos,
+                       } );
+    } elsif( $name eq '_' || $name =~ /^[\W]/ ) {
+        return Language::P::ParseTree::Symbol->new
+                   ( { name  => $name,
+                       sigil => $sigil,
+                       pos   => $pos,
+                       } );
+    }
+
     if( $self->{_lexical_state}[-1]{hints} & 0x00000400 ) {
         _parse_error( $self, $pos,
                       "Global symbol %s requires explicit package name",

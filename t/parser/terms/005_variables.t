@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 12;
+use Test::More tests => 14;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -89,6 +89,21 @@ sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
+package x;
+$_
+EOP
+--- !parsetree:LexicalState
+changed: CHANGED_PACKAGE
+hints: 0
+package: x
+warnings: ~
+--- !parsetree:Symbol
+context: CXT_VOID
+name: _
+sigil: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $#
 EOP
 --- !parsetree:Symbol
@@ -109,6 +124,21 @@ EOE
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 ${^F}
 EOP
+--- !parsetree:Symbol
+context: CXT_VOID
+name: "\x06"
+sigil: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+package x;
+${^F}
+EOP
+--- !parsetree:LexicalState
+changed: CHANGED_PACKAGE
+hints: 0
+package: x
+warnings: ~
 --- !parsetree:Symbol
 context: CXT_VOID
 name: "\x06"
