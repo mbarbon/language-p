@@ -404,6 +404,7 @@ dot_dot             0       same                 2   1  context=i1
 dot_dot_dot         0       same                 2   1  context=i1
 dup                 0       same                 1   2  noattr
 dynamic_goto        u       same                 1   0  noattr
+each                u       same                 1   1  context=i1
 end                 0       same                 0   0  noattr
 eval                u       same                 1   1  context=i1,hints=i,warnings=su,package=s,lexicals=eval_my,globals=eval_our
 eval_regex          u       same                 1   1  context=i1,flags=i
@@ -468,6 +469,7 @@ jump_if_s_lt        0       same                 2   0  to=b
 jump_if_s_ne        0       same                 2   0  to=b
 jump_if_true        0       same                 1   0  to=b
 jump_if_null        0       same                 1   0  to=b
+keys                u       same                 1   1  context=i1
 lc                  u       same                 1   1  noattr
 lcfirst             u       same                 1   1  noattr
 length              u       same                 1   1  noattr
@@ -573,6 +575,7 @@ uc                  u       same                 1   1  noattr
 ucfirst             u       same                 1   1  noattr
 undef               u       same                -1   1  context=i1
 unlink              0       same                 1   1  context=i1
+values              u       same                 1   1  context=i1
 vec                 u       same                 3   1  context=i1
 vivify_array        0       same                 1   1  context=i1
 vivify_hash         0       same                 1   1  context=i1

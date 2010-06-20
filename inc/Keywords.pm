@@ -231,10 +231,12 @@ chdir               o       same                 0   1  0             scalar+mak
 chr                 o       same                 1   1  topic         scalar
 close               o       same                 0   1  0             make_glob
 die                 o       default
+each                o       same                 1   1  0             make_hash+reference
 glob                o       same                 1  -1  topic         scalar
 hex                 o       same                 1   1  topic         scalar
 int                 o       same                 1   1  topic         scalar
 join                o       same                 1  -1  0             scalar,list
+keys                o       same                 1   1  0             make_hash+reference
 lc                  o       same                 1   1  topic         scalar
 lcfirst             o       same                 1   1  topic         scalar
 length              o       same                 1   1  topic         scalar
@@ -257,6 +259,7 @@ uc                  o       same                 1   1  topic         scalar
 ucfirst             o       same                 1   1  topic         scalar
 unlink              o       same                 1  -1  topic         list
 unshift             o       same                 1  -1  0             make_array+reference
+values              o       same                 1   1  0             make_hash+reference
 vec                 o       same                 3   3  0             scalar,scalar,scalar
 wantarray           o       same                 0   0  0             0
 warn                o       default

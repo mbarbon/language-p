@@ -116,10 +116,12 @@ t/parser/expressions/010_named_unary/chdir.t
 t/parser/expressions/010_named_unary/chr.t
 t/parser/expressions/010_named_unary/close.t
 t/parser/expressions/010_named_unary/defined.t
+t/parser/expressions/010_named_unary/each.t
 t/parser/expressions/010_named_unary/exists.t
 t/parser/expressions/010_named_unary/glob.t
 t/parser/expressions/010_named_unary/hex.t
 t/parser/expressions/010_named_unary/int.t
+t/parser/expressions/010_named_unary/keys.t
 t/parser/expressions/010_named_unary/lc.t
 t/parser/expressions/010_named_unary/lcfirst.t
 t/parser/expressions/010_named_unary/length.t
@@ -134,6 +136,7 @@ t/parser/expressions/010_named_unary/scalar.t
 t/parser/expressions/010_named_unary/uc.t
 t/parser/expressions/010_named_unary/ucfirst.t
 t/parser/expressions/010_named_unary/undef.t
+t/parser/expressions/010_named_unary/values.t
 t/parser/expressions/010_require.t
 t/parser/expressions/011_relational.t
 t/parser/expressions/013_bitand.t
