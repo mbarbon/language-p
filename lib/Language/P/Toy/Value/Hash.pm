@@ -142,4 +142,25 @@ sub iterator {
                ->iterator( $runtime );
 }
 
+sub key_iterator {
+    my( $self, $runtime ) = @_;
+
+    return Language::P::Toy::Value::Array->new
+               ( $runtime,
+                 { array => [ map { Language::P::Toy::Value::Scalar
+                                        ->new_string( $runtime, $_ ) }
+                                  keys %{$self->hash} ] } )
+               ->iterator( $runtime );
+}
+
+sub value_iterator {
+    my( $self, $runtime ) = @_;
+
+    return Language::P::Toy::Value::Array->new
+               ( $runtime,
+                 { array => [ map { $self->{hash}->{$_} }
+                                  keys %{$self->hash} ] } )
+               ->iterator( $runtime );
+}
+
 1;

@@ -1445,6 +1445,28 @@ sub o_exists_hash {
     return $pc + 1;
 }
 
+sub o_keys {
+    my( $op, $runtime, $pc ) = @_;
+    my $hash = pop @{$runtime->{_stack}};
+    my $res = Language::P::Toy::Value::List->new( $runtime );
+
+    $res->assign_iterator( $runtime, $hash->key_iterator( $runtime ) );
+    push @{$runtime->{_stack}}, $res;
+
+    return $pc + 1;
+}
+
+sub o_values {
+    my( $op, $runtime, $pc ) = @_;
+    my $hash = pop @{$runtime->{_stack}};
+    my $res = Language::P::Toy::Value::List->new( $runtime );
+
+    $res->assign_iterator( $runtime, $hash->value_iterator( $runtime ) );
+    push @{$runtime->{_stack}}, $res;
+
+    return $pc + 1;
+}
+
 sub o_array_size {
     my( $op, $runtime, $pc ) = @_;
     my $array = pop @{$runtime->{_stack}};
