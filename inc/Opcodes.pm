@@ -584,6 +584,8 @@ wantarray           u       want                 0   1  context=i1
 warn                v       same                 1   0  noattr
 
 rx_accept           0       same                 0   0  groups=i
+rx_any              0       same                 0   0  noattr
+rx_any_nonewline    0       same                 0   0  noattr
 rx_beginning        0       same                 0   0  noattr
 rx_capture_end      0       same                 0   0  group=i
 rx_capture_start    0       same                 0   0  group=i
