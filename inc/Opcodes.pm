@@ -220,6 +220,9 @@ EOT
             if(    $a == PROTO_ARRAY || $a == PROTO_MAKE_ARRAY
                 || $a == ( PROTO_MAKE_ARRAY|PROTO_REFERENCE ) ) {
                 push @cxt, CXT_LIST;
+            } elsif(    $a == PROTO_HASH || $a == PROTO_MAKE_HASH
+                     || $a == ( PROTO_MAKE_HASH|PROTO_REFERENCE ) ) {
+                push @cxt, CXT_LIST;
             } elsif( $a & PROTO_REFERENCE ) {
                 push @cxt, CXT_SCALAR;
             } else {

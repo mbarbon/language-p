@@ -2354,6 +2354,14 @@ sub _apply_prototype {
                                       pos   => $term->pos,
                                       } );
         }
+        if(    ( $proto_char & PROTO_MAKE_HASH ) == PROTO_MAKE_HASH
+            && $term->is_bareword ) {
+            $args->[$i - 3] = Language::P::ParseTree::Symbol->new
+                                  ( { name  => $term->value,
+                                      sigil => VALUE_HASH,
+                                      pos   => $term->pos,
+                                      } );
+        }
         if( $proto_char & PROTO_REFERENCE ) {
             my $arg = $args->[$i - 3];
             my $value = $arg->is_symbol ? $arg->sigil : 0;
