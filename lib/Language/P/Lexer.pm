@@ -242,7 +242,7 @@ my %quoted_chars =
 
 my %quoted_pattern =
   ( w  => [ T_CLASS, 'WORDS' ],
-    W  => [ T_CLASS, 'NON_WORDS' ],
+    W  => [ T_CLASS, 'NOT_WORDS' ],
     s  => [ T_CLASS, 'SPACES' ],
     S  => [ T_CLASS, 'NOT_SPACES' ],
     d  => [ T_CLASS, 'DIGITS' ],
