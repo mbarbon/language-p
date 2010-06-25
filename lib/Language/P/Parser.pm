@@ -1362,6 +1362,44 @@ sub _parse_string_rest {
     return $string;
 }
 
+sub _create_local {
+    my( $self, $tree, $pos ) = @_;
+
+    if( $tree->isa( 'Language::P::ParseTree::List' ) ) {
+        # local( $a ? $b : $c )
+        return _create_local( $self, $tree->expressions->[0] )
+          if    @{$tree->expressions} == 1
+             && $tree->expressions->[0]->isa( 'Language::P::ParseTree::Ternary' );
+
+        my @expressions = map _create_local( $self, $_ ),
+                              @{$tree->expressions};
+
+        return Language::P::ParseTree::List->new
+                   ( { expressions => \@expressions,
+                       pos_s       => $tree->pos_s,
+                       pos_e       => $tree->pos_e,
+                       } );
+    } elsif( $tree->isa( 'Language::P::ParseTree::Ternary' ) ) {
+        return Language::P::ParseTree::Ternary->new
+                   ( { condition => $tree->condition,
+                       iftrue    => _create_local( $self, $tree->iftrue ),
+                       iffalse   => _create_local( $self, $tree->iffalse ),
+                       pos_s     => $tree->pos_s,
+                       pos_e     => $tree->pos_e,
+                       } );
+    } elsif(    $tree->isa( 'Language::P::ParseTree::Symbol' )
+             || $tree->isa( 'Language::P::ParseTree::Subscript' ) ) {
+        return Language::P::ParseTree::Local->new
+                   ( { left  => $tree,
+                       pos_s => $pos || $tree->pos_s,
+                       pos_e => $pos || $tree->pos_e,
+                       } );
+    } else {
+        # TODO correct error message
+        die "Invalid value in local";
+    }
+}
+
 sub _parse_term_terminal {
     my( $self, $token, $is_bind ) = @_;
 
@@ -1547,10 +1585,8 @@ sub _parse_term_terminal {
                                } );
             }
         } elsif( $tokidt == KEY_LOCAL ) {
-            return Language::P::ParseTree::Local->new
-                       ( { left => _parse_term_list_if_parens( $self, PREC_NAMED_UNOP ),
-                           pos  => $token->[O_POS],
-                           } );
+            my $tree = _parse_term_list_if_parens( $self, PREC_NAMED_UNOP );
+            return _create_local( $self, $tree, $token->[O_POS] );
         } elsif( $tokidt == KEY_DO ) {
             return _parse_do( $self, $token );
         }
