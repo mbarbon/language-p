@@ -209,6 +209,7 @@ t/parser/terms/087_transliteration.t
 t/parser/terms/105_dereference.t
 t/parser/terms/106_dereference_sub.t
 t/parser/terms/110_brackets.t
+t/parser/terms/111_stashes.t
 t/parser/terms/140_prototypes.t
 t/parser/terms/150_closure.t
 t/parser/z00_selfparse.t
