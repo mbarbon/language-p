@@ -252,6 +252,7 @@ rmdir               o       same                 1   1  topic         scalar
 shift               o       same                 1   1  topic         make_array+reference
 splice              o       same                 1  -1  0             make_array+reference,scalar,scalar,list
 sprintf             o       same                 1  -1  0             scalar,list
+substr              o       same                 2   4  0             scalar,scalar,scalar,scalar
 uc                  o       same                 1   1  topic         scalar
 ucfirst             o       same                 1   1  topic         scalar
 unlink              o       same                 1  -1  topic         list

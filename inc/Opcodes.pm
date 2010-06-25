@@ -560,6 +560,7 @@ str_le              0       compare_s_le_scalar  2   1  noattr
 str_lt              0       compare_s_lt_scalar  2   1  noattr
 str_ne              0       compare_s_ne_scalar  2   1  noattr
 stringify           0       same                 1   1  context=i1
+substr              v       same                -1   1  context=i1,arg_count=i1
 subtract            0       same                 2   1  context=i1
 subtract_assign     0       same                 2   1  context=i1
 swap                0       same                 2   2  noattr

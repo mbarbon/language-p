@@ -154,6 +154,7 @@ t/parser/expressions/021_builtins/shift.t
 t/parser/expressions/021_builtins/splice.t
 t/parser/expressions/021_builtins/split.t
 t/parser/expressions/021_builtins/sprintf.t
+t/parser/expressions/021_builtins/substr.t
 t/parser/expressions/021_builtins/unlink.t
 t/parser/expressions/021_builtins/unshift.t
 t/parser/expressions/021_builtins/vec.t

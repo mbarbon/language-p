@@ -200,19 +200,16 @@ right: !parsetree:Substitution
     op: OP_QL_S
   replacement: !parsetree:Block
     lines:
-      - !parsetree:FunctionCall
+      - !parsetree:Overridable
         arguments:
           - !parsetree:Constant
-            context: CXT_LIST
+            context: CXT_SCALAR
             flags: CONST_STRING
             value: "xxxbaz\nEOTi\n EOT\n"
           - !parsetree:Constant
-            context: CXT_LIST
+            context: CXT_SCALAR
             flags: CONST_NUMBER|NUM_INTEGER
             value: 3
         context: CXT_SCALAR
-        function: !parsetree:Symbol
-          context: CXT_SCALAR
-          name: substr
-          sigil: VALUE_SUB
+        function: OP_SUBSTR
 EOE
