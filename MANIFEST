@@ -53,6 +53,7 @@ lib/Language/P/Toy/Value/Scalar.pm
 lib/Language/P/Toy/Value/ScratchPad.pm
 lib/Language/P/Toy/Value/StringNumber.pm
 lib/Language/P/Toy/Value/Subroutine.pm
+lib/Language/P/Toy/Value/Substr.pm
 lib/Language/P/Toy/Value/SymbolTable.pm
 lib/Language/P/Toy/Value/Typeglob.pm
 lib/Language/P/Toy/Value/Undef.pm

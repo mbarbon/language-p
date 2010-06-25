@@ -11,6 +11,7 @@ use Language::P::Toy::Value::List;
 use Language::P::Toy::Value::Pos;
 use Language::P::Toy::Value::Vec;
 use Language::P::Toy::Value::Range;
+use Language::P::Toy::Value::Substr;
 use Language::P::Toy::Exception;
 use Language::P::Constants qw(:all);
 
@@ -1157,6 +1158,45 @@ sub o_vec {
                     );
 
     push @{$runtime->{_stack}}, $vec;
+
+    return $pc + 1;
+}
+
+sub o_substr {
+    my( $op, $runtime, $pc ) = @_;
+    my $count = $op->{arg_count};
+    my( $new_val, $length );
+    $new_val = pop @{$runtime->{_stack}} if $count >= 4;
+    $length = pop @{$runtime->{_stack}} if $count >= 3;
+    my $offset = pop @{$runtime->{_stack}};
+    my $val = pop @{$runtime->{_stack}};
+
+    my $offset_int = $offset->as_integer( $runtime );
+    my $value = $val->as_scalar( $runtime );
+    my $value_length = $value->get_length_int;
+    my $length_int;
+    if( $count >= 3 ) {
+        $length_int = $length->as_integer( $runtime );
+    } else {
+        $length_int = $value_length - $offset_int;
+    }
+
+    if( $count == 4 ) {
+        my $str = $value->as_string( $runtime );
+        my $sub = substr $str, $offset_int, $length_int,
+                         $new_val->as_string( $runtime );
+
+        $val->assign( $runtime, Language::P::Toy::Value::Scalar->new_string
+                                    ( $runtime, $str ) );
+
+        push @{$runtime->{_stack}},
+             Language::P::Toy::Value::Scalar->new_string( $runtime, $sub );
+    } else {
+        my $substr = Language::P::Toy::Value::Substr->new
+                         ( $runtime, $value, $offset_int, $length_int );
+
+        push @{$runtime->{_stack}}, $substr;
+    }
 
     return $pc + 1;
 }
