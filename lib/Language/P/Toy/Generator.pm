@@ -176,6 +176,7 @@ my %opcode_map =
     OP_RX_START_GROUP()              => \&_direct_jump,
     OP_RX_TRY()                      => \&_direct_jump,
     OP_RX_STATE_RESTORE()            => \&_rx_state_restore,
+    OP_RX_CLASS()                    => \&_rx_class,
     OP_MATCH()                       => \&_match,
     OP_REPLACE()                     => \&_replace,
     );
@@ -681,6 +682,18 @@ sub _rx_state_restore {
 
     push @$bytecode,
          o( 'rx_state_restore', index => _temporary_index( $self, IDX_REGEX, $op->{attributes}{index} ) );
+}
+
+sub _rx_class {
+    my( $self, $bytecode, $op ) = @_;
+    my $elements = '';
+
+    foreach my $e ( @{$op->{attributes}{elements}} ) {
+        $elements .= $e->{attributes}{string};
+    }
+
+    push @$bytecode,
+         o( 'rx_class', elements => $elements );
 }
 
 sub _allocate_lexicals {

@@ -1841,8 +1841,20 @@ sub _regex_exact {
 sub _regex_class {
     my( $self, $tree ) = @_;
 
-    _add_bytecode $self,
-        opcode_nm( OP_RX_CLASS, elements => join '', @{$tree->elements} );
+    my @elements;
+    foreach my $e ( @{$tree->elements} ) {
+        push @elements,
+             opcode_nm( OP_RX_EXACT, string => $e->value,
+                        length => length( $e->value ) );
+    }
+
+    if( @elements == 1 ) {
+        _add_bytecode $self, $elements[0];
+    } else {
+        _add_bytecode $self,
+            opcode_nm( OP_RX_CLASS,
+                       elements => \@elements );
+    }
 }
 
 sub _regex_alternate {

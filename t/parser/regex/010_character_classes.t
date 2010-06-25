@@ -21,9 +21,15 @@ right: !parsetree:Pattern
   components:
     - !parsetree:RXClass
       elements:
-        - a
-        - b
-        - c
+        - !parsetree:Constant
+          flags: CONST_STRING
+          value: a
+        - !parsetree:Constant
+          flags: CONST_STRING
+          value: b
+        - !parsetree:Constant
+          flags: CONST_STRING
+          value: c
   flags: 0
   op: OP_QL_M
 EOE
@@ -63,8 +69,12 @@ right: !parsetree:Pattern
   components:
     - !parsetree:RXClass
       elements:
-        - a
-        - -
+        - !parsetree:Constant
+          flags: CONST_STRING
+          value: a
+        - !parsetree:Constant
+          flags: CONST_STRING
+          value: -
   flags: 0
   op: OP_QL_M
 EOE
@@ -83,8 +93,12 @@ right: !parsetree:Pattern
   components:
     - !parsetree:RXClass
       elements:
-        - a
-        - -
+        - !parsetree:Constant
+          flags: CONST_STRING
+          value: a
+        - !parsetree:Constant
+          flags: CONST_STRING
+          value: -
         - !parsetree:RXSpecialClass
           type: WORDS
   flags: 0
@@ -105,8 +119,12 @@ right: !parsetree:Pattern
   components:
     - !parsetree:RXClass
       elements:
-        - '['
-        - ']'
+        - !parsetree:Constant
+          flags: CONST_STRING
+          value: '['
+        - !parsetree:Constant
+          flags: CONST_STRING
+          value: ']'
   flags: 0
   op: OP_QL_M
 EOE
@@ -125,7 +143,9 @@ right: !parsetree:Pattern
   components:
     - !parsetree:RXClass
       elements:
-        - '['
+        - !parsetree:Constant
+          flags: CONST_STRING
+          value: '['
     - !parsetree:Constant
       flags: CONST_STRING
       value: ']'
@@ -147,8 +167,12 @@ right: !parsetree:Pattern
   components:
     - !parsetree:RXClass
       elements:
-        - /
-        - \
+        - !parsetree:Constant
+          flags: CONST_STRING
+          value: /
+        - !parsetree:Constant
+          flags: CONST_STRING
+          value: \
   flags: 0
   op: OP_QL_M
 EOE

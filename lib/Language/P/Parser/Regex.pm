@@ -231,7 +231,10 @@ sub _parse_charclass {
             next;
         }
 
-        push @$st, $value->[O_VALUE];
+        push @$st, Language::P::ParseTree::Constant->new
+                       ( { flags => CONST_STRING,
+                           value => $value->[O_VALUE],
+                           } );
     }
 }
 
