@@ -482,6 +482,7 @@ my %dispatch_regex =
     'Language::P::ParseTree::RXAlternation'  => '_regex_alternate',
     'Language::P::ParseTree::RXAssertion'    => '_regex_assertion',
     'Language::P::ParseTree::RXClass'        => '_regex_class',
+    'Language::P::ParseTree::RXSpecialClass' => '_regex_special_class',
     );
 
 sub dispatch {
@@ -1843,9 +1844,14 @@ sub _regex_class {
 
     my @elements;
     foreach my $e ( @{$tree->elements} ) {
-        push @elements,
-             opcode_nm( OP_RX_EXACT, string => $e->value,
-                        length => length( $e->value ) );
+        if( $e->is_constant ) {
+            push @elements,
+                 opcode_nm( OP_RX_EXACT, string => $e->value,
+                            length => length( $e->value ) );
+        } else {
+            push @elements,
+                 opcode_nm( OP_RX_SPECIAL_CLASS, type => $e->type );
+        }
     }
 
     if( @elements == 1 ) {
@@ -1855,6 +1861,13 @@ sub _regex_class {
             opcode_nm( OP_RX_CLASS,
                        elements => \@elements );
     }
+}
+
+sub _regex_special_class {
+    my( $self, $tree ) = @_;
+
+    _add_bytecode $self,
+        opcode_nm( OP_RX_SPECIAL_CLASS, type => $tree->type );
 }
 
 sub _regex_alternate {
