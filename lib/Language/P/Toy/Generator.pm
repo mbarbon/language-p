@@ -177,6 +177,7 @@ my %opcode_map =
     OP_RX_TRY()                      => \&_direct_jump,
     OP_RX_STATE_RESTORE()            => \&_rx_state_restore,
     OP_RX_CLASS()                    => \&_rx_class,
+    OP_RX_SPECIAL_CLASS()            => \&_rx_special_class,
     OP_MATCH()                       => \&_match,
     OP_REPLACE()                     => \&_replace,
     );
@@ -684,16 +685,45 @@ sub _rx_state_restore {
          o( 'rx_state_restore', index => _temporary_index( $self, IDX_REGEX, $op->{attributes}{index} ) );
 }
 
+# quick and dirty, and adequate for the Toy runtime
+my %element_map =
+  ( WORDS      => 'w',
+    NOT_WORDS  => 'W',
+    DIGITS     => 'd',
+    NOT_DIGITS => 'D',
+    SPACES     => 's',
+    NOT_SPACES => 'S',
+    );
+
 sub _rx_class {
     my( $self, $bytecode, $op ) = @_;
     my $elements = '';
+    my @special;
 
     foreach my $e ( @{$op->{attributes}{elements}} ) {
-        $elements .= $e->{attributes}{string};
+        if( $e->{opcode_n} == OP_RX_EXACT ) {
+            $elements .= $e->{attributes}{string};
+        } else {
+            die $e->{attributes}{type}
+                unless exists $element_map{$e->{attributes}{type}};
+            my $c = '\\' . $element_map{$e->{attributes}{type}};
+            push @special, qr/$c/;
+        }
     }
 
     push @$bytecode,
-         o( 'rx_class', elements => $elements );
+         o( 'rx_class', elements => $elements, special => \@special );
+}
+
+sub _rx_special_class {
+    my( $self, $bytecode, $op ) = @_;
+
+    die $op->{attributes}{type}
+        unless exists $element_map{$op->{attributes}{type}};
+
+    my $c = '\\' . $element_map{$op->{attributes}{type}};
+    push @$bytecode,
+         o( 'rx_class', elements => '', special => [ qr/$c/ ] );
 }
 
 sub _allocate_lexicals {

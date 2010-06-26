@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..36\n";
+print "1..46\n";
 
 $text = 'abbcccddddeeeeeffffff';
 
@@ -34,6 +34,18 @@ print $1 eq 'abb' ? "ok\n" : "not ok - $1\n";
 print "aaa" =~ /a.a/ ? "ok\n" : "not ok\n";
 print "a\na" =~ /a.a/ ? "not ok\n" : "ok\n";
 print "a\na" =~ /a.a/s ? "ok\n" : "not ok\n";
+
+# special classes
+print "a" =~ /\w/ ? "ok\n" : "not ok\n";
+print "!" =~ /\w/ ? "not ok\n" : "ok\n";
+print "!" =~ /[\w!]/ ? "ok\n" : "not ok\n";
+print "a" =~ /[\w!]/ ? "ok\n" : "not ok\n";
+print "?" =~ /[\w!]/ ? "not ok\n" : "ok\n";
+print "?" =~ /\W/ ? "ok\n" : "not ok\n";
+print "1" =~ /\d/ ? "ok\n" : "not ok\n";
+print "1" =~ /\D/ ? "not ok\n" : "ok\n";
+print " " =~ /\s/ ? "ok\n" : "not ok\n";
+print " " =~ /\S/ ? "not ok\n" : "ok\n";
 
 # captures
 print $text =~ /(a|b|c)d/ ? "ok\n" : "not ok\n";

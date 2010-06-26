@@ -424,15 +424,17 @@ sub o_rx_class {
     my( $op, $runtime, $pc ) = @_;
     my $cxt = $runtime->{_stack}->[-1];
 
-    v "Class '$op->{elements}' at $cxt->{pos}\n";
+    v "Class '$op->{elements}', '@{$op->{special}}} at $cxt->{pos}\n";
     my $chr = substr $cxt->{string}, $cxt->{pos}, 1;
-    if(    $cxt->{pos} >= length( $cxt->{string} )
-        || index( $op->{elements}, $chr ) < 0 ) {
-        return _backtrack( $runtime, $cxt );
-    }
-    $cxt->{pos} += 1;
+    if(    $cxt->{pos} < length( $cxt->{string} )
+        && (    index( $op->{elements}, $chr ) >= 0
+             || grep $chr =~ $_, @{$op->{special}} ) ) {
+        $cxt->{pos} += 1;
 
-    return $pc + 1;
+        return $pc + 1;
+    }
+
+    return _backtrack( $runtime, $cxt );
 }
 
 sub o_rx_start_group {
