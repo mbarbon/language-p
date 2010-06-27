@@ -2,13 +2,22 @@
 
 use strict;
 use warnings;
-use Test::More tests => 12;
+use Test::More tests => 15;
 
 use lib 't/lib';
 use TestParser qw(:all);
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1725272
+EOP
+--- !parsetree:Constant
+context: CXT_VOID
+flags: CONST_NUMBER|NUM_INTEGER
+value: 1725272
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+1_725_272
 EOP
 --- !parsetree:Constant
 context: CXT_VOID
@@ -72,6 +81,24 @@ EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 .0123
+EOP
+--- !parsetree:Constant
+context: CXT_VOID
+flags: CONST_NUMBER|NUM_FLOAT
+value: 0.0123
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+0._012_3
+EOP
+--- !parsetree:Constant
+context: CXT_VOID
+flags: CONST_NUMBER|NUM_FLOAT
+value: 0.0123
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+.012_3
 EOP
 --- !parsetree:Constant
 context: CXT_VOID

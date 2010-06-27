@@ -803,9 +803,10 @@ sub lex_number {
     $$_ =~ s/^0([xb]?)//x and do {
         if( $1 eq 'b' ) {
             # binary number
-            if( $$_ =~ s/^([01]+)// ) {
+            if( $$_ =~ s/^([01_]+)// ) {
                 $flags = NUM_BINARY;
                 $num .= $1;
+                $num =~ tr/_//d;
 
                 return [ $self->{pos}, T_NUMBER, $num, $flags ];
             } else {
@@ -813,9 +814,10 @@ sub lex_number {
             }
         } elsif( $1 eq 'x' ) {
             # hexadecimal number
-            if( $$_ =~ s/^([0-9a-fA-F]+)// ) {
+            if( $$_ =~ s/^([0-9a-fA-F_]+)// ) {
                 $flags = NUM_HEXADECIMAL;
                 $num .= $1;
+                $num =~ tr/_//d;
 
                 return [ $self->{pos}, T_NUMBER, $num, $flags ];
             } else {
@@ -823,10 +825,11 @@ sub lex_number {
             }
         } else {
             # maybe octal number
-            if( $$_ =~ s/^([0-7]+)// ) {
+            if( $$_ =~ s/^([0-7_]+)// ) {
                 $flags = NUM_OCTAL;
                 $num .= $1;
                 $$_ =~ /^[89]/ and die "Invalid octal digit";
+                $num =~ tr/_//d;
 
                 return [ $self->{pos}, T_NUMBER, $num, $flags ];
             } else {
@@ -835,21 +838,26 @@ sub lex_number {
             }
         }
     };
-    $$_ =~ s/^(\d+)//x and do {
+    $$_ =~ s/^([0-9][0-9_]*)//x and do {
         $flags = NUM_INTEGER;
         $num .= $1;
     };
     # '..' operator (es. 12..15)
-    $$_ =~ /^\.\./ and return [ $self->{pos}, T_NUMBER, $num, $flags ];
-    $$_ =~ s/^\.(\d*)//x and do {
+    length $num and $$_ =~ /^\.\./
+      and $num =~ tr/_//d, return [ $self->{pos}, T_NUMBER, $num, $flags ];
+    if( !length $num && $$_ =~ s/^\.(_*[0-9][0-9_]*)//x ) {
         $flags = NUM_FLOAT;
-        $num = '0' unless length $num;
+        $num = '0';
         $num .= ".$1" if length $1;
-    };
-    $$_ =~ s/^[eE]([+-]?\d+)//x and do {
+    } elsif( length $num && $$_ =~ s/^\.(_*[0-9][0-9_]*)?//x ) {
+        $flags = NUM_FLOAT;
+        $num .= ".$1" if defined $1;
+    }
+    length $num and $$_ =~ s/^[eE]([+-]?[0-9][0-9_]*)//x and do {
         $flags = NUM_FLOAT;
         $num .= "e$1";
     };
+    $num =~ tr/_//d;
 
     return [ $self->{pos}, T_NUMBER, $num, $flags ];
 }
