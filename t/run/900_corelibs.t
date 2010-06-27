@@ -10,7 +10,7 @@ use strict;
 use warnings;
 use warnings::register;
 use vars;
-# use subs;
+use subs;
 # use base;
 # use parent;
 # use Carp;
