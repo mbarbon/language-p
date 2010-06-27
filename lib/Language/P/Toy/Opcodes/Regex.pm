@@ -9,7 +9,7 @@ use Language::P::Constants qw(:all);
 our @EXPORT_OK = qw(o_rx_start_match o_rx_accept o_rx_exact o_rx_start_group
                     o_rx_quantifier o_rx_capture_start o_rx_capture_end o_rx_try
                     o_rx_beginning o_rx_end_or_newline o_rx_state_restore
-                    o_rx_match o_rx_match_global o_rx_replace
+                    o_rx_match o_rx_match_global o_rx_replace o_rx_transliterate
                     o_rx_replace_global o_rx_class o_rx_any_nonewline o_rx_any);
 
 our %EXPORT_TAGS =
@@ -355,6 +355,63 @@ sub o_rx_replace_global {
             Language::P::Toy::Value::List->new
                 ( $runtime, { array => [ $res ] } );
     }
+
+    return $pc + 1;
+}
+
+sub o_rx_transliterate {
+    my( $op, $runtime, $pc ) = @_;
+    my $string = pop @{$runtime->{_stack}};
+    my( $match, $replacement, $flags ) = ( $op->{match}, $op->{replacement}, $op->{flags} );
+    my $s = $string->as_string( $runtime );
+    my( $count, $new, $last_r ) = ( 0, '', '' );
+
+    for( my $i = 0; $i < length $s; ++$i ) {
+        my $c = substr $s, $i, 1;
+        my $idx = index $match, $c;
+        my $r = $c;
+
+        if( $idx == -1 && ( $flags & 1 ) ) { # complement
+            if( $flags & 2 ) { # delete
+                $r = '';
+            } elsif( length $replacement ) {
+                $r = substr $replacement, -1, 1;
+            }
+
+            if( $last_r eq $r && ( $flags & 4 ) ) { # squeeze
+                $r = '';
+            } else {
+                $last_r = $r;
+            }
+
+            $count += 1;
+        } elsif( $idx != -1 && !( $flags & 1 ) ) {
+            if( $idx >= length $replacement && ( $flags & 2 ) ) { # delete
+                $r = '';
+            } elsif( $idx >= length $replacement ) {
+                $r = substr $replacement, -1, 1;
+            } elsif( $idx < length $replacement ) {
+                $r = substr $replacement, $idx, 1;
+            }
+
+            if( $last_r eq $r && ( $flags & 4 ) ) { # squeeze
+                $r = '';
+            } else {
+                $last_r = $r;
+            }
+
+            $count += 1;
+        } else {
+            $last_r = '';
+        }
+
+        $new .= $r;
+    }
+
+    $string->set_string( $runtime, $new );
+
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::Scalar->new_integer( $runtime, $count );
 
     return $pc + 1;
 }

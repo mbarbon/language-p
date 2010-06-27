@@ -180,6 +180,7 @@ my %opcode_map =
     OP_RX_SPECIAL_CLASS()            => \&_rx_special_class,
     OP_MATCH()                       => \&_match,
     OP_REPLACE()                     => \&_replace,
+    OP_TRANSLITERATE()               => \&_transliterate,
     );
 
 sub _qualify {
@@ -664,6 +665,17 @@ sub _replace {
          o( ( $params{flags} & FLAG_RX_GLOBAL ) ? 'rx_replace_global' :
                                                   'rx_replace', %params );
     push @{$self->_block_map->{$op->{attributes}{to}}}, $bytecode->[-1];
+}
+
+
+sub _transliterate {
+    my( $self, $bytecode, $op ) = @_;
+
+    push @$bytecode,
+         o( 'rx_transliterate',
+            match       => join( '', @{$op->{attributes}{match}} ),
+            replacement => join( '', @{$op->{attributes}{replacement}} ),
+            flags       => $op->{attributes}{flags} );
 }
 
 sub _rx_quantifier {
