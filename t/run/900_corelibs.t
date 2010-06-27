@@ -6,7 +6,7 @@ BEGIN { print "1..1\n" }
 use strict;
 use warnings;
 use warnings::register;
-# use vars;
+use vars;
 # use subs;
 # use base;
 # use parent;
