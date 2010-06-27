@@ -878,6 +878,26 @@ sub _binary_op {
                       opcode_npm( $tree->op, $tree->pos,
                                   context => _context( $tree ) );
     } elsif( $tree->op == OP_MATCH || $tree->op == OP_NOT_MATCH ) {
+        # TODO maybe build a different parse tree?
+        if( $tree->right->isa( 'Language::P::ParseTree::Transliteration' ) ) {
+            $self->dispatch( $tree->left );
+
+            _add_bytecode $self,
+                opcode_npm( OP_TRANSLITERATE, $tree->pos,
+                            context     => _context( $tree ),
+                            match       => $tree->right->match,
+                            replacement => $tree->right->replacement,
+                            flags       => $tree->right->flags );
+
+            if( $tree->op == OP_NOT_MATCH ) {
+                _add_bytecode $self,
+                    opcode_npm( OP_LOG_NOT, $tree->pos,
+                                context   => _context( $tree ) );
+            }
+
+            return;
+        }
+
         my $scope_id = $self->_current_block->{id};
 
         unless( $self->_code_segments->[0]->scopes->[$scope_id]->{flags} & SCOPE_REGEX ) {
