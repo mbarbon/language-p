@@ -1796,6 +1796,27 @@ sub o_do_file {
 sub o_require_file {
     my( $op, $runtime, $pc ) = @_;
     my $file = pop @{$runtime->{_stack}};
+
+    if( $file->is_integer( $runtime ) || $file->is_float( $runtime ) ) {
+        my $value = $file->as_float( $runtime );
+        my $version = $runtime->symbol_table->get_symbol( $runtime, ']', '$' );
+        my $v = $version->as_float( $runtime );
+
+        if( $v >= $value ) {
+            push @{$runtime->{_stack}},
+                 Language::P::Toy::Value::Scalar->new_integer( $runtime, 1 );
+            return $pc + 1;
+        }
+
+        my $msg = sprintf 'Perl %f required--this is only %f stopped.',
+                          $value, $v;
+        my $exc = Language::P::Toy::Exception->new
+                      ( { message  => $msg,
+                          } );
+
+        return $runtime->throw_exception( $exc, 1 );
+    }
+
     my $file_str = $file->as_string( $runtime );
     my $inc = $runtime->symbol_table->get_symbol( $runtime, 'INC', '%', 1 );
 

@@ -2,6 +2,9 @@
 
 BEGIN { print "1..1\n" }
 
+use 5;
+require 5;
+
 # load some misc "very important" modules included in core
 use strict;
 use warnings;

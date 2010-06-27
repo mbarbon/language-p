@@ -41,6 +41,7 @@ sub type { 1 }
 sub is_defined { 1 }
 sub is_string { 0 }
 sub is_float { 0 }
+sub is_integer { 0 }
 sub is_overloaded { 0 }
 sub is_blessed { $_[0]->{stash} ? 1 : 0 }
 sub is_overloaded_value { $_[0]->{stash} && $_[0]->{stash}->has_overloading }
