@@ -16,8 +16,8 @@ EOP
 L1:
   constant_integer value=1
   constant_integer value=2
-  make_list count=2
-  make_list count=1
+  make_list count=2, context=8
+  make_list count=1, context=8
   iterator
   temporary_set index=0, slot=9
   global name="y", slot=5

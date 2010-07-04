@@ -83,6 +83,7 @@ sub _start_bb {
 }
 
 sub _context { $_[0]->get_attribute( 'context' ) & CXT_CALL_MASK }
+sub _context_lvalue { $_[0]->get_attribute( 'context' ) & (CXT_CALL_MASK|CXT_LVALUE) }
 
 sub push_block {
     my( $self, $flags, $start_pos, $exit_pos, $context ) = @_;
@@ -255,7 +256,7 @@ sub generate_use {
                       opcode_nm( OP_CONCATENATE ),
                       opcode_nm( OP_CONCATENATE ),
                       opcode_nm( OP_CONCATENATE ),
-                      opcode_nm( OP_MAKE_LIST, count => 1 ),
+                      opcode_nm( OP_MAKE_LIST, count => 1, context => CXT_LIST ),
                       opcode_np( OP_DIE, $tree->pos );
         _add_jump $self,
                   opcode_nm( OP_JUMP, to => $return ),
@@ -285,10 +286,14 @@ sub generate_use {
             $self->dispatch( $arg );
         }
         _add_bytecode $self,
-            opcode_nm( OP_MAKE_LIST, count => @{$tree->import} + 1 );
+            opcode_nm( OP_MAKE_LIST,
+                       count   => @{$tree->import} + 1,
+                       context => CXT_LIST );
     } else {
         _add_bytecode $self,
-            opcode_nm( OP_MAKE_LIST, count => 1 );
+            opcode_nm( OP_MAKE_LIST,
+                       count   => 1,
+                       context => CXT_LIST );
     }
 
     _add_bytecode $self,
@@ -570,7 +575,9 @@ sub _indirect {
     }
 
     _add_bytecode $self,
-         opcode_nm( OP_MAKE_LIST, count => scalar @{$tree->arguments} ),
+         opcode_nm( OP_MAKE_LIST,
+                    count   => scalar @{$tree->arguments},
+                    context => CXT_LIST ),
          opcode_npm( $tree->function, $tree->pos,
                      context   => _context( $tree ) );
 }
@@ -660,7 +667,7 @@ sub _function_call {
     }
 
     _add_bytecode $self,
-         opcode_nm( OP_MAKE_LIST, count => $argcount );
+         opcode_nm( OP_MAKE_LIST, count => $argcount, context => CXT_LIST );
 
     if( $is_func ) {
         $self->dispatch( $tree->function );
@@ -695,7 +702,7 @@ sub _method_call {
     }
 
     _add_bytecode $self,
-        opcode_nm( OP_MAKE_LIST, count => 1 + scalar @$args );
+        opcode_nm( OP_MAKE_LIST, count => 1 + scalar @$args, context => CXT_LIST );
 
     if( $tree->indirect ) {
         _add_bytecode $self,
@@ -718,7 +725,9 @@ sub _list {
     }
 
     _add_bytecode $self,
-         opcode_nm( OP_MAKE_LIST, count => @{$tree->expressions} + 0 );
+         opcode_nm( OP_MAKE_LIST,
+                    count    => @{$tree->expressions} + 0,
+                    context  => _context_lvalue( $tree ) );
 }
 
 sub _unary_op {
@@ -1210,7 +1219,7 @@ sub _foreach {
     }
 
     $self->dispatch( $tree->expression );
-    _add_bytecode $self, opcode_nm( OP_MAKE_LIST, count => 1 );
+    _add_bytecode $self, opcode_nm( OP_MAKE_LIST, count => 1, context => CXT_LIST );
 
     my $iterator = $self->{_temporary_count}++;
     my( $glob, $slot );
@@ -1558,7 +1567,7 @@ sub _quoted_string {
                             name => '"', slot => VALUE_SCALAR );
             $self->dispatch( $c );
             _add_bytecode $self,
-                opcode_nm( OP_MAKE_LIST, count => 2 ),
+                opcode_nm( OP_MAKE_LIST, count => 2, context => CXT_LIST ),
                 opcode_npm( OP_JOIN, $tree->pos );
         } else {
             $self->dispatch( $c );
@@ -1628,7 +1637,7 @@ sub _ref_constructor {
     if( $tree->expression ) {
         $self->dispatch( $tree->expression );
     } else {
-        _add_bytecode $self, opcode_nm( OP_MAKE_LIST, count => 0 );
+        _add_bytecode $self, opcode_nm( OP_MAKE_LIST, count => 0, context => CXT_LIST );
     }
 
     if( $tree->type == VALUE_ARRAY ) {
