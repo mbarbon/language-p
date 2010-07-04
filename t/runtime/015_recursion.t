@@ -31,7 +31,7 @@ my @fib =
     o( 'constant',
        value => Language::P::Toy::Value::StringNumber->new( $runtime, { integer => 1 } ),
        ),
-    o( 'make_list', count => 1 ),
+    o( 'make_list', count => 1, context => CXT_LIST ),
     o( 'return' ),
     # if n >= 2
     # fib( n - 1 )
@@ -40,7 +40,7 @@ my @fib =
        value => Language::P::Toy::Value::StringNumber->new( $runtime, { integer => 1 } ),
        ),
     o( 'subtract' ),
-    o( 'make_list', count => 1 ),
+    o( 'make_list', count => 1, context => CXT_LIST ),
     o( 'constant', value => $fib ),
     o( 'call' ),
     # fib( n - 2 )
@@ -49,12 +49,12 @@ my @fib =
        value => Language::P::Toy::Value::StringNumber->new( $runtime, { integer => 2 } ),
        ),
     o( 'subtract' ),
-    o( 'make_list', count => 1 ),
+    o( 'make_list', count => 1, context => CXT_LIST ),
     o( 'constant', value => $fib ),
     o( 'call' ),
     # sum
     o( 'add' ),
-    o( 'make_list', count => 1 ),
+    o( 'make_list', count => 1, context => CXT_LIST ),
     o( 'return' ),
     );
 
@@ -64,7 +64,7 @@ my @main =
   ( o( 'constant',
        value => Language::P::Toy::Value::StringNumber->new( $runtime, { integer => 10 } ),
        ),
-    o( 'make_list', count => 1 ),
+    o( 'make_list', count => 1, context => CXT_LIST ),
     o( 'constant', value => $fib ),
     o( 'call', context => CXT_SCALAR ),
     o( 'end' ),

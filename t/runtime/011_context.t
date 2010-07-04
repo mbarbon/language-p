@@ -13,7 +13,7 @@ my $runtime = Language::P::Toy::Runtime->new;
 
 my @wantarray =
   ( o( 'want' ),
-    o( 'make_list', count => 1 ),
+    o( 'make_list', count => 1, context => CXT_LIST ),
     o( 'return' ),
     );
 
@@ -24,13 +24,13 @@ my $want = Language::P::Toy::Value::Subroutine->new
                    } );
 
 my @main =
-  ( o( 'make_list', count => 0 ),
+  ( o( 'make_list', count => 0, context => CXT_LIST ),
     o( 'constant', value   => $want ),
     o( 'call',     context => CXT_VOID ),
-    o( 'make_list', count => 0 ),
+    o( 'make_list', count => 0, context => CXT_LIST ),
     o( 'constant', value   => $want ),
     o( 'call',     context => CXT_SCALAR ),
-    o( 'make_list', count => 0 ),
+    o( 'make_list', count => 0, context => CXT_LIST ),
     o( 'constant', value   => $want ),
     o( 'call',     context => CXT_LIST ),
     o( 'end' ),

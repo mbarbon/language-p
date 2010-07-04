@@ -17,7 +17,7 @@ my @add_mul =
     o( 'add' ),
     o( 'parameter_index', index => 2 ),
     o( 'multiply' ),
-    o( 'make_list', count => 1 ),
+    o( 'make_list', count => 1, context => CXT_LIST ),
     o( 'return' ),
     );
 
@@ -36,7 +36,7 @@ my @main =
     o( 'constant',
        value => Language::P::Toy::Value::StringNumber->new( $runtime, { integer => 7 } ),
        ),
-    o( 'make_list', count => 3 ),
+    o( 'make_list', count => 3, context => CXT_LIST ),
     o( 'constant', value => $add_mul ),
     o( 'call', context => CXT_SCALAR ),
     o( 'end' ),

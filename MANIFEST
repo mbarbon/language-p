@@ -44,6 +44,7 @@ lib/Language/P/Toy/Value/Code.pm
 lib/Language/P/Toy/Value/Handle.pm
 lib/Language/P/Toy/Value/Hash.pm
 lib/Language/P/Toy/Value/List.pm
+lib/Language/P/Toy/Value/LvalueList.pm
 lib/Language/P/Toy/Value/MainSymbolTable.pm
 lib/Language/P/Toy/Value/Pos.pm
 lib/Language/P/Toy/Value/Range.pm

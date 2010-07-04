@@ -8,6 +8,7 @@ use Language::P::Toy::Value::StringNumber;
 use Language::P::Toy::Value::Reference;
 use Language::P::Toy::Value::Array;
 use Language::P::Toy::Value::List;
+use Language::P::Toy::Value::LvalueList;
 use Language::P::Toy::Value::Pos;
 use Language::P::Toy::Value::Vec;
 use Language::P::Toy::Value::Range;
@@ -500,7 +501,9 @@ sub o_make_list {
     my $st = $runtime->{_stack};
 
     # create the list
-    my $list = Language::P::Toy::Value::List->new( $runtime );
+    my $list = ( $op->{context} & CXT_LVALUE ) ?
+                   Language::P::Toy::Value::LvalueList->new( $runtime ) :
+                   Language::P::Toy::Value::List->new( $runtime );
     if( $op->{count} ) {
         for( my $j = $#$st - $op->{count} + 1; $j <= $#$st; ++$j ) {
             $list->push_value( $runtime, $st->[$j] );
