@@ -761,7 +761,7 @@ sub lex_identifier {
     $id or $$_ =~ s/^{//x and do {
         my $spcbef = _skip_space( $self );
         my $maybe_id;
-        if( $$_ =~ s/^(\w+)//x ) {
+        if( $$_ =~ s/^([\w\x00-\x1f]\w*)//x ) {
             $maybe_id = $1;
         } else {
             $$_ = '{' . $spcbef . $$_;
