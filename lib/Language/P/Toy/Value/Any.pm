@@ -19,11 +19,6 @@ our @METHODS = qw(as_integer as_float as_string as_scalar as_boolean_int
 
                   call find_method
 
-                  dereference_scalar dereference_hash
-                  dereference_array dereference_typeglob
-                  dereference_subroutine dereference_io
-                  dereference vivify_scalar vivify_array vivify_hash
-
                   reference_type bless
 
                   set_layer
@@ -52,6 +47,80 @@ sub get_length_int {
     my( $self, $runtime ) = @_;
 
     return $self->as_scalar( $runtime )->get_length_int( $runtime );
+}
+
+sub _symbolic_reference {
+    my( $self, $runtime, $sigil ) = @_;
+
+    if( $runtime->{_lex}{hints} & 0x00000002 ) {
+        my $e = Language::P::Toy::Exception->new
+                    ( { message  => "Can't use symbolic references while \"strict ref\" in use",
+                        } );
+        $runtime->throw_exception( $e, 1 );
+    }
+
+    my $name = $self->as_string( $runtime );
+    # TODO probably does not work
+    if( $name !~ /::|'/ ) {
+        $name = $runtime->{_lex}{package} . '::' . $name;
+    }
+
+    # TODO must handle punctuation variables and other special cases
+    return $runtime->symbol_table->get_symbol( $runtime, $name, $sigil, 1 );
+}
+
+sub dereference_scalar {
+    my( $self, $runtime ) = @_;
+
+    return _symbolic_reference( $self, $runtime, '$' );
+}
+
+sub dereference_hash {
+    my( $self, $runtime ) = @_;
+
+    return _symbolic_reference( $self, $runtime, '%' );
+}
+
+sub dereference_array {
+    my( $self, $runtime ) = @_;
+
+    return _symbolic_reference( $self, $runtime, '@' );
+}
+
+sub dereference_glob {
+    my( $self, $runtime ) = @_;
+
+    return _symbolic_reference( $self, $runtime, '*' );
+}
+
+sub dereference_subroutine {
+    my( $self, $runtime ) = @_;
+
+    return _symbolic_reference( $self, $runtime, '&' );
+}
+
+sub dereference_io {
+    my( $self, $runtime ) = @_;
+
+    return _symbolic_reference( $self, $runtime, 'I' );
+}
+
+sub vivify_scalar {
+    my( $self, $runtime ) = @_;
+
+    return _symbolic_reference( $self, $runtime, '$' );
+}
+
+sub vivify_array {
+    my( $self, $runtime ) = @_;
+
+    return _symbolic_reference( $self, $runtime, '@' );
+}
+
+sub vivify_hash {
+    my( $self, $runtime ) = @_;
+
+    return _symbolic_reference( $self, $runtime, '%' );
 }
 
 sub unimplemented {
