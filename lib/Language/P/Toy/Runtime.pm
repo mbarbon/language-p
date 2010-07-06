@@ -561,7 +561,7 @@ sub set_warnings {
 sub get_warnings {
     my( $self ) = @_;
 
-    return Language::P::Toy::Value::Scalar->new_integer
+    return Language::P::Toy::Value::Scalar->new_string
                ( $self, $_[0]->{_variables}{warnings} );
 }
 
