@@ -96,6 +96,24 @@ sub is_defined {
     return $self->_get( $runtime )->is_defined( $runtime );
 }
 
+sub is_string {
+    my( $self, $runtime ) = @_;
+
+    return $self->_get( $runtime )->is_string( $runtime );
+}
+
+sub is_float {
+    my( $self, $runtime ) = @_;
+
+    return $self->_get( $runtime )->is_float( $runtime );
+}
+
+sub is_integer {
+    my( $self, $runtime ) = @_;
+
+    return $self->_get( $runtime )->is_integer( $runtime );
+}
+
 package Language::P::Toy::Value::ActiveScalarCallbacks;
 
 use strict;

@@ -240,15 +240,25 @@ _make_binary_op( $_ ), _make_binary_op_assign( $_ ) foreach
       operator => '|',
       new_type => 'string',
       },
-    { name     => 'o_bit_and',
+    { name     => '_bit_and_default',
       convert  => 'as_integer',
       operator => '&',
       new_type => 'integer',
       },
-    { name     => 'o_bit_xor',
+    { name     => '_bit_and_string',
+      convert  => 'as_string',
+      operator => '&',
+      new_type => 'string',
+      },
+    { name     => '_bit_xor_default',
       convert  => 'as_integer',
       operator => '^',
       new_type => 'integer',
+      },
+    { name     => '_bit_xor_string',
+      convert  => 'as_string',
+      operator => '^',
+      new_type => 'string',
       },
     { name     => 'o_modulus',
       convert  => 'as_integer',
@@ -262,19 +272,23 @@ _make_binary_op( $_ ), _make_binary_op_assign( $_ ) foreach
       },
     );
 
-sub _bit_or_string_number {
+sub _make_bit_op {
+    my( $name, $op ) = @_;
+
+    eval sprintf <<'EOT',
+sub _bit_%s_string_number {
     my( $op, $runtime, $pc ) = @_;
     my $vr = pop @{$runtime->{_stack}};
     my $vl = pop @{$runtime->{_stack}};
 
     if( $vl->is_string && $vr->is_string ) {
-        my $r = $vl->as_string( $runtime ) | $vr->as_string( $runtime );
+        my $r = $vl->as_string( $runtime ) %s $vr->as_string( $runtime );
 
         push @{$runtime->{_stack}},
              Language::P::Toy::Value::StringNumber->new( $runtime,
                                                          { string => $r } );
     } else {
-        my $r = $vl->as_integer( $runtime ) | $vr->as_integer( $runtime );
+        my $r = $vl->as_integer( $runtime ) %s $vr->as_integer( $runtime );
 
         push @{$runtime->{_stack}},
              Language::P::Toy::Value::StringNumber->new( $runtime,
@@ -284,23 +298,30 @@ sub _bit_or_string_number {
     return $pc + 1;
 }
 
-sub _bit_or_assign_string_number {
+sub _bit_%s_assign_string_number {
     my( $op, $runtime, $pc ) = @_;
     my $vr = pop @{$runtime->{_stack}};
     my $vl = $runtime->{_stack}[-1];
 
     if( $vl->is_string && $vr->is_string ) {
-        my $r = $vl->as_string( $runtime ) | $vr->as_string( $runtime );
+        my $r = $vl->as_string( $runtime ) %s $vr->as_string( $runtime );
 
         $vl->set_string( $runtime, $r );
     } else {
-        my $r = $vl->as_integer( $runtime ) | $vr->as_integer( $runtime );
+        my $r = $vl->as_integer( $runtime ) %s $vr->as_integer( $runtime );
 
         $vl->set_integer( $runtime, $r );
     }
 
     return $pc + 1;
 }
+EOT
+        $name, $op, $op, $name, $op, $op;
+}
+
+_make_bit_op( 'or',  '|' );
+_make_bit_op( 'and', '&' );
+_make_bit_op( 'xor', '^' );
 
 sub _do_add_string_number {
     my( $runtime, $vl, $vr ) = @_;
@@ -417,11 +438,43 @@ my %dispatch_bit_or =
              },
     );
 
+my %dispatch_bit_and =
+  ( -1  => { -1  => \&_bit_and_default,
+              11 => \&_bit_and_string_number,
+             },
+     11 => { -1  => \&_bit_and_string_number,
+             },
+    );
+
+my %dispatch_bit_xor =
+  ( -1  => { -1  => \&_bit_xor_default,
+              11 => \&_bit_xor_string_number,
+             },
+     11 => { -1  => \&_bit_xor_string_number,
+             },
+    );
+
 my %dispatch_bit_or_assign =
   ( -1  => { -1  => \&_bit_or_assign_default,
               11 => \&_bit_or_assign_string_number,
              },
      11 => { -1  => \&_bit_or_assign_string_number,
+             },
+    );
+
+my %dispatch_bit_and_assign =
+  ( -1  => { -1  => \&_bit_and_assign_default,
+              11 => \&_bit_and_assign_string_number,
+             },
+     11 => { -1  => \&_bit_and_assign_string_number,
+             },
+    );
+
+my %dispatch_bit_xor_assign =
+  ( -1  => { -1  => \&_bit_xor_assign_default,
+              11 => \&_bit_xor_assign_string_number,
+             },
+     11 => { -1  => \&_bit_xor_assign_string_number,
              },
     );
 
@@ -472,12 +525,44 @@ sub o_bit_or {
     return _dispatch( \%dispatch_bit_or, $vl, $vr )->( $op, $runtime, $pc );
 }
 
+sub o_bit_and {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = $runtime->{_stack}[-1];
+    my $vl = $runtime->{_stack}[-2];
+
+    return _dispatch( \%dispatch_bit_and, $vl, $vr )->( $op, $runtime, $pc );
+}
+
+sub o_bit_xor {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = $runtime->{_stack}[-1];
+    my $vl = $runtime->{_stack}[-2];
+
+    return _dispatch( \%dispatch_bit_xor, $vl, $vr )->( $op, $runtime, $pc );
+}
+
 sub o_bit_or_assign {
     my( $op, $runtime, $pc ) = @_;
     my $vr = $runtime->{_stack}[-1];
     my $vl = $runtime->{_stack}[-2];
 
     return _dispatch( \%dispatch_bit_or_assign, $vl, $vr )->( $op, $runtime, $pc );
+}
+
+sub o_bit_and_assign {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = $runtime->{_stack}[-1];
+    my $vl = $runtime->{_stack}[-2];
+
+    return _dispatch( \%dispatch_bit_and_assign, $vl, $vr )->( $op, $runtime, $pc );
+}
+
+sub o_bit_xor_assign {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = $runtime->{_stack}[-1];
+    my $vl = $runtime->{_stack}[-2];
+
+    return _dispatch( \%dispatch_bit_xor_assign, $vl, $vr )->( $op, $runtime, $pc );
 }
 
 sub o_add {
