@@ -103,6 +103,8 @@ sub run_file {
         local $self->{_parser} = $parser;
         my $flags =   PARSE_ADD_RETURN
                     | ( $is_main             ? PARSE_MAIN : 0 );
+        local $self->{_variables}{hints} = 0;
+        local $self->{_variables}{warnings} = "";
         $parser->parse_file( $program, $flags );
     };
     $self->_after_parse( $program ) if $is_main;
@@ -119,6 +121,8 @@ sub run_string {
         local $self->{_parser} = $parser;
         my $flags =   ( $context != CXT_VOID ? PARSE_ADD_RETURN : 0 )
                     | ( $is_main             ? PARSE_MAIN : 0 );
+        local $self->{_variables}{hints} = 0;
+        local $self->{_variables}{warnings} = "";
         $parser->parse_string( $program, $flags, $program_name );
     };
     $self->_after_parse( $program ) if $is_main;
