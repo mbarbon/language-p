@@ -937,6 +937,15 @@ sub _find_lexical {
     return undef;
 }
 
+sub _sigil_symbol {
+    my( $sigil ) = @_;
+
+    return $sigil == VALUE_SCALAR ? '$' :
+           $sigil == VALUE_ARRAY  ? '@' :
+           $sigil == VALUE_HASH   ? '%' :
+                                    die "Invalid sigil value";
+}
+
 sub _find_symbol {
     my( $self, $pos, $sigil, $name, $type ) = @_;
 
@@ -973,8 +982,8 @@ sub _find_symbol {
 
     if( $self->{_lexical_state}[-1]{hints} & 0x00000400 ) {
         _parse_error( $self, $pos,
-                      "Global symbol %s requires explicit package name",
-                      $name );
+                      "Global symbol %s%s requires explicit package name",
+                      _sigil_symbol( $sigil ), $name );
     }
 
     return Language::P::ParseTree::Symbol->new
