@@ -135,7 +135,7 @@ subscripted: !parsetree:Symbol
   context: CXT_SCALAR
   name: foo
   sigil: VALUE_GLOB
-type: VALUE_HASH
+type: VALUE_GLOB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

@@ -1714,13 +1714,12 @@ sub _parse_indirobj_maybe_subscripts {
     my $subscript = _parse_bracketed_expr( $self, $next->[O_TYPE], 0 );
     my $subscripted = $is_id ? _find_symbol( $self, $token->[O_POS], $sym_sigil, $indir->[O_VALUE], $indir->[O_ID_TYPE] ) :
                                $indir;
-    my $subscript_type = $next->[O_TYPE] == T_OPBRK ? VALUE_HASH : VALUE_ARRAY;
 
     if( $is_slice ) {
         return Language::P::ParseTree::Slice->new
                    ( { subscripted => $subscripted,
                        subscript   => _make_list( $self, $subscript ),
-                       type        => $subscript_type,
+                       type        => $sym_sigil,
                        reference   => $is_id ? 0 : 1,
                        pos         => $token->[O_POS],
                        } );
@@ -1728,7 +1727,7 @@ sub _parse_indirobj_maybe_subscripts {
         my $term = Language::P::ParseTree::Subscript->new
                        ( { subscripted => $subscripted,
                            subscript   => $subscript,
-                           type        => $subscript_type,
+                           type        => $sym_sigil,
                            reference   => $is_id ? 0 : 1,
                            pos         => $token->[O_POS],
                            } );
