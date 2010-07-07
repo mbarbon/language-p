@@ -97,8 +97,10 @@ sub _subscript {
 
     $tree->set_attribute( 'context', $cxt );
 
-    $self->visit( $tree->subscripted, $tree->reference ? CXT_SCALAR|CXT_VIVIFY :
-                                                         CXT_LIST );
+    my $sub_cxt = $tree->reference && $tree->type != VALUE_GLOB ?
+                      CXT_SCALAR|CXT_VIVIFY :
+                      CXT_LIST;
+    $self->visit( $tree->subscripted, $sub_cxt );
     $self->visit( $tree->subscript, CXT_SCALAR );
 }
 
