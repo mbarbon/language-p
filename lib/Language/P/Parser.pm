@@ -981,14 +981,16 @@ sub _find_symbol {
                        } );
     }
 
-    if( $self->{_lexical_state}[-1]{hints} & 0x00000400 ) {
+    my $fqname = _qualify( $self, $name, $type );
+    if(    ( $self->{_lexical_state}[-1]{hints} & 0x00000400 )
+        && !$self->runtime->is_declared( $fqname, $sigil ) ) {
         _parse_error( $self, $pos,
                       "Global symbol %s%s requires explicit package name",
                       _sigil_symbol( $sigil ), $name );
     }
 
     return Language::P::ParseTree::Symbol->new
-               ( { name  => _qualify( $self, $name, $type ),
+               ( { name  => $fqname,
                    sigil => $sigil,
                    pos   => $pos,
                    } );
