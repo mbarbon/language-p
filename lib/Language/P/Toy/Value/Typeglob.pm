@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use base qw(Language::P::Toy::Value::Any);
 
-__PACKAGE__->mk_ro_accessors( qw(body) );
+__PACKAGE__->mk_ro_accessors( qw(body imported) );
 
 sub type { 16 }
 
@@ -13,6 +13,7 @@ sub new {
     my $self = $class->SUPER::new( $runtime, $args );
 
     $self->{body} ||= Language::P::Toy::Value::Typeglob::Body->new( $args );
+    $self->{imported} = 0;
 
     return $self;
 }
@@ -99,6 +100,13 @@ sub vivify_hash {
     return $self->body->get_or_create( $runtime, 'hash' );
 }
 
+sub _imported {
+    my( $name, $runtime ) = @_;
+    $name =~ s/::[^:]+//;
+
+    return $name ne $runtime->{_lex}{package};
+}
+
 sub assign {
     my( $self, $runtime, $other ) = @_;
 
@@ -106,12 +114,16 @@ sub assign {
         my $ref = $other->reference;
 
         if( $ref->isa( 'Language::P::Toy::Value::Scalar' ) ) {
+            $self->{imported} |= 1 if _imported( $self->body->name, $runtime );
             $self->body->set_slot( $runtime, 'scalar', $ref );
         } elsif( $ref->isa( 'Language::P::Toy::Value::Array' ) ) {
+            $self->{imported} |= 2 if _imported( $self->body->name, $runtime );
             $self->body->set_slot( $runtime, 'array', $ref );
         } elsif( $ref->isa( 'Language::P::Toy::Value::Hash' ) ) {
+            $self->{imported} |= 4 if _imported( $self->body->name, $runtime );
             $self->body->set_slot( $runtime, 'hash', $ref );
         } elsif( $ref->isa( 'Language::P::Toy::Value::Code' ) ) {
+            $self->{imported} |= 8 if _imported( $self->body->name, $runtime );
             $self->body->set_slot( $runtime, 'subroutine', $ref );
         } elsif( $ref->isa( 'Language::P::Toy::Value::Typeglob' ) ) {
             $self->_assign_glob( $runtime, $other );

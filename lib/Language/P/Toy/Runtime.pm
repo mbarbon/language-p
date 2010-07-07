@@ -535,6 +535,13 @@ sub get_package {
     return $self->symbol_table->get_package( $self, $name );
 }
 
+sub is_declared {
+    my( $self, $name, $sigil ) = @_;
+    my $glob = $self->symbol_table->get_symbol( $self, $name, '*', 0 );
+
+    return $glob && ( $glob->imported & ( 1 << $sigil - 1 ) );
+}
+
 sub set_hints {
     my( $self, $value ) = @_;
 
