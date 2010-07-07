@@ -21,11 +21,11 @@ our %EXPORT_TAGS =
     );
 
 __PACKAGE__->mk_ro_accessors( qw(lexer generator runtime) );
-__PACKAGE__->mk_accessors( qw(_lexicals _pending_lexicals
+__PACKAGE__->mk_accessors( qw(_lexicals
                               _in_declaration _lexical_state
                               _options) );
 
-sub _lexical_sub_state { $_[0]->{_lexical_state}->[-1]->{sub} }
+sub _lexical_sub_state { $_[0]->{_lexical_state}[-1]{sub} }
 
 use constant
   { PREC_HIGHEST       => 0,
@@ -252,7 +252,6 @@ sub _parse {
         };
     }
 
-    $self->_pending_lexicals( [] );
     $self->_lexicals( $lexical_state->{lexicals} );
     $self->_enter_scope( $lexical_state->{lexicals} ? 1 : 0, 1 );
     $self->{_lexical_state}[-1]{package} = $lexical_state->{package};
@@ -296,6 +295,7 @@ sub _enter_scope {
 
     push @{$self->{_lexical_state}}, { package  => undef,
                                        lexicals => $self->_lexicals,
+                                       pending  => [],
                                        is_sub   => $is_sub,
                                        top_level=> $top_level,
                                        hints    => 0,
@@ -324,6 +324,7 @@ sub _enter_scope {
 sub _leave_scope {
     my( $self ) = @_;
 
+    $self->_add_pending_lexicals;
     my $state = pop @{$self->{_lexical_state}};
     $self->_lexicals( $state->{lexicals} );
     _patch_gotos( $self, $state ) if $state->{is_sub} || $state->{top_level};
@@ -488,11 +489,11 @@ sub _parse_line_rest {
 sub _add_pending_lexicals {
     my( $self ) = @_;
 
-    foreach my $lexical ( @{$self->_pending_lexicals} ) {
+    foreach my $lexical ( @{$self->{_lexical_state}[-1]{pending}} ) {
         $self->_lexicals->add_lexical( $lexical );
     }
 
-    $self->_pending_lexicals( [] );
+    $self->{_lexical_state}[-1]{pending} = [];
 }
 
 sub _lexical_state_node {
@@ -1780,7 +1781,7 @@ sub _process_declaration {
             #      current implementation
             $sym->set_closed_over if $force_closed;
         }
-        push @{$self->_pending_lexicals}, $sym;
+        push @{$self->{_lexical_state}[-1]{pending}}, $sym;
 
         return $sym;
     } elsif(    $decl->isa( 'Language::P::ParseTree::Builtin' )
