@@ -973,7 +973,9 @@ sub _find_symbol {
                        sigil => $sigil,
                        pos   => $pos,
                        } );
-    } elsif( $name eq '_' || $name =~ /^[\W]/ || $name =~ /^[0-9]+$/ ) {
+    } elsif(    ( $name eq '_' || $name =~ /^[\W]/ || $name =~ /^[0-9]+$/ )
+             || ( $sigil == VALUE_HASH && ( $name eq 'SIG' ) )
+             || ( $sigil == VALUE_ARRAY && ( $name eq 'INC' ) ) ) {
         return Language::P::ParseTree::Symbol->new
                    ( { name  => $name,
                        sigil => $sigil,
