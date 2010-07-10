@@ -1405,6 +1405,8 @@ sub o_die {
         return $runtime->throw_exception( $exc, 1 );
     }
 
+    # TODO handle empty argument list when $@ is set and when it is not
+
     my $message = '';
     for( my $iter = $args->iterator( $runtime ); $iter->next( $runtime ); ) {
         $message .= $iter->item->as_string;
@@ -1415,6 +1417,33 @@ sub o_die {
                       } );
 
     return $runtime->throw_exception( $exc, 1 );
+}
+
+sub o_warn {
+    my( $op, $runtime, $pc ) = @_;
+    my $args = pop @{$runtime->{_stack}};
+
+    # TODO handle empty argument list when $@ is set and when it is not
+
+    my $message = '';
+    for( my $iter = $args->iterator( $runtime ); $iter->next( $runtime ); ) {
+        $message .= $iter->item->as_string;
+    }
+
+    if( length $message and substr( $message, -1 ) ne "\n" ) {
+        my $info = $runtime->current_frame_info;
+
+        $message .= " at $info->{file} line $info->{line}.\n";
+    }
+
+    my $stderr = $runtime->symbol_table->get_symbol( $runtime, 'STDERR', 'I' );
+
+    $stderr->write_string( $runtime, $message );
+
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::Scalar->new_integer( $runtime, 1 );
+
+    return $pc + 1;
 }
 
 sub o_backtick {

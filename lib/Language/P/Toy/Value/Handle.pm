@@ -14,6 +14,12 @@ sub as_handle {
     return $self;
 }
 
+sub write_string {
+    my( $self, $runtime, $string ) = @_;
+
+    print { $self->handle } $string;
+}
+
 sub write {
     my( $self, $runtime, $scalar, $offset, $length ) = @_;
     local $\;
