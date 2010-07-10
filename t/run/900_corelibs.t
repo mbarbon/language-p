@@ -12,7 +12,7 @@ use warnings::register;
 use vars;
 use subs;
 # use base;
-# use parent;
+use parent;
 # use Carp;
 # use Carp::Heavy;
 # use Exporter;
