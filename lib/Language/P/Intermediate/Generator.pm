@@ -1600,6 +1600,13 @@ sub _subscript {
         _add_bytecode $self, opcode_npm( OP_HASH_ELEMENT, $tree->pos,
                                          create    => $lvalue ? 1 : 0,
                                          context   => _context( $tree ) );
+    } elsif( $tree->type == VALUE_GLOB ) {
+        _add_bytecode $self, opcode_npm( OP_DEREFERENCE_GLOB, $tree->pos,
+                                         context   => CXT_SCALAR )
+          if $tree->reference;
+        _add_bytecode $self, opcode_npm( OP_GLOB_ELEMENT, $tree->pos,
+                                         create    => $lvalue ? 1 : 0,
+                                         context   => _context( $tree ) );
     } else {
         die $tree->type;
     }

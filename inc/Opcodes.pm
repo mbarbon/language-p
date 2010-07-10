@@ -442,6 +442,7 @@ ft_setuid           u       same                 1   1  context=i1
 ft_sticky           u       same                 1   1  context=i1
 get                 0       same                 0   1  index=i
 glob                0       same                 1   1  context=i1
+glob_element        0       same                 2   1  context=i1
 glob_slot           0       same                 1   1  slot=i_sigil
 glob_slot_set       0       same                 2   0  slot=i_sigil
 global              0       same                 0   1  name=s,slot=i_sigil
