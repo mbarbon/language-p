@@ -34,6 +34,9 @@ sub new {
     my $out = Language::P::Toy::Value::Handle->new( $runtime, { handle => \*STDOUT } );
     $self->set_symbol( $runtime, 'STDOUT', 'I', $out );
 
+    my $err = Language::P::Toy::Value::Handle->new( $runtime, { handle => \*STDERR } );
+    $self->set_symbol( $runtime, 'STDERR', 'I', $err );
+
     my $interpreter = Language::P::Toy::Value::Scalar->new_string( $runtime, $^X );
     $self->set_symbol( $runtime, "\030", '$', $interpreter );
 
