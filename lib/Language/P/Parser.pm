@@ -956,7 +956,7 @@ sub _find_symbol {
                        sigil => $sigil,
                        pos   => $pos,
                        } );
-    } elsif( $type == T_FQ_ID ) {
+    } elsif( $type == T_FQ_ID || $sigil == VALUE_GLOB ) {
         return Language::P::ParseTree::Symbol->new
                    ( { name  => _qualify( $self, $name, $type ),
                        sigil => $sigil,
