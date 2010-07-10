@@ -143,6 +143,31 @@ sub _assign_glob {
     $self->{body} = $other->body;
 }
 
+my %thing_map =
+  ( SCALAR => 'scalar',
+    ARRAY  => 'array',
+    HASH   => 'hash',
+    CODE   => 'subroutine',
+    IO     => 'io',
+    FORMAT => 'format',
+    );
+
+sub get_item_or_undef {
+    my( $self, $runtime, $key ) = @_;
+    my $obj;
+
+    if( $key eq 'GLOB' ) {
+        $obj = $self;
+    } elsif( my $slot = $thing_map{$key} ) {
+        $obj = $self->body->$slot;
+    } else {
+        return Language::P::Toy::Value::Undef->new( $runtime );
+    }
+
+    return Language::P::Toy::Value::Reference->new
+               ( $runtime, { reference => $obj } );
+}
+
 package Language::P::Toy::Value::Typeglob::Body;
 
 use strict;

@@ -1584,6 +1584,16 @@ sub o_values {
     return $pc + 1;
 }
 
+sub o_glob_element {
+    my( $op, $runtime, $pc ) = @_;
+    my $hash = pop @{$runtime->{_stack}};
+    my $key = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $hash->get_item_or_undef( $runtime, $key->as_string( $runtime ) );
+
+    return $pc + 1;
+}
+
 sub o_array_size {
     my( $op, $runtime, $pc ) = @_;
     my $array = pop @{$runtime->{_stack}};
