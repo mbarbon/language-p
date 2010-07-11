@@ -33,6 +33,12 @@ sub clone {
     return $clone;
 }
 
+sub as_boolean_int {
+    my( $self, $runtime ) = @_;
+
+    return %{$self->{hash}} ? 1 : 0;
+}
+
 sub localize {
     my( $self, $runtime ) = @_;
 
