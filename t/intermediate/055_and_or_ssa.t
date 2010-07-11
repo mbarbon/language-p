@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 5;
+use Test::More tests => 7;
 
 use lib qw(t/lib);
 use TestIntermediate qw(:all);
@@ -29,6 +29,25 @@ L5:
 EOI
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
+$a &&= $b;
+EOP
+# main
+L1:
+  set index=1 (global name="a", slot=1)
+  jump_if_true to=L2 (get index=1)
+  jump to=L5
+L2:
+  set index=2 (assign (get index=1), (global name="b", slot=1))
+  jump to=L3
+L3:
+  jump to=L4
+L4:
+  end
+L5:
+  jump to=L3
+EOI
+
+generate_ssa_and_diff( <<'EOP', <<'EOI' );
 $x = $a || $b;
 EOP
 # main
@@ -42,6 +61,25 @@ L2:
 L3:
   set index=3 (phi L5, 1, L2, 2)
   assign context=2 (global name="x", slot=1), (get index=3)
+  jump to=L4
+L4:
+  end
+L5:
+  jump to=L3
+EOI
+
+generate_ssa_and_diff( <<'EOP', <<'EOI' );
+$a ||= $b;
+EOP
+# main
+L1:
+  set index=1 (global name="a", slot=1)
+  jump_if_true to=L5 (get index=1)
+  jump to=L2
+L2:
+  set index=2 (assign (get index=1), (global name="b", slot=1))
+  jump to=L3
+L3:
   jump to=L4
 L4:
   end

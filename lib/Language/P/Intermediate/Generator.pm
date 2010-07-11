@@ -856,7 +856,8 @@ sub _binary_op {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
-    if( $tree->op == OP_LOG_AND || $tree->op == OP_LOG_OR ) {
+    if(    $tree->op == OP_LOG_AND || $tree->op == OP_LOG_OR
+        || $tree->op == OP_LOG_AND_ASSIGN || $tree->op == OP_LOG_OR_ASSIGN ) {
         $self->dispatch( $tree->left );
 
         my( $right, $end ) = _new_blocks( $self, 2 );
@@ -866,7 +867,7 @@ sub _binary_op {
              opcode_n( OP_DUP );
         _add_jump $self,
              opcode_npm( OP_JUMP_IF_TRUE, $tree->pos,
-                         $tree->op == OP_LOG_AND ?
+                         $tree->op == OP_LOG_AND || $tree->op == OP_LOG_AND_ASSIGN ?
                              ( true => $right, false => $end ) :
                              ( true => $end,   false => $right ) ),
              $right, $end;
@@ -874,8 +875,13 @@ sub _binary_op {
         _add_blocks $self, $right;
 
         # evalutates right only if this is the correct return value
-        _add_bytecode $self, opcode_n( OP_POP );
+        if( $tree->op == OP_LOG_AND || $tree->op == OP_LOG_OR ) {
+            _add_bytecode $self, opcode_n( OP_POP );
+        }
         $self->dispatch( $tree->right );
+        if( $tree->op == OP_LOG_AND_ASSIGN || $tree->op == OP_LOG_OR_ASSIGN ) {
+            _add_bytecode $self, opcode_n( OP_ASSIGN );
+        }
         _add_jump $self, opcode_nm( OP_JUMP, to => $end ), $end;
         _add_blocks $self, $end;
     } elsif( $tree->op == OP_ASSIGN ) {
