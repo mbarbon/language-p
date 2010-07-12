@@ -13,6 +13,7 @@ use Language::P::Assembly qw(:all);
 
 my %op_map =
   ( OP_MAKE_LIST()        => '_make_list',
+    OP_MAKE_ARRAY()       => '_make_array',
     OP_POP()              => '_pop',
     OP_SWAP()             => '_swap',
     OP_DUP()              => '_dup',
@@ -441,6 +442,14 @@ sub _swap {
     die 'Empty stack in swap' unless @{$self->_stack} >= 2;
     $stack->[-1] = $stack->[-2];
     $stack->[-2] = $t;
+}
+
+sub _make_array {
+    my( $self, $op ) = @_;
+
+    push @{$self->_stack},
+         opcode_n( OP_MAKE_ARRAY, _get_stack( $self, $op->{attributes}{count} ) );
+    _created( $self, 1 );
 }
 
 sub _make_list {

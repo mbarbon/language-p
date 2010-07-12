@@ -20,7 +20,7 @@ L2:
   jump_if_f_lt to=L3 (global name="i", slot=1), (constant_integer value=10)
   jump to=L5
 L3:
-  print context=2 (global name="STDOUT", slot=7), (make_list (global name="i", slot=1))
+  print context=2 (global name="STDOUT", slot=7), (make_array (global name="i", slot=1))
   jump to=L4
 L4:
   assign context=2 (global name="i", slot=1), (add context=4 (global name="i", slot=1), (constant_integer value=1))
@@ -54,7 +54,7 @@ L6:
   glob_slot_set slot=1 (temporary index=1, slot=5), (temporary index=2, slot=1)
   jump to=L8
 L7:
-  print context=2 (global name="STDOUT", slot=7), (make_list (global name="i", slot=1))
+  print context=2 (global name="STDOUT", slot=7), (make_array (global name="i", slot=1))
   jump to=L2
 L8:
   end

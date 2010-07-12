@@ -14,7 +14,7 @@ EOP
 # main
 L1:
   assign context=2 (global name="x", slot=1), (add context=4 (global name="a", slot=1), (constant_integer value=2))
-  print context=2 (global name="STDOUT", slot=7), (make_list (not context=8 (global name="a", slot=1)))
+  print context=2 (global name="STDOUT", slot=7), (make_array (not context=8 (global name="a", slot=1)))
   jump to=L2
 L2:
   end

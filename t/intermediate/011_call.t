@@ -17,7 +17,7 @@ EOP
 # main
 L1:
   constant_integer value=1
-  make_list count=1, context=8
+  make_array count=1, context=8
   global name="foo", slot=4
   call context=2
   pop
@@ -37,9 +37,9 @@ L1:
   concat_assign context=4
   constant_string value="\x0a"
   concat_assign context=4
-  make_list count=1, context=8
+  make_array count=1, context=8
   print context=1
-  make_list count=1, context=8
+  make_array count=1, context=8
   return context=1
   jump to=L2
 L2:

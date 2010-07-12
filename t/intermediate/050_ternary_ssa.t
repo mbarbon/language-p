@@ -66,7 +66,7 @@ L1:
   jump to=L4
 L2:
   set index=4 (phi L3, 2, L4, 3)
-  print context=2 (get index=1), (make_list (get index=4))
+  print context=2 (get index=1), (make_array (get index=4))
   jump to=L5
 L3:
   set index=2 (global name="b", slot=1)

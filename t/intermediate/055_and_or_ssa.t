@@ -161,7 +161,7 @@ L2:
   jump to=L3
 L3:
   set index=4 (phi L5, 1, L2, 3)
-  print context=2 (get index=2), (make_list (get index=4))
+  print context=2 (get index=2), (make_array (get index=4))
   jump to=L4
 L4:
   end
