@@ -53,7 +53,7 @@ sub as_float {
 sub assign {
     my( $self, $runtime, $other ) = @_;
 
-    Language::P::Toy::Value::Scalar::assign( $self, $runtime, $other )
+    return Language::P::Toy::Value::Scalar::assign( $self, $runtime, $other )
         unless ref( $self ) eq ref( $other );
 
     $self->{string} = $other->{string};
