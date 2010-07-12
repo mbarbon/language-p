@@ -87,6 +87,24 @@ sub push_list {
                ( $runtime, { integer => scalar @{$self->array} } );
 }
 
+sub push_flatten {
+    my( $self, $runtime, @values ) = @_;
+
+    foreach my $value ( @values ) {
+        if(    $value->isa( 'Language::P::Toy::Value::Array' )
+            || $value->isa( 'Language::P::Toy::Value::Range' )
+            || $value->isa( 'Language::P::Toy::Value::Hash' ) ) {
+            for( my $it = $value->iterator( $runtime ); $it->next( $runtime ); ) {
+                push @{$self->{array}}, $it->item( $runtime );
+            }
+        } else {
+            push @{$self->{array}}, $value;
+        }
+    }
+
+    return;
+}
+
 sub pop_value {
     my( $self, $runtime ) = @_;
 

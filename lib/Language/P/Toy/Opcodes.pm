@@ -581,6 +581,26 @@ sub o_add_assign {
     return _dispatch( \%dispatch_add_assign, $vl, $vr )->( $op, $runtime, $pc );
 }
 
+sub o_make_array {
+    my( $op, $runtime, $pc ) = @_;
+    my $st = $runtime->{_stack};
+
+    # create the array
+    my $array = Language::P::Toy::Value::Array->new( $runtime );
+    if( $op->{count} ) {
+        for( my $j = $#$st - $op->{count} + 1; $j <= $#$st; ++$j ) {
+            $array->push_flatten( $runtime, $st->[$j] );
+        }
+        # clear the stack
+        $#$st -= $op->{count} - 1;
+        $st->[-1] = $array;
+    } else {
+        push @$st, $array;
+    }
+
+    return $pc + 1;
+}
+
 sub o_make_list {
     my( $op, $runtime, $pc ) = @_;
     my $st = $runtime->{_stack};
