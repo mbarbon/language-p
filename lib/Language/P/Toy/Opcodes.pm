@@ -1069,6 +1069,11 @@ _make_compare( $_ ) foreach
       operator => '!=',
       new_type => 'scalar',
       },
+    { name     => 'o_compare_f_gt_scalar',
+      convert  => 'as_float',
+      operator => '>',
+      new_type => 'scalar',
+      },
 
     { name     => 'o_compare_s_eq_int',
       convert  => 'as_string',
