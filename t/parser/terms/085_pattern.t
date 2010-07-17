@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 9;
+use Test::More tests => 11;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -49,6 +49,45 @@ right: !parsetree:Pattern
       value: test
   flags: 0
   op: OP_QL_M
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+$a =~ "a";
+EOP
+--- !parsetree:BinOp
+context: CXT_VOID
+left: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: a
+  sigil: VALUE_SCALAR
+op: OP_MATCH
+right: !parsetree:Pattern
+  components:
+    - !parsetree:Constant
+      flags: CONST_STRING
+      value: a
+  flags: 0
+  op: OP_QL_M
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+$a =~ $b;
+EOP
+--- !parsetree:BinOp
+context: CXT_VOID
+left: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: a
+  sigil: VALUE_SCALAR
+op: OP_MATCH
+right: !parsetree:InterpolatedPattern
+  context: CXT_SCALAR
+  flags: 0
+  op: OP_QL_M
+  string: !parsetree:Symbol
+    context: CXT_SCALAR
+    name: b
+    sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

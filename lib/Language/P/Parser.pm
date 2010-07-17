@@ -1644,6 +1644,22 @@ sub _parse_term_terminal_maybe_subscripts {
     my( $self, $token, $is_bind ) = @_;
     my( $term, $no_subscr ) = _parse_term_terminal( $self, $token, $is_bind );
 
+    if( $is_bind && $term && !$term->is_pattern ) {
+        if( $term->is_constant ) {
+            $term = Language::P::ParseTree::Pattern->new
+                        ( { components  => [ $term ],
+                            flags       => 0,
+                            op          => OP_QL_M,
+                            } );
+        } else {
+            $term = Language::P::ParseTree::InterpolatedPattern->new
+                        ( { string  => $term,
+                            flags   => 0,
+                            op      => OP_QL_M,
+                            } );
+        }
+    }
+
     return $term if $no_subscr || !$term;
     return _parse_maybe_subscript_rest( $self, $term, 1 );
 }
