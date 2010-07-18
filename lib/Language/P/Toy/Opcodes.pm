@@ -848,6 +848,16 @@ sub o_lexical_pad {
     return $pc + 1;
 }
 
+sub o_lexical_pad_set {
+    my( $op, $runtime, $pc ) = @_;
+    my $pad = $runtime->{_stack}->[$runtime->{_frame} - 1];
+    my $value = pop @{$runtime->{_stack}};
+
+    $pad->values->[$op->{index}] = $value;
+
+    return $pc + 1;
+}
+
 sub o_lexical_pad_clear {
     my( $op, $runtime, $pc ) = @_;
     my $pad = $runtime->{_stack}->[$runtime->{_frame} - 1];
