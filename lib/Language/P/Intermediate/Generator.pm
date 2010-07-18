@@ -561,6 +561,14 @@ sub _indirect {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
+    if( $tree->function == OP_MAP ) {
+        _map( $self, $tree );
+        return;
+    } elsif( $tree->function == OP_GREP ) {
+        _grep( $self, $tree );
+        return;
+    }
+
     if( $tree->indirect ) {
         $self->dispatch( $tree->indirect );
     } else {
@@ -1344,6 +1352,84 @@ sub _foreach {
     }
 
     _end_list_iteration( $self, $tree, $enter_block, $start_step,
+                         $exit_loop, $end_loop );
+}
+
+sub _map {
+    my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
+
+    my $iter_var = Language::P::ParseTree::Symbol->new
+                       ( { name  => '_',
+                           sigil => VALUE_SCALAR,
+                           } );
+    my $expression = $tree->indirect || $tree->arguments->[0];
+    my $st = $tree->indirect ? 0 : 1;
+    my $en = $#{$tree->arguments};
+    my $list = Language::P::ParseTree::List->new
+                   ( { expressions => [ @{$tree->arguments}[ $st .. $en ] ],
+                       } );
+    $list->set_attribute( 'context', CXT_LIST );
+
+    # result value
+    _add_bytecode $self,
+        opcode_nm( OP_MAKE_LIST, count => 0, context => CXT_LIST );
+
+    my( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop ) =
+        _setup_list_iteration( $self, $tree, $iter_var, $list, 0 );
+
+    _add_bytecode $self,
+        opcode_n( OP_DUP );
+
+    # call expresssion and add it to the result
+    $self->dispatch( $expression );
+    _add_bytecode $self,
+        opcode_n( OP_PUSH_ELEMENT );
+
+    _end_list_iteration( $self, $tree, 0, $start_step,
+                         $exit_loop, $end_loop );
+}
+
+sub _grep {
+    my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
+
+    my $iter_var = Language::P::ParseTree::Symbol->new
+                       ( { name  => '_',
+                           sigil => VALUE_SCALAR,
+                           } );
+    my $expression = $tree->indirect || $tree->arguments->[0];
+    my $st = $tree->indirect ? 0 : 1;
+    my $en = $#{$tree->arguments};
+    my $list = Language::P::ParseTree::List->new
+                   ( { expressions => [ @{$tree->arguments}[ $st .. $en ] ],
+                       } );
+    $list->set_attribute( 'context', CXT_LIST );
+
+    # result value
+    _add_bytecode $self,
+        opcode_nm( OP_MAKE_LIST, count => 0, context => CXT_LIST );
+
+    my( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop ) =
+        _setup_list_iteration( $self, $tree, $iter_var, $list, 0 );
+
+    # call expresssion and add it to the result
+    $self->dispatch( $expression );
+
+    my( $iftrue, $iffalse ) = _new_blocks( $self, 2 );
+    _add_jump $self,
+        opcode_nm( OP_JUMP_IF_TRUE, true => $iftrue, false => $iffalse ),
+        $iftrue, $iffalse;
+    _add_blocks $self, $iftrue;
+    _add_bytecode $self,
+        opcode_nm( OP_GLOBAL, name => '_', slot => VALUE_SCALAR ),
+        opcode_n( OP_PUSH_ELEMENT );
+    _add_jump $self,
+        opcode_nm( OP_JUMP, to => $iffalse ),
+        $iffalse;
+    _add_blocks $self, $iffalse;
+
+    _end_list_iteration( $self, $tree, 0, $start_step,
                          $exit_loop, $end_loop );
 }
 

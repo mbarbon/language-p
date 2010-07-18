@@ -235,6 +235,7 @@ t/run/017_references.t
 t/run/018_vivification.t
 t/run/020_lexicals.t
 t/run/021_interpolated_regexp.t
+t/run/021_map_grep.t
 t/run/021_regexp.t
 t/run/021_substitution.t
 t/run/025_begin.t
