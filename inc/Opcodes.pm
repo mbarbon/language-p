@@ -530,6 +530,7 @@ power_assign        0       same                 2   1  context=i1
 predec              0       same                 1   1  context=i1
 preinc              0       same                 1   1  context=i1
 print               0       same                 2   1  context=i1
+push_element        0       same                 2   1  noattr
 ql_lt               0       same                -1  -1  noattr
 ql_m                0       same                -1  -1  noattr
 ql_qr               0       same                -1  -1  noattr

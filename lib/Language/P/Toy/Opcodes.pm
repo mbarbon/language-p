@@ -581,6 +581,16 @@ sub o_add_assign {
     return _dispatch( \%dispatch_add_assign, $vl, $vr )->( $op, $runtime, $pc );
 }
 
+sub o_push_element {
+    my( $op, $runtime, $pc ) = @_;
+    my $arg = pop @{$runtime->{_stack}};
+    my $arr = $runtime->{_stack}[-1];
+
+    $arr->push_flatten( $runtime, $arg );
+
+    return $pc + 1;
+}
+
 sub o_make_array {
     my( $op, $runtime, $pc ) = @_;
     my $st = $runtime->{_stack};
