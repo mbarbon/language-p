@@ -1205,26 +1205,19 @@ sub _cond_loop {
     }
 }
 
-sub _foreach {
-    my( $self, $tree ) = @_;
-    _emit_label( $self, $tree );
-
-    my $iter_var = $tree->variable;
+sub _setup_list_iteration {
+    my( $self, $tree, $iter_var, $list, $in_block ) = @_;
     my $is_lexical = $iter_var->isa( 'Language::P::ParseTree::LexicalDeclaration' );
 
     my( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop ) =
         _new_blocks( $self, 5 );
-    $tree->set_attribute( 'lbl_next', $tree->continue ? $start_continue :
-                                                        $start_step );
-    $tree->set_attribute( 'lbl_last', $end_loop );
-    $tree->set_attribute( 'lbl_redo', $start_loop );
 
-    if( $tree->block->isa( 'Language::P::ParseTree::Block' ) ) {
+    if( $in_block ) {
         _start_bb( $self );
         $self->push_block( 0, $tree->pos_s, $tree->pos_e );
     }
 
-    $self->dispatch( $tree->expression );
+    $self->dispatch( $list );
     _add_bytecode $self, opcode_nm( OP_MAKE_LIST, count => 1, context => CXT_LIST );
 
     my $iterator = $self->{_temporary_count}++;
@@ -1305,6 +1298,41 @@ sub _foreach {
                        );
     }
 
+    return ( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop );
+}
+
+sub _end_list_iteration {
+    my( $self, $tree, $enter_block, $start_step, $exit_loop, $end_loop ) = @_;
+
+    _add_jump $self, opcode_nm( OP_JUMP, to => $start_step ), $start_step;
+
+    _add_blocks $self, $exit_loop;
+    _add_bytecode $self, opcode_n( OP_POP );
+    _add_jump $self, opcode_nm( OP_JUMP, to => $end_loop ), $end_loop;
+    _add_blocks $self, $end_loop;
+
+    if( $enter_block ) {
+        _exit_scope( $self, $self->_current_block );
+        $self->pop_block;
+        _start_bb( $self );
+    }
+}
+
+sub _foreach {
+    my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
+
+    my $iter_var = $tree->variable;
+    my $enter_block = $tree->block->isa( 'Language::P::ParseTree::Block' );
+    my( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop ) =
+        _setup_list_iteration( $self, $tree, $iter_var, $tree->expression,
+                               $enter_block );
+
+    $tree->set_attribute( 'lbl_next', $tree->continue ? $start_continue :
+                                                        $start_step );
+    $tree->set_attribute( 'lbl_last', $end_loop );
+    $tree->set_attribute( 'lbl_redo', $start_loop );
+
     $self->dispatch( $tree->block );
     _discard_if_void( $self, $tree->block );
 
@@ -1315,18 +1343,8 @@ sub _foreach {
         $self->dispatch( $tree->continue );
     }
 
-    _add_jump $self, opcode_nm( OP_JUMP, to => $start_step ), $start_step;
-
-    _add_blocks $self, $exit_loop;
-    _add_bytecode $self, opcode_n( OP_POP );
-    _add_jump $self, opcode_nm( OP_JUMP, to => $end_loop ), $end_loop;
-    _add_blocks $self, $end_loop;
-
-    if( $tree->block->isa( 'Language::P::ParseTree::Block' ) ) {
-        _exit_scope( $self, $self->_current_block );
-        $self->pop_block;
-        _start_bb( $self );
-    }
+    _end_list_iteration( $self, $tree, $enter_block, $start_step,
+                         $exit_loop, $end_loop );
 }
 
 sub _for {
