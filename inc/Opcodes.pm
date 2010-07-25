@@ -597,6 +597,7 @@ rx_class            0       same                 0   0  elements=s
 rx_end              0       same                 0   0  noattr
 rx_end_or_newline   0       same                 0   0  noattr
 rx_exact            0       same                 0   0  string=s,length=i
+rx_exact_i          0       same                 0   0  string=s,length=i
 rx_quantifier       0       same                 0   0  min=i,max=i,greedy=i1,group=i,to=b,subgroups_start=i,subgroups_end=i
 rx_special_class    0       same                 0   0  type=i
 rx_start_group      0       same                 0   0  to=b

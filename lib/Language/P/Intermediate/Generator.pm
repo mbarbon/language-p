@@ -195,8 +195,8 @@ sub _generate_regex {
     _add_bytecode $self,
         opcode_nm( OP_RX_ACCEPT, groups => $self->_group_count );
 
-    die "Flags i, o not supported"
-      if $regex->flags & ( FLAG_RX_CASE_INSENSITIVE|FLAG_RX_ONCE );
+    die "Flag o not supported"
+      if $regex->flags & FLAG_RX_ONCE;
 
     return $self->_code_segments;
 }
@@ -1993,9 +1993,15 @@ sub _regex_group {
 sub _regex_exact {
     my( $self, $tree ) = @_;
 
-    _add_bytecode $self,
-        opcode_nm( OP_RX_EXACT, string => $tree->value,
-                   length => length( $tree->value ) );
+    if( $tree->insensitive ) {
+        _add_bytecode $self,
+            opcode_nm( OP_RX_EXACT_I, string => $tree->value,
+                       length => length( $tree->value ) );
+    } else {
+        _add_bytecode $self,
+            opcode_nm( OP_RX_EXACT, string => $tree->value,
+                       length => length( $tree->value ) );
+    }
 }
 
 sub _regex_class {
@@ -2004,9 +2010,15 @@ sub _regex_class {
     my @elements;
     foreach my $e ( @{$tree->elements} ) {
         if( $e->is_constant ) {
-            push @elements,
-                 opcode_nm( OP_RX_EXACT, string => $e->value,
-                            length => length( $e->value ) );
+            if( $tree->insensitive ) {
+                push @elements,
+                     opcode_nm( OP_RX_EXACT_I, string => $e->value,
+                                length => length( $e->value ) );
+            } else {
+                push @elements,
+                     opcode_nm( OP_RX_EXACT, string => $e->value,
+                                length => length( $e->value ) );
+            }
         } else {
             push @elements,
                  opcode_nm( OP_RX_SPECIAL_CLASS, type => $e->type );
