@@ -9,7 +9,7 @@ use Language::P::Constants qw(:all);
 our @EXPORT_OK = qw(o_rx_start_match o_rx_accept o_rx_exact o_rx_start_group
                     o_rx_quantifier o_rx_capture_start o_rx_capture_end o_rx_try
                     o_rx_beginning o_rx_end_or_newline o_rx_state_restore
-                    o_rx_end
+                    o_rx_end o_rx_exact_i
                     o_rx_match o_rx_match_global o_rx_replace o_rx_transliterate
                     o_rx_replace_global o_rx_class o_rx_any_nonewline o_rx_any);
 
@@ -471,6 +471,20 @@ sub o_rx_exact {
     v "Exact '$op->{string}' at $cxt->{pos}\n";
     if(    substr( $cxt->{string}, $cxt->{pos}, $op->{length} )
         ne $op->{string} ) {
+        return _backtrack( $runtime, $cxt );
+    }
+    $cxt->{pos} += $op->{length};
+
+    return $pc + 1;
+}
+
+sub o_rx_exact_i {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    v "Exact (i) '$op->{string}' at $cxt->{pos}\n";
+    if(    lc substr( $cxt->{string}, $cxt->{pos}, $op->{length} )
+        ne lc $op->{string} ) {
         return _backtrack( $runtime, $cxt );
     }
     $cxt->{pos} += $op->{length};

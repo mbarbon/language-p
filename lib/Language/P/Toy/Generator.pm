@@ -735,6 +735,9 @@ sub _rx_class {
     foreach my $e ( @{$op->{attributes}{elements}} ) {
         if( $e->{opcode_n} == OP_RX_EXACT ) {
             $elements .= $e->{attributes}{string};
+        } elsif( $e->{opcode_n} == OP_RX_EXACT_I ) {
+            $elements .= lc $e->{attributes}{string} .
+                         uc $e->{attributes}{string};
         } else {
             die $e->{attributes}{type}
                 unless exists $element_map{$e->{attributes}{type}};
