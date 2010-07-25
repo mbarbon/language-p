@@ -705,12 +705,26 @@ sub _rx_state_restore {
 
 # quick and dirty, and adequate for the Toy runtime
 my %element_map =
-  ( WORDS      => 'w',
-    NOT_WORDS  => 'W',
-    DIGITS     => 'd',
-    NOT_DIGITS => 'D',
-    SPACES     => 's',
-    NOT_SPACES => 'S',
+  ( WORDS      => '\\w',
+    NOT_WORDS  => '\\W',
+    DIGITS     => '\\d',
+    NOT_DIGITS => '\\D',
+    SPACES     => '\\s',
+    NOT_SPACES => '\\S',
+    alpha      => '[[:alpha:]]',
+    alnum      => '[[:alnum:]]',
+    ascii      => '[[:ascii:]]',
+    blank      => '[[:blank:]]',
+    cntrl      => '[[:cntrl:]]',
+    digit      => '[[:digit:]]',
+    graph      => '[[:graph:]]',
+    lower      => '[[:lower:]]',
+    print      => '[[:print:]]',
+    punct      => '[[:punct:]]',
+    space      => '[[:space:]]',
+    upper      => '[[:upper:]]',
+    word       => '[[:word:]]',
+    xdigit     => '[[:xdigit:]]',
     );
 
 sub _rx_class {
@@ -724,7 +738,7 @@ sub _rx_class {
         } else {
             die $e->{attributes}{type}
                 unless exists $element_map{$e->{attributes}{type}};
-            my $c = '\\' . $element_map{$e->{attributes}{type}};
+            my $c = $element_map{$e->{attributes}{type}};
             push @special, qr/$c/;
         }
     }
@@ -739,7 +753,7 @@ sub _rx_special_class {
     die $op->{attributes}{type}
         unless exists $element_map{$op->{attributes}{type}};
 
-    my $c = '\\' . $element_map{$op->{attributes}{type}};
+    my $c = $element_map{$op->{attributes}{type}};
     push @$bytecode,
          o( 'rx_class', elements => '', special => [ qr/$c/ ] );
 }
