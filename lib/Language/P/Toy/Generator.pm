@@ -108,6 +108,12 @@ sub process {
 
         return;
     }
+    if( $tree->isa( 'Language::P::ParseTree::LexicalState' ) ) {
+        if( $tree->changed & CHANGED_PACKAGE ) {
+            $self->runtime->symbol_table->get_package( $self->runtime,
+                                                       $tree->package, 1 );
+        }
+    }
 
     push @{$self->{_pending}}, $tree;
 }
