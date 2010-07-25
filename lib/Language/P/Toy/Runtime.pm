@@ -647,6 +647,8 @@ sub add_overload {
 
     my $stash = $runtime->symbol_table->get_package( $runtime, $pack, 0 );
     $stash->{overload} = \%val;
+
+    return;
 }
 
 1;
