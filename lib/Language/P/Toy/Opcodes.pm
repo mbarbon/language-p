@@ -1347,6 +1347,19 @@ sub o_substr {
     return $pc + 1;
 }
 
+sub o_ord {
+    my( $op, $runtime, $pc ) = @_;
+    my $scalar = pop @{$runtime->{_stack}};
+    my $str = $scalar->as_string( $runtime );
+
+    my $int = ord substr $str, 0, 1;
+
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::Scalar->new_integer( $runtime, $int );
+
+    return $pc + 1;
+}
+
 sub o_glob_slot_create {
     my( $op, $runtime, $pc ) = @_;
     my $glob = pop @{$runtime->{_stack}};
