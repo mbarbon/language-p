@@ -27,7 +27,9 @@ sub get_package {
     my( $self, $runtime, $package, $create ) = @_;
 
     return $self if $self->is_main && $package eq 'main';
-    return $self->_get_symbol( $runtime, $package, '::', $create );
+    my( $pack ) = $self->_get_symbol( $runtime, $package, '::', $create );
+
+    return $pack;
 }
 
 sub _tied_to_regex_capture {
