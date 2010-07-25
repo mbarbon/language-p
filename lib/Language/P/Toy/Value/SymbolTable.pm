@@ -172,4 +172,30 @@ sub find_method {
     return undef;
 }
 
+sub derived_from {
+    my( $self, $runtime, $base ) = @_;
+
+    return 0 unless $base;
+    return 1 if $self == $base;
+
+    my $isa_glob = $self->{symbols}{ISA};
+    unless( $isa_glob ) {
+        my $universal_stash = $runtime->symbol_table->get_package( $runtime, 'UNIVERSAL' );
+
+        return $universal_stash == $base ? 1 : 0;
+    }
+    my $isa_array = $isa_glob->body->array;
+
+    for( my $i = 0; $i < $isa_array->get_count( $runtime ); ++$i ) {
+        my $base_name = $isa_array->get_item( $runtime, $i )->as_string( $runtime );
+        my $base_stash = $runtime->symbol_table->get_package( $runtime, $base_name, 0 );
+        next unless $base_stash;
+
+        return 1 if $base_stash == $base;
+        return 1 if $base_stash->derived_from( $runtime, $base );
+    }
+
+    return 0;
+}
+
 1;

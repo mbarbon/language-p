@@ -50,6 +50,8 @@ sub new {
     $self->set_symbol( $runtime, 'INC', '@', $inc );
     $self->set_symbol( $runtime, 'Internals::add_overload', '&',
                        $runtime->wrap_method( $runtime, 'add_overload' ) );
+    $self->set_symbol( $runtime, 'UNIVERSAL::isa', '&',
+                       $runtime->wrap_method( $runtime, 'derived_from' ) );
 
     return $self;
 }

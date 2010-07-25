@@ -655,4 +655,24 @@ sub add_overload {
     return;
 }
 
+sub derived_from {
+    my( $self, $runtime, $pc, $context, $args ) = @_;
+    my $ref = $args->get_item( $runtime, 0 );
+    my $pack = $args->get_item( $runtime, 1 )->as_string( $runtime );
+    my $base = $runtime->symbol_table->get_package( $runtime, $pack, 0 );
+    my $stash;
+
+    if( $ref->isa( 'Language::P::Toy::Value::Reference' ) ) {
+        return unless $ref->reference->is_blessed;
+        $stash = $ref->reference->stash;
+    } else {
+        my $class = $ref->as_string( $runtime );
+        $stash = $runtime->symbol_table->get_package( $runtime, $class, 0 );
+    }
+
+    my $isa = $stash ? $stash->derived_from( $runtime, $base ) : 0;
+
+    return Language::P::Toy::Value::Scalar->new_boolean( $runtime, $isa );
+}
+
 1;
