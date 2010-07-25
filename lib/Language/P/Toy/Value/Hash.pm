@@ -56,12 +56,14 @@ sub localize_element {
     return $value;
 }
 
-sub assign {
+sub assign { assign_array( @_ ) }
+
+sub assign_array {
     my( $self, $runtime, $other ) = @_;
 
     # FIXME optimize: don't do it unless necessary
     my $oiter = $other->clone( $runtime, 1 )->iterator( $runtime );
-    $self->assign_iterator( $runtime, $oiter );
+    return $self->assign_iterator( $runtime, $oiter );
 }
 
 sub assign_iterator {
@@ -74,6 +76,8 @@ sub assign_iterator {
         my $v = $iter->item;
         $self->{hash}{$k->as_string( $runtime )} = $v;
     }
+
+    return 2 * keys %{$self->{hash}};
 }
 
 sub restore_item {

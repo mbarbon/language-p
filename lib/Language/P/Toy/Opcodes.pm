@@ -1260,9 +1260,22 @@ sub o_quotemeta {
 sub o_assign {
     my( $op, $runtime, $pc ) = @_;
     my $vr = pop @{$runtime->{_stack}};
-    my $vl = $runtime->{_stack}[-1];
+    my $vl = pop @{$runtime->{_stack}};
 
-    $vl->assign( $runtime, $vr );
+    if( $vl->isa( 'Language::P::Toy::Value::Array' ) ) {
+        my $count = $vl->assign_array( $runtime, $vr );
+
+        if( _context( $op, $runtime ) == CXT_SCALAR ) {
+            push @{$runtime->{_stack}},
+                 Language::P::Toy::Value::Scalar->new_integer( $runtime, $count );
+        } else {
+            push @{$runtime->{_stack}}, $vl;
+        }
+    } else {
+        $vl->assign( $runtime, $vr );
+
+        push @{$runtime->{_stack}}, $vl;
+    }
 
     return $pc + 1;
 }

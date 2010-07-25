@@ -50,16 +50,20 @@ sub localize_element {
     return $value;
 }
 
-sub assign {
+sub assign { assign_array( @_ ) }
+
+sub assign_array {
     my( $self, $runtime, $other ) = @_;
 
     # FIXME multiple dispatch
     if( $other->isa( 'Language::P::Toy::Value::Scalar' ) ) {
         $self->{array} = [ $other->clone( $runtime, 1 ) ];
+
+        return 1;
     } else {
         # FIXME optimize: don't do it unless necessary
         my $oiter = $other->clone( $runtime, 1 )->iterator( $runtime );
-        $self->assign_iterator( $runtime, $oiter );
+        return $self->assign_iterator( $runtime, $oiter );
     }
 }
 
@@ -70,6 +74,8 @@ sub assign_iterator {
     while( $iter && $iter->next ) {
         push @{$self->{array}}, $iter->item;
     }
+
+    return scalar @{$self->{array}};
 }
 
 sub push_value {

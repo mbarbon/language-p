@@ -65,9 +65,13 @@ sub assign_iterator {
 
     if( $iter && $iter->next ) {
         $self->assign( $runtime, $iter->item );
+
+        return 1;
     } else {
         $self->assign( $runtime,
                        Language::P::Toy::Value::Undef->new( $runtime ) );
+
+        return 0;
     }
 }
 

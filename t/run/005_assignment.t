@@ -2,9 +2,9 @@
 
 print "1..9\n";
 
-( $a, $c, $b ) = ( 1, 3, 2 );
+$t = ( $a, $c, $b ) = ( 1, 3, 2 );
 
-print "$a $b $c" eq "1 2 3" ? "ok 1\n" : "not ok 1\n";
+print "$a $b $c $t" eq "1 2 3 3" ? "ok 1\n" : "not ok 1 - $a $b $c $t\n";
 
 ( $a, $b, $c ) = ( $c, $b, $a );
 
