@@ -1642,6 +1642,35 @@ sub o_values {
     return $pc + 1;
 }
 
+sub o_each {
+    my( $op, $runtime, $pc ) = @_;
+    my $hash = pop @{$runtime->{_stack}};
+    my $key_scalar = $hash->next_key( $runtime );
+    my $cxt = _context( $op, $runtime );
+
+    if( defined $key_scalar ) {
+        my $key = $key_scalar->as_string( $runtime );
+        if( $cxt == CXT_SCALAR ) {
+            push @{$runtime->{_stack}}, $key_scalar;
+        } else {
+            my $value = $hash->get_item_or_undef( $runtime, $key );
+            push @{$runtime->{_stack}},
+                 Language::P::Toy::Value::List->new( $runtime,
+                                                     { array => [ $key_scalar,
+                                                                  $value ] } );
+        }
+    } else {
+        if( $cxt == CXT_SCALAR ) {
+            push @{$runtime->{_stack}},
+                 Language::P::Toy::Value::Undef->new( $runtime );
+        } else {
+            push @{$runtime->{_stack}}, $empty_list;
+        }
+    }
+
+    return $pc + 1;
+}
+
 sub o_glob_element {
     my( $op, $runtime, $pc ) = @_;
     my $hash = pop @{$runtime->{_stack}};

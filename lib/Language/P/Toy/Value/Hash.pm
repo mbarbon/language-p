@@ -13,6 +13,7 @@ sub new {
     my $self = $class->SUPER::new( $runtime, $args );
 
     $self->{hash} ||= {};
+    $self->{iterator} ||= undef;
 
     return $self;
 }
@@ -171,6 +172,24 @@ sub value_iterator {
                  { array => [ map { $self->{hash}->{$_} }
                                   keys %{$self->hash} ] } )
                ->iterator( $runtime );
+}
+
+sub start_iteration {
+    my( $self, $runtime ) = @_;
+    $self->{iterator} = $self->key_iterator( $runtime );
+}
+
+sub next_key {
+    my( $self, $runtime ) = @_;
+    $self->start_iteration unless $self->{iterator};
+
+    if( !$self->{iterator}->next( $runtime ) ) {
+        $self->{iterator} = undef;
+
+        return undef;
+    }
+
+    return $self->{iterator}->item( $runtime );
 }
 
 1;
