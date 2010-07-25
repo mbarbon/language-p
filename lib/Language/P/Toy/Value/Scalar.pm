@@ -90,7 +90,7 @@ sub find_method {
     my( $self, $runtime, $name ) = @_;
     my $stash = $runtime->symbol_table->get_package( $runtime, $self->as_string( $runtime ) );
 
-    return undef unless $stash;
+    $stash ||= $runtime->symbol_table->get_package( $runtime, 'UNIVERSAL' );
     return $stash->find_method( $runtime, $name );
 }
 
