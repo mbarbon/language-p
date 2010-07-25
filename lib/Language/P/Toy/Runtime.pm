@@ -620,9 +620,13 @@ sub wrap_method {
         my( $self, $runtime, $pc, $context ) = @_;
         my $args = pop @{$runtime->{_stack}};
 
-        $receiver->$method( $runtime, $pc, $context, $args );
-        push @{$runtime->{_stack}},
-             Language::P::Toy::Value::List->new( $runtime );
+        my $res = $receiver->$method( $runtime, $pc, $context, $args );
+        if( $res ) {
+            push @{$runtime->{_stack}}, $res;
+        } else {
+            push @{$runtime->{_stack}},
+                 Language::P::Toy::Value::List->new( $runtime );
+        }
 
         return $pc + 1;
     };
