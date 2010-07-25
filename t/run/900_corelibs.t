@@ -11,7 +11,7 @@ use warnings;
 use warnings::register;
 use vars;
 use subs;
-# use base;
+use base;
 use parent;
 use Carp;
 # use Carp::Heavy;
@@ -26,5 +26,6 @@ use Exporter;
 # use File::Find;
 # use File::Path;
 # use UNIVERSAL;
+# use Class::Accessor::Fast;
 
 print "ok 1 - got there\n";
