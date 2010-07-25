@@ -439,6 +439,7 @@ sub return_undef {
 
 sub set_exception {
     my( $self, $exc ) = @_;
+    die $exc unless ref $exc;
 
     my $scalar = Language::P::Toy::Value::Scalar->new_string
                      ( $self, $exc->full_message );
