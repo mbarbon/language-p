@@ -195,7 +195,7 @@ sub _generate_regex {
     _add_bytecode $self,
         opcode_nm( OP_RX_ACCEPT, groups => $self->_group_count );
 
-    die "Flags i, o, g, c not supported"
+    die "Flags i, o not supported"
       if $regex->flags & ( FLAG_RX_CASE_INSENSITIVE|FLAG_RX_ONCE );
 
     return $self->_code_segments;
