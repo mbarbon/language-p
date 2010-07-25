@@ -11,10 +11,22 @@ sub type { 18 }
 sub assign {
     my( $self, $runtime, $other ) = @_;
 
-    # FIXME optimize: don't do it unless necessary
-    my $oiter = $other->clone( $runtime, 1 )->iterator( $runtime );
-    for( my $iter = $self->lvalue_iterator( $runtime ); $iter->next( $runtime ); ) {
-        $iter->item->assign_iterator( $runtime, $oiter );
+    # FIXME multiple dispatch
+    if( $other->isa( 'Language::P::Toy::Value::Scalar' ) ) {
+        my $iter = $self->lvalue_iterator( $runtime );
+
+        if( $iter->next ) {
+            $iter->item->assign( $runtime, $other );
+        }
+        while( $iter->next( $runtime ) ) {
+            $iter->item->assign_iterator( $runtime, undef );
+        }
+    } else {
+        # FIXME optimize: don't do it unless necessary
+        my $oiter = $other->clone( $runtime, 1 )->iterator( $runtime );
+        for( my $iter = $self->lvalue_iterator( $runtime ); $iter->next( $runtime ); ) {
+            $iter->item->assign_iterator( $runtime, $oiter );
+        }
     }
 }
 

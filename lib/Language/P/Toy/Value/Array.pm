@@ -67,7 +67,7 @@ sub assign_iterator {
     my( $self, $runtime, $iter ) = @_;
 
     $self->{array} = [];
-    while( $iter->next ) {
+    while( $iter && $iter->next ) {
         push @{$self->{array}}, $iter->item;
     }
 }

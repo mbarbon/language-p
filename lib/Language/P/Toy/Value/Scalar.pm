@@ -63,7 +63,7 @@ sub assign {
 sub assign_iterator {
     my( $self, $runtime, $iter ) = @_;
 
-    if( $iter->next ) {
+    if( $iter && $iter->next ) {
         $self->assign( $runtime, $iter->item );
     } else {
         $self->assign( $runtime,

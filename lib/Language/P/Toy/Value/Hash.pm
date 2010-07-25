@@ -68,7 +68,7 @@ sub assign_iterator {
     my( $self, $runtime, $iter ) = @_;
 
     $self->{hash} = {};
-    while( $iter->next ) {
+    while( $iter && $iter->next ) {
         my $k = $iter->item;
         $iter->next;
         my $v = $iter->item;
