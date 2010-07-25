@@ -20,8 +20,8 @@ op: OP_MATCH
 right: !parsetree:Substitution
   pattern: !parsetree:Pattern
     components:
-      - !parsetree:Constant
-        flags: CONST_STRING
+      - !parsetree:RXConstant
+        insensitive: 0
         value: foo
     flags: FLAG_RX_GLOBAL
     op: OP_QL_S
@@ -44,8 +44,8 @@ op: OP_MATCH
 right: !parsetree:Substitution
   pattern: !parsetree:Pattern
     components:
-      - !parsetree:Constant
-        flags: CONST_STRING
+      - !parsetree:RXConstant
+        insensitive: 0
         value: foo
     flags: 0
     op: OP_QL_S
@@ -71,8 +71,8 @@ op: OP_MATCH
 right: !parsetree:Substitution
   pattern: !parsetree:Pattern
     components:
-      - !parsetree:Constant
-        flags: CONST_STRING
+      - !parsetree:RXConstant
+        insensitive: 0
         value: foo
     flags: 0
     op: OP_QL_S
@@ -95,8 +95,8 @@ op: OP_MATCH
 right: !parsetree:Substitution
   pattern: !parsetree:Pattern
     components:
-      - !parsetree:Constant
-        flags: CONST_STRING
+      - !parsetree:RXConstant
+        insensitive: 0
         value: foo
     flags: FLAG_RX_GLOBAL|FLAG_RX_EVAL
     op: OP_QL_S
@@ -164,8 +164,8 @@ right: !parsetree:Substitution
     components:
       - !parsetree:RXAssertion
         type: END_OR_NEWLINE
-      - !parsetree:Constant
-        flags: CONST_STRING
+      - !parsetree:RXConstant
+        insensitive: 0
         value: foo
     flags: FLAG_RX_GLOBAL
     op: OP_QL_S
@@ -193,8 +193,8 @@ op: OP_MATCH
 right: !parsetree:Substitution
   pattern: !parsetree:Pattern
     components:
-      - !parsetree:Constant
-        flags: CONST_STRING
+      - !parsetree:RXConstant
+        insensitive: 0
         value: foo
     flags: FLAG_RX_EVAL
     op: OP_QL_S

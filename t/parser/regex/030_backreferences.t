@@ -22,8 +22,8 @@ right: !parsetree:Pattern
     - !parsetree:RXGroup
       capture: 1
       components:
-        - !parsetree:Constant
-          flags: CONST_STRING
+        - !parsetree:RXConstant
+          insensitive: 0
           value: a
     - !parsetree:RXBackreference
       group: 1
@@ -48,8 +48,8 @@ right: !parsetree:Pattern
     - !parsetree:RXGroup
       capture: 1
       components: []
-    - !parsetree:Constant
-      flags: CONST_STRING
+    - !parsetree:RXConstant
+      insensitive: 0
       value: "\x08"
   flags: 0
   op: OP_QL_M

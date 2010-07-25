@@ -620,6 +620,16 @@ __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub is_pattern { 1 }
 
+package Language::P::ParseTree::RXConstant;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(value insensitive);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
 package Language::P::ParseTree::RXGroup;
 
 use strict;
@@ -666,7 +676,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(elements);
+our @FIELDS = qw(elements insensitive);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 

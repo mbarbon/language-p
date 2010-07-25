@@ -30,6 +30,7 @@ right: !parsetree:Pattern
         - !parsetree:Constant
           flags: CONST_STRING
           value: c
+      insensitive: 0
   flags: 0
   op: OP_QL_M
 EOE
@@ -51,6 +52,7 @@ right: !parsetree:Pattern
         - !parsetree:RXRange
           end: q
           start: a
+      insensitive: 0
   flags: 0
   op: OP_QL_M
 EOE
@@ -75,6 +77,7 @@ right: !parsetree:Pattern
         - !parsetree:Constant
           flags: CONST_STRING
           value: -
+      insensitive: 0
   flags: 0
   op: OP_QL_M
 EOE
@@ -101,6 +104,7 @@ right: !parsetree:Pattern
           value: -
         - !parsetree:RXSpecialClass
           type: WORDS
+      insensitive: 0
   flags: 0
   op: OP_QL_M
 EOE
@@ -125,6 +129,7 @@ right: !parsetree:Pattern
         - !parsetree:Constant
           flags: CONST_STRING
           value: ']'
+      insensitive: 0
   flags: 0
   op: OP_QL_M
 EOE
@@ -146,8 +151,9 @@ right: !parsetree:Pattern
         - !parsetree:Constant
           flags: CONST_STRING
           value: '['
-    - !parsetree:Constant
-      flags: CONST_STRING
+      insensitive: 0
+    - !parsetree:RXConstant
+      insensitive: 0
       value: ']'
   flags: 0
   op: OP_QL_M
@@ -173,6 +179,7 @@ right: !parsetree:Pattern
         - !parsetree:Constant
           flags: CONST_STRING
           value: \
+      insensitive: 0
   flags: 0
   op: OP_QL_M
 EOE

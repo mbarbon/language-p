@@ -23,6 +23,7 @@ right: !parsetree:Pattern
       elements:
         - !parsetree:RXPosixClass
           type: alpha
+      insensitive: 0
   flags: 0
   op: OP_QL_M
 EOE

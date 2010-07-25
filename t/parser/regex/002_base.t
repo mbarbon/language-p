@@ -21,13 +21,13 @@ right: !parsetree:Pattern
   components:
     - !parsetree:RXAssertion
       type: BEGINNING
-    - !parsetree:Constant
-      flags: CONST_STRING
+    - !parsetree:RXConstant
+      insensitive: 0
       value: "\ntes"
     - !parsetree:RXAssertion
       type: ANY_NONEWLINE
-    - !parsetree:Constant
-      flags: CONST_STRING
+    - !parsetree:RXConstant
+      insensitive: 0
       value: .
     - !parsetree:RXSpecialClass
       type: WORDS
@@ -51,43 +51,43 @@ right: !parsetree:Pattern
       greedy: 1
       max: -1
       min: 0
-      node: !parsetree:Constant
-        flags: CONST_STRING
+      node: !parsetree:RXConstant
+        insensitive: 0
         value: a
     - !parsetree:RXQuantifier
       greedy: 1
       max: -1
       min: 1
-      node: !parsetree:Constant
-        flags: CONST_STRING
+      node: !parsetree:RXConstant
+        insensitive: 0
         value: b
     - !parsetree:RXQuantifier
       greedy: 1
       max: 1
       min: 0
-      node: !parsetree:Constant
-        flags: CONST_STRING
+      node: !parsetree:RXConstant
+        insensitive: 0
         value: c
     - !parsetree:RXQuantifier
       greedy: 0
       max: -1
       min: 0
-      node: !parsetree:Constant
-        flags: CONST_STRING
+      node: !parsetree:RXConstant
+        insensitive: 0
         value: d
     - !parsetree:RXQuantifier
       greedy: 0
       max: -1
       min: 1
-      node: !parsetree:Constant
-        flags: CONST_STRING
+      node: !parsetree:RXConstant
+        insensitive: 0
         value: b
     - !parsetree:RXQuantifier
       greedy: 0
       max: 1
       min: 0
-      node: !parsetree:Constant
-        flags: CONST_STRING
+      node: !parsetree:RXConstant
+        insensitive: 0
         value: c
   flags: 0
   op: OP_QL_M
@@ -112,8 +112,8 @@ right: !parsetree:Pattern
       node: !parsetree:RXGroup
         capture: 1
         components:
-          - !parsetree:Constant
-            flags: CONST_STRING
+          - !parsetree:RXConstant
+            insensitive: 0
             value: a
           - !parsetree:RXQuantifier
             greedy: 0
@@ -122,11 +122,11 @@ right: !parsetree:Pattern
             node: !parsetree:RXGroup
               capture: 1
               components:
-                - !parsetree:Constant
-                  flags: CONST_STRING
+                - !parsetree:RXConstant
+                  insensitive: 0
                   value: cbc
-          - !parsetree:Constant
-            flags: CONST_STRING
+          - !parsetree:RXConstant
+            insensitive: 0
             value: w
   flags: 0
   op: OP_QL_M
@@ -148,18 +148,18 @@ right: !parsetree:Pattern
       left:
         - !parsetree:RXAssertion
           type: BEGINNING
-        - !parsetree:Constant
-          flags: CONST_STRING
+        - !parsetree:RXConstant
+          insensitive: 0
           value: t
       right:
         - !parsetree:RXAlternation
           left:
-            - !parsetree:Constant
-              flags: CONST_STRING
+            - !parsetree:RXConstant
+              insensitive: 0
               value: es
           right:
-            - !parsetree:Constant
-              flags: CONST_STRING
+            - !parsetree:RXConstant
+              insensitive: 0
               value: t
             - !parsetree:RXAssertion
               type: END_OR_NEWLINE
@@ -183,26 +183,26 @@ right: !parsetree:Pattern
       greedy: 1
       max: -1
       min: 1
-      node: !parsetree:Constant
-        flags: CONST_STRING
+      node: !parsetree:RXConstant
+        insensitive: 0
         value: a
     - !parsetree:RXGroup
       capture: 1
       components:
         - !parsetree:RXAlternation
           left:
-            - !parsetree:Constant
-              flags: CONST_STRING
+            - !parsetree:RXConstant
+              insensitive: 0
               value: a
           right:
             - !parsetree:RXAlternation
               left:
-                - !parsetree:Constant
-                  flags: CONST_STRING
+                - !parsetree:RXConstant
+                  insensitive: 0
                   value: b
               right:
-                - !parsetree:Constant
-                  flags: CONST_STRING
+                - !parsetree:RXConstant
+                  insensitive: 0
                   value: c
   flags: 0
   op: OP_QL_M
@@ -220,20 +220,20 @@ left: !parsetree:Symbol
 op: OP_MATCH
 right: !parsetree:Pattern
   components:
-    - !parsetree:Constant
-      flags: CONST_STRING
+    - !parsetree:RXConstant
+      insensitive: 0
       value: a
     - !parsetree:RXGroup
       capture: 0
       components:
-        - !parsetree:Constant
-          flags: CONST_STRING
+        - !parsetree:RXConstant
+          insensitive: 0
           value: a
     - !parsetree:RXGroup
       capture: 1
       components:
-        - !parsetree:Constant
-          flags: CONST_STRING
+        - !parsetree:RXConstant
+          insensitive: 0
           value: a
   flags: 0
   op: OP_QL_M

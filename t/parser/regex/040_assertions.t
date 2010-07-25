@@ -21,8 +21,8 @@ right: !parsetree:Pattern
   components:
     - !parsetree:RXAssertionGroup
       components:
-        - !parsetree:Constant
-          flags: CONST_STRING
+        - !parsetree:RXConstant
+          insensitive: 0
           value: test
       type: POSITIVE_LOOKAHEAD
   flags: 0
@@ -43,8 +43,8 @@ right: !parsetree:Pattern
   components:
     - !parsetree:RXAssertionGroup
       components:
-        - !parsetree:Constant
-          flags: CONST_STRING
+        - !parsetree:RXConstant
+          insensitive: 0
           value: test
       type: NEGATIVE_LOOKBEHIND
   flags: 0

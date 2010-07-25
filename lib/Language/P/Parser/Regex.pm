@@ -23,6 +23,15 @@ sub parse_string {
     $self->_parse;
 }
 
+sub _constant {
+    my( $string, $flags ) = @_;
+
+    return Language::P::ParseTree::RXConstant->new
+               ( { value       => $string,
+                   insensitive => $flags & FLAG_RX_CASE_INSENSITIVE,
+                   } );
+}
+
 sub _parse {
     my( $self ) = @_;
 
@@ -37,10 +46,7 @@ sub _parse {
         my $value = $self->lexer->lex_quote;
 
         if( $value->[O_TYPE] == T_STRING ) {
-            push @$st, Language::P::ParseTree::Constant->new
-                           ( { flags => CONST_STRING,
-                               value => $value->[O_VALUE],
-                               } );
+            push @$st, _constant( $value->[O_VALUE], $flags );
         } elsif( $value->[O_TYPE] == T_PATTERN ) {
             if( $value->[O_VALUE] eq ')' ) {
                 die 'Unmatched ) in regex' unless $in_group;
@@ -104,14 +110,11 @@ sub _parse {
             } elsif( $value->[O_RX_REST]->[0] == T_QUANTIFIER ) {
                 die 'Nothing to quantify in regex' unless @$st;
 
-                if(    $st->[-1]->is_constant
+                if(    $st->[-1]->isa( 'Language::P::ParseTree::RXConstant' )
                     && length( $st->[-1]->value ) > 1 ) {
                     my $last = chop $st->[-1]->{value}; # XXX
 
-                    push @$st, Language::P::ParseTree::Constant->new
-                                   ( { flags => CONST_STRING,
-                                       value => $last,
-                                       } );
+                    push @$st, _constant( $last, $flags );
                 }
 
                 $st->[-1] = Language::P::ParseTree::RXQuantifier->new
@@ -146,7 +149,8 @@ sub _parse {
                                    } );
             } elsif( $value->[O_RX_REST]->[0] == T_CLASS_START ) {
                 push @$st, Language::P::ParseTree::RXClass->new
-                               ( { elements => [],
+                               ( { elements    => [],
+                                   insensitive => $flags & FLAG_RX_CASE_INSENSITIVE,
                                    } );
 
                 _parse_charclass( $self, $st->[-1] );
@@ -161,10 +165,7 @@ sub _parse {
                     my $digits = $value->[O_VALUE];
 
                     $digits =~ /^[89]/ and die "Invalid octal digit";
-                    push @$st, Language::P::ParseTree::Constant->new
-                                   ( { flags => CONST_STRING,
-                                       value => chr oct '0' . $digits,
-                                       } );
+                    push @$st, _constant( chr( oct '0' . $digits ), $flags );
                 }
             } else {
                 Carp::confess( $value->[O_TYPE], ' ', $value->[O_VALUE], ' ',

@@ -21,8 +21,8 @@ right: !parsetree:Pattern
   components:
     - !parsetree:RXAssertion
       type: BEGINNING
-    - !parsetree:Constant
-      flags: CONST_STRING
+    - !parsetree:RXConstant
+      insensitive: 0
       value: test
     - !parsetree:RXAssertion
       type: END_OR_NEWLINE
@@ -44,8 +44,8 @@ right: !parsetree:Pattern
   components:
     - !parsetree:RXAssertion
       type: BEGINNING
-    - !parsetree:Constant
-      flags: CONST_STRING
+    - !parsetree:RXConstant
+      insensitive: 0
       value: test
   flags: 0
   op: OP_QL_M
@@ -63,8 +63,8 @@ left: !parsetree:Symbol
 op: OP_MATCH
 right: !parsetree:Pattern
   components:
-    - !parsetree:Constant
-      flags: CONST_STRING
+    - !parsetree:RXConstant
+      insensitive: 0
       value: a
   flags: 0
   op: OP_QL_M
@@ -113,8 +113,8 @@ EOP
 components:
   - !parsetree:RXAssertion
     type: BEGINNING
-  - !parsetree:Constant
-    flags: CONST_STRING
+  - !parsetree:RXConstant
+    insensitive: 0
     value: test
 flags: 0
 op: OP_QL_QR
@@ -167,8 +167,8 @@ right: !parsetree:Pattern
       type: BEGINNING
     - !parsetree:RXAssertion
       type: END_OR_NEWLINE
-    - !parsetree:Constant
-      flags: CONST_STRING
+    - !parsetree:RXConstant
+      insensitive: 0
       value: '{foo}aaa'
   flags: 0
   op: OP_QL_M

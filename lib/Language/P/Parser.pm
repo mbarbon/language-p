@@ -1646,8 +1646,12 @@ sub _parse_term_terminal_maybe_subscripts {
 
     if( $is_bind && $term && !$term->is_pattern ) {
         if( $term->is_constant ) {
+            my $const = Language::P::ParseTree::RXConstant->new
+                            ( { value       => $term->value,
+                                insensitive => 0,
+                                } );
             $term = Language::P::ParseTree::Pattern->new
-                        ( { components  => [ $term ],
+                        ( { components  => [ $const ],
                             flags       => 0,
                             op          => OP_QL_M,
                             } );

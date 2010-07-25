@@ -23,8 +23,8 @@ right: !parsetree:Pattern
       greedy: 1
       max: -1
       min: 0
-      node: !parsetree:Constant
-        flags: CONST_STRING
+      node: !parsetree:RXConstant
+        insensitive: 0
         value: a
   flags: 0
   op: OP_QL_M
@@ -46,8 +46,8 @@ right: !parsetree:Pattern
       greedy: 0
       max: 1
       min: 0
-      node: !parsetree:Constant
-        flags: CONST_STRING
+      node: !parsetree:RXConstant
+        insensitive: 0
         value: a
   flags: 0
   op: OP_QL_M
@@ -65,8 +65,8 @@ left: !parsetree:Symbol
 op: OP_MATCH
 right: !parsetree:Pattern
   components:
-    - !parsetree:Constant
-      flags: CONST_STRING
+    - !parsetree:RXConstant
+      insensitive: 0
       value: 'a{,2}'
   flags: 0
   op: OP_QL_M
@@ -88,8 +88,8 @@ right: !parsetree:Pattern
       greedy: 1
       max: 7
       min: 7
-      node: !parsetree:Constant
-        flags: CONST_STRING
+      node: !parsetree:RXConstant
+        insensitive: 0
         value: a
   flags: 0
   op: OP_QL_M
@@ -111,8 +111,8 @@ right: !parsetree:Pattern
       greedy: 0
       max: 7
       min: 7
-      node: !parsetree:Constant
-        flags: CONST_STRING
+      node: !parsetree:RXConstant
+        insensitive: 0
         value: a
   flags: 0
   op: OP_QL_M
@@ -134,8 +134,8 @@ right: !parsetree:Pattern
       greedy: 1
       max: 2
       min: 1
-      node: !parsetree:Constant
-        flags: CONST_STRING
+      node: !parsetree:RXConstant
+        insensitive: 0
         value: a
   flags: 0
   op: OP_QL_M
@@ -157,8 +157,8 @@ right: !parsetree:Pattern
       greedy: 0
       max: 2
       min: 1
-      node: !parsetree:Constant
-        flags: CONST_STRING
+      node: !parsetree:RXConstant
+        insensitive: 0
         value: a
   flags: 0
   op: OP_QL_M
@@ -180,8 +180,8 @@ right: !parsetree:Pattern
       greedy: 1
       max: -1
       min: 4
-      node: !parsetree:Constant
-        flags: CONST_STRING
+      node: !parsetree:RXConstant
+        insensitive: 0
         value: a
   flags: 0
   op: OP_QL_M
@@ -203,8 +203,8 @@ right: !parsetree:Pattern
       greedy: 0
       max: -1
       min: 5
-      node: !parsetree:Constant
-        flags: CONST_STRING
+      node: !parsetree:RXConstant
+        insensitive: 0
         value: a
   flags: 0
   op: OP_QL_M
