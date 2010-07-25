@@ -2595,7 +2595,11 @@ sub _parse_eval {
     my( $lex, $glob ) = $self->_lexicals->all_visible_lexicals;
     my $lex_state = $self->{_lexical_state}[-1];
     my $tree = _parse_listop( $self, $token );
-    $_->set_closed_over foreach values %$lex;
+    foreach ( values %$lex ) {
+        # do not mark @_ as closed over since each subroutine has its own
+        next if $_->name eq '_' and $_->sigil == VALUE_ARRAY;
+        $_->set_closed_over;
+    }
     $tree->set_attribute( 'lexicals', $lex );
     $tree->set_attribute( 'globals', $glob );
     $tree->set_attribute( 'environment',
