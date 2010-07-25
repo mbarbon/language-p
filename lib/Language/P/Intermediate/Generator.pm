@@ -1921,6 +1921,7 @@ sub _exit_scope {
 
 my %regex_assertions =
   ( BEGINNING        => OP_RX_BEGINNING,
+    END              => OP_RX_END,
     END_OR_NEWLINE   => OP_RX_END_OR_NEWLINE,
     ANY_NONEWLINE    => OP_RX_ANY_NONEWLINE,
     ANY              => OP_RX_ANY,
