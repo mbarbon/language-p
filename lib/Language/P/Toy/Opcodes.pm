@@ -1591,6 +1591,43 @@ sub o_list_slice {
     return $pc + 1;
 }
 
+sub o_splice {
+    my( $op, $runtime, $pc ) = @_;
+    my $count = $op->{arg_count};
+    my @values;
+
+    @values = splice @{$runtime->{_stack}}, -( $count - 3 ) if $count >= 4;
+    my( $offset, $length );
+    $length = pop @{$runtime->{_stack}} if $count >= 3;
+    $offset = pop @{$runtime->{_stack}} if $count >= 2;
+    my $arr = pop @{$runtime->{_stack}};
+
+    my $arr_length = $arr->get_count( $runtime );
+    my( $length_int, $offset_int );
+    if( $count >= 2 ) {
+        $offset_int = $offset->as_integer( $runtime );
+    } else {
+        $offset_int = 0;
+    }
+    if( $count >= 3 ) {
+        $length_int = $length->as_integer( $runtime );
+    } else {
+        $length_int = $arr_length - $offset_int;
+    }
+
+    my @res;
+    if( $count >= 4 ) {
+        @res = splice @{$arr->array}, $offset_int, $length_int, @values;
+    } else {
+        @res = splice @{$arr->array}, $offset_int, $length_int;
+    }
+
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::List->new( $runtime, { array => \@res } );
+
+    return $pc + 1;
+}
+
 sub o_exists_array {
     my( $op, $runtime, $pc ) = @_;
     my $array = pop @{$runtime->{_stack}};
