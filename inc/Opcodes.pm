@@ -577,7 +577,7 @@ temporary_set       0       same                 1   0  index=i,slot=i_sigil
 transliterate       u       rx_transliterate     1   1  match=s,replacement=s,flags=i,context=i1
 uc                  u       same                 1   1  noattr
 ucfirst             u       same                 1   1  noattr
-undef               u       same                -1   1  context=i1
+undef               u       same                 1   0  context=i1
 unlink              0       same                 1   1  context=i1
 values              u       same                 1   1  context=i1
 vec                 u       same                 3   1  context=i1

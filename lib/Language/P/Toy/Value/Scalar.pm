@@ -42,6 +42,13 @@ sub new_float {
 
 sub as_scalar { return $_[0] }
 
+sub undefine {
+    my( $self, $runtime ) = @_;
+
+    %$self = ();
+    bless $self, 'Language::P::Toy::Value::Undef';
+}
+
 sub assign {
     my( $self, $runtime, $other ) = @_;
 

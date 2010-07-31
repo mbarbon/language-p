@@ -594,8 +594,10 @@ sub _builtin {
     my( $self, $tree ) = @_;
     my $op_flags = $OP_ATTRIBUTES{$tree->function}->{flags};
 
-    if( $tree->function == OP_UNDEF && !$tree->arguments ) {
+    if( $tree->function == OP_UNDEF ) {
         _emit_label( $self, $tree );
+        $self->dispatch( $tree->arguments->[0] )
+            if $tree->arguments;
         _add_bytecode $self, opcode_n( OP_CONSTANT_UNDEF );
     } elsif(    $tree->function == OP_EXISTS
              && $tree->arguments->[0]->isa( 'Language::P::ParseTree::Subscript' ) ) {
