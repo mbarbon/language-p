@@ -1476,11 +1476,19 @@ sub o_die {
         return $runtime->throw_exception( $exc, 1 );
     }
 
-    # TODO handle empty argument list when $@ is set and when it is not
-
     my $message = '';
-    for( my $iter = $args->iterator( $runtime ); $iter->next( $runtime ); ) {
-        $message .= $iter->item->as_string;
+    if( $args->get_count == 0 ) {
+        my $exc = $runtime->symbol_table->get_symbol( $runtime, '@', '$', 1 );
+
+        if( $exc->is_defined( $runtime ) ) {
+            $message .= $exc->as_string( $runtime ) . "\t...propagated";
+        } else {
+            $message = 'Died';
+        }
+    } else {
+        for( my $iter = $args->iterator( $runtime ); $iter->next( $runtime ); ) {
+            $message .= $iter->item->as_string;
+        }
     }
 
     my $exc = Language::P::Toy::Exception->new
