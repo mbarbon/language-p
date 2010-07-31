@@ -390,9 +390,23 @@ sub _generate_bytecode {
     $self->push_block( 0, undef, undef );
     $self->push_block( $block_flags, $pos_s, $pos_e );
 
+    # clear $@ when entering eval scope
+    if( $is_eval ) {
+        _add_bytecode $self,
+            opcode_nm( OP_GLOBAL, name => '@', slot => VALUE_SCALAR ),
+            opcode_nm( OP_UNDEF );
+    }
+
     foreach my $tree ( @$statements ) {
         $self->dispatch( $tree );
         _discard_if_void( $self, $tree );
+    }
+
+    # clear $@ when exiting eval scope
+    if( $is_eval ) {
+        _add_bytecode $self,
+            opcode_nm( OP_GLOBAL, name => '@', slot => VALUE_SCALAR ),
+            opcode_nm( OP_UNDEF );
     }
 
     $self->pop_block;
@@ -1558,6 +1572,12 @@ sub _block {
     $self->push_block( $is_eval ? SCOPE_EVAL : 0, $tree->pos_s, $tree->pos_e,
                        $is_eval ? _context( $tree ) : 0 );
     _emit_lexical_state( $self, $tree );
+    # clear $@ when entering eval scope
+    if( $is_eval ) {
+        _add_bytecode $self,
+            opcode_nm( OP_GLOBAL, name => '@', slot => VALUE_SCALAR ),
+            opcode_nm( OP_UNDEF );
+    }
 
     foreach my $line ( @{$tree->lines} ) {
         $self->dispatch( $line );
@@ -1565,6 +1585,12 @@ sub _block {
     }
 
     _exit_scope( $self, $self->_current_block );
+    # clear $@ when exiting eval scope
+    if( $is_eval ) {
+        _add_bytecode $self,
+            opcode_nm( OP_GLOBAL, name => '@', slot => VALUE_SCALAR ),
+            opcode_nm( OP_UNDEF );
+    }
     $self->pop_block;
     _start_bb( $self ) if $is_eval;
 }

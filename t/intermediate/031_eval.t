@@ -37,7 +37,11 @@ eval {
 EOP
 # main
 L1:
+  global name="@", slot=1
+  undef
   constant_integer value=1
+  global name="@", slot=1
+  undef
   jump to=L2
 L2:
   global name="x", slot=1
@@ -47,12 +51,16 @@ L2:
   jump to=L3
 L3:
   lexical_state_save index=0
+  global name="@", slot=1
+  undef
   jump to=L4
 L4:
   lexical_state_set index=1
   constant_integer value=1
   pop
   lexical_state_restore index=0
+  global name="@", slot=1
+  undef
   jump to=L5
 L5:
   end

@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    eval 'print "1..8\n"';
+    eval 'print "1..10\n"';
 }
 
 my $y = 2;
@@ -39,3 +39,7 @@ $ok = eval {
 };
 print "ok $ok\n";
 
+# check that $@ is cleared on enter/exit
+$@ = 1;
+eval 'print $@ ? "not ok\n" : "ok\n"; $@ = 1';
+print $@ ? "not ok\n" : "ok\n";
