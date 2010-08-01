@@ -1655,6 +1655,28 @@ sub o_exists_array {
     return $pc + 1;
 }
 
+sub o_delete_array {
+    my( $op, $runtime, $pc ) = @_;
+    my $array = pop @{$runtime->{_stack}};
+    my $index = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}},
+         $array->delete_item( $runtime, $index->as_integer( $runtime ) );
+
+    return $pc + 1;
+}
+
+sub o_delete_array_slice {
+    my( $op, $runtime, $pc ) = @_;
+    my $array = pop @{$runtime->{_stack}};
+    my $indices = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}},
+         $array->delete_slice( $runtime, $indices );
+
+    return $pc + 1;
+}
+
 sub o_hash_element {
     my( $op, $runtime, $pc ) = @_;
     my $hash = pop @{$runtime->{_stack}};
@@ -1683,6 +1705,28 @@ sub o_exists_hash {
     my $key = pop @{$runtime->{_stack}};
 
     push @{$runtime->{_stack}}, $hash->exists( $runtime, $key->as_string( $runtime ) );
+
+    return $pc + 1;
+}
+
+sub o_delete_hash {
+    my( $op, $runtime, $pc ) = @_;
+    my $hash = pop @{$runtime->{_stack}};
+    my $index = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}},
+         $hash->delete_item( $runtime, $index->as_string( $runtime ) );
+
+    return $pc + 1;
+}
+
+sub o_delete_hash_slice {
+    my( $op, $runtime, $pc ) = @_;
+    my $hash = pop @{$runtime->{_stack}};
+    my $indices = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}},
+         $hash->delete_slice( $runtime, $indices );
 
     return $pc + 1;
 }

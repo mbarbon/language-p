@@ -209,6 +209,32 @@ sub exists {
     return Language::P::Toy::Value::Scalar->new_boolean( $runtime, $index > $#{$self->{array}} );
 }
 
+sub delete_item {
+    my( $self, $runtime, $index ) = @_;
+    my $value = delete $self->{array}[$index];
+
+    $value ||= Language::P::Toy::Value::Undef->new( $runtime );
+
+    return Language::P::Toy::Value::List->new( $runtime,
+                                               { array => [ $value ] } );
+}
+
+sub delete_slice {
+    my( $self, $runtime, $indices ) = @_;
+    my @res;
+
+    for( my $iter = $indices->iterator; $iter->next; ) {
+        my $index = $iter->item->as_integer( $runtime );
+        my $value = delete $self->{array}[$index];
+
+        $value ||= Language::P::Toy::Value::Undef->new( $runtime );
+
+        push @res, $value;
+    }
+
+    return Language::P::Toy::Value::List->new( $runtime, { array => \@res } );
+}
+
 sub get_count {
     my( $self, $runtime ) = @_;
 
