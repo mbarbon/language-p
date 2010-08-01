@@ -212,6 +212,7 @@ package             k
 require             b       KEY_REQUIRE_FILE     1   1  0             any
 
 defined             b       same                 1   1  topic         any+amper
+delete              b       same                 1   1  0             scalar
 eval                b       same                 1   1  topic+block   any
 exists              b       same                 1   1  0             any+amper
 grep                b       same                 2  -1  indirect      list

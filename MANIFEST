@@ -117,6 +117,7 @@ t/parser/expressions/010_named_unary/chdir.t
 t/parser/expressions/010_named_unary/chr.t
 t/parser/expressions/010_named_unary/close.t
 t/parser/expressions/010_named_unary/defined.t
+t/parser/expressions/010_named_unary/delete.t
 t/parser/expressions/010_named_unary/each.t
 t/parser/expressions/010_named_unary/exists.t
 t/parser/expressions/010_named_unary/glob.t
