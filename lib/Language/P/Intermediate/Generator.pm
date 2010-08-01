@@ -631,6 +631,32 @@ sub _builtin {
             opcode_npm( $arg->type == VALUE_ARRAY ? OP_EXISTS_ARRAY :
                                                     OP_EXISTS_HASH,
                         $tree->pos, context => _context( $tree ) );
+    } elsif( $tree->function == OP_DELETE ) {
+        _emit_label( $self, $tree );
+
+        my $arg = $tree->arguments->[0];
+
+        $self->dispatch( $arg->subscript );
+        $self->dispatch( $arg->subscripted );
+
+        _add_bytecode $self,
+            opcode_npm( $arg->type == VALUE_ARRAY ? OP_VIVIFY_ARRAY :
+                                                    OP_VIVIFY_HASH,
+                        $tree->pos, context => CXT_SCALAR )
+              if $arg->reference;
+        if( $tree->arguments->[0]->isa( 'Language::P::ParseTree::Subscript' ) ) {
+            # element
+            _add_bytecode $self,
+                opcode_npm( $arg->type == VALUE_ARRAY ? OP_DELETE_ARRAY :
+                                                        OP_DELETE_HASH,
+                            $tree->pos, context => _context( $tree ) );
+        } else {
+            # slice
+            _add_bytecode $self,
+                opcode_npm( $arg->type == VALUE_ARRAY ? OP_DELETE_ARRAY_SLICE :
+                                                        OP_DELETE_HASH_SLICE,
+                            $tree->pos, context => _context( $tree ) );
+        }
     } elsif( $op_flags & Language::P::Opcodes::FLAG_UNARY ) {
         _emit_label( $self, $tree );
         foreach my $arg ( @{$tree->arguments || []} ) {

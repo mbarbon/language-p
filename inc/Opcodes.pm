@@ -392,6 +392,10 @@ constant_sub        0       same                 0   1  value=c
 constant_undef      0       same                 0   1  noattr
 defined             u       same                 1   1  context=i1
 delete              u       same                 1   1  context=i1
+delete_array        u       same                 2   1  context=i1
+delete_array_slice  u       same                 2   1  context=i1
+delete_hash         u       same                 2   1  context=i1
+delete_hash_slice   u       same                 2   1  context=i1
 dereference_array   0       same                 1   1  context=i1
 dereference_glob    0       same                 1   1  context=i1
 dereference_hash    0       same                 1   1  context=i1
