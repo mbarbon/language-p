@@ -323,6 +323,23 @@ _make_bit_op( 'or',  '|' );
 _make_bit_op( 'and', '&' );
 _make_bit_op( 'xor', '^' );
 
+sub o_bit_not {
+    my( $op, $runtime, $pc ) = @_;
+    my $v = pop @{$runtime->{_stack}};
+
+    if( $v->is_string( $runtime ) ) {
+        push @{$runtime->{_stack}},
+             Language::P::Toy::Value::Scalar->new_string
+                 ( $runtime, ~$v->as_string( $runtime ) );
+    } else {
+        push @{$runtime->{_stack}},
+             Language::P::Toy::Value::Scalar->new_integer
+                 ( $runtime, ~$v->as_integer( $runtime ) );
+    }
+
+    return $pc + 1;
+}
+
 sub _do_add_string_number {
     my( $runtime, $vl, $vr ) = @_;
 
@@ -1152,10 +1169,6 @@ _make_unary( $_ ) foreach
     { name       => 'o_chr',
       type       => 'string',
       expression => 'chr $v->as_integer( $runtime )',
-      },
-    { name       => 'o_bit_not',
-      type       => 'integer',
-      expression => '~ $v->as_integer( $runtime )',
       },
     { name       => 'o_length',
       type       => 'integer',
