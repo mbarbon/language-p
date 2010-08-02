@@ -41,6 +41,8 @@ sub new_float {
 }
 
 sub as_scalar { return $_[0] }
+sub as_integer { return int( $_[0]->as_float( $_[1] ) ) }
+sub as_float { return $_[0]->as_integer( $_[1] ) }
 
 sub undefine {
     my( $self, $runtime ) = @_;
