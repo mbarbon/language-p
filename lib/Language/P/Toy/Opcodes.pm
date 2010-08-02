@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use Exporter 'import';
 
+use Scalar::Util; # dualvar
+
 use Language::P::Toy::Value::StringNumber;
 use Language::P::Toy::Value::Reference;
 use Language::P::Toy::Value::Array;
@@ -128,6 +130,25 @@ sub o_print {
 
     # HACK
     push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new( $runtime, { integer => 1 } );
+
+    return $pc + 1;
+}
+
+sub o_sprintf {
+    my( $op, $runtime, $pc ) = @_;
+    my $args = pop @{$runtime->{_stack}};
+    my $format = $args->get_item( $runtime, 0 )->as_string( $runtime );
+    my @values;
+
+    for( my $i = 1; $i < $args->get_count( $runtime ); ++$i ) {
+        my $value = $args->get_item( $runtime, $i )->as_scalar( $runtime );
+        push @values, Scalar::Util::dualvar( $value->as_float( $runtime ),
+                                             $value->as_string( $runtime ) );
+    }
+
+    my $string = sprintf $format, @values;
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::Scalar->new_string( $runtime, $string );
 
     return $pc + 1;
 }
