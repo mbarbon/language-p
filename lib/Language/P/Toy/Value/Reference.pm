@@ -91,6 +91,12 @@ sub as_string {
     return sprintf '%s(0x%p)', _reference_string( $self ), $self->{reference};
 }
 
+sub as_integer {
+    my( $self, $runtime ) = @_;
+
+    return int( $self->{reference} );
+}
+
 sub as_boolean_int {
     my( $self, $runtime ) = @_;
 
