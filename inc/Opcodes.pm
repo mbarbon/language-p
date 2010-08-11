@@ -450,7 +450,7 @@ glob                0       same                 1   1  context=i1
 glob_element        0       same                 2   1  context=i1
 glob_slot           0       same                 1   1  slot=i_sigil
 glob_slot_set       0       same                 2   0  slot=i_sigil
-global              0       same                 0   1  name=s,slot=i_sigil
+global              0       same                 0   1  name=s,slot=i_sigil,context=i1
 grep                0       same                 1   1  context=i1
 hash_element        0       same                 2   1  context=i1,create=i1
 hash_slice          0       same                 2   1  context=i1,create=i1

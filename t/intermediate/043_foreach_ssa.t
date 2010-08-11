@@ -15,7 +15,7 @@ EOP
 # main
 L1:
   temporary_set index=0, slot=9 (iterator (make_list (make_list (constant_integer value=1), (constant_integer value=2))))
-  set index=1 (global name="y", slot=5)
+  set index=1 (global context=4, name="y", slot=5)
   temporary_set index=2, slot=1 (glob_slot slot=1 (get index=1))
   temporary_set index=1, slot=5 (get index=1)
   jump to=L2

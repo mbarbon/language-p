@@ -235,8 +235,10 @@ sub generate_use {
         _add_bytecode $self,
                       opcode_nm( OP_CONSTANT_INTEGER, value => $tree->version ),
                       opcode_npm( OP_GLOBAL, $tree->pos,
-                                  name => ']',
-                                  slot => VALUE_SCALAR );
+                                  name    => ']',
+                                  slot    => VALUE_SCALAR,
+                                  context => CXT_SCALAR,
+                                  );
         _add_jump $self,
                   opcode_nm( OP_JUMP_IF_F_LT,
                              true  => $return,
@@ -250,7 +252,7 @@ sub generate_use {
                       opcode_nm( OP_FRESH_STRING, value => 'Perl ' ),
                       opcode_nm( OP_CONSTANT_FLOAT, value => $tree->version ),
                       opcode_nm( OP_CONSTANT_STRING, value => ' required--this is only ' ),
-                      opcode_nm( OP_GLOBAL, name => ']', slot => VALUE_SCALAR ),
+                      opcode_nm( OP_GLOBAL, name => ']', slot => VALUE_SCALAR, context => CXT_SCALAR ),
                       opcode_nm( OP_CONSTANT_STRING, value => ', stopped' ),
                       opcode_nm( OP_CONCATENATE ),
                       opcode_nm( OP_CONCATENATE ),
@@ -393,7 +395,7 @@ sub _generate_bytecode {
     # clear $@ when entering eval scope
     if( $is_eval ) {
         _add_bytecode $self,
-            opcode_nm( OP_GLOBAL, name => '@', slot => VALUE_SCALAR ),
+            opcode_nm( OP_GLOBAL, name => '@', slot => VALUE_SCALAR, context => CXT_SCALAR ),
             opcode_nm( OP_UNDEF );
     }
 
@@ -405,7 +407,7 @@ sub _generate_bytecode {
     # clear $@ when exiting eval scope
     if( $is_eval ) {
         _add_bytecode $self,
-            opcode_nm( OP_GLOBAL, name => '@', slot => VALUE_SCALAR ),
+            opcode_nm( OP_GLOBAL, name => '@', slot => VALUE_SCALAR, context => CXT_SCALAR ),
             opcode_nm( OP_UNDEF );
     }
 
@@ -588,8 +590,10 @@ sub _indirect {
     } else {
         _add_bytecode $self,
              opcode_npm( OP_GLOBAL, $tree->pos,
-                         name => 'STDOUT',
-                         slot => VALUE_HANDLE );
+                         name    => 'STDOUT',
+                         slot    => VALUE_HANDLE,
+                         context => CXT_SCALAR,
+                         );
     }
 
     foreach my $arg ( @{$tree->arguments} ) {
@@ -1098,7 +1102,10 @@ sub _symbol {
 
     _add_bytecode $self,
          opcode_npm( OP_GLOBAL, $tree->pos,
-                     name => $tree->name, slot => $tree->sigil );
+                     name    => $tree->name,
+                     slot    => $tree->sigil,
+                     context => $tree->get_attribute( 'context' ),
+                     );
 }
 
 sub _lexical_symbol {
@@ -1283,7 +1290,7 @@ sub _setup_list_iteration {
         $slot = $self->{_temporary_count}++;
 
         _add_bytecode $self,
-            opcode_nm( OP_GLOBAL, name => $iter_var->name, slot => VALUE_GLOB ),
+            opcode_nm( OP_GLOBAL, name => $iter_var->name, slot => VALUE_GLOB, context => CXT_SCALAR ),
             opcode_n( OP_DUP ),
             opcode_nm( OP_GLOB_SLOT,   slot  => VALUE_SCALAR ),
             opcode_nm( OP_TEMPORARY_SET,
@@ -1464,7 +1471,7 @@ sub _grep {
         $iftrue, $iffalse;
     _add_blocks $self, $iftrue;
     _add_bytecode $self,
-        opcode_nm( OP_GLOBAL, name => '_', slot => VALUE_SCALAR ),
+        opcode_nm( OP_GLOBAL, name => '_', slot => VALUE_SCALAR, context => CXT_SCALAR ),
         opcode_n( OP_PUSH_ELEMENT );
     _add_jump $self,
         opcode_nm( OP_JUMP, to => $iffalse ),
@@ -1601,7 +1608,7 @@ sub _block {
     # clear $@ when entering eval scope
     if( $is_eval ) {
         _add_bytecode $self,
-            opcode_nm( OP_GLOBAL, name => '@', slot => VALUE_SCALAR ),
+            opcode_nm( OP_GLOBAL, name => '@', slot => VALUE_SCALAR, context => CXT_SCALAR ),
             opcode_nm( OP_UNDEF );
     }
 
@@ -1614,7 +1621,7 @@ sub _block {
     # clear $@ when exiting eval scope
     if( $is_eval ) {
         _add_bytecode $self,
-            opcode_nm( OP_GLOBAL, name => '@', slot => VALUE_SCALAR ),
+            opcode_nm( OP_GLOBAL, name => '@', slot => VALUE_SCALAR, context => CXT_SCALAR ),
             opcode_nm( OP_UNDEF );
     }
     $self->pop_block;
@@ -1717,7 +1724,7 @@ sub _quoted_string {
                  && $c->op == OP_DEREFERENCE_ARRAY ) ) {
             _add_bytecode $self,
                 opcode_npm( OP_GLOBAL, $tree->pos,
-                            name => '"', slot => VALUE_SCALAR );
+                            name => '"', slot => VALUE_SCALAR, context => CXT_SCALAR );
             $self->dispatch( $c );
             _add_bytecode $self,
                 opcode_nm( OP_MAKE_LIST, count => 2, context => CXT_LIST ),
@@ -1740,7 +1747,7 @@ sub _quoted_string {
                  && $c->op == OP_DEREFERENCE_ARRAY ) ) {
             _add_bytecode $self,
                 opcode_npm( OP_GLOBAL, $tree->pos,
-                            name => '"', slot => VALUE_SCALAR );
+                            name => '"', slot => VALUE_SCALAR, context => CXT_SCALAR );
             $self->dispatch( $c );
             _add_bytecode $self,
                 opcode_nm( OP_MAKE_LIST, count => 2, context => CXT_LIST ),

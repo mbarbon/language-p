@@ -13,7 +13,7 @@ EOP
 # main
 L1:
   constant_integer value=1
-  global name="foo", slot=2
+  global context=8, name="foo", slot=2
   exists_array context=2
   pop
   jump to=L2
@@ -27,7 +27,7 @@ EOP
 # main
 L1:
   constant_integer value=1
-  global name="foo", slot=1
+  global context=36, name="foo", slot=1
   vivify_hash context=4
   exists_hash context=2
   pop
@@ -41,7 +41,7 @@ exists &foo;
 EOP
 # main
 L1:
-  global name="foo", slot=4
+  global context=4, name="foo", slot=4
   exists context=2
   pop
   jump to=L2

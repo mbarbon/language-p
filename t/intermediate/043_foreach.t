@@ -20,7 +20,7 @@ L1:
   make_list context=8, count=1
   iterator
   temporary_set index=0, slot=9
-  global name="y", slot=5
+  global context=4, name="y", slot=5
   dup
   glob_slot slot=1
   temporary_set index=2, slot=1

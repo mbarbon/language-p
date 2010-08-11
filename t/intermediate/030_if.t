@@ -19,7 +19,7 @@ L1:
   pop
   jump to=L3
 L3:
-  global name="a", slot=1
+  global context=4, name="a", slot=1
   constant_integer value=2
   jump_if_f_lt false=L5, true=L7
 L4:
@@ -49,7 +49,7 @@ L1:
   pop
   jump to=L3
 L3:
-  global name="a", slot=1
+  global context=4, name="a", slot=1
   constant_integer value=11
   jump_if_f_lt false=L6, true=L5
 L4:
@@ -61,7 +61,7 @@ L5:
   pop
   jump to=L4
 L6:
-  global name="a", slot=1
+  global context=4, name="a", slot=1
   constant_integer value=12
   jump_if_f_lt false=L8, true=L7
 L7:
@@ -89,7 +89,7 @@ L1:
   pop
   jump to=L3
 L3:
-  global name="a", slot=1
+  global context=4, name="a", slot=1
   constant_integer value=1
   subtract context=4
   jump_if_true false=L8, true=L5
@@ -122,7 +122,7 @@ L1:
 L10:
   jump to=L4
 L3:
-  global name="a", slot=1
+  global context=4, name="a", slot=1
   jump_if_true false=L9, true=L7
 L4:
   constant_integer value=2
@@ -133,7 +133,7 @@ L5:
   pop
   jump to=L4
 L7:
-  global name="b", slot=1
+  global context=4, name="b", slot=1
   jump_if_true false=L10, true=L5
 L8:
   end
@@ -154,13 +154,13 @@ L10:
 L11:
   jump to=L3
 L2:
-  global name="y", slot=1
+  global context=4, name="y", slot=1
   constant_string value=""
   jump_if_s_eq false=L10, true=L6
 L3:
   end
 L6:
-  global name="z", slot=1
+  global context=4, name="z", slot=1
   jump_if_true false=L8, true=L11
 L8:
   constant_integer value=3

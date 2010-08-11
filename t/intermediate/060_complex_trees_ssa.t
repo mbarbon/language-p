@@ -19,7 +19,7 @@ L1:
 # is_scalar
 L1:
   lexical_state_set index=1
-  set index=1 (global name="STDOUT", slot=7)
+  set index=1 (global context=4, name="STDOUT", slot=7)
   jump_if_true to=L5 (defined context=4 (want context=4))
   jump to=L7
 L2:
