@@ -9,7 +9,7 @@ EOP
 condition: !parsetree:Builtin
   arguments:
     - !parsetree:Symbol
-      context: CXT_SCALAR
+      context: CXT_SCALAR|CXT_NOCREATE
       name: a
       sigil: VALUE_SCALAR
   context: CXT_SCALAR

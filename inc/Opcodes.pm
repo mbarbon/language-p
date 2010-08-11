@@ -192,7 +192,7 @@ EOT
             $op, $attr->[2], $attr->[3], $attr->[4], $cxt;
     }
 
-    printf $out <<'EOT', CXT_SCALAR, CXT_CALLER, CXT_SCALAR;
+    printf $out <<'EOT',
     );
 
 our %%CONTEXT =
@@ -203,7 +203,10 @@ our %%CONTEXT =
         [ %d ],
     OP_DYNAMIC_GOTO() =>
         [ %d ],
+    OP_DEFINED() =>
+        [ %d ],
 EOT
+        CXT_SCALAR, CXT_CALLER, CXT_SCALAR, CXT_SCALAR|CXT_NOCREATE;
 
     foreach my $ft ( grep /^OP_FT/, keys %op ) {
         printf $out <<'EOT', $ft, CXT_SCALAR;
@@ -213,7 +216,7 @@ EOT
     }
 
     while( my( $op, $key ) = each %op_key_map ) {
-        next if $op eq 'OP_RETURN';
+        next if $op eq 'OP_RETURN' || $op eq 'OP_DEFINED';
         my $attr = $attrs{$key} or die "Unknown builtin '$key'";
         my @cxt;
         foreach my $a ( @{$attr->[5]} ) {

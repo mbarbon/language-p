@@ -27,7 +27,7 @@ EOP
 # main
 L1:
   constant_integer value=1
-  global context=36, name="foo", slot=1
+  global context=4, name="foo", slot=1
   vivify_hash context=4
   exists_hash context=2
   pop

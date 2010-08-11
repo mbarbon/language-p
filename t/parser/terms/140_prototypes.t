@@ -15,7 +15,7 @@ arguments:
   - !parsetree:Builtin
     arguments:
       - !parsetree:Constant
-        context: CXT_SCALAR
+        context: CXT_SCALAR|CXT_NOCREATE
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
     context: CXT_LIST

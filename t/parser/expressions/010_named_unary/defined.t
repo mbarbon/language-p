@@ -8,7 +8,7 @@ EOP
 --- !parsetree:Builtin
 arguments:
   - !parsetree:Symbol
-    context: CXT_SCALAR
+    context: CXT_SCALAR|CXT_NOCREATE
     name: a
     sigil: VALUE_SCALAR
 context: CXT_VOID
@@ -21,7 +21,7 @@ EOP
 --- !parsetree:Builtin
 arguments:
   - !parsetree:Symbol
-    context: CXT_SCALAR
+    context: CXT_SCALAR|CXT_NOCREATE
     name: foo
     sigil: VALUE_SUB
 context: CXT_VOID
@@ -34,7 +34,7 @@ EOP
 --- !parsetree:Builtin
 arguments:
   - !parsetree:Dereference
-    context: CXT_SCALAR
+    context: CXT_SCALAR|CXT_NOCREATE
     left: !parsetree:Block
       lines:
         - !parsetree:Symbol

@@ -1100,11 +1100,12 @@ sub _symbol {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
+    my $lvalue = $tree->get_attribute( 'context' ) & (CXT_LVALUE|CXT_NOCREATE|CXT_CALL_MASK);
     _add_bytecode $self,
          opcode_npm( OP_GLOBAL, $tree->pos,
                      name    => $tree->name,
                      slot    => $tree->sigil,
-                     context => $tree->get_attribute( 'context' ),
+                     context => $lvalue,
                      );
 }
 

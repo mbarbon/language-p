@@ -493,7 +493,7 @@ sub _global {
              o( 'glob',
                 pos    => $op->{pos},
                 name   => $op->{attributes}{name},
-                create => 1 );
+                create => !($op->{attributes}{context} & CXT_NOCREATE) );
         return;
     }
 
