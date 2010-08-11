@@ -55,10 +55,10 @@ caller 1;
 EOP
 # main
 L1:
-  caller context=2, arg_count=0
+  caller arg_count=0, context=2
   pop
   constant_integer value=1
-  caller context=2, arg_count=1
+  caller arg_count=1, context=2
   pop
   jump to=L2
 L2:

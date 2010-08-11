@@ -32,7 +32,7 @@ L1:
   global name="STDOUT", slot=7
   global name="a", slot=1
   not context=8
-  make_array count=1, context=8
+  make_array context=8, count=1
   print context=2
   pop
   jump to=L2

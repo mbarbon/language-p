@@ -147,7 +147,8 @@ sub _p {
             if $arg->isa( 'Language::P::Intermediate::Code' );
     }
     if( ref( $arg ) eq 'HASH' ) {
-        return '{' . join( ', ', map "$_ => $arg->{$_}", keys %$arg ) . '}';
+        return '{' . join( ', ', map "$_ => $arg->{$_}",
+                                 sort keys %$arg ) . '}';
     }
     if(    $self->{opcode_n} && defined $name && $attributes
         && (my $named = $attributes->{$self->{opcode_n}}{named}) ) {
@@ -184,7 +185,7 @@ sub as_string {
         die "Can't happen" unless %{$self->{attributes}};
         $str .= ' ' . join ', ',
                       map  { "$_=" . _p( $self, $self->{attributes}{$_}, $_, $number_to_name, $attributes ) }
-                           keys %{$self->{attributes}};
+                           sort keys %{$self->{attributes}};
     }
 
     if( $self->{parameters} ) {

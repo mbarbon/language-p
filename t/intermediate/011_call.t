@@ -17,7 +17,7 @@ EOP
 # main
 L1:
   constant_integer value=1
-  make_array count=1, context=8
+  make_array context=8, count=1
   global name="foo", slot=4
   call context=2
   pop
@@ -33,13 +33,13 @@ L1:
   concat_assign context=4
   constant_integer value=0
   lexical index=0, slot=2
-  array_element create=0, context=4
+  array_element context=4, create=0
   concat_assign context=4
   constant_string value="\x0a"
   concat_assign context=4
-  make_array count=1, context=8
+  make_array context=8, count=1
   print context=1
-  make_array count=1, context=8
+  make_array context=8, count=1
   return context=1
   jump to=L2
 L2:

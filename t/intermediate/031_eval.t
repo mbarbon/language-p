@@ -15,13 +15,13 @@ EOP
 # main
 L1:
   constant_string value="1"
-  eval warnings=undef, hints=0, globals={}, context=2, lexicals={}, package="main"
+  eval context=2, globals={}, hints=0, lexicals={}, package="main", warnings=undef
   pop
   jump to=L2
 L2:
   lexical_state_set index=1
   constant_string value="1"
-  eval warnings=undef, hints=0, globals={}, context=2, lexicals={}, package="x"
+  eval context=2, globals={}, hints=0, lexicals={}, package="x", warnings=undef
   pop
   jump to=L3
 L3:
