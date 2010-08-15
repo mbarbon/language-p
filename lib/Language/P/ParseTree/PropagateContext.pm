@@ -78,6 +78,8 @@ sub _symbol {
 
     if( $tree->sigil == VALUE_ARRAY || $tree->sigil == VALUE_HASH ) {
         $tree->set_attribute( 'context', $cxt );
+    } elsif( $tree->sigil == VALUE_STASH ) {
+        $tree->set_attribute( 'context', $cxt );
     } else {
         $tree->set_attribute( 'context', $cxt & CXT_LIST ? _lv( CXT_SCALAR, $cxt ) : $cxt );
     }

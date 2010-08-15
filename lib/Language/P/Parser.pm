@@ -956,6 +956,15 @@ sub _find_symbol {
                        sigil => $sigil,
                        pos   => $pos,
                        } );
+    } elsif( $sigil == VALUE_HASH && $name =~ /::$/ ) {
+        my $name = _qualify( $self, $name, $type );
+        $name = 'main::' if $name eq '';
+
+        return Language::P::ParseTree::Symbol->new
+                   ( { name  => $name,
+                       sigil => VALUE_STASH,
+                       pos   => $pos,
+                       } );
     } elsif( $type == T_FQ_ID || $sigil == VALUE_GLOB || $sigil == VALUE_SUB ) {
         return Language::P::ParseTree::Symbol->new
                    ( { name  => _qualify( $self, $name, $type ),

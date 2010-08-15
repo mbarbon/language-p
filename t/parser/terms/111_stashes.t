@@ -8,8 +8,8 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:Symbol
 context: CXT_VOID
-name: ''
-sigil: VALUE_HASH
+name: 'main::'
+sigil: VALUE_STASH
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -17,8 +17,8 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 EOP
 --- !parsetree:Symbol
 context: CXT_VOID
-name: ''
-sigil: VALUE_HASH
+name: 'main::'
+sigil: VALUE_STASH
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -27,7 +27,7 @@ EOP
 --- !parsetree:Symbol
 context: CXT_VOID
 name: 'a::b::'
-sigil: VALUE_HASH
+sigil: VALUE_STASH
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -42,8 +42,8 @@ subscript: !parsetree:Constant
   value: a
 subscripted: !parsetree:Symbol
   context: CXT_LIST
-  name: ''
-  sigil: VALUE_HASH
+  name: 'main::'
+  sigil: VALUE_STASH
 type: VALUE_HASH
 EOE
 
@@ -59,8 +59,8 @@ subscript: !parsetree:Constant
   value: a
 subscripted: !parsetree:Symbol
   context: CXT_LIST
-  name: ''
-  sigil: VALUE_HASH
+  name: 'main::'
+  sigil: VALUE_STASH
 type: VALUE_HASH
 EOE
 
@@ -77,6 +77,6 @@ subscript: !parsetree:Constant
 subscripted: !parsetree:Symbol
   context: CXT_LIST
   name: 'a::b::'
-  sigil: VALUE_HASH
+  sigil: VALUE_STASH
 type: VALUE_HASH
 EOE
