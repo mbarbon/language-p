@@ -232,6 +232,7 @@ t/run/015_defined.t
 t/run/015_hash_ops.t
 t/run/015_pos.t
 t/run/015_range.t
+t/run/015_scalar.t
 t/run/017_references.t
 t/run/017_stash.t
 t/run/018_vivification.t

@@ -1243,6 +1243,15 @@ _make_boolean_unary( $_ ) foreach
       },
     );
 
+sub o_scalar {
+    my( $op, $runtime, $pc ) = @_;
+    my $v = pop @{$runtime->{_stack}};
+
+    push @{$runtime->{_stack}}, $v->as_scalar( $runtime );
+
+    return $pc + 1;
+}
+
 sub o_undef {
     my( $op, $runtime, $pc ) = @_;
     my $val = pop @{$runtime->{_stack}};
