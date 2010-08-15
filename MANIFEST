@@ -267,6 +267,7 @@ t/run/files/Moo.pm
 t/run/files/foo.pl
 t/runtime/001_load.t
 t/runtime/002_base.t
+t/runtime/005_stash.t
 t/runtime/010_call.t
 t/runtime/011_context.t
 t/runtime/015_recursion.t

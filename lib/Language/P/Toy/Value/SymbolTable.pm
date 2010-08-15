@@ -23,7 +23,7 @@ sub get_package {
     my( $self, $runtime, $package, $create ) = @_;
 
     return $self if $self->is_main && $package eq 'main';
-    my( $pack ) = $self->_get_symbol( $runtime, $package, '::', $create );
+    my( $pack ) = $self->get_symbol( $runtime, $package . '::', '::', $create );
 
     return $pack;
 }
@@ -63,61 +63,62 @@ our %sigils =
     '*'  => [ undef,        'Language::P::Toy::Value::Typeglob' ],
     'I'  => [ 'io',         'Language::P::Toy::Value::Handle' ],
     'F'  => [ 'format',     'Language::P::Toy::Value::Format' ],
-    '::' => [ undef,        'language::P::Toy::Value::SymbolTable' ],
+    '::' => [ 'hash',       'language::P::Toy::Value::SymbolTable' ],
     );
 
 sub get_symbol {
     my( $self, $runtime, $name, $sigil, $create ) = @_;
-    my( $symbol, $created ) = $self->_get_symbol( $runtime, $name, '*', $create );
+    my( $symbol, $created ) = $self->_get_glob( $runtime, $name, $create );
 
     return $symbol unless $symbol;
-    if( !$created ) {
-        return $symbol if $sigil eq '*';
-        return $create ? $symbol->get_or_create_slot( $runtime, $sigils{$sigil}[0] ) :
-                         $symbol->get_slot( $runtime, $sigils{$sigil}[0] );
-    }
-    $self->_apply_magic( $runtime, $name, $symbol );
+
+    $self->_apply_magic( $runtime, $name, $symbol ) if $created;
 
     return $symbol if $sigil eq '*';
-    return $create ? $symbol->get_or_create_slot( $runtime, $sigils{$sigil}[0] ) :
-                     $symbol->get_slot( $runtime, $sigils{$sigil}[0] );
+
+    my $value = $symbol->get_slot( $runtime, $sigils{$sigil}[0] );
+    return $value if $value || !$create;
+
+    if( $sigil eq '::' ) {
+        $value = Language::P::Toy::Value::SymbolTable->new( $runtime );
+        $symbol->set_slot( $runtime, 'hash', $value );
+
+        return $value;
+    }
+
+    return $symbol->get_or_create_slot( $runtime, $sigils{$sigil}[0] );
 }
 
-sub _get_symbol {
-    my( $self, $runtime, $name, $sigil, $create ) = @_;
-    my( @packages ) = split /::/, $name;
+sub _get_glob {
+    my( $self, $runtime, $name, $create ) = @_;
+    my( @packages ) = split /(?<=::)/, $name;
     my $name_prefix = '';
     if( $self->is_main ) {
-        shift @packages if $packages[0] eq '' || $packages[0] eq 'main';
+        shift @packages if $packages[0] eq 'main::';
         $name_prefix = 'main::' if @packages == 1;
     }
 
     my $index = 0;
     my $current = $self;
     foreach my $package ( @packages ) {
-        if( $index == $#packages && $sigil ne '::' ) {
-            my $glob = $current->{hash}{$package};
-            my $created = 0;
-            return ( undef, $created ) if !$glob && !$create;
-            if( !$glob ) {
-                $created = 1;
-                $glob = $current->{hash}{$package} =
-                    Language::P::Toy::Value::Typeglob->new
-                        ( $runtime, { name => $name_prefix . $name } );
-            }
-            return ( $glob, $created ) if $sigil eq '*';
-            return ( $create ? $glob->get_or_create_slot( $runtime, $sigils{$sigil}[0] ) :
-                               $glob->get_slot( $runtime, $sigils{$sigil}[0] ),
-                     $created );
-        } else {
-            my $subpackage = $package . '::';
-            if( !exists $current->{hash}{$subpackage} ) {
-                return ( undef, 0 ) unless $create;
+        my $glob = $current->{hash}{$package};
+        return ( undef, 0 ) if !$glob && !$create;
+        my $created = 0;
+        if( !$glob ) {
+            $created = 1;
+            $glob = $current->{hash}{$package} =
+                Language::P::Toy::Value::Typeglob->new
+                    ( $runtime, { name => $name_prefix . $name } );
+        }
 
-                $current = $current->{hash}{$subpackage} =
-                  Language::P::Toy::Value::SymbolTable->new( $runtime );
-            } else {
-                $current = $current->{hash}{$subpackage};
+        if( $index == $#packages ) {
+            return ( $glob, $created );
+        } else {
+            $current = $glob->get_slot( $runtime, 'hash' );
+            if( !$current ) {
+                return ( undef, 0 ) unless $create;
+                $current = Language::P::Toy::Value::SymbolTable->new( $runtime );
+                $glob->set_slot( $runtime, 'hash', $current );
             }
 
             return $current if $index == $#packages;
