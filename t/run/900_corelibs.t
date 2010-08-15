@@ -27,6 +27,6 @@ use Exporter;
 # use File::Path;
 # use UNIVERSAL;
 use Class::Accessor;
-# use Class::Accessor::Fast;
+use Class::Accessor::Fast;
 
 print "ok 1 - got there\n";
