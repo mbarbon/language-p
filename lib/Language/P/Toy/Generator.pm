@@ -495,6 +495,13 @@ sub _global {
                 name   => $op->{attributes}{name},
                 create => !($op->{attributes}{context} & CXT_NOCREATE) );
         return;
+    } elsif( $op->{attributes}{slot} == VALUE_STASH ) {
+        push @$bytecode,
+             o( 'stash',
+                pos    => $op->{pos},
+                name   => substr( $op->{attributes}{name}, 0, -2 ),
+                create => !($op->{attributes}{context} & CXT_NOCREATE) );
+        return;
     }
 
     my $slot = $sigil_to_slot{$op->{attributes}{slot}};

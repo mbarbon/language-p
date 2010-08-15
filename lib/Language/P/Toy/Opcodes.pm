@@ -811,6 +811,18 @@ sub o_glob {
     my( $op, $runtime, $pc ) = @_;
     my $value = $runtime->symbol_table->get_symbol( $runtime, $op->{name}, '*',
                                                     $op->{create} );
+    $value ||= Language::P::Toy::Value::Undef->new( $runtime );
+
+    push @{$runtime->{_stack}}, $value;
+
+    return $pc + 1;
+}
+
+sub o_stash {
+    my( $op, $runtime, $pc ) = @_;
+    my $value = $runtime->symbol_table->get_package( $runtime, $op->{name},
+                                                     $op->{create} );
+    $value ||= Language::P::Toy::Value::Undef->new( $runtime );
 
     push @{$runtime->{_stack}}, $value;
 

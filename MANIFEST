@@ -233,6 +233,7 @@ t/run/015_hash_ops.t
 t/run/015_pos.t
 t/run/015_range.t
 t/run/017_references.t
+t/run/017_stash.t
 t/run/018_vivification.t
 t/run/020_lexicals.t
 t/run/021_interpolated_regexp.t
