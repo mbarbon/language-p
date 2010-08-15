@@ -15,11 +15,12 @@ my %types =
     );
 
 my %special =
-  ( topic    => PROTO_DEFAULT_ARG,
-    handle   => PROTO_FILEHANDLE,
-    block    => PROTO_BLOCK,
-    indirect => PROTO_INDIROBJ,
-    pattern  => PROTO_PATTERN,
+  ( topic        => PROTO_DEFAULT_ARG,
+    handle       => PROTO_FILEHANDLE,
+    block        => PROTO_BLOCK,
+    indirect     => PROTO_INDIROBJ,
+    pattern      => PROTO_PATTERN,
+    unary_list   => PROTO_UNARY_LIST,
     );
 
 my %proto =
@@ -165,11 +166,12 @@ __DATA__
 # o: overridable builtin
 
 # special:
-# topic:    default to $_
-# handle:   indirect filehandle (es. print)
-# block:    may take a block (es. eval)
-# indirect: block or expression (es. map)
-# pattern:  the first argument might be a pattern (es. split)
+# topic:       default to $_
+# handle:      indirect filehandle (es. print)
+# block:       may take a block (es. eval)
+# indirect:    block or expression (es. map)
+# pattern:     the first argument might be a pattern (es. split)
+# unary_list:  unary operator that can take a list (es. scalar)
 
 # prototype:
 # scalar:      scalar value
@@ -220,7 +222,7 @@ map                 b       same                 2  -1  indirect      list
 pos                 b       same                 1   1  topic         scalar
 print               b       same                 1  -1  topic+handle  list
 return              b       default
-scalar              b       same                 1   1  0             any
+scalar              b       same                 1   1  unary_list    any
 split               b       same                 0   4  pattern       scalar,scalar,scalar,scalar
 undef               b       same                 0   1  0             any
 

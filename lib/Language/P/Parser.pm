@@ -2297,7 +2297,14 @@ sub _parse_listop_like {
     } elsif( $next->[O_TYPE] == T_OPPAR ) {
         _lex_token( $self, T_OPPAR );
         ( $args, $fh ) = _parse_arglist( $self, PREC_LOWEST, 0, $proto->[2] );
-        _lex_token( $self, T_CLPAR );
+        my $end_par = _lex_token( $self, T_CLPAR );
+
+        $args = [ Language::P::ParseTree::List->new
+                      ( { expressions => $args,
+                          pos_s       => $next->[O_POS],
+                          pos_e       => $end_par->[O_POS],
+                          } ) ]
+            if $args && @$args > 1 && ( $proto->[2] & PROTO_UNARY_LIST );
     } elsif( $proto->[1] == 1 ) {
         ( $args, undef ) = _parse_arglist( $self, PREC_NAMED_UNOP, 1, $proto->[2] );
     } elsif( $proto->[1] != 0 ) {
