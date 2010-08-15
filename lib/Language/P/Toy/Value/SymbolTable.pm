@@ -2,9 +2,7 @@ package Language::P::Toy::Value::SymbolTable;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::Any);
-
-__PACKAGE__->mk_ro_accessors( qw(symbols) );
+use base qw(Language::P::Toy::Value::Hash);
 
 use Language::P::Toy::Value::Typeglob;
 
@@ -17,8 +15,6 @@ sub overload_table { $_[0]->{overload} }
 sub new {
     my( $class, $runtime, $args ) = @_;
     my $self = $class->SUPER::new( $runtime, $args );
-
-    $self->{symbols} ||= {};
 
     return $self;
 }
@@ -100,12 +96,12 @@ sub _get_symbol {
     my $current = $self;
     foreach my $package ( @packages ) {
         if( $index == $#packages && $sigil ne '::' ) {
-            my $glob = $current->{symbols}{$package};
+            my $glob = $current->{hash}{$package};
             my $created = 0;
             return ( undef, $created ) if !$glob && !$create;
             if( !$glob ) {
                 $created = 1;
-                $glob = $current->{symbols}{$package} =
+                $glob = $current->{hash}{$package} =
                     Language::P::Toy::Value::Typeglob->new
                         ( $runtime, { name => $name_prefix . $name } );
             }
@@ -115,13 +111,13 @@ sub _get_symbol {
                      $created );
         } else {
             my $subpackage = $package . '::';
-            if( !exists $current->{symbols}{$subpackage} ) {
+            if( !exists $current->{hash}{$subpackage} ) {
                 return ( undef, 0 ) unless $create;
 
-                $current = $current->{symbols}{$subpackage} =
+                $current = $current->{hash}{$subpackage} =
                   Language::P::Toy::Value::SymbolTable->new( $runtime );
             } else {
-                $current = $current->{symbols}{$subpackage};
+                $current = $current->{hash}{$subpackage};
             }
 
             return $current if $index == $#packages;
@@ -143,14 +139,14 @@ sub set_symbol {
 sub find_method {
     my( $self, $runtime, $name ) = @_;
 
-    my $name_glob = $self->{symbols}{$name};
+    my $name_glob = $self->{hash}{$name};
     if( $name_glob ) {
         my $sub = $name_glob->body->subroutine;
 
         return $sub if $sub;
     }
 
-    my $isa_glob = $self->{symbols}{ISA};
+    my $isa_glob = $self->{hash}{ISA};
     unless( $isa_glob ) {
         my $universal_stash = $runtime->symbol_table->get_package( $runtime, 'UNIVERSAL' );
 
@@ -178,7 +174,7 @@ sub derived_from {
     return 0 unless $base;
     return 1 if $self == $base;
 
-    my $isa_glob = $self->{symbols}{ISA};
+    my $isa_glob = $self->{hash}{ISA};
     unless( $isa_glob ) {
         my $universal_stash = $runtime->symbol_table->get_package( $runtime, 'UNIVERSAL' );
 
