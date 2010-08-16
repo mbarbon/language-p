@@ -64,6 +64,9 @@ sub _symbolic_reference {
     if( $name !~ /::|'/ ) {
         $name = $runtime->{_lex}{package} . '::' . $name;
     }
+    if( $name =~ /::$/ ) {
+        $sigil = '::';
+    }
 
     # TODO must handle punctuation variables and other special cases
     return $runtime->symbol_table->get_symbol( $runtime, $name, $sigil, 1 );
