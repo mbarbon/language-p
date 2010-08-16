@@ -112,4 +112,11 @@ sub _apply_magic {
     }
 }
 
+sub get_symbol {
+    my( $self, $runtime, $name, $sigil, $create ) = @_;
+    return $self if $name eq 'main::' && $sigil eq '::';
+
+    return $self->SUPER::get_symbol( $runtime, $name, $sigil, $create );
+}
+
 1;

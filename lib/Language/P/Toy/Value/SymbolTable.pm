@@ -21,8 +21,6 @@ sub new {
 
 sub get_package {
     my( $self, $runtime, $package, $create ) = @_;
-
-    return $self if $self->is_main && $package eq 'main';
     my( $pack ) = $self->get_symbol( $runtime, $package . '::', '::', $create );
 
     return $pack;
