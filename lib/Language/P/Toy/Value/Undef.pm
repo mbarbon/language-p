@@ -91,7 +91,7 @@ sub vivify_scalar {
                       } );
     $self->assign( $runtime, $new );
 
-    return $self->dereference_scalar( $runtime );
+    return $self->dereference_scalar( $runtime, 0 );
 }
 
 sub vivify_array {
@@ -102,7 +102,7 @@ sub vivify_array {
                       } );
     $self->assign( $runtime, $new );
 
-    return $self->dereference_array( $runtime );
+    return $self->dereference_array( $runtime, 0 );
 }
 
 sub vivify_hash {
@@ -113,7 +113,7 @@ sub vivify_hash {
                       } );
     $self->assign( $runtime, $new );
 
-    return $self->dereference_hash( $runtime );
+    return $self->dereference_hash( $runtime, 0 );
 }
 
 sub set_handle {

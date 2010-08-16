@@ -65,7 +65,7 @@ sub as_boolean_int {
 }
 
 sub dereference_scalar {
-    my( $self, $runtime ) = @_;
+    my( $self, $runtime, $create ) = @_;
 
     return $self->body->get_or_create( $runtime, 'scalar' );
 }
@@ -77,7 +77,7 @@ sub vivify_scalar {
 }
 
 sub dereference_array {
-    my( $self, $runtime ) = @_;
+    my( $self, $runtime, $create ) = @_;
 
     return $self->body->get_or_create( $runtime, 'array' );
 }
@@ -89,7 +89,7 @@ sub vivify_array {
 }
 
 sub dereference_hash {
-    my( $self, $runtime ) = @_;
+    my( $self, $runtime, $create ) = @_;
 
     return $self->body->get_or_create( $runtime, 'hash' );
 }

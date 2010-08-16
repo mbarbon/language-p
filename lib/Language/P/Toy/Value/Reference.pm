@@ -30,7 +30,7 @@ sub assign {
 }
 
 sub dereference_scalar {
-    my( $self, $runtime ) = @_;
+    my( $self, $runtime, $create ) = @_;
 
     die unless $self->{reference}->isa( 'Language::P::Toy::Value::Scalar' );
     return $self->{reference};
@@ -44,7 +44,7 @@ sub vivify_scalar {
 }
 
 sub dereference_hash {
-    my( $self, $runtime ) = @_;
+    my( $self, $runtime, $create ) = @_;
 
     die unless $self->{reference}->isa( 'Language::P::Toy::Value::Hash' );
     return $self->{reference};
@@ -58,7 +58,7 @@ sub vivify_hash {
 }
 
 sub dereference_array {
-    my( $self, $runtime ) = @_;
+    my( $self, $runtime, $create ) = @_;
 
     die unless $self->{reference}->isa( 'Language::P::Toy::Value::Array' );
     return $self->{reference};
@@ -79,7 +79,7 @@ sub dereference_subroutine {
 }
 
 sub dereference_glob {
-    my( $self, $runtime ) = @_;
+    my( $self, $runtime, $create ) = @_;
 
     die unless $self->{reference}->isa( 'Language::P::Toy::Value::Typeglob' );
     return $self->{reference};
@@ -140,14 +140,14 @@ sub find_method {
 
 sub as_handle {
     my( $self, $runtime ) = @_;
-    my $glob = $self->dereference_glob( $runtime );
+    my $glob = $self->dereference_glob( $runtime, 1 );
 
     return $glob->as_handle( $runtime );
 }
 
 sub set_handle {
     my( $self, $runtime, $handle ) = @_;
-    my $glob = $self->dereference_glob( $runtime );
+    my $glob = $self->dereference_glob( $runtime, 1 );
 
     $glob->set_handle( $runtime, $handle );
 }

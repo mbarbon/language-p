@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..7\n";
+print "1..11\n";
 
 package Foo;
 
@@ -17,3 +17,9 @@ print exists $main::{"Bar::"} ? "not ok\n" : "ok\n";
 print exists $main::{"Foo::"}{"foo"} ? "ok\n" : "not ok\n";
 print exists $main::{"Foo::"}{"bar"} ? "not ok\n" : "ok\n";
 
+# symbolic reference
+print "# symbolic references\n";
+print defined %{"Foo::"} ? "ok\n" : "not ok\n";
+print defined %{"Bar::"} ? "not ok\n" : "ok\n";
+print exists ${"main::"}{"Foo::"}{"foo"} ? "ok\n" : "not ok\n";
+print exists ${"main::"}{"Foo::"}{"bar"} ? "not ok\n" : "ok\n";

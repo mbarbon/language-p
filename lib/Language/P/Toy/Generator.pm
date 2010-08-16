@@ -187,6 +187,12 @@ my %opcode_map =
     OP_MATCH()                       => \&_match,
     OP_REPLACE()                     => \&_replace,
     OP_TRANSLITERATE()               => \&_transliterate,
+
+    OP_DEREFERENCE_ARRAY()           => \&_dereference,
+    OP_DEREFERENCE_GLOB()            => \&_dereference,
+    OP_DEREFERENCE_HASH()            => \&_dereference,
+    OP_DEREFERENCE_SCALAR()          => \&_dereference,
+    OP_DEREFERENCE_SUB()             => \&_dereference,
     );
 
 sub _qualify {
@@ -515,6 +521,15 @@ sub _global {
          o( 'glob_slot_create',
             pos    => $op->{pos},
             slot   => $slot );
+}
+
+sub _dereference {
+    my( $self, $bytecode, $op ) = @_;
+
+    push @$bytecode,
+         o( $NUMBER_TO_NAME{$op->{opcode_n}},
+            pos    => $op->{pos},
+            create => !($op->{attributes}{context} & CXT_NOCREATE) );
 }
 
 sub _const_string {

@@ -1968,7 +1968,7 @@ sub o_dereference_scalar {
     my( $op, $runtime, $pc ) = @_;
     my $ref = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $ref->dereference_scalar( $runtime );
+    push @{$runtime->{_stack}}, $ref->dereference_scalar( $runtime, $op->{create} );
 
     return $pc + 1;
 }
@@ -1986,7 +1986,7 @@ sub o_dereference_array {
     my( $op, $runtime, $pc ) = @_;
     my $ref = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $ref->dereference_array( $runtime );
+    push @{$runtime->{_stack}}, $ref->dereference_array( $runtime, $op->{create} );
 
     return $pc + 1;
 }
@@ -2004,7 +2004,7 @@ sub o_dereference_hash {
     my( $op, $runtime, $pc ) = @_;
     my $ref = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $ref->dereference_hash( $runtime );
+    push @{$runtime->{_stack}}, $ref->dereference_hash( $runtime, $op->{create} );
 
     return $pc + 1;
 }
@@ -2022,7 +2022,7 @@ sub o_dereference_glob {
     my( $op, $runtime, $pc ) = @_;
     my $ref = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $ref->dereference_glob( $runtime );
+    push @{$runtime->{_stack}}, $ref->dereference_glob( $runtime, $op->{create} );
 
     return $pc + 1;
 }
