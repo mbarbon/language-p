@@ -83,7 +83,7 @@ sub _start_bb {
 }
 
 sub _context { $_[0]->get_attribute( 'context' ) & CXT_CALL_MASK }
-sub _context_lvalue { $_[0]->get_attribute( 'context' ) & (CXT_CALL_MASK|CXT_LVALUE) }
+sub _context_lvalue { $_[0]->get_attribute( 'context' ) & (CXT_CALL_MASK|CXT_LVALUE|CXT_NOCREATE) }
 
 sub push_block {
     my( $self, $flags, $start_pos, $exit_pos, $context ) = @_;
@@ -804,7 +804,7 @@ sub _unary_op {
 
     _add_bytecode $self,
         opcode_npm( $op, $tree->pos,
-                    context   => _context( $tree ) );
+                    context   => _context_lvalue( $tree ) );
 }
 
 sub _local {
@@ -1100,12 +1100,11 @@ sub _symbol {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
-    my $lvalue = $tree->get_attribute( 'context' ) & (CXT_LVALUE|CXT_NOCREATE|CXT_CALL_MASK);
     _add_bytecode $self,
          opcode_npm( OP_GLOBAL, $tree->pos,
                      name    => $tree->name,
                      slot    => $tree->sigil,
-                     context => $lvalue,
+                     context => _context_lvalue( $tree ),
                      );
 }
 
