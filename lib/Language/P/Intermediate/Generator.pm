@@ -8,8 +8,6 @@ __PACKAGE__->mk_accessors( qw(_code_segments _current_basic_block _options
                               _label_count _temporary_count _current_block
                               _group_count _main file_name) );
 
-use Scalar::Util qw();
-
 use Language::P::Intermediate::Code qw(:all);
 use Language::P::Intermediate::BasicBlock;
 use Language::P::Opcodes qw(:all);

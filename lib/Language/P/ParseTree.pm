@@ -12,7 +12,7 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
-use Scalar::Util ();
+use Scalar::Util; # weaken
 
 sub new {
     my( $class, $args ) = @_;

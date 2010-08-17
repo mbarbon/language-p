@@ -7,7 +7,7 @@ use base qw(Class::Accessor::Fast);
 __PACKAGE__->mk_ro_accessors( qw(bytecode start_label lexical_state scope
                                  predecessors successors) );
 
-use Scalar::Util qw();
+use Scalar::Util; # weaken
 use Language::P::Assembly qw(label);
 use Language::P::Opcodes qw(OP_JUMP);
 

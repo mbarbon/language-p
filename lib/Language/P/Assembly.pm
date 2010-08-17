@@ -122,7 +122,7 @@ use base qw(Class::Accessor::Fast);
 __PACKAGE__->mk_ro_accessors( qw(label literal opcode opcode_n
                                  parameters attributes) );
 
-use Scalar::Util qw(blessed);
+use Scalar::Util; # blessed
 use Language::P::Constants qw(VALUE_SCALAR VALUE_ARRAY VALUE_HASH);
 
 my %sigil_to_name =
@@ -136,7 +136,7 @@ sub _p {
 
     return 'undef' unless defined $arg;
 
-    if( blessed( $arg ) ) {
+    if( Scalar::Util::blessed( $arg ) ) {
         return $arg->start_label
             if $arg->isa( 'Language::P::Intermediate::BasicBlock' );
         return '(' . substr( $arg->as_string( $number_to_name, $attributes ), 2, -1 ) . ')'

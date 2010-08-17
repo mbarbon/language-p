@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
-use Scalar::Util;
+use Scalar::Util; # weaken
 
 __PACKAGE__->mk_ro_accessors( qw(type name basic_blocks outer inner
                                  lexicals prototype scopes lexical_states) );
