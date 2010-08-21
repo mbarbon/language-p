@@ -107,6 +107,10 @@ sub _reference_string {
     my( $self ) = @_;
     my $ref = $self->{reference};
 
+    if( $ref->is_blessed ) {
+        return $ref->stash->name;
+    }
+
     return $ref->isa( 'Language::P::Toy::Value::Reference' )  ? 'REF' :
            $ref->isa( 'Language::P::Toy::Value::Scalar' )     ? 'SCALAR' :
            $ref->isa( 'Language::P::Toy::Value::Hash' )       ? 'HASH' :
