@@ -566,6 +566,7 @@ scalar              u       same                 1   1  context=i1
 set                 0       same                 1   0  index=i
 shift_left          0       same                 2   1  context=i1
 shift_right         0       same                 2   1  context=i1
+sort                0       same                -1   1  context=i1
 splice              v       same                -1   1  context=i1,arg_count=i1
 split               v       same                -1   1  context=i1,arg_count=i1
 sprintf             0       same                 1   1  context=i1

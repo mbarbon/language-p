@@ -173,6 +173,7 @@ t/parser/expressions/021_grep.t
 t/parser/expressions/021_indirect_method.t
 t/parser/expressions/021_list_op.t
 t/parser/expressions/021_map.t
+t/parser/expressions/021_sort.t
 t/parser/expressions/024_or_low.t
 t/parser/loops/001_block.t
 t/parser/regex/002_base.t

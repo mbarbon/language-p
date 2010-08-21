@@ -21,6 +21,7 @@ my %special =
     indirect     => PROTO_INDIROBJ,
     pattern      => PROTO_PATTERN,
     unary_list   => PROTO_UNARY_LIST,
+    sub_name     => PROTO_SUBNAME,
     );
 
 my %proto =
@@ -223,6 +224,7 @@ pos                 b       same                 1   1  topic         scalar
 print               b       same                 1  -1  topic+handle  list
 return              b       default
 scalar              b       same                 1   1  unary_list    any
+sort                b       same                 1  -1  indirect+sub_name  list
 split               b       same                 0   4  pattern       scalar,scalar,scalar,scalar
 undef               b       same                 0   1  0             any
 

@@ -15,6 +15,7 @@ our @EXPORT_OK =
        PROTO_GLOB PROTO_REFERENCE PROTO_BLOCK PROTO_AMPER PROTO_ANY
        PROTO_INDIROBJ PROTO_FILEHANDLE PROTO_MAKE_GLOB PROTO_MAKE_ARRAY
        PROTO_MAKE_HASH PROTO_DEFAULT_ARG PROTO_PATTERN PROTO_UNARY_LIST
+       PROTO_SUBNAME
 
        FLAG_IMPLICITARGUMENTS FLAG_ERASEFRAME
        FLAG_RX_MULTI_LINE FLAG_RX_SINGLE_LINE FLAG_RX_CASE_INSENSITIVE
@@ -73,6 +74,7 @@ use constant
     PROTO_DEFAULT_ARG  => 2048,    # adds $_ if no arg specified
     PROTO_PATTERN      => 4096,    # split /foo/
     PROTO_UNARY_LIST   => 8192,    # scalar ( $a, $b, $c )
+    PROTO_SUBNAME      => 16384,   # sort foo @bar, sort $foo @bar
     PROTO_DEFAULT      => [ -1, -1, 0, 2 ],
 
     # sigils, anonymous array/hash constructors, dereferences

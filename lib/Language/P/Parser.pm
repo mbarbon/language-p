@@ -2459,7 +2459,7 @@ sub _apply_prototype {
 
 sub _parse_arglist {
     my( $self, $prec, $is_unary, $proto_char ) = @_;
-    my $indirect_term = $proto_char & (PROTO_INDIROBJ|PROTO_FILEHANDLE);
+    my $indirect_term = $proto_char & (PROTO_INDIROBJ|PROTO_FILEHANDLE|PROTO_SUBNAME);
     my $la = $self->lexer->peek( $indirect_term ? X_REF : X_TERM );
     my $term_prec = $prec > PREC_LISTEXPR ? PREC_LISTEXPR : $prec;
 
@@ -2502,7 +2502,31 @@ sub _parse_arglist {
                                 pos   => $la->[O_POS],
                                 } );
             }
-        } elsif( $proto_char & PROTO_FILEHANDLE ) {
+        } elsif(    $proto_char & PROTO_SUBNAME
+                 && $la->[O_TYPE] == T_ID ) {
+            # look ahead one more token
+            _lex_token( $self );
+            my $la2 = $self->lexer->peek( X_TERM );
+
+            my $tt = $la2->[O_TYPE];
+            if(    $prec_assoc_un{$tt}
+                || $tt == T_STAR
+                || $tt == T_PERCENT
+                || $tt == T_DOLLAR
+                || $tt == T_AT
+                || $tt == T_AMPERSAND
+                || $tt == T_ID
+                ) {
+                $term = Language::P::ParseTree::Symbol->new
+                            ( { name  => $la->[O_VALUE],
+                                sigil => VALUE_SUB,
+                                pos   => $la->[O_POS],
+                                } );
+            } else {
+                $self->lexer->unlex( $la );
+                $indirect_term = 0;
+            }
+        } elsif( $proto_char & (PROTO_FILEHANDLE|PROTO_SUBNAME) ) {
             if( $la->[O_TYPE] == T_DOLLAR ) {
                 _lex_token( $self, T_DOLLAR );
 
