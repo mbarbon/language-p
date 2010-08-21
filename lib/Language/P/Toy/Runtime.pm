@@ -179,9 +179,11 @@ sub compile_regex {
                          interpolate => 1,
                          flags       => $flags,
                          } );
+    my $original = Language::P::Parser::Regex->quote_original( \$string, 0 );
     my $parsed_rx = $parser->parse_string( $string );
     my $pattern = Language::P::ParseTree::Pattern->new
                       ( { components => $parsed_rx,
+                          original   => $original,
                           flags      => $flags,
                           } );
     my $re = $generator->process_regex( $pattern );

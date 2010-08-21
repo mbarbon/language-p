@@ -1956,7 +1956,10 @@ sub _pattern {
                             } );
 
     my $re = $generator->_generate_regex( $tree, $self->_code_segments->[0] );
-    _add_bytecode $self, opcode_nm( OP_CONSTANT_REGEX, value => $re->[0] );
+    _add_bytecode $self, opcode_nm( OP_CONSTANT_REGEX,
+                                    value    => $re->[0],
+                                    original => $tree->original,
+                                    );
 }
 
 sub _interpolated_pattern {

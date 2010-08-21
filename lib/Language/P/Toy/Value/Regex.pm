@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use base qw(Language::P::Toy::Value::Code);
 
+__PACKAGE__->mk_ro_accessors( qw(regex_string) );
+
 use Language::P::Constants qw(:all);
 
 use constant

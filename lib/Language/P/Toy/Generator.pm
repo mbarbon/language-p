@@ -578,6 +578,9 @@ sub _const_codelike {
     my( $self, $bytecode, $op ) = @_;
 
     my $sub = $self->_generated->{$op->{attributes}{value}};
+    if( $op->{opcode_n} ==  OP_CONSTANT_REGEX ) {
+        $sub->{regex_string} = $op->{attributes}{original};
+    }
     push @$bytecode,
          o( 'constant', value => $sub );
 }
