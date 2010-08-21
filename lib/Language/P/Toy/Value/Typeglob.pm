@@ -18,6 +18,16 @@ sub new {
     return $self;
 }
 
+sub clone {
+    my( $self, $runtime, $level ) = @_;
+
+    return Language::P::Toy::Value::Typeglob->new
+               ( $runtime,
+                 { body     => $self->{body},
+                   imported => $self->{imported},
+                   } );
+}
+
 sub as_string {
     my( $self, $runtime ) = @_;
 
