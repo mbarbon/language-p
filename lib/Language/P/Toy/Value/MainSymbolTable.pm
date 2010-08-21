@@ -41,7 +41,7 @@ sub new {
     $self->set_symbol( $runtime, "\030", '$', $interpreter );
 
     # TODO make readonly
-    my $version = Language::P::Toy::Value::Scalar->new_float( $runtime, $] );
+    my $version = Language::P::Toy::Value::Scalar->new_float( $runtime, 5.008009 );
     $self->set_symbol( $runtime, ']', '$', $version );
 
     my $inc = Language::P::Toy::Value::Array->new( $runtime );
