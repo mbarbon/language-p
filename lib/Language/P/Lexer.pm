@@ -412,7 +412,7 @@ sub lex_pattern_group {
 
     die unless length $$buffer; # no whitespace allowed after '(?'
 
-    $$buffer =~ s/^(\#|:|[imsx]*\-[imsx]*:?|!|=|<=|<!|{|\?{|\?>)//x
+    $$buffer =~ s/^(\#|:|[a-zA-Z ]*\-[a-zA-Z ]*:?|!|=|<=|<!|{|\?{|\?>)//x
       or die "Invalid character after (?";
 
     return [ $self->{pos}, T_PATTERN, $1 ];

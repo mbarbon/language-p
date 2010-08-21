@@ -35,6 +35,29 @@ sub _flag_letters {
     return $chars;
 }
 
+sub _parse_flags {
+    my( $flags ) = @_;
+    my $value = 0;
+
+    for my $i ( 0 .. length( $flags ) - 1 ) {
+        my $c = substr $flags, $i, 1;
+
+        if( $c eq 'x' ) {
+            $value |= FLAG_RX_FREE_FORMAT;
+        } elsif( $c eq 'i' ) {
+            $value |= FLAG_RX_CASE_INSENSITIVE;
+        } elsif( $c eq 's' ) {
+            $value |= FLAG_RX_SINGLE_LINE;
+        } elsif( $c eq 'm' ) {
+            $value |= FLAG_RX_MULTI_LINE;
+        } else {
+            return -1;
+        }
+    }
+
+    return $value;
+}
+
 sub quote_original {
     my( $class, $string, $flags ) = @_;
     my $remove = FLAG_RX_QR_ALL & ~$flags;
@@ -63,6 +86,7 @@ sub _parse {
 
     my( @values );
     my( $in_group, $st, $flags ) = ( 0, \@values, $self->flags );
+    my @flags = ( $self->flags );
     for(;;) {
         my $value = $self->lexer->lex_quote;
 
@@ -74,8 +98,9 @@ sub _parse {
 
                 --$in_group;
                 $st = pop @values;
+                $flags = pop @flags;
             } elsif( $value->[O_VALUE] eq '(?' ) {
-                ++$in_group;
+                my $is_group = 1;
                 my $type = $self->lexer->lex_pattern_group;
 
                 if( $type->[O_VALUE] eq ':' ) {
@@ -103,16 +128,61 @@ sub _parse {
                                    ( { components => [],
                                        type       => 'NEGATIVE_LOOKBEHIND',
                                        } );
+                } elsif( $type->[O_VALUE] =~ /([a-z]*)-([a-z]*)(:?)/ ) {
+                    my( $add, $rem, $colon ) = ( $1, $2, $3 );
+                    my $add_flags = _parse_flags( $add );
+                    my $rem_flags = _parse_flags( $rem );
+
+                    if( $add_flags == -1 ) {
+                        Language::P::Parser::Exception->throw
+                            ( message  => sprintf( "Sequence (?%s...) not recognized in regex",
+                                                   $add ),
+                              position => $value->[O_POS],
+                              );
+                    } elsif( $rem_flags == -1 ) {
+                        Language::P::Parser::Exception->throw
+                            ( message  => sprintf( "Sequence (?%s-%s...) not recognized in regex",
+                                                   $add, $rem ),
+                              position => $value->[O_POS],
+                              );
+                    } else {
+                        $flags = ( $flags | $add_flags ) & ~$rem_flags;
+                    }
+
+                    if( $colon ) {
+                        push @$st, Language::P::ParseTree::RXGroup->new
+                                       ( { components => [],
+                                           capture    => 0,
+                                           } );
+                    } else {
+                        my $paren = $self->lexer->lex_quote;
+
+                        if( $paren->[O_VALUE] ne ')' ) {
+                            Language::P::Parser::Exception->throw
+                                ( message  => sprintf( "Sequence (?%s-%s%s...) not recognized in regex",
+                                                       $add, $rem, $paren->[O_VALUE] ),
+                                  position => $value->[O_POS],
+                                  );
+                        }
+
+                        $is_group = 0;
+                    }
                 } else {
                     # remaining (?...) constructs
                     die "Unhandled (?" . $type->[O_VALUE] . ") in regex";
                 }
 
-                my $nst = $st->[-1]->components;
-                push @values, $st;
-                $st = $nst;
+                if( $is_group ) {
+                    ++$in_group;
+                    push @flags, $flags;
+
+                    my $nst = $st->[-1]->components;
+                    push @values, $st;
+                    $st = $nst;
+                }
             } elsif( $value->[O_VALUE] eq '(' ) {
                 ++$in_group;
+                push @flags, $flags;
                 ++$self->{_group_count};
                 push @$st, Language::P::ParseTree::RXGroup->new
                                ( { components => [],
