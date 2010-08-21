@@ -27,6 +27,7 @@ right: !parsetree:Pattern
       type: POSITIVE_LOOKAHEAD
   flags: 0
   op: OP_QL_M
+  original: (?-xism:(?=test))
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -49,4 +50,5 @@ right: !parsetree:Pattern
       type: NEGATIVE_LOOKBEHIND
   flags: 0
   op: OP_QL_M
+  original: (?-xism:(?<!test))
 EOE

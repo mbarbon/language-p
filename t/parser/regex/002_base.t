@@ -33,6 +33,7 @@ right: !parsetree:Pattern
       type: WORDS
   flags: 0
   op: OP_QL_M
+  original: (?-xism:^\ntes.\.\w)
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -91,6 +92,7 @@ right: !parsetree:Pattern
         value: c
   flags: 0
   op: OP_QL_M
+  original: (?-xism:a*b+c?d*?b+?c??)
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -130,6 +132,7 @@ right: !parsetree:Pattern
             value: w
   flags: 0
   op: OP_QL_M
+  original: (?-xism:(a(cbc)??w)*)
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -165,6 +168,7 @@ right: !parsetree:Pattern
               type: END_OR_NEWLINE
   flags: 0
   op: OP_QL_M
+  original: (?-xism:^t|es|t$)
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -206,6 +210,7 @@ right: !parsetree:Pattern
                   value: c
   flags: 0
   op: OP_QL_M
+  original: (?-xism:a+(a|b|c))
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -237,4 +242,5 @@ right: !parsetree:Pattern
           value: a
   flags: 0
   op: OP_QL_M
+  original: (?-xism:a(?:a)(a))
 EOE

@@ -33,6 +33,7 @@ right: !parsetree:Pattern
       insensitive: 0
   flags: 0
   op: OP_QL_M
+  original: '(?-xism:[abc])'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -55,6 +56,7 @@ right: !parsetree:Pattern
       insensitive: 0
   flags: 0
   op: OP_QL_M
+  original: '(?-xism:[a-q])'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -80,6 +82,7 @@ right: !parsetree:Pattern
       insensitive: 0
   flags: 0
   op: OP_QL_M
+  original: '(?-xism:[a-])'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -107,6 +110,7 @@ right: !parsetree:Pattern
       insensitive: 0
   flags: 0
   op: OP_QL_M
+  original: '(?-xism:[a-\w])'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -132,6 +136,7 @@ right: !parsetree:Pattern
       insensitive: 0
   flags: 0
   op: OP_QL_M
+  original: '(?-xism:[[\]])'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -157,6 +162,7 @@ right: !parsetree:Pattern
       value: ']'
   flags: 0
   op: OP_QL_M
+  original: '(?-xism:[[]])'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -182,4 +188,5 @@ right: !parsetree:Pattern
       insensitive: 0
   flags: 0
   op: OP_QL_M
+  original: '(?-xism:[/\\])'
 EOE

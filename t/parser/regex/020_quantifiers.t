@@ -28,6 +28,7 @@ right: !parsetree:Pattern
         value: a
   flags: 0
   op: OP_QL_M
+  original: (?-xism:a*)
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -51,6 +52,7 @@ right: !parsetree:Pattern
         value: a
   flags: 0
   op: OP_QL_M
+  original: (?-xism:a??)
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -70,6 +72,7 @@ right: !parsetree:Pattern
       value: 'a{,2}'
   flags: 0
   op: OP_QL_M
+  original: '(?-xism:a{,2})'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -93,6 +96,7 @@ right: !parsetree:Pattern
         value: a
   flags: 0
   op: OP_QL_M
+  original: '(?-xism:a{7})'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -116,6 +120,7 @@ right: !parsetree:Pattern
         value: a
   flags: 0
   op: OP_QL_M
+  original: '(?-xism:a{7}?)'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -139,6 +144,7 @@ right: !parsetree:Pattern
         value: a
   flags: 0
   op: OP_QL_M
+  original: '(?-xism:a{1,2})'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -162,6 +168,7 @@ right: !parsetree:Pattern
         value: a
   flags: 0
   op: OP_QL_M
+  original: '(?-xism:a{1,2}?)'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -185,6 +192,7 @@ right: !parsetree:Pattern
         value: a
   flags: 0
   op: OP_QL_M
+  original: '(?-xism:a{4,})'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -208,6 +216,7 @@ right: !parsetree:Pattern
         value: a
   flags: 0
   op: OP_QL_M
+  original: '(?-xism:a{5,}?)'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

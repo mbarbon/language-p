@@ -23,6 +23,27 @@ sub parse_string {
     $self->_parse;
 }
 
+sub _flag_letters {
+    my( $flags ) = @_;
+    my $chars = '';
+
+    $chars .= 'x' if $flags & FLAG_RX_FREE_FORMAT;
+    $chars .= 'i' if $flags & FLAG_RX_CASE_INSENSITIVE;
+    $chars .= 's' if $flags & FLAG_RX_SINGLE_LINE;
+    $chars .= 'm' if $flags & FLAG_RX_MULTI_LINE;
+
+    return $chars;
+}
+
+sub quote_original {
+    my( $class, $string, $flags ) = @_;
+    my $remove = FLAG_RX_QR_ALL & ~$flags;
+
+    return sprintf "(?%s-%s:%s)", _flag_letters( $flags ),
+                                  _flag_letters( $remove ),
+                                  $$string;
+}
+
 sub _constant {
     my( $string, $flags ) = @_;
 

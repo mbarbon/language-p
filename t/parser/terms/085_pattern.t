@@ -28,6 +28,7 @@ right: !parsetree:Pattern
       type: END_OR_NEWLINE
   flags: 0
   op: OP_QL_M
+  original: (?-xism:^test$)
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -49,6 +50,7 @@ right: !parsetree:Pattern
       value: test
   flags: 0
   op: OP_QL_M
+  original: (?-xism:^test)
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -68,6 +70,7 @@ right: !parsetree:Pattern
       value: a
   flags: 0
   op: OP_QL_M
+  original: (?-xism:a)
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -104,6 +107,7 @@ right: !parsetree:Pattern
   components: []
   flags: FLAG_RX_SINGLE_LINE|FLAG_RX_MULTI_LINE
   op: OP_QL_M
+  original: (?sm-xi:)
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -118,6 +122,7 @@ components:
     value: test
 flags: 0
 op: OP_QL_QR
+original: (?-xism:^test)
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -172,6 +177,7 @@ right: !parsetree:Pattern
       value: '{foo}aaa'
   flags: 0
   op: OP_QL_M
+  original: '(?-xism:^${foo}aaa)'
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

@@ -25,6 +25,7 @@ right: !parsetree:Substitution
         value: foo
     flags: FLAG_RX_GLOBAL
     op: OP_QL_S
+    original: (?-xism:foo)
   replacement: !parsetree:Constant
     context: CXT_SCALAR
     flags: CONST_STRING
@@ -49,6 +50,7 @@ right: !parsetree:Substitution
         value: foo
     flags: 0
     op: OP_QL_S
+    original: (?-xism:foo)
   replacement: !parsetree:QuotedString
     components:
       - !parsetree:Symbol
@@ -76,6 +78,7 @@ right: !parsetree:Substitution
         value: foo
     flags: 0
     op: OP_QL_S
+    original: (?-xism:foo)
   replacement: !parsetree:Constant
     context: CXT_SCALAR
     flags: CONST_STRING
@@ -100,6 +103,7 @@ right: !parsetree:Substitution
         value: foo
     flags: FLAG_RX_GLOBAL|FLAG_RX_EVAL
     op: OP_QL_S
+    original: (?-xism:foo)
   replacement: !parsetree:Block
     lines:
       - !parsetree:BinOp
@@ -169,6 +173,7 @@ right: !parsetree:Substitution
         value: foo
     flags: FLAG_RX_GLOBAL
     op: OP_QL_S
+    original: (?-xism:$foo)
   replacement: !parsetree:Constant
     context: CXT_SCALAR
     flags: CONST_STRING
@@ -198,6 +203,7 @@ right: !parsetree:Substitution
         value: foo
     flags: FLAG_RX_EVAL
     op: OP_QL_S
+    original: (?-xism:foo)
   replacement: !parsetree:Block
     lines:
       - !parsetree:Overridable

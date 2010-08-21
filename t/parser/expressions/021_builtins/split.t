@@ -14,6 +14,7 @@ arguments:
         value: foo
     flags: 0
     op: OP_QL_M
+    original: (?-xism:foo)
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: foo
@@ -34,6 +35,7 @@ arguments:
         value: foo
     flags: 0
     op: OP_QL_M
+    original: (?-xism:foo)
 context: CXT_VOID
 function: OP_SPLIT
 EOE

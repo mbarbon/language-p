@@ -1210,14 +1210,18 @@ sub _parse_match {
 
         return $match;
     } else {
-        my $parts = Language::P::Parser::Regex->new
-                        ( { generator   => $self->generator,
-                            runtime     => $self->runtime,
-                            interpolate => $token->[O_QS_INTERPOLATE],
-                            flags       => $token->[O_RX_FLAGS],
-                            } )->parse_string( $token->[O_QS_BUFFER] );
+        my $parser = Language::P::Parser::Regex->new
+                         ( { generator   => $self->generator,
+                             runtime     => $self->runtime,
+                             interpolate => $token->[O_QS_INTERPOLATE],
+                             flags       => $token->[O_RX_FLAGS],
+                             } );
+        my $original = Language::P::Parser::Regex->quote_original
+                          ( $token->[O_QS_BUFFER], $token->[O_RX_FLAGS] );
+        my $parts = $parser->parse_string( $token->[O_QS_BUFFER] );
         my $match = Language::P::ParseTree::Pattern->new
                         ( { components => $parts,
+                            original   => $original,
                             op         => $token->[O_VALUE],
                             flags      => $token->[O_RX_FLAGS],
                             pos        => $token->[O_POS],
@@ -1659,8 +1663,11 @@ sub _parse_term_terminal_maybe_subscripts {
                             ( { value       => $term->value,
                                 insensitive => 0,
                                 } );
+            my $original = Language::P::Parser::Regex->quote_original
+                               ( \$term->value, 0 );
             $term = Language::P::ParseTree::Pattern->new
                         ( { components  => [ $const ],
+                            original    => $original,
                             flags       => 0,
                             op          => OP_QL_M,
                             } );

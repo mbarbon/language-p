@@ -40,6 +40,7 @@ arguments:
           value: test
       flags: 0
       op: OP_QL_M
+      original: (?-xism:test)
   - !parsetree:Symbol
     context: CXT_LIST
     name: x
@@ -68,6 +69,7 @@ arguments:
           value: test
       flags: 0
       op: OP_QL_M
+      original: (?-xism:test)
   - !parsetree:Symbol
     context: CXT_LIST
     name: x

@@ -590,7 +590,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(op components flags);
+our @FIELDS = qw(op components flags original);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 

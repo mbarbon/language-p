@@ -24,6 +24,7 @@ right: !parsetree:Pattern
       value: .
   flags: 0
   op: OP_QL_M
+  original: (?-xism:\.)
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -70,4 +71,5 @@ right: !parsetree:Pattern
       value: .
   flags: 0
   op: OP_QL_M
+  original: (?-xism:\.)
 EOE
