@@ -1075,7 +1075,7 @@ sub lex {
     $$_ =~ /^\d|^\.\d/ and do {
         _lexer_error( $self, $self->{pos},
                       "Number found where operator expected" )
-            if $expect == X_OPERATOR;
+            if $expect == X_OPERATOR && !$indir;
         return $self->lex_number;
     };
     # quote and quote-like operators
@@ -1158,7 +1158,7 @@ sub lex {
     $$_ =~ s/^(["'`])//x and do {
         _lexer_error( $self, $self->{pos},
                       "String found where operator expected" )
-            if $expect == X_OPERATOR;
+            if $expect == X_OPERATOR && !$indir;
         return _prepare_sublex( $self, $1, $1 );
     };
     # < when not operator (<> glob, <> file read, << here doc)
@@ -1278,7 +1278,7 @@ sub lex {
     $$_ =~ s/^\@// and do {
         _lexer_error( $self, $self->{pos},
                       "Array found where operator expected" )
-            if $expect == X_OPERATOR;
+            if $expect == X_OPERATOR && !$indir;
         return [ $self->{pos}, T_AT, '@' ];
     };
     # single char operators
