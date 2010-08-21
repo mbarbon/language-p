@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use t::lib::TestParser tests => 19;
+use t::lib::TestParser tests => 20;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 print defined 1, 2
@@ -89,6 +89,23 @@ function: OP_PRINT
 indirect: !parsetree:Symbol
   context: CXT_SCALAR
   name: FILE
+  sigil: VALUE_GLOB
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print main::FILE $stuff;
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: stuff
+    sigil: VALUE_SCALAR
+context: CXT_VOID
+function: OP_PRINT
+indirect: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: main::FILE
   sigil: VALUE_GLOB
 EOE
 
