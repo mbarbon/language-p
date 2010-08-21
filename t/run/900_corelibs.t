@@ -21,7 +21,7 @@ use Exporter;
 # use blib;
 # use Fatal;
 # use autodie;
-# use constant;
+use constant;
 # use File::Basename;
 # use File::Find;
 # use File::Path;
