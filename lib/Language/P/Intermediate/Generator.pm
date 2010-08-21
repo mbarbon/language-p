@@ -2078,6 +2078,9 @@ sub _regex_class {
                      opcode_nm( OP_RX_EXACT, string => $e->value,
                                 length => length( $e->value ) );
             }
+        } elsif( $e->isa( 'Language::P::ParseTree::RXRange' ) ) {
+            push @elements,
+                 opcode_nm( OP_RX_RANGE, start => $e->start, end => $e->end );
         } else {
             push @elements,
                  opcode_nm( OP_RX_SPECIAL_CLASS, type => $e->type );
