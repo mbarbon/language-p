@@ -15,7 +15,8 @@ sub new {
     my( $class, $args ) = @_;
     my $self = $class->SUPER::new( $args );
 
-    $self->{symbol_table} ||= Language::P::Toy::Value::MainSymbolTable->new( $self );
+    $self->{symbol_table} ||= Language::P::Toy::Value::MainSymbolTable->new
+                                  ( $self, { name => 'main' } );
     $self->{_variables} = { osname      => $^O,
                             hints       => 0,
                             };

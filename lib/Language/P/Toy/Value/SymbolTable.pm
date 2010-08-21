@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use base qw(Language::P::Toy::Value::Hash);
 
+__PACKAGE__->mk_ro_accessors( qw(name) );
+
 use Language::P::Toy::Value::Typeglob;
 
 sub type { 7 }
@@ -78,7 +80,8 @@ sub get_symbol {
     return $value if $value || !$create;
 
     if( $sigil eq '::' ) {
-        $value = Language::P::Toy::Value::SymbolTable->new( $runtime );
+        $value = Language::P::Toy::Value::SymbolTable->new
+                     ( $runtime, { name => substr $name, 0, -2 } );
         $symbol->set_slot( $runtime, 'hash', $value );
 
         return $value;
@@ -115,7 +118,9 @@ sub _get_glob {
             $current = $glob->get_slot( $runtime, 'hash' );
             if( !$current ) {
                 return ( undef, 0 ) unless $create;
-                $current = Language::P::Toy::Value::SymbolTable->new( $runtime );
+                my $pack_name = join '', @packages[0 .. $index];
+                $current = Language::P::Toy::Value::SymbolTable->new
+                               ( $runtime, { name => substr $pack_name, 0, -2 } );
                 $glob->set_slot( $runtime, 'hash', $current );
             }
 
