@@ -151,6 +151,7 @@ t/parser/expressions/021_builtins/binmode.t
 t/parser/expressions/021_builtins/bless.t
 t/parser/expressions/021_builtins/die.t
 t/parser/expressions/021_builtins/filetest.t
+t/parser/expressions/021_builtins/index.t
 t/parser/expressions/021_builtins/join.t
 t/parser/expressions/021_builtins/open.t
 t/parser/expressions/021_builtins/pop.t

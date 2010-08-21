@@ -237,6 +237,7 @@ die                 o       default
 each                o       same                 1   1  0             make_hash+reference
 glob                o       same                 1  -1  topic         scalar
 hex                 o       same                 1   1  topic         scalar
+index               o       same                 2   3  0             scalar,scalar,scalar
 int                 o       same                 1   1  topic         scalar
 join                o       same                 1  -1  0             scalar,list
 keys                o       same                 1   1  0             make_hash+reference
