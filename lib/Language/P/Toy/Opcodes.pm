@@ -892,8 +892,10 @@ sub o_lexical_clear {
 sub o_lexical_pad {
     my( $op, $runtime, $pc ) = @_;
     my $pad = $runtime->{_stack}->[$runtime->{_frame} - 1];
+    my $value = $pad->values->[$op->{index}]
+                  ||= Language::P::Toy::Value::Undef->new( $runtime );
 
-    push @{$runtime->{_stack}}, $pad->values->[$op->{index}];
+    push @{$runtime->{_stack}}, $value;
 
     return $pc + 1;
 }
