@@ -72,6 +72,7 @@ support/parrot/runtime/p5runtime.pir
 support/parrot/runtime/p5scalar.pir
 support/parrot/runtime/p5string.pir
 support/parrot/runtime/p5undef.pir
+support/toy/lib/Scalar/Util.pm
 support/toy/lib/overload.pm
 t/intermediate/002_base.t
 t/intermediate/002_base_tree.t
@@ -268,6 +269,7 @@ t/run/files/Bar.pm
 t/run/files/Foo.pm
 t/run/files/Moo.pm
 t/run/files/foo.pl
+t/run/z00_selfparse.t
 t/runtime/001_load.t
 t/runtime/002_base.t
 t/runtime/005_stash.t
