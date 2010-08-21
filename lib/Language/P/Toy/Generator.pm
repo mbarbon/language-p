@@ -763,6 +763,9 @@ sub _rx_class {
         } elsif( $e->{opcode_n} == OP_RX_EXACT_I ) {
             $elements .= lc $e->{attributes}{string} .
                          uc $e->{attributes}{string};
+        } elsif( $e->{opcode_n} == OP_RX_RANGE ) {
+            $elements .= join '', $e->{attributes}{start} ..
+                                  $e->{attributes}{end};
         } else {
             die $e->{attributes}{type}
                 unless exists $element_map{$e->{attributes}{type}};
