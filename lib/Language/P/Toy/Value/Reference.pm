@@ -88,6 +88,11 @@ sub dereference_glob {
 sub as_string {
     my( $self, $runtime ) = @_;
 
+    # TODO find a more general solution, possibly using overload
+    if( $self->{reference}->type == 15 ) {
+        return $self->{reference}->regex_string;
+    }
+
     return sprintf '%s(0x%p)', _reference_string( $self ), $self->{reference};
 }
 

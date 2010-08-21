@@ -2056,6 +2056,19 @@ sub o_make_closure {
     return $pc + 1;
 }
 
+sub o_make_qr {
+    my( $op, $runtime, $pc ) = @_;
+    my $pattern = pop @{$runtime->{_stack}};
+    my $stash = $runtime->symbol_table->get_package( $runtime, 'Regexp', 1 );
+    my $ref = Language::P::Toy::Value::Reference->new
+                  ( $runtime, { reference => $pattern } );
+
+    $ref->bless( $runtime, $stash );
+    push @{$runtime->{_stack}}, $ref;
+
+    return $pc + 1;
+}
+
 sub o_localize_array_element {
     my( $op, $runtime, $pc ) = @_;
     my $array = pop @{$runtime->{_stack}};

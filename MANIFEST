@@ -239,6 +239,7 @@ t/run/018_vivification.t
 t/run/020_lexicals.t
 t/run/021_interpolated_regexp.t
 t/run/021_map_grep.t
+t/run/021_qr.t
 t/run/021_regexp.t
 t/run/021_regexp_i.t
 t/run/021_substitution.t
