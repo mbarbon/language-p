@@ -1960,6 +1960,8 @@ sub _pattern {
                                     value    => $re->[0],
                                     original => $tree->original,
                                     );
+    _add_bytecode $self, opcode_n( OP_MAKE_QR )
+        if $tree->op == OP_QL_QR;
 }
 
 sub _interpolated_pattern {
@@ -1971,6 +1973,8 @@ sub _interpolated_pattern {
                                      context => _context( $tree ),
                                      flags   => $tree->flags,
                                      );
+    _add_bytecode $self, opcode_n( OP_MAKE_QR )
+        if $tree->op == OP_QL_QR;
 }
 
 sub _exit_scope {

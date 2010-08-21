@@ -505,6 +505,7 @@ log_xor             0       same                 2   1  context=i1
 make_array          0       same                -1   1  context=i1
 make_closure        0       same                 1   1  noattr
 make_list           0       same                -1   1  context=i1
+make_qr             0       same                 1   1  noattr
 map                 0       same                 1   1  context=i1
 match               0       rx_match             2   1  context=i1,flags=i,index=i
 minus               0       negate               1   1  context=i1
