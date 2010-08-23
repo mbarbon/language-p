@@ -581,6 +581,8 @@ sub _indirect {
     } elsif( $tree->function == OP_GREP ) {
         _grep( $self, $tree );
         return;
+    } elsif( $tree->function == OP_SORT ) {
+        _sort( $self, $tree );
     }
 
     if( $tree->indirect ) {
@@ -1478,6 +1480,21 @@ sub _grep {
 
     _end_list_iteration( $self, $tree, 0, $start_step,
                          $exit_loop, $end_loop );
+}
+
+sub _sort {
+    my( $self, $tree ) = @_;
+    _emit_label( $self, $tree );
+
+    my $list = Language::P::ParseTree::List->new
+                   ( { expressions => $tree->arguments,
+                       } );
+    $list->set_attribute( 'context', CXT_LIST );
+    $self->dispatch( $list );
+
+    die 'Unsupported custom sort comparison' if $tree->indirect;
+    _add_bytecode $self,
+        opcode_npm( OP_SORT, $tree->pos );
 }
 
 sub _for {

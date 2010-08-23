@@ -118,6 +118,22 @@ sub o_join {
     return $pc + 1;
 }
 
+sub o_sort {
+    my( $op, $runtime, $pc ) = @_;
+    my $args = pop @{$runtime->{_stack}};
+
+    # cheat
+    my @strings = map $_->as_string( $runtime ), @{$args->array};
+    my @res = map Language::P::Toy::Value::Scalar->new_string( $runtime, $_ ),
+                  sort @strings;
+    my $res = Language::P::Toy::Value::List->new
+                  ( $runtime, { array => \@res } );
+
+    push @{$runtime->{_stack}}, $res;
+
+    return $pc + 1;
+}
+
 sub o_print {
     my( $op, $runtime, $pc ) = @_;
     my $args = pop @{$runtime->{_stack}};
