@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use t::lib::TestParser tests => 4;
+use t::lib::TestParser tests => 5;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 sort @foo, @boo
@@ -84,4 +84,22 @@ indirect: !parsetree:Symbol
   context: CXT_SCALAR
   name: foo
   sigil: VALUE_SUB
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+sort keys %foo
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:Overridable
+    arguments:
+      - !parsetree:Symbol
+        context: CXT_LIST
+        name: foo
+        sigil: VALUE_HASH
+    context: CXT_LIST
+    function: OP_KEYS
+context: CXT_VOID
+function: OP_SORT
+indirect: ~
 EOE

@@ -2467,7 +2467,7 @@ sub _parse_arglist {
     if( $indirect_term ) {
         if( $la->[O_TYPE] == T_OPBRK ) {
             $term = _parse_indirobj( $self, 0 );
-        } elsif(    $proto_char & PROTO_FILEHANDLE
+        } elsif(    ( $proto_char & PROTO_FILEHANDLE )
                  && $la->[O_TYPE] == T_ID
                  && (    $la->[O_ID_TYPE] == T_ID
                       || $la->[O_ID_TYPE] == T_FQ_ID ) ) {
@@ -2502,8 +2502,10 @@ sub _parse_arglist {
                                 pos   => $la->[O_POS],
                                 } );
             }
-        } elsif(    $proto_char & PROTO_SUBNAME
-                 && $la->[O_TYPE] == T_ID ) {
+        } elsif(    ( $proto_char & PROTO_SUBNAME )
+                 && $la->[O_TYPE] == T_ID
+                 && !is_builtin( $la->[O_ID_TYPE] )
+                 && !is_overridable( $la->[O_ID_TYPE] ) ) {
             # look ahead one more token
             _lex_token( $self );
             my $la2 = $self->lexer->peek( X_TERM );
