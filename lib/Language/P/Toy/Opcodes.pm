@@ -1413,6 +1413,28 @@ sub o_substr {
     return $pc + 1;
 }
 
+sub o_index {
+    my( $op, $runtime, $pc ) = @_;
+    my $argc = $op->{arg_count};
+    my $start = 0;
+    if( $argc == 3 ) {
+        my $start_s = pop @{$runtime->{_stack}};
+
+        $start = $start_s->as_integer( $runtime );
+    }
+    my $substr = pop @{$runtime->{_stack}};
+    my $str = pop @{$runtime->{_stack}};
+
+    my $pos = index $str->as_string( $runtime ),
+                    $substr->as_string( $runtime ),
+                    $start;
+
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::Scalar->new_integer( $runtime, $pos );
+
+    return $pc + 1;
+}
+
 sub o_ord {
     my( $op, $runtime, $pc ) = @_;
     my $scalar = pop @{$runtime->{_stack}};
