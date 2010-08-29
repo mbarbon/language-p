@@ -208,6 +208,7 @@ sub _make_binary_op {
     my( $op ) = @_;
 
     eval sprintf <<'EOT',
+#line 1 %s
 sub %s {
     my( $op, $runtime, $pc ) = @_;
     my $vr = pop @{$runtime->{_stack}};
@@ -220,8 +221,8 @@ sub %s {
     return $pc + 1;
 }
 EOT
-        $op->{name}, $op->{convert}, $op->{operator}, $op->{convert},
-        $op->{new_type};
+        $op->{name}, $op->{name},
+        $op->{convert}, $op->{operator}, $op->{convert}, $op->{new_type};
     die $@ if $@;
 }
 
@@ -229,6 +230,7 @@ sub _make_binary_op_assign {
     my( $op ) = @_;
 
     eval sprintf <<'EOT',
+#line 1 %s
 sub %s_assign {
     my( $op, $runtime, $pc ) = @_;
     my $vr = pop @{$runtime->{_stack}};
@@ -240,8 +242,8 @@ sub %s_assign {
     return $pc + 1;
 }
 EOT
-        $op->{name}, $op->{convert}, $op->{operator}, $op->{convert},
-        $op->{new_type};
+        $op->{name}, $op->{name},
+        $op->{convert}, $op->{operator}, $op->{convert}, $op->{new_type};
     die $@ if $@;
 }
 
@@ -313,6 +315,7 @@ sub _make_bit_op {
     my( $name, $op ) = @_;
 
     eval sprintf <<'EOT',
+#line 1 %s
 sub _bit_%s_string_number {
     my( $op, $runtime, $pc ) = @_;
     my $vr = pop @{$runtime->{_stack}};
@@ -353,7 +356,7 @@ sub _bit_%s_assign_string_number {
     return $pc + 1;
 }
 EOT
-        $name, $op, $op, $name, $op, $op;
+        $name, $name, $op, $op, $name, $op, $op;
 }
 
 _make_bit_op( 'or',  '|' );
@@ -982,6 +985,7 @@ sub _make_cond_jump {
     my( $op ) = @_;
 
     eval sprintf <<'EOT',
+#line 1 %s
 sub %s {
     my( $op, $runtime, $pc ) = @_;
     my $vr = pop @{$runtime->{_stack}};
@@ -990,7 +994,8 @@ sub %s {
     return $vl->%s( $runtime ) %s $vr->%s( $runtime ) ? $op->{to} : $pc + 1;
 }
 EOT
-        $op->{name}, $op->{convert}, $op->{operator}, $op->{convert};
+        $op->{name}, $op->{name},
+        $op->{convert}, $op->{operator}, $op->{convert};
 }
 
 _make_cond_jump( $_ ) foreach
@@ -1058,6 +1063,7 @@ sub _make_compare {
                   'Language::P::Toy::Value::StringNumber->new( $runtime, { integer => $r } )';
 
     eval sprintf <<'EOT',
+#line 1 %s
 sub %s {
     my( $op, $runtime, $pc ) = @_;
     my $vr = pop @{$runtime->{_stack}};
@@ -1069,8 +1075,8 @@ sub %s {
     return $pc + 1;
 }
 EOT
-        $op->{name}, $op->{convert}, $op->{operator}, $op->{convert},
-        $ret;
+        $op->{name}, $op->{name},
+        $op->{convert}, $op->{operator}, $op->{convert}, $ret;
 }
 
 _make_compare( $_ ) foreach
@@ -1190,6 +1196,7 @@ sub _make_unary {
     my( $op ) = @_;
 
     eval sprintf <<'EOT',
+#line 1 %s
 sub %s {
     my( $op, $runtime, $pc ) = @_;
     my $v = pop @{$runtime->{_stack}};
@@ -1200,7 +1207,7 @@ sub %s {
     return $pc + 1;
 }
 EOT
-        $op->{name}, $op->{type}, $op->{expression};
+        $op->{name}, $op->{name}, $op->{type}, $op->{expression};
     die $@ if $@;
 }
 
@@ -1235,6 +1242,7 @@ sub _make_boolean_unary {
     my( $op ) = @_;
 
     eval sprintf <<'EOT',
+#line 1 %s
 sub %s {
     my( $op, $runtime, $pc ) = @_;
     my $v = pop @{$runtime->{_stack}};
@@ -1245,7 +1253,7 @@ sub %s {
     return $pc + 1;
 }
 EOT
-        $op->{name}, $op->{expression};
+        $op->{name}, $op->{name}, $op->{expression};
     die $@ if $@;
 }
 
@@ -1646,6 +1654,7 @@ sub _make_bool_ft {
     my( $op ) = @_;
 
     eval sprintf <<'EOT',
+#line 1 %s
 sub %s {
     my( $op, $runtime, $pc ) = @_;
     my $file = pop @{$runtime->{_stack}};
@@ -1656,7 +1665,7 @@ sub %s {
     return $pc + 1;
 }
 EOT
-        $op->{name}, $op->{operator};
+        $op->{name}, $op->{name}, $op->{operator};
     die $@ if $@;
 }
 
