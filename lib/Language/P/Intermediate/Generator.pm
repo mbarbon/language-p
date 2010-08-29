@@ -1819,10 +1819,16 @@ sub _slice {
 
     my $lvalue = $tree->get_attribute( 'context' ) & (CXT_LVALUE|CXT_VIVIFY);
     if( $tree->type == VALUE_ARRAY ) {
+        _add_bytecode $self, opcode_npm( OP_VIVIFY_ARRAY, $tree->pos,
+                                         context   => CXT_SCALAR )
+          if $tree->reference;
         _add_bytecode $self, opcode_npm( OP_ARRAY_SLICE, $tree->pos,
                                          create    => $lvalue ? 1 : 0,
                                          context   => _context( $tree ) );
     } elsif( $tree->type == VALUE_HASH ) {
+        _add_bytecode $self, opcode_npm( OP_VIVIFY_HASH, $tree->pos,
+                                         context   => CXT_SCALAR )
+          if $tree->reference;
         _add_bytecode $self, opcode_npm( OP_HASH_SLICE, $tree->pos,
                                          create    => $lvalue ? 1 : 0,
                                          context   => _context( $tree ) );
