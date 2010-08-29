@@ -269,6 +269,11 @@ _make_binary_op( $_ ), _make_binary_op_assign( $_ ) foreach
       operator => '/',
       new_type => 'float',
       },
+    { name     => '_shift_left_default',
+      convert  => 'as_integer',
+      operator => '<<',
+      new_type => 'integer',
+      },
     { name     => '_bit_or_default',
       convert  => 'as_integer',
       operator => '|',
@@ -559,6 +564,13 @@ my %dispatch_add_assign =
              },
     );
 
+my %dispatch_shift_left =
+  ( -1  => { -1  => \&_shift_left_default,
+             },
+     10 => { -1  => \&_shift_left_overload,
+             },
+    );
+
 sub _dispatch {
     my( $table, $l, $r ) = @_;
     my $lt = $l->type;
@@ -664,6 +676,14 @@ sub o_repeat_array {
          Language::P::Toy::Value::List->new( $runtime, { array => \@res } );
 
     return $pc + 1;
+}
+
+sub o_shift_left {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = $runtime->{_stack}[-1];
+    my $vl = $runtime->{_stack}[-2];
+
+    return _dispatch( \%dispatch_shift_left, $vl, $vr )->( $op, $runtime, $pc );
 }
 
 sub o_push_element {
