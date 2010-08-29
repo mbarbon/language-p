@@ -2,7 +2,7 @@ package TestIntermediate;
 
 use strict;
 use warnings;
-use TestParser qw(parse_string);
+use t::lib::TestParser;
 
 use Language::P::Intermediate::Generator;
 use Language::P::Intermediate::Transform;
@@ -100,6 +100,17 @@ sub generate_ssa_and_diff {
 
     local $Test::Builder::Level = $Test::Builder::Level + 1;
     Test::Differences::eq_or_diff( $asm_string, $assembly );
+}
+
+package t::lib::TestIntermediate;
+
+sub import {
+    shift;
+
+    strict->import;
+    warnings->import;
+    Test::More->import( @_ );
+    Exporter::export( 'TestIntermediate', scalar caller, ':all' );
 }
 
 1;

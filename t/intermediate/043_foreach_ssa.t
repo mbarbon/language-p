@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 2;
-
-use lib qw(t/lib);
-use TestIntermediate qw(:all);
+use t::lib::TestIntermediate tests => 2;
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
 foreach $y ( 1, 2 ) {
