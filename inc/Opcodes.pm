@@ -553,7 +553,9 @@ readline            u       same                 1   1  context=i1
 reference           u       same                 1   1  context=i1
 reftype             u       same                 1   1  context=i1
 repeat              0       same                 2   1  context=i1
+repeat_array        0       same                 2   1  context=i1
 repeat_assign       0       same                 2   1  context=i1
+repeat_scalar       0       same                 2   1  context=i1
 replace             0       rx_replace           2   1  context=i1,index=i,flags=i,to=b
 require_file        u       same                 1   1  context=i1
 restore_array_element 0     same                 0   0  index=i

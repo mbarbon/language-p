@@ -638,6 +638,32 @@ sub o_add_assign {
     return _dispatch( \%dispatch_add_assign, $vl, $vr )->( $op, $runtime, $pc );
 }
 
+sub o_repeat_scalar {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = pop @{$runtime->{_stack}};
+    my $vl = pop @{$runtime->{_stack}};
+
+    my $res = $vl->as_string( $runtime ) x $vr->as_integer( $runtime );
+
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::Scalar->new_string( $runtime, $res );
+
+    return $pc + 1;
+}
+
+sub o_repeat_array {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = pop @{$runtime->{_stack}};
+    my $vl = pop @{$runtime->{_stack}};
+
+    my @res = ( @{$vl->array} ) x $vr->as_integer( $runtime );
+
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::List->new( $runtime, { array => \@res } );
+
+    return $pc + 1;
+}
+
 sub o_push_element {
     my( $op, $runtime, $pc ) = @_;
     my $arg = pop @{$runtime->{_stack}};

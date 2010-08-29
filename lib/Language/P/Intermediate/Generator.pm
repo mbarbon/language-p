@@ -1009,6 +1009,22 @@ sub _binary_op {
                 opcode_npm( OP_LOG_NOT, $tree->pos,
                             context   => _context( $tree ) );
         }
+    } elsif( $tree->op == OP_REPEAT ) {
+        my $op;
+        $self->dispatch( $tree->left );
+        if( $tree->left->isa( 'Language::P::ParseTree::Parentheses' ) ) {
+            $op = OP_REPEAT_ARRAY;
+            _add_bytecode $self,
+                opcode_nm( OP_MAKE_LIST, count => 1, context => CXT_LIST );
+        } else {
+            $op = OP_REPEAT_SCALAR;
+        }
+
+        $self->dispatch( $tree->right );
+
+        _add_bytecode $self,
+            opcode_npm( $op, $tree->pos,
+                        context   => _context( $tree ) );
     } else {
         $self->dispatch( $tree->left );
         $self->dispatch( $tree->right );
