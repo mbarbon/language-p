@@ -3,8 +3,8 @@
 BEGIN { print "1..1\n" }
 BEGIN { unshift @INC, 'lib' }
 
-use Language::P::Constants;
-use Language::P::Assembly;
+use Language::P::Constants qw(:all);
+use Language::P::Assembly qw(:all);
 use Language::P::Exception;
 # use Language::P::Intermediate::BasicBlock;
 use Language::P::Intermediate::Code;
