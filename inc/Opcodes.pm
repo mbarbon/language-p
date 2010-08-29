@@ -587,6 +587,7 @@ subtract_assign     0       same                 2   1  context=i1
 swap                0       same                 2   2  noattr
 temporary           0       same                 0   1  index=i,slot=i_sigil
 temporary_set       0       same                 1   0  index=i,slot=i_sigil
+temporary_clear     0       same                 0   0  index=i,slot=i_sigil
 transliterate       u       rx_transliterate     1   1  match=s,replacement=s,flags=i,context=i1
 uc                  u       same                 1   1  noattr
 ucfirst             u       same                 1   1  noattr

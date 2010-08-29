@@ -1294,7 +1294,7 @@ sub _setup_list_iteration {
     _add_bytecode $self, opcode_nm( OP_MAKE_LIST, count => 1, context => CXT_LIST );
 
     my $iterator = $self->{_temporary_count}++;
-    my( $glob, $slot );
+    my( $glob );
     _add_bytecode $self,
         opcode_npm( OP_ITERATOR, $tree->pos ),
         opcode_nm( OP_TEMPORARY_SET,
@@ -1303,28 +1303,32 @@ sub _setup_list_iteration {
 
     if( !$is_lexical ) {
         $glob = $self->{_temporary_count}++;
-        $slot = $self->{_temporary_count}++;
+        my $slot = $self->{_temporary_count}++;
 
         _add_bytecode $self,
-            opcode_nm( OP_GLOBAL, name => $iter_var->name, slot => VALUE_GLOB, context => CXT_SCALAR ),
-            opcode_n( OP_DUP ),
-            opcode_nm( OP_GLOB_SLOT,   slot  => VALUE_SCALAR ),
-            opcode_nm( OP_TEMPORARY_SET,
-                       index => $slot,
-                       slot  => VALUE_SCALAR ),
+            opcode_nm( OP_GLOBAL,
+                       name    => $iter_var->name,
+                       slot    => VALUE_GLOB,
+                       context => CXT_SCALAR ),
             opcode_nm( OP_TEMPORARY_SET,
                        index => $glob,
-                       slot  => VALUE_GLOB );
+                       slot  => VALUE_GLOB ),
+            opcode_npm( OP_LOCALIZE_GLOB_SLOT, $tree->pos,
+                        name  => $iter_var->name,
+                        slot  => VALUE_SCALAR,
+                        index => $slot,
+                        ),
+            opcode_n( OP_POP );
 
         push @{$self->_current_block->{bytecode}},
-             [ opcode_npm( OP_TEMPORARY, $self->_current_block->{pos},
-                           index => $glob,
-                           slot  => VALUE_GLOB ),
-               opcode_npm( OP_TEMPORARY, $self->_current_block->{pos},
+             [ opcode_nm( OP_TEMPORARY_CLEAR,
+                          index => $glob,
+                          slot  => VALUE_GLOB ),
+               opcode_npm( OP_RESTORE_GLOB_SLOT, $tree->pos,
+                           name  => $iter_var->name,
+                           slot  => VALUE_SCALAR,
                            index => $slot,
-                           slot  => VALUE_SCALAR ),
-               opcode_npm( OP_GLOB_SLOT_SET, $self->_current_block->{pos},
-                           slot  => VALUE_SCALAR ),
+                           ),
                ];
     }
 
