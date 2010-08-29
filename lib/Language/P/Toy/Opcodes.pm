@@ -2165,7 +2165,7 @@ sub o_restore_array_element {
     my( $op, $runtime, $pc ) = @_;
     my $saved = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
 
-    $saved->[0]->restore_item( $runtime, $saved->[1], $saved->[2] );
+    $saved->[0]->restore_item( $runtime, $saved->[1], $saved->[2] ) if $saved;
     $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = undef;
 
     return $pc + 1;
@@ -2193,7 +2193,7 @@ sub o_restore_hash_element {
     my $saved = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
 
     # an undef values deletes the key
-    $saved->[0]->restore_item( $runtime, $saved->[1], $saved->[2] );
+    $saved->[0]->restore_item( $runtime, $saved->[1], $saved->[2] ) if $saved;
     $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = undef;
 
     return $pc + 1;
