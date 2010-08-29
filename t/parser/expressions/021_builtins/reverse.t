@@ -19,7 +19,11 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 reverse
 EOP
 --- !parsetree:Overridable
-arguments: ~
+arguments:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: _
+    sigil: VALUE_SCALAR
 context: CXT_VOID
 function: OP_REVERSE
 EOE

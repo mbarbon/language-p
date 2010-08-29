@@ -255,7 +255,7 @@ push                o       same                 1  -1  0             make_array
 quotemeta           o       same                 1   1  topic         scalar
 readline            o       same                 0   1  0             make_glob
 ref                 o       KEY_REFTYPE          0   1  topic         scalar
-reverse             o       default
+reverse             o       same                 0  -1  topic         list
 rmdir               o       same                 1   1  topic         scalar
 shift               o       same                 1   1  topic         make_array+reference
 splice              o       same                 1  -1  0             make_array+reference,scalar,scalar,list
