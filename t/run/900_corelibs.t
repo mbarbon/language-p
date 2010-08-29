@@ -14,7 +14,7 @@ use subs;
 use base;
 use parent;
 use Carp;
-# use Carp::Heavy;
+use Carp::Heavy;
 use Exporter;
 # use Exporter::Heavy;
 # use lib;
