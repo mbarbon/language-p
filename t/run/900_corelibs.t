@@ -16,7 +16,7 @@ use parent;
 use Carp;
 use Carp::Heavy;
 use Exporter;
-# use Exporter::Heavy;
+use Exporter::Heavy;
 # use lib;
 # use blib;
 # use Fatal;
