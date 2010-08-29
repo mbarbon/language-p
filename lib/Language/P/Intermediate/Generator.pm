@@ -1280,7 +1280,8 @@ sub _cond_loop {
 
 sub _setup_list_iteration {
     my( $self, $tree, $iter_var, $list, $in_block ) = @_;
-    my $is_lexical = $iter_var->isa( 'Language::P::ParseTree::LexicalDeclaration' );
+    my $is_lexical_declaration = $iter_var->isa( 'Language::P::ParseTree::LexicalDeclaration' );
+    my $is_lexical = $is_lexical_declaration || $iter_var->isa( 'Language::P::ParseTree::LexicalSymbol' );
 
     my( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop ) =
         _new_blocks( $self, 5 );
@@ -1300,6 +1301,13 @@ sub _setup_list_iteration {
         opcode_nm( OP_TEMPORARY_SET,
                    index => $iterator,
                    slot  => VALUE_ITERATOR );
+
+    if( $is_lexical_declaration ) {
+        _allocate_lexical( $self, $self->_code_segments->[0], $iter_var, 0 );
+    } elsif( $is_lexical ) {
+        _allocate_lexical( $self, $self->_code_segments->[0],
+                           $iter_var->declaration, $iter_var->level );
+    }
 
     if( !$is_lexical ) {
         $glob = $self->{_temporary_count}++;
@@ -1329,6 +1337,23 @@ sub _setup_list_iteration {
                            slot  => VALUE_SCALAR,
                            index => $slot,
                            ),
+               ];
+    } elsif( !$is_lexical_declaration ) {
+        my $slot = $self->{_temporary_count}++;
+        my $lex_info = $self->_code_segments->[0]->lexicals->{map}->{$iter_var->declaration};
+        my $in_pad = $lex_info->{in_pad};
+
+        _add_bytecode $self,
+            opcode_nm( $in_pad ? OP_LOCALIZE_LEXICAL_PAD : OP_LOCALIZE_LEXICAL,
+                       lexical => $lex_info->{index},
+                       index   => $slot,
+                       );
+
+        push @{$self->_current_block->{bytecode}},
+             [ opcode_nm( $in_pad ? OP_RESTORE_LEXICAL_PAD : OP_RESTORE_LEXICAL,
+                          lexical => $lex_info->{index},
+                          index   => $slot,
+                          ),
                ];
     }
 
@@ -1367,10 +1392,15 @@ sub _setup_list_iteration {
             $exit_loop, $start_loop;
 
         _add_blocks $self, $start_loop;
-        _allocate_lexical( $self, $self->_code_segments->[0], $iter_var, 0 );
-        my $lex_info = $self->_code_segments->[0]->lexicals->{map}->{$iter_var};
+        my $lex_info;
+        if( $is_lexical_declaration ) {
+            $lex_info = $self->_code_segments->[0]->lexicals->{map}->{$iter_var};
+        } else {
+            $lex_info = $self->_code_segments->[0]->lexicals->{map}->{$iter_var->declaration};
+        }
+
         _add_bytecode $self,
-            opcode_nm( $iter_var->closed_over ? OP_LEXICAL_PAD_SET : OP_LEXICAL_SET,
+            opcode_nm( $lex_info->{in_pad} ? OP_LEXICAL_PAD_SET : OP_LEXICAL_SET,
                        index => $lex_info->{index},
                        );
     }
