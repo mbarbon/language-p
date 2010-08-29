@@ -934,6 +934,25 @@ sub o_lexical_clear {
     return $pc + 1;
 }
 
+sub o_localize_lexical {
+    my( $op, $runtime, $pc ) = @_;
+
+    $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] =
+        $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{lexical}];
+
+    return $pc + 1;
+}
+
+sub o_restore_lexical {
+    my( $op, $runtime, $pc ) = @_;
+    my $val = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
+
+    $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{lexical}] = $val if $val;
+    $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = undef;
+
+    return $pc + 1;
+}
+
 sub o_lexical_pad {
     my( $op, $runtime, $pc ) = @_;
     my $pad = $runtime->{_stack}->[$runtime->{_frame} - 1];
@@ -960,6 +979,27 @@ sub o_lexical_pad_clear {
     my $pad = $runtime->{_stack}->[$runtime->{_frame} - 1];
 
     $pad->values->[$op->{index}] = undef;
+
+    return $pc + 1;
+}
+
+sub o_localize_lexical_pad {
+    my( $op, $runtime, $pc ) = @_;
+    my $pad = $runtime->{_stack}->[$runtime->{_frame} - 1];
+
+    $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] =
+        $pad->values->[$op->{lexical}];
+
+    return $pc + 1;
+}
+
+sub o_restore_lexical_pad {
+    my( $op, $runtime, $pc ) = @_;
+    my $pad = $runtime->{_stack}->[$runtime->{_frame} - 1];
+    my $val = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
+
+    $pad->values->[$op->{lexical}] = $val if $val;
+    $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = undef;
 
     return $pc + 1;
 }

@@ -175,6 +175,10 @@ my %opcode_map =
     OP_RESTORE_HASH_ELEMENT()        => \&_map_index,
     OP_LOCALIZE_ARRAY_ELEMENT()      => \&_map_index,
     OP_RESTORE_ARRAY_ELEMENT()       => \&_map_index,
+    OP_LOCALIZE_LEXICAL()            => \&_map_lexical_index,
+    OP_RESTORE_LEXICAL()             => \&_map_lexical_index,
+    OP_LOCALIZE_LEXICAL_PAD()        => \&_map_lexical_index,
+    OP_RESTORE_LEXICAL_PAD()         => \&_map_lexical_index,
     OP_END()                         => \&_end,
     OP_STOP()                        => \&_stop,
     OP_DOT_DOT()                     => \&_dot_dot,
@@ -663,6 +667,16 @@ sub _map_slot_index {
             name  => $op->{attributes}{name},
             slot  => $sigil_to_slot{$op->{attributes}{slot}},
             index => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ),
+            );
+}
+
+sub _map_lexical_index {
+    my( $self, $bytecode, $op ) = @_;
+
+    push @$bytecode,
+         o( $NUMBER_TO_NAME{$op->{opcode_n}},
+            index   => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ),
+            lexical => $op->{attributes}{lexical},
             );
 }
 
