@@ -571,6 +571,8 @@ sub _dispatch {
         if $sub = $table->{$lt}{-1};
     return $table->{$lt}{$rt} = $sub
         if $sub = $table->{-1}{$rt};
+    return $table->{$lt}{$rt} = $sub
+        if $sub = $table->{-1}{-1};
     die "Unable to dispatch types $lt, $rt";
 }
 
