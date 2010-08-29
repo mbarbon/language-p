@@ -476,7 +476,7 @@ sub throw_exception {
 
                 $self->run_bytecode( $scope->{bytecode} );
             };
-            die "Exception during stack unwind: $@" if $@;
+            die "Exception during stack unwind: $@\nduring: ", $exc if $@;
 
             if( $scope->{flags} & 2 ) {
                 $self->set_exception( $exc );
