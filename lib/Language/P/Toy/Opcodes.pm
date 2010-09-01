@@ -678,6 +678,36 @@ sub o_repeat_array {
     return $pc + 1;
 }
 
+sub o_reverse {
+    my( $op, $runtime, $pc ) = @_;
+    my $args = pop @{$runtime->{_stack}};
+    my $cxt = _context( $op, $runtime );
+
+    if( $cxt == CXT_LIST ) {
+        my @res = reverse @{$args->array};
+
+        push @{$runtime->{_stack}},
+             Language::P::Toy::Value::List->new( $runtime, { array => \@res } );
+    } else {
+        my $value;
+
+        if( $args->get_count == 0 ) {
+            my $def = $runtime->symbol_table->get_symbol( $runtime, '_', '$' );
+
+            $value = reverse $def->as_string( $runtime );
+        } else {
+            my $v = join "", map $_->as_string( $runtime ), @{$args->array};
+
+            $value = reverse $v;
+        }
+
+        push @{$runtime->{_stack}},
+             Language::P::Toy::Value::Scalar->new_string( $runtime, $value );
+    }
+
+    return $pc + 1;
+}
+
 sub o_shift_left {
     my( $op, $runtime, $pc ) = @_;
     my $vr = $runtime->{_stack}[-1];
