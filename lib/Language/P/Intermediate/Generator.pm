@@ -583,6 +583,7 @@ sub _indirect {
         return;
     } elsif( $tree->function == OP_SORT ) {
         _sort( $self, $tree );
+        return;
     }
 
     if( $tree->indirect ) {
