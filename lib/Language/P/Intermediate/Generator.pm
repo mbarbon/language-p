@@ -1478,9 +1478,6 @@ sub _map {
     my( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop ) =
         _setup_list_iteration( $self, $tree, $iter_var, $list, 0 );
 
-    _add_bytecode $self,
-        opcode_n( OP_DUP );
-
     # call expresssion and add it to the result
     $self->dispatch( $expression );
     _add_bytecode $self,
