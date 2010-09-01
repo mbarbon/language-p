@@ -4,7 +4,7 @@ BEGIN { print "1..1\n" }
 BEGIN { unshift @INC, 'lib' }
 
 use Language::P::Constants qw(:all);
-# use Language::P::Keywords;
+use Language::P::Keywords;
 # use Language::P::Opcodes;
 use Language::P::Assembly qw(:all);
 use Language::P::Exception;
