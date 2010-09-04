@@ -1393,7 +1393,7 @@ sub _parse_string_rest {
                             ( { value => $_,
                                 flags => CONST_STRING,
                                 } ),
-                        split /[\s\r\n]+/, $string->value;
+                        split ' ', $string->value;
 
         $string = Language::P::ParseTree::List->new
                       ( { expressions => \@words,
