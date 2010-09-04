@@ -5,10 +5,10 @@ BEGIN { unshift @INC, 'lib' }
 
 use Language::P::Constants qw(:all);
 use Language::P::Keywords qw(:all);
-# use Language::P::Opcodes;
+use Language::P::Opcodes qw(:all);
 use Language::P::Assembly qw(:all);
 use Language::P::Exception;
-# use Language::P::Intermediate::BasicBlock;
+use Language::P::Intermediate::BasicBlock;
 use Language::P::Intermediate::Code;
 # use Language::P::Intermediate::Generator;
 # use Language::P::Intermediate::Transform;
