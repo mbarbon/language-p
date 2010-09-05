@@ -893,6 +893,38 @@ sub o_call_method {
     return $sub->call( $runtime, $pc, _context( $op, $runtime ) );
 }
 
+sub o_call_method_indirect {
+    my( $op, $runtime, $pc ) = @_;
+    my $args = pop @{$runtime->{_stack}};
+    my $invocant = $args->get_item( $runtime, 0 );
+    my $method = pop @{$runtime->{_stack}};
+
+    # prepare the stack for the call
+    push @{$runtime->{_stack}}, $args;
+
+    my $sub;
+    if(    $method->isa( 'Language::P::Toy::Value::Reference' )
+        && $method->reference->isa( 'Language::P::Toy::Value::Subroutine' ) ) {
+        $sub = $method->reference;
+    } else {
+        my $name = $method->as_string( $runtime );
+
+        if( ( my $idx = rindex $name, '::' ) >= 0 ) {
+            my $pack = substr $name, 0, $idx;
+            my $meth = substr $name, $idx + 2;
+
+            my $stash = $runtime->symbol_table->get_package( $runtime, $pack, 1 );
+            $sub = $stash->find_method( $runtime, $meth );
+        } else {
+            $sub = $invocant->find_method( $runtime, $name );
+        }
+
+        die "Can't find method $name" unless $sub;
+    }
+
+    return $sub->call( $runtime, $pc, _context( $op, $runtime ) );
+}
+
 sub o_find_method {
     my( $op, $runtime, $pc ) = @_;
     my $invocant = pop @{$runtime->{_stack}};

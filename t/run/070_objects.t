@@ -18,7 +18,7 @@ sub s_a { 4 }
 
 package main;
 
-print "1..11\n";
+print "1..14\n";
 
 # simple method calls
 print Foo->s_a == 2 ? "ok 1\n" : "ok 2\n";
@@ -49,3 +49,12 @@ print $oc->Bar::a == 1 ? "ok\n" : "not ok\n";
 
 # ref
 print ref $oc eq 'Baz' ? "ok\n" : "not ok\n";
+
+# indirect method calls
+$foo_a1 = \&Foo::a;
+$foo_a2 = "Foo::a";
+$a = "a";
+
+print $oc->$foo_a1 == 1 ? "ok\n" : "not ok\n";
+print $oc->$foo_a2 == 1 ? "ok\n" : "not ok\n";
+print $oc->$a == 3 ? "ok\n" : "not ok\n";
