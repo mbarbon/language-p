@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..46\n";
+print "1..48\n";
 
 $text = 'abbcccddddeeeeeffffff';
 
@@ -62,6 +62,10 @@ print $1 eq 'c' ? "ok\n" : "not ok\n";
 }
 
 print $1 eq 'c' ? "ok\n" : "not ok - $1\n";
+
+# non-greedy quantifiers
+print $text =~ /(.+?)(c+)/ ? "ok\n" : "not ok\n";
+print "$1-$2" eq 'abb-ccc' ? "ok\n" : "not ok - $1-$2\n";
 
 # captures in list context
 @x = $text =~ /((b|c)+)/;

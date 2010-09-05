@@ -556,7 +556,7 @@ sub o_rx_quantifier {
                group_count   => -1,
                saved_groups  => $groups,
                };
-    } elsif( $count >= $op->{min} ) {
+    } elsif( $op->{greedy} && $count >= $op->{min} ) {
         push @{$cxt->{states}},
              { pos           => $cxt->{pos},
                ret_pc        => $pc + 1,
@@ -569,8 +569,12 @@ sub o_rx_quantifier {
 
     # if nongreedy, match at least min
     if( !$op->{greedy} && $count >= $op->{min} ) {
-        # TODO why pops the group?
-        pop @{$cxt->{groups}};
+        push @{$cxt->{states}},
+             { pos           => $cxt->{pos},
+               ret_pc        => $op->{to},
+               group_count   => scalar @{$cxt->{groups}},
+               saved_groups  => $groups,
+               };
         return $pc + 1;
     }
 
