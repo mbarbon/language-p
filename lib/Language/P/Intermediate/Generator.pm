@@ -1557,14 +1557,21 @@ sub _for {
     _start_bb( $self );
     $self->push_block( 0, $tree->pos_s, $tree->pos_e );
 
-    $self->dispatch( $tree->initializer );
-    _discard_if_void( $self, $tree->initializer );
+    if( $tree->initializer ) {
+        $self->dispatch( $tree->initializer );
+        _discard_if_void( $self, $tree->initializer );
+    }
 
     _add_jump $self,
          opcode_nm( OP_JUMP, to => $start_cond ), $start_cond;
     _add_blocks $self, $start_cond;
 
-    $self->dispatch_cond( $tree->condition, $start_loop, $end_loop );
+    if( $tree->condition ) {
+        $self->dispatch_cond( $tree->condition, $start_loop, $end_loop );
+    } else {
+        _add_jump $self,
+            opcode_nm( OP_JUMP, to => $start_loop ), $start_loop;
+    }
 
     _add_blocks $self, $start_loop;
     $self->dispatch( $tree->block );
@@ -1574,8 +1581,12 @@ sub _for {
          opcode_nm( OP_JUMP, to => $start_step ), $start_step;
 
     _add_blocks $self, $start_step;
-    $self->dispatch( $tree->step );
-    _discard_if_void( $self, $tree->step );
+
+    if( $tree->step ) {
+        $self->dispatch( $tree->step );
+        _discard_if_void( $self, $tree->step );
+    }
+
     _add_jump $self, opcode_nm( OP_JUMP, to => $start_cond ), $start_cond;
 
     _add_blocks $self, $end_loop;
