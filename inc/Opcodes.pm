@@ -623,3 +623,4 @@ rx_start_group      0       same                 0   0  to=b
 rx_start_match      0       same                 0   0  noattr
 rx_state_restore    0       same                 0   0  index=i
 rx_try              0       same                 0   0  to=b
+rx_word_boundary    0       same                 0   0  noattr

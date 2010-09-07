@@ -2073,6 +2073,7 @@ my %regex_assertions =
     END_OR_NEWLINE   => OP_RX_END_OR_NEWLINE,
     ANY_NONEWLINE    => OP_RX_ANY_NONEWLINE,
     ANY              => OP_RX_ANY,
+    WORD_BOUNDARY    => OP_RX_WORD_BOUNDARY,
     );
 
 sub _regex_assertion {
