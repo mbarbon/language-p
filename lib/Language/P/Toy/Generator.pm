@@ -188,6 +188,7 @@ my %opcode_map =
     OP_RX_TRY()                      => \&_direct_jump,
     OP_RX_STATE_RESTORE()            => \&_rx_state_restore,
     OP_RX_CLASS()                    => \&_rx_class,
+    OP_RX_RANGE()                    => \&_rx_range,
     OP_RX_SPECIAL_CLASS()            => \&_rx_special_class,
     OP_MATCH()                       => \&_match,
     OP_REPLACE()                     => \&_replace,
@@ -800,6 +801,15 @@ sub _rx_class {
 
     push @$bytecode,
          o( 'rx_class', elements => $elements, special => \@special );
+}
+
+sub _rx_range {
+    my( $self, $bytecode, $op ) = @_;
+    my $elements = join '', $op->{attributes}{start} ..
+                            $op->{attributes}{end};
+
+    push @$bytecode,
+         o( 'rx_class', elements => $elements, special => [] );
 }
 
 sub _rx_special_class {
