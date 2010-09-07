@@ -672,7 +672,10 @@ sub _parse_cond {
         my $expr;
         if( $else->[O_ID_TYPE] == KEY_ELSIF ) {
             _lex_token( $self, T_OPPAR );
+
             $expr = _parse_expr( $self );
+            $self->_add_pending_lexicals;
+
             _lex_token( $self, T_CLPAR );
         }
         my $brack = _lex_token( $self, T_OPBRK, undef, X_BLOCK );
