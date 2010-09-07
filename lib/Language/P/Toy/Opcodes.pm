@@ -1632,6 +1632,28 @@ sub o_ord {
     return $pc + 1;
 }
 
+sub o_oct {
+    my( $op, $runtime, $pc ) = @_;
+    my $scalar = pop @{$runtime->{_stack}};
+    my $int = oct $scalar->as_string( $runtime );
+
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::Scalar->new_integer( $runtime, $int );
+
+    return $pc + 1;
+}
+
+sub o_uc {
+    my( $op, $runtime, $pc ) = @_;
+    my $scalar = pop @{$runtime->{_stack}};
+    my $str = uc $scalar->as_string( $runtime );
+
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::Scalar->new_string( $runtime, $str );
+
+    return $pc + 1;
+}
+
 sub o_glob_slot_create {
     my( $op, $runtime, $pc ) = @_;
     my $glob = pop @{$runtime->{_stack}};
