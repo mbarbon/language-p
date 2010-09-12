@@ -658,10 +658,13 @@ sub lex_quote {
                     }
                 }
 
-                if(    $interpolated_pattern
-                    && (    !length( $$buffer )
-                         || index( "()| \r\n\t",
-                                   substr( $$buffer, 0, 1 ) ) != -1 ) ) {
+                if(    $c eq '@' && length( $$buffer )
+                    && $$buffer !~ /^[a-zA-Z0-9_{]/ ) {
+                    $v .= $c;
+                } elsif(    $interpolated_pattern
+                         && (    !length( $$buffer )
+                              || index( "()| \r\n\t",
+                                        substr( $$buffer, 0, 1 ) ) != -1 ) ) {
                     $v .= $c;
                 } elsif( length $v ) {
                     $self->unlex( [ $self->{pos}, $ops{$c}, $c ] );
@@ -930,7 +933,14 @@ sub _find_end {
 
                 if(    length( $nc )
                     && $nc ne $quote_end
+                    && $c eq '$'
                     && index( "()| \r\n\t", $nc ) == -1 ) {
+                    $interpolated = 1;
+                }
+                if(    length( $nc )
+                    && $nc ne $quote_end
+                    && $c eq '@'
+                    && $nc =~ /^[a-zA-Z0-9_{]$/ ) {
                     $interpolated = 1;
                 }
             }

@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 11;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 14;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 /^test$/;
@@ -208,7 +204,7 @@ right: !parsetree:InterpolatedPattern
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
-/$foo\w/
+/$foo$/
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
@@ -230,8 +226,84 @@ right: !parsetree:InterpolatedPattern
       - !parsetree:Constant
         context: CXT_SCALAR
         flags: CONST_STRING
+        value: $
+    context: CXT_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+/@foo\w/
+EOP
+--- !parsetree:BinOp
+context: CXT_VOID
+left: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: _
+  sigil: VALUE_SCALAR
+op: OP_MATCH
+right: !parsetree:InterpolatedPattern
+  context: CXT_SCALAR
+  flags: 0
+  op: OP_QL_M
+  string: !parsetree:QuotedString
+    components:
+      - !parsetree:Symbol
+        context: CXT_SCALAR
+        name: foo
+        sigil: VALUE_ARRAY
+      - !parsetree:Constant
+        context: CXT_SCALAR
+        flags: CONST_STRING
         value: \w
     context: CXT_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+/$!\w/
+EOP
+--- !parsetree:BinOp
+context: CXT_VOID
+left: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: _
+  sigil: VALUE_SCALAR
+op: OP_MATCH
+right: !parsetree:InterpolatedPattern
+  context: CXT_SCALAR
+  flags: 0
+  op: OP_QL_M
+  string: !parsetree:QuotedString
+    components:
+      - !parsetree:Symbol
+        context: CXT_SCALAR
+        name: '!'
+        sigil: VALUE_SCALAR
+      - !parsetree:Constant
+        context: CXT_SCALAR
+        flags: CONST_STRING
+        value: \w
+    context: CXT_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+/@!\w/
+EOP
+--- !parsetree:BinOp
+context: CXT_VOID
+left: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: _
+  sigil: VALUE_SCALAR
+op: OP_MATCH
+right: !parsetree:Pattern
+  components:
+    - !parsetree:RXConstant
+      insensitive: 0
+      value: '@!'
+    - !parsetree:RXSpecialClass
+      type: WORDS
+  flags: 0
+  op: OP_QL_M
+  original: (?-xism:@!\w)
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
