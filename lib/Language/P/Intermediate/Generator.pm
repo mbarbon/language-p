@@ -879,7 +879,14 @@ sub _parentheses {
 
 sub _substitution {
     my( $self, $tree ) = @_;
-    _pattern( $self, $tree->pattern );
+    my $pat = $tree->pattern;
+    if( $pat->isa( 'Language::P::ParseTree::Pattern' ) ) {
+        _pattern( $self, $pat );
+    } elsif( $pat->isa( 'Language::P::ParseTree::InterpolatedPattern' ) ) {
+        _interpolated_pattern( $self, $pat );
+    } else {
+        die $pat;
+    }
 
     my $current = $self->_current_basic_block;
     my $block = _new_block( $self );
