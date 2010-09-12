@@ -2276,6 +2276,7 @@ sub o_make_closure {
                         stack_size => $sub->stack_size,
                         lexicals   => $sub->lexicals ? $sub->lexicals->new_scope( $runtime ) : undef,
                         closed     => $sub->closed,
+                        prototype  => $sub->prototype,
                         } );
     $runtime->make_closure( $clone );
 
