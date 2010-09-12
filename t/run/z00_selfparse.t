@@ -32,9 +32,9 @@ use Language::P::Parser::Exception;
 BEGIN { print "ok\n" }
 use Language::P::Parser::Lexicals;
 BEGIN { print "ok\n" }
-# use Language::P::Parser;
-BEGIN { print "ok\n" }
 # use Language::P::Parser::Regex;
+BEGIN { print "ok\n" }
+# use Language::P::Parser;
 BEGIN { print "ok\n" }
 # use Language::P;
 BEGIN { print "ok\n" }
