@@ -12,7 +12,8 @@ our @EXPORT_OK = qw(o_rx_start_match o_rx_accept o_rx_exact o_rx_start_group
                     o_rx_end o_rx_exact_i o_rx_word_boundary
                     o_rx_match o_rx_match_global o_rx_replace o_rx_transliterate
                     o_rx_replace_global o_rx_class o_rx_any_nonewline o_rx_any
-                    o_rx_save_pos o_rx_restore_pos);
+                    o_rx_save_pos o_rx_restore_pos o_rx_fail o_rx_backtrack
+                    o_rx_pop_state);
 
 our %EXPORT_TAGS =
   ( opcodes => \@EXPORT_OK,
@@ -715,6 +716,36 @@ sub o_rx_restore_pos {
     my $cxt = $runtime->{_stack}->[-1];
 
     $cxt->{pos} = $cxt->{saved_pos}[$op->{index}];
+
+    return $pc + 1;
+}
+
+sub o_rx_fail {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    return _backtrack( $runtime, $cxt );
+}
+
+sub o_rx_pop_state {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    pop @{$cxt->{states}};
+
+    return $pc + 1;
+}
+
+sub o_rx_backtrack {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    push @{$cxt->{states}},
+         { pos           => $cxt->{pos},
+           ret_pc        => $op->{to},
+           group_count   => scalar @{$cxt->{groups}},
+           saved_groups  => undef,
+           };
 
     return $pc + 1;
 }

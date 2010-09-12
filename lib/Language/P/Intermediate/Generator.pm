@@ -2099,9 +2099,13 @@ sub _regex_assertion_group {
     my( $self, $tree ) = @_;
     my $type = $tree->type;
 
+    my $next;
     if( $type eq 'POSITIVE_LOOKAHEAD' ) {
         _add_bytecode $self, opcode_nm( OP_RX_SAVE_POS,
                                         index => $self->_pos_count );
+    } elsif( $type eq 'NEGATIVE_LOOKAHEAD' ) {
+        $next = _new_block( $self );
+        _add_bytecode $self, opcode_nm( OP_RX_BACKTRACK, to => $next );
     } else {
         die "Unsupported assertion '$type'" unless $regex_assertions{$type};
     }
@@ -2114,6 +2118,11 @@ sub _regex_assertion_group {
         _add_bytecode $self, opcode_nm( OP_RX_RESTORE_POS,
                                         index => $self->_pos_count );
         $self->_pos_count( $self->_pos_count + 1 );
+    } elsif( $type eq 'NEGATIVE_LOOKAHEAD' ) {
+        _add_bytecode $self,
+            opcode_n( OP_RX_POP_STATE ),
+            opcode_n( OP_RX_FAIL );
+        _add_blocks $self, $next;
     } else {
         die "Unsupported assertion '$type'" unless $regex_assertions{$type};
     }

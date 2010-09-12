@@ -186,6 +186,7 @@ my %opcode_map =
     OP_RX_QUANTIFIER()               => \&_rx_quantifier,
     OP_RX_START_GROUP()              => \&_direct_jump,
     OP_RX_TRY()                      => \&_direct_jump,
+    OP_RX_BACKTRACK()                => \&_direct_jump,
     OP_RX_STATE_RESTORE()            => \&_rx_state_restore,
     OP_RX_CLASS()                    => \&_rx_class,
     OP_RX_RANGE()                    => \&_rx_range,

@@ -608,6 +608,7 @@ warn                0       same                 1   1  context=i1
 rx_accept           0       same                 0   0  groups=i
 rx_any              0       same                 0   0  noattr
 rx_any_nonewline    0       same                 0   0  noattr
+rx_backtrack        0       same                 0   0  to=b
 rx_beginning        0       same                 0   0  noattr
 rx_capture_end      0       same                 0   0  group=i
 rx_capture_start    0       same                 0   0  group=i
@@ -616,6 +617,8 @@ rx_end              0       same                 0   0  noattr
 rx_end_or_newline   0       same                 0   0  noattr
 rx_exact            0       same                 0   0  string=s,length=i
 rx_exact_i          0       same                 0   0  string=s,length=i
+rx_fail             0       same                 0   0  noattr
+rx_pop_state        0       same                 0   0  noattr
 rx_quantifier       0       same                 0   0  min=i,max=i,greedy=i1,group=i,to=b,subgroups_start=i,subgroups_end=i
 rx_range            0       same                 0   0  start=s,end=s
 rx_restore_pos      0       same                 0   0  index=i
