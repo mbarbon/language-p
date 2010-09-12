@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-BEGIN { print "1..17\n" }
+BEGIN { print "1..18\n" }
 BEGIN { unshift @INC, 'lib' }
 
 use Language::P::Constants qw(:all);
@@ -20,7 +20,8 @@ BEGIN { print "ok\n" }
 use Language::P::Intermediate::Generator;
 BEGIN { print "ok\n" }
 use Language::P::Intermediate::Transform;
-# use Language::P::Lexer;
+BEGIN { print "ok\n" }
+use Language::P::Lexer;
 BEGIN { print "ok\n" }
 use Language::P::ParseTree;
 BEGIN { print "ok\n" }
