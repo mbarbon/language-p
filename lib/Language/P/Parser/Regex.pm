@@ -116,7 +116,7 @@ sub _parse {
                 } elsif( $type->[O_VALUE] eq '!' ) {
                     push @$st, Language::P::ParseTree::RXAssertionGroup->new
                                    ( { components => [],
-                                       type       => 'NEGATIVE_LOKAHEAD',
+                                       type       => 'NEGATIVE_LOOKAHEAD',
                                        } );
                 } elsif( $type->[O_VALUE] eq '<=' ) {
                     push @$st, Language::P::ParseTree::RXAssertionGroup->new
