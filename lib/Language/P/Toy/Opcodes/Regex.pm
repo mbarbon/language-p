@@ -11,7 +11,8 @@ our @EXPORT_OK = qw(o_rx_start_match o_rx_accept o_rx_exact o_rx_start_group
                     o_rx_beginning o_rx_end_or_newline o_rx_state_restore
                     o_rx_end o_rx_exact_i o_rx_word_boundary
                     o_rx_match o_rx_match_global o_rx_replace o_rx_transliterate
-                    o_rx_replace_global o_rx_class o_rx_any_nonewline o_rx_any);
+                    o_rx_replace_global o_rx_class o_rx_any_nonewline o_rx_any
+                    o_rx_save_pos o_rx_restore_pos);
 
 our %EXPORT_TAGS =
   ( opcodes => \@EXPORT_OK,
@@ -696,6 +697,24 @@ sub o_rx_state_restore {
     $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = undef;
     $runtime->set_last_match( $old )
         if $old;
+
+    return $pc + 1;
+}
+
+sub o_rx_save_pos {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    $cxt->{saved_pos}[$op->{index}] = $cxt->{pos};
+
+    return $pc + 1;
+}
+
+sub o_rx_restore_pos {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    $cxt->{pos} = $cxt->{saved_pos}[$op->{index}];
 
     return $pc + 1;
 }

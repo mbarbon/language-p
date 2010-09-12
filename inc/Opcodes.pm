@@ -618,6 +618,8 @@ rx_exact            0       same                 0   0  string=s,length=i
 rx_exact_i          0       same                 0   0  string=s,length=i
 rx_quantifier       0       same                 0   0  min=i,max=i,greedy=i1,group=i,to=b,subgroups_start=i,subgroups_end=i
 rx_range            0       same                 0   0  start=s,end=s
+rx_restore_pos      0       same                 0   0  index=i
+rx_save_pos         0       same                 0   0  index=i
 rx_special_class    0       same                 0   0  type=i
 rx_start_group      0       same                 0   0  to=b
 rx_start_match      0       same                 0   0  noattr

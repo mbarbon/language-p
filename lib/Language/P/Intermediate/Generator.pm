@@ -6,7 +6,7 @@ use base qw(Language::P::ParseTree::Visitor);
 
 __PACKAGE__->mk_accessors( qw(_code_segments _current_basic_block _options
                               _label_count _temporary_count _current_block
-                              _group_count _main file_name) );
+                              _group_count _pos_count _main file_name) );
 
 use Language::P::Intermediate::Code qw(:all);
 use Language::P::Intermediate::BasicBlock;
@@ -24,6 +24,7 @@ sub new {
     $self->_label_count( 0 );
     $self->_temporary_count( 0 );
     $self->_group_count( 0 );
+    $self->_pos_count( 0 );
 
     return $self;
 }
@@ -175,6 +176,7 @@ sub _generate_regex {
 
     $self->_code_segments( [] );
     $self->_group_count( 0 );
+    $self->_pos_count( 0 );
 
     push @{$self->_code_segments},
          Language::P::Intermediate::Code->new
@@ -495,13 +497,14 @@ my %dispatch_cond =
     );
 
 my %dispatch_regex =
-  ( 'Language::P::ParseTree::RXQuantifier'   => '_regex_quantifier',
-    'Language::P::ParseTree::RXGroup'        => '_regex_group',
-    'Language::P::ParseTree::RXConstant'     => '_regex_exact',
-    'Language::P::ParseTree::RXAlternation'  => '_regex_alternate',
-    'Language::P::ParseTree::RXAssertion'    => '_regex_assertion',
-    'Language::P::ParseTree::RXClass'        => '_regex_class',
-    'Language::P::ParseTree::RXSpecialClass' => '_regex_special_class',
+  ( 'Language::P::ParseTree::RXQuantifier'     => '_regex_quantifier',
+    'Language::P::ParseTree::RXGroup'          => '_regex_group',
+    'Language::P::ParseTree::RXConstant'       => '_regex_exact',
+    'Language::P::ParseTree::RXAlternation'    => '_regex_alternate',
+    'Language::P::ParseTree::RXAssertion'      => '_regex_assertion',
+    'Language::P::ParseTree::RXAssertionGroup' => '_regex_assertion_group',
+    'Language::P::ParseTree::RXClass'          => '_regex_class',
+    'Language::P::ParseTree::RXSpecialClass'   => '_regex_special_class',
     );
 
 sub dispatch {
@@ -2083,6 +2086,30 @@ sub _regex_assertion {
     die "Unsupported assertion '$type'" unless $regex_assertions{$type};
 
     _add_bytecode $self, opcode_n( $regex_assertions{$type} );
+}
+
+sub _regex_assertion_group {
+    my( $self, $tree ) = @_;
+    my $type = $tree->type;
+
+    if( $type eq 'POSITIVE_LOOKAHEAD' ) {
+        _add_bytecode $self, opcode_nm( OP_RX_SAVE_POS,
+                                        index => $self->_pos_count );
+    } else {
+        die "Unsupported assertion '$type'" unless $regex_assertions{$type};
+    }
+
+    foreach my $c ( @{$tree->components} ) {
+        $self->dispatch_regex( $c );
+    }
+
+    if( $type eq 'POSITIVE_LOOKAHEAD' ) {
+        _add_bytecode $self, opcode_nm( OP_RX_RESTORE_POS,
+                                        index => $self->_pos_count );
+        $self->_pos_count( $self->_pos_count + 1 );
+    } else {
+        die "Unsupported assertion '$type'" unless $regex_assertions{$type};
+    }
 }
 
 sub _regex_quantifier {
