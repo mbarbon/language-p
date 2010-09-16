@@ -1570,6 +1570,44 @@ sub _parse_term_terminal {
             }
 
             return $tree;
+        } elsif( $token->[O_ID_TYPE] == KEY_SPLIT ) {
+            my $call = _parse_listop( $self, $token );
+
+            my $first;
+            if( !$call->arguments ) {
+                $call->{arguments} = [];
+                $first = Language::P::ParseTree::Constant->new
+                             ( { flags => CONST_STRING,
+                                 value => ' ',
+                                 pos   => $token->[O_POS],
+                                 } );
+            } else {
+                $first = $call->arguments->[0];
+            }
+
+            if( $first->isa( 'Language::P::ParseTree::Constant' ) ) {
+                my $v1 = my $v2 = $first->value;
+                my $token = [ $first->pos, T_PATTERN,
+                              OP_QL_M, 0, \$v1, undef, 0, 0 ];
+                $first = _parse_match( $self, $token );
+
+                $call->{function} = OP_SPLIT_SKIPSPACES if $v2 eq ' ';
+            } elsif( !$first->isa( 'Language::P::ParseTree::Pattern' ) ) {
+                $first = Language::P::ParseTree::InterpolatedPattern->new
+                             ( { string  => $first,
+                                 flags   => 0,
+                                 op      => OP_QL_M,
+                                 } );
+            }
+
+            $call->arguments->[0] = $first;
+
+            if( @{$call->arguments} == 1 ) {
+                push @{$call->arguments},
+                     _find_symbol( $self, undef, VALUE_SCALAR, '_', T_FQ_ID );
+            }
+
+            return $call;
         } elsif( !is_keyword( $token->[O_ID_TYPE] ) ) {
             return _parse_listop( $self, $token );
         } elsif(    $tokidt == OP_MY
