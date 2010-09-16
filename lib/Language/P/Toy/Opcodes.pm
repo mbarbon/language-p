@@ -1858,6 +1858,9 @@ _make_bool_ft( $_ ) foreach
     { name     => 'o_ft_ischarspecial',
       operator => 'c',
       },
+    { name     => 'o_ft_isfile',
+      operator => 'f',
+      },
     );
 
 sub o_array_element {
