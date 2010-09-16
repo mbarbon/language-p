@@ -13,7 +13,7 @@ our @EXPORT_OK = qw(o_rx_start_match o_rx_accept o_rx_exact o_rx_start_group
                     o_rx_match o_rx_match_global o_rx_replace o_rx_transliterate
                     o_rx_replace_global o_rx_class o_rx_any_nonewline o_rx_any
                     o_rx_save_pos o_rx_restore_pos o_rx_fail o_rx_backtrack
-                    o_rx_pop_state);
+                    o_rx_pop_state o_split o_split_skipspaces);
 
 our %EXPORT_TAGS =
   ( opcodes => \@EXPORT_OK,
@@ -139,6 +139,22 @@ sub _backtrack {
 
         return $rpc + 1;
     }
+}
+
+sub o_split {
+    my( $op, $runtime, $pc ) = @_;
+
+    die 'Unimplemented';
+
+    return $pc + 1;
+}
+
+sub o_split_skipspaces {
+    my( $op, $runtime, $pc ) = @_;
+
+    die 'Unimplemented';
+
+    return $pc + 1;
 }
 
 sub o_rx_match {
