@@ -10,7 +10,7 @@ EOP
 L1:
   constant_regex original="(?-xism:aa)", value=anoncode
   global context=4, name="_", slot=1
-  split arg_count=2, context=2
+  rx_split arg_count=2, context=2
   pop
   jump to=L2
 L2:
@@ -24,7 +24,7 @@ EOP
 L1:
   constant_regex original="(?-xism:aa)", value=anoncode
   global context=4, name="_", slot=1
-  split arg_count=2, context=2
+  rx_split arg_count=2, context=2
   pop
   jump to=L2
 L2:
@@ -38,7 +38,7 @@ EOP
 L1:
   constant_regex original="(?-xism: )", value=anoncode
   global context=4, name="_", slot=1
-  split arg_count=2, context=2
+  rx_split arg_count=2, context=2
   pop
   jump to=L2
 L2:
@@ -52,7 +52,7 @@ EOP
 L1:
   constant_regex original="(?-xism: )", value=anoncode
   global context=4, name="_", slot=1
-  split_skipspaces arg_count=2, context=2
+  rx_split_skipspaces arg_count=2, context=2
   pop
   jump to=L2
 L2:

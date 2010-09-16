@@ -574,8 +574,8 @@ shift_left          0       same                 2   1  context=i1
 shift_right         0       same                 2   1  context=i1
 sort                0       same                -1   1  context=i1
 splice              v       same                -1   1  context=i1,arg_count=i1
-split               v       same                -1   1  context=i1,arg_count=i1
-split_skipspaces    v       same                -1   1  context=i1,arg_count=i1
+rx_split            v       same                -1   1  context=i1,arg_count=i1
+rx_split_skipspaces v       same                -1   1  context=i1,arg_count=i1
 sprintf             0       same                 1   1  context=i1
 stop                0       same                 1   0  noattr
 str_cmp             0       same                 2   1  noattr

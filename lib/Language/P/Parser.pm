@@ -1570,7 +1570,7 @@ sub _parse_term_terminal {
             }
 
             return $tree;
-        } elsif( $token->[O_ID_TYPE] == KEY_SPLIT ) {
+        } elsif( $token->[O_ID_TYPE] == KEY_RX_SPLIT ) {
             my $call = _parse_listop( $self, $token );
 
             my $first;
@@ -1591,7 +1591,7 @@ sub _parse_term_terminal {
                               OP_QL_M, 0, \$v1, undef, 0, 0 ];
                 $first = _parse_match( $self, $token );
 
-                $call->{function} = OP_SPLIT_SKIPSPACES if $v2 eq ' ';
+                $call->{function} = OP_RX_SPLIT_SKIPSPACES if $v2 eq ' ';
             } elsif( !$first->isa( 'Language::P::ParseTree::Pattern' ) ) {
                 $first = Language::P::ParseTree::InterpolatedPattern->new
                              ( { string  => $first,

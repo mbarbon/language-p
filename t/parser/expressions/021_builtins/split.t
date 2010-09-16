@@ -20,7 +20,7 @@ arguments:
     name: foo
     sigil: VALUE_SCALAR
 context: CXT_VOID
-function: OP_SPLIT
+function: OP_RX_SPLIT
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -41,7 +41,7 @@ arguments:
     name: _
     sigil: VALUE_SCALAR
 context: CXT_VOID
-function: OP_SPLIT
+function: OP_RX_SPLIT
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -62,7 +62,7 @@ arguments:
     name: _
     sigil: VALUE_SCALAR
 context: CXT_VOID
-function: OP_SPLIT
+function: OP_RX_SPLIT
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -83,5 +83,5 @@ arguments:
     name: _
     sigil: VALUE_SCALAR
 context: CXT_VOID
-function: OP_SPLIT_SKIPSPACES
+function: OP_RX_SPLIT_SKIPSPACES
 EOE
