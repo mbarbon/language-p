@@ -301,9 +301,6 @@ sub _jump_to {
     if( @$stack ) {
         @$out_names = _emit_out_stack( $self ) unless @$out_names;
 
-        my $created_elements = $self->_converting->{created};
-        my $inherited_elements = @$stack - $created_elements;
-
         # copy inherited elements, generated GET or PHI for created elements
         if( !$converted->{in_stack} ) {
             if( @{$to->predecessors} > 1 ) {
