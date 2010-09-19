@@ -719,7 +719,7 @@ sub o_shift_left {
 sub o_push_element {
     my( $op, $runtime, $pc ) = @_;
     my $arg = pop @{$runtime->{_stack}};
-    my $arr = $runtime->{_stack}[-1];
+    my $arr = pop @{$runtime->{_stack}};
 
     $arr->push_flatten( $runtime, $arg );
 

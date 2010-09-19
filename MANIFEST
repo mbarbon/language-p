@@ -86,6 +86,7 @@ t/intermediate/041_loops.t
 t/intermediate/041_loops_tree.t
 t/intermediate/043_foreach.t
 t/intermediate/043_foreach_ssa.t
+t/intermediate/044_map_grep.t
 t/intermediate/050_ternary.t
 t/intermediate/050_ternary_ssa.t
 t/intermediate/050_ternary_tree.t

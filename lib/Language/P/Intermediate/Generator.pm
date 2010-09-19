@@ -1486,19 +1486,28 @@ sub _map {
     $list->set_attribute( 'context', CXT_LIST );
 
     # result value
+    my $result = $self->{_temporary_count}++;
     _add_bytecode $self,
-        opcode_nm( OP_MAKE_LIST, count => 0, context => CXT_LIST );
+        opcode_nm( OP_MAKE_LIST, count => 0, context => CXT_LIST ),
+        opcode_nm( OP_TEMPORARY_SET, index => $result, slot => VALUE_ARRAY );
 
     my( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop ) =
         _setup_list_iteration( $self, $tree, $iter_var, $list, 0 );
 
     # call expresssion and add it to the result
+    _add_bytecode $self,
+        opcode_nm( OP_TEMPORARY, index => $result, slot => VALUE_ARRAY );
     $self->dispatch( $expression );
     _add_bytecode $self,
         opcode_n( OP_PUSH_ELEMENT );
 
     _end_list_iteration( $self, $tree, 0, $start_step,
                          $exit_loop, $end_loop );
+
+    # return the result
+    _add_bytecode $self,
+        opcode_nm( OP_TEMPORARY, index => $result, slot => VALUE_ARRAY ),
+        opcode_nm( OP_TEMPORARY_CLEAR, index => $result, slot => VALUE_ARRAY );
 }
 
 sub _grep {
@@ -1518,8 +1527,10 @@ sub _grep {
     $list->set_attribute( 'context', CXT_LIST );
 
     # result value
+    my $result = $self->{_temporary_count}++;
     _add_bytecode $self,
-        opcode_nm( OP_MAKE_LIST, count => 0, context => CXT_LIST );
+        opcode_nm( OP_MAKE_LIST, count => 0, context => CXT_LIST ),
+        opcode_nm( OP_TEMPORARY_SET, index => $result, slot => VALUE_ARRAY );
 
     my( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop ) =
         _setup_list_iteration( $self, $tree, $iter_var, $list, 0 );
@@ -1533,6 +1544,7 @@ sub _grep {
         $iftrue, $iffalse;
     _add_blocks $self, $iftrue;
     _add_bytecode $self,
+        opcode_nm( OP_TEMPORARY, index => $result, slot => VALUE_ARRAY ),
         opcode_nm( OP_GLOBAL, name => '_', slot => VALUE_SCALAR, context => CXT_SCALAR ),
         opcode_n( OP_PUSH_ELEMENT );
     _add_jump $self,
@@ -1542,6 +1554,11 @@ sub _grep {
 
     _end_list_iteration( $self, $tree, 0, $start_step,
                          $exit_loop, $end_loop );
+
+    # return the result
+    _add_bytecode $self,
+        opcode_nm( OP_TEMPORARY, index => $result, slot => VALUE_ARRAY ),
+        opcode_nm( OP_TEMPORARY_CLEAR, index => $result, slot => VALUE_ARRAY );
 }
 
 sub _sort {
