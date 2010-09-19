@@ -494,9 +494,9 @@ lexical_state_save  0       same                 0   0  index=i
 lexical_state_set   0       same                 0   0  index=i
 list_slice          0       same                 2   1  context=i1
 local               0       same                 1   1  noattr
-localize_array_element 0    same                 0   1  index=i
+localize_array_element 0    same                 2   1  index=i
 localize_glob_slot  0       same                 0   1  name=s,index=i,slot=i_sigil
-localize_hash_element 0     same                 0   1  index=i
+localize_hash_element 0     same                 2   1  index=i
 localize_lexical    0       same                 0   0  lexical=i,index=i
 localize_lexical_pad 0      same                 0   0  lexical=i,index=i
 log_and             0       same                 2   1  noattr
@@ -574,7 +574,7 @@ scalar              u       same                 1   1  context=i1
 set                 0       same                 1   0  index=i
 shift_left          0       same                 2   1  context=i1
 shift_right         0       same                 2   1  context=i1
-sort                0       same                -1   1  context=i1
+sort                0       same                 1   1  context=i1
 splice              v       same                -1   1  context=i1,arg_count=i1
 sprintf             0       same                 1   1  context=i1
 stop                0       same                 1   0  noattr
