@@ -620,8 +620,10 @@ sub _builtin {
 
     if( $tree->function == OP_UNDEF ) {
         _emit_label( $self, $tree );
-        $self->dispatch( $tree->arguments->[0] )
-            if $tree->arguments;
+        if( $tree->arguments ) {
+            $self->dispatch( $tree->arguments->[0] );
+            _add_bytecode $self, opcode_np( OP_UNDEF, $tree->pos );
+        }
         _add_bytecode $self, opcode_n( OP_CONSTANT_UNDEF );
     } elsif(    $tree->function == OP_EXISTS
              && $tree->arguments->[0]->isa( 'Language::P::ParseTree::Subscript' ) ) {
