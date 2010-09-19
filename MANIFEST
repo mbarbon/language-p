@@ -81,6 +81,7 @@ t/intermediate/011_call_tree.t
 t/intermediate/030_if.t
 t/intermediate/031_eval.t
 t/intermediate/040_conditional_loops.t
+t/intermediate/040_conditional_loops_ssa.t
 t/intermediate/040_conditional_loops_tree.t
 t/intermediate/041_loops.t
 t/intermediate/041_loops_tree.t

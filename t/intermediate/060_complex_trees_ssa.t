@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 2;
-
-use lib qw(t/lib);
-use TestIntermediate qw(:all);
+use t::lib::TestIntermediate tests => 3;
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
 sub is_scalar {
@@ -80,4 +76,29 @@ L7:
 L9:
   jump_if_true to=L17 (constant_integer value=4)
   jump to=L18
+EOI
+
+generate_ssa_and_diff( <<'EOP', <<'EOI' );
+sub { xx( 123 ) if $_[0] }
+EOP
+# main
+L1:
+  set index=1 (make_closure (constant_sub value=anoncode))
+  jump to=L2
+L2:
+  end
+# anoncode
+L1:
+  lexical_state_set index=1
+  jump to=L2
+L2:
+  jump_if_true to=L4 (array_element context=4, create=0 (constant_integer value=0), (lexical index=0, slot=2))
+  jump to=L6
+L3:
+  end
+L4:
+  return context=1 (make_array context=8 (call context=1 (make_array context=8 (constant_integer value=123)), (global context=4, name="xx", slot=4)))
+  jump to=L3
+L6:
+  jump to=L3
 EOI
