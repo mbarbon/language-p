@@ -259,7 +259,8 @@ sub generate_use {
                       opcode_nm( OP_CONCATENATE ),
                       opcode_nm( OP_CONCATENATE ),
                       opcode_nm( OP_MAKE_ARRAY, count => 1, context => CXT_LIST ),
-                      opcode_np( OP_DIE, $tree->pos );
+                      opcode_np( OP_DIE, $tree->pos ),
+                      opcode_n( OP_POP );
         _add_jump $self,
                   opcode_nm( OP_JUMP, to => $return ),
             $return;

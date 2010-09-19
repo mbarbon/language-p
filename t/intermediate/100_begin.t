@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 2;
-
-use lib qw(t/lib);
-use TestIntermediate qw(:all);
+use t::lib::TestIntermediate tests => 4;
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
 1;
@@ -53,6 +49,54 @@ L2:
   jump to=L4
 L3:
   call context=2 (get index=2), (get index=1)
+  jump to=L4
+L4:
+  end
+EOI
+
+generate_and_diff( <<'EOP', <<'EOI' );
+use 5;
+EOP
+# main
+L1:
+  end
+# BEGIN
+L1:
+  lexical_state_set index=1
+  constant_integer value=5
+  global context=4, name="]", slot=1
+  jump_if_f_lt false=L3, true=L4
+L3:
+  fresh_string value="Perl "
+  constant_float value=5
+  constant_string value=" required--this is only "
+  global context=4, name="]", slot=1
+  constant_string value=", stopped"
+  concat
+  concat
+  concat
+  concat
+  make_array context=8, count=1
+  die
+  pop
+  jump to=L4
+L4:
+  end
+EOI
+
+generate_ssa_and_diff( <<'EOP', <<'EOI' );
+use 5;
+EOP
+# main
+L1:
+  end
+# BEGIN
+L1:
+  lexical_state_set index=1
+  jump_if_f_lt to=L4 (constant_integer value=5), (global context=4, name="]", slot=1)
+  jump to=L3
+L3:
+  die (make_array (concat (fresh_string value="Perl "), (concat (constant_float value=5), (concat (constant_string value=" required--this is only "), (concat (global context=4, name="]", slot=1), (constant_string value=", stopped"))))))
   jump to=L4
 L4:
   end
