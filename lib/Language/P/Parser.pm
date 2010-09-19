@@ -2116,11 +2116,17 @@ sub _add_implicit_return {
     # compound and can implicitly return
     if( $line->isa( 'Language::P::ParseTree::Block' ) && @{$line->lines} ) {
         $line->lines->[-1] = _add_implicit_return( $line->lines->[-1] );
+    } elsif( $line->isa( 'Language::P::ParseTree::Block' ) ) {
+        $line->lines->[0] = Language::P::ParseTree::Builtin->new
+                                ( { arguments => [],
+                                    function  => OP_RETURN,
+                                    pos       => $line->pos,
+                                    } );
     } elsif( $line->isa( 'Language::P::ParseTree::Conditional' ) ) {
-        _add_implicit_return( $_ ) foreach @{$line->iftrues};
-        _add_implicit_return( $line->iffalse ) if $line->iffalse;
+        $_ = _add_implicit_return( $_ ) foreach @{$line->iftrues};
+        $line->{iffalse} = _add_implicit_return( $line->iffalse ) if $line->iffalse;
     } elsif( $line->isa( 'Language::P::ParseTree::ConditionalBlock' ) ) {
-        _add_implicit_return( $line->block )
+        $line->{block} = _add_implicit_return( $line->block )
     } else {
         Carp::confess( "Unhandled statement type: ", ref( $line ) );
     }

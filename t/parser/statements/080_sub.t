@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 8;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 9;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 sub name {
@@ -59,6 +55,39 @@ lines:
         sigil: VALUE_SCALAR
     context: CXT_CALLER
     function: OP_RETURN
+name: name
+prototype: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+sub name {
+  3 if 2
+}
+EOP
+--- !parsetree:NamedSubroutine
+lines:
+  - !parsetree:LexicalState
+    changed: CHANGED_ALL
+    hints: 0
+    package: main
+    warnings: ~
+  - !parsetree:Conditional
+    iffalse: ~
+    iftrues:
+      - !parsetree:ConditionalBlock
+        block: !parsetree:Builtin
+          arguments:
+            - !parsetree:Constant
+              context: CXT_CALLER
+              flags: CONST_NUMBER|NUM_INTEGER
+              value: 3
+          context: CXT_CALLER
+          function: OP_RETURN
+        block_type: if
+        condition: !parsetree:Constant
+          context: CXT_SCALAR
+          flags: CONST_NUMBER|NUM_INTEGER
+          value: 2
 name: name
 prototype: ~
 EOE
