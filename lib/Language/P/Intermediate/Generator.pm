@@ -445,6 +445,7 @@ sub _generate_bytecode {
         open my $ir_dump, '>', $outfile || die "Can't open '$outfile': $!";
 
         foreach my $cs ( @{$self->_code_segments} ) {
+            $cs->find_alive_blocks;
             foreach my $bb ( @{$cs->basic_blocks} ) {
                 foreach my $ins ( @{$bb->bytecode} ) {
                     print $ir_dump $ins->as_string( \%NUMBER_TO_NAME );

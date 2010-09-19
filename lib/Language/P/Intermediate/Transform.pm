@@ -109,12 +109,14 @@ sub to_ssa {
         push @{$new_code->inner}, $new_inner;
     }
 
+    $code_segment->find_alive_blocks;
+
     # find all non-empty blocks without predecessors and enqueue them
     # (there can be more than one only if there is dead code)
     $self->_queue( [] );
     foreach my $block ( @{$code_segment->basic_blocks} ) {
         next unless @{$block->bytecode};
-        next if @{$block->predecessors};
+        next if $block->dead || @{$block->predecessors};
         push @{$self->_queue}, $block;
     }
 
@@ -127,7 +129,7 @@ sub to_ssa {
         # might not be possible if more values become temporaries,
         # works for now
         if(    ( $self->_converted->{$block}{depth} || 0 ) > 0
-            && grep !$self->_converted->{$_}{converted}, @{$block->predecessors} ) {
+            && grep !$_->dead && !$self->_converted->{$_}{converted}, @{$block->predecessors} ) {
             push @{$self->_queue}, $block;
             redo;
         }
@@ -141,7 +143,7 @@ sub to_ssa {
             Language::P::Intermediate::BasicBlock
                 ->new_from_label( $block->start_label,
                                   $block->lexical_state,
-                                  $block->scope );
+                                  $block->scope, $block->dead );
 
         push @{$new_code->basic_blocks}, $cblock;
         $self->_current_basic_block( $cblock );
@@ -328,7 +330,7 @@ sub _jump_to {
     $converted->{block} ||= Language::P::Intermediate::BasicBlock
                                 ->new_from_label( $to->start_label,
                                                   $to->lexical_state,
-                                                  $to->scope );
+                                                  $to->scope, $to->dead );
     $op->{attributes}{to} = $converted->{block};
     push @{$self->_queue}, $to;
 
@@ -500,7 +502,7 @@ sub _replace {
     $converted->{block} ||= Language::P::Intermediate::BasicBlock
                                 ->new_from_label( $to->start_label,
                                                   $to->lexical_state,
-                                                  $to->scope );
+                                                  $to->scope, $to->dead );
     $new_jump->{attributes}{to} = $converted->{block};
     push @{$self->_queue}, $to;
 

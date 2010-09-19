@@ -60,11 +60,6 @@ EOP
 L1:
   constant_integer value=1
   jump to=L5
-L13:
-  jump to=L4
-L14:
-  constant_integer value=7
-  jump to=L3
 L15:
   end
 L16:
@@ -72,9 +67,6 @@ L16:
 L17:
   jump to=L5
 L18:
-  jump to=L4
-L3:
-  constant_integer value=5
   jump to=L4
 L4:
   constant_integer value=6

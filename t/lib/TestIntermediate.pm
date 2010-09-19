@@ -55,11 +55,13 @@ sub blocks_as_string {
     my $str = '';
 
     foreach my $segment ( @$segments ) {
+        $segment->find_alive_blocks;
         my $name = $segment->is_main ? 'main' :
                                        $segment->name || 'anoncode';
         $str .= "# " . $name . "\n";
         foreach my $block ( sort { $a->start_label cmp $b->start_label}
                                  @{$segment->basic_blocks} ) {
+            next if $block->dead;
             foreach my $instr ( @{$block->bytecode} ) {
                 $str .= $instr->as_string( $op_map, $op_attr )
             }

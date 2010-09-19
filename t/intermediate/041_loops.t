@@ -55,8 +55,6 @@ L3:
   print context=2
   pop
   jump to=L3
-L5:
-  end
 EOI
 
 generate_and_diff( <<'EOP', <<'EOI' );
@@ -88,8 +86,6 @@ L4:
   assign context=2
   pop
   jump to=L3
-L5:
-  end
 EOI
 
 generate_and_diff( <<'EOP', <<'EOI' );

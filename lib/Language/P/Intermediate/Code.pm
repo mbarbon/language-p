@@ -54,4 +54,20 @@ sub is_eval  { $_[0]->{type} == CODE_EVAL }
 
 sub weaken   { $_->weaken, Scalar::Util::weaken( $_ ) foreach @{$_[0]->inner} }
 
+sub find_alive_blocks {
+    my( $self ) = @_;
+    my @queue = $self->basic_blocks->[0];
+    $queue[0]->{dead} = 0;
+
+    while( @queue ) {
+        my $block = shift @queue;
+
+        foreach my $successor ( @{$block->successors} ) {
+            next unless $successor->dead;
+            $successor->{dead} = 0;
+            push @queue, $successor;
+        }
+    }
+}
+
 1;
