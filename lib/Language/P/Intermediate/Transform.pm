@@ -421,8 +421,8 @@ sub _pop {
     my $top = pop @{$self->_stack};
     _add_bytecode $self, $top if    $top->{opcode_n} != OP_PHI
                                  && $top->{opcode_n} != OP_GET;
-    _emit_out_stack( $self );
     _created( $self, -1 );
+    _emit_out_stack( $self );
 }
 
 sub _dup {
