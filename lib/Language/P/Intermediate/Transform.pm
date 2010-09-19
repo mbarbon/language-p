@@ -347,6 +347,11 @@ sub _emit_out_stack {
     my( @out_names, @out_stack );
     my $i = @$stack - $self->_converting->{created};
 
+    die sprintf 'Inconsistent stack count in %s: %d elements in stack < %d elements created',
+                $self->_current_basic_block->start_label,
+                scalar( @$stack ), $self->_converting->{created}
+        if scalar( @$stack ) < $self->_converting->{created};
+
     # copy inherited stack elements and all created GET opcodes add a
     # SET in the block and a GET in the out stack for all other
     # created ops
@@ -380,7 +385,7 @@ sub _generic {
         $new_op = opcode_nm( $op->{opcode_n}, %{$op->{attributes}} );
         $new_op->{parameters} = \@in if @in;
     } elsif( $op->{parameters} ) {
-        die "Can't handle fixed and dynamic parameters" if @in;
+        die "Can't handle fixed and dynamic parameters for $NUMBER_TO_NAME{$op->{opcode_n}}" if @in;
         $new_op = opcode_n( $op->{opcode_n}, @{$op->{parameters}} );
     } else {
         $new_op = opcode_n( $op->{opcode_n}, @in );
