@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 7;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 7;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 s/foo/bar/g;
@@ -186,7 +182,7 @@ xxxbaz
 EOTi
  EOT
 EOT
-# 1;
+__LINE__
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
@@ -218,4 +214,8 @@ right: !parsetree:Substitution
             value: 3
         context: CXT_SCALAR
         function: OP_SUBSTR
+--- !parsetree:Constant
+context: CXT_VOID
+flags: CONST_NUMBER|NUM_INTEGER
+value: 6
 EOE

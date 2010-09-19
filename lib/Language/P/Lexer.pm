@@ -6,6 +6,7 @@ use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_ro_accessors( qw(stream buffer tokens runtime
                                  file line _start_of_line _heredoc_lexer
+                                 _line_length
                                  ) );
 __PACKAGE__->mk_accessors( qw(quote) );
 
@@ -97,6 +98,7 @@ sub new {
     $self->{pending_brackets} = [];
     $self->{line} ||= 1;
     $self->{_start_of_line} = 1;
+    $self->{_line_length} = 1;
     $self->{pos} = [ $self->file, $self->line ];
 
     return $self;
@@ -290,11 +292,13 @@ sub _skip_space {
                  && $$buffer =~ /^=[a-zA-Z]/ ) {
             $reset_pos = 1;
             do {
-                ++$self->{line};
+                $self->{line} += $self->{_line_length};
+                $self->{_line_length} = 1;
                 $$buffer = '';
                 $self->_fill_buffer;
             } while( $$buffer && $$buffer !~ /^=cut\b/ );
-            ++$self->{line};
+            $self->{line} += $self->{_line_length};
+            $self->{_line_length} = 1;
             $$buffer = '';
             next;
         } elsif(    $self->{_start_of_line}
@@ -309,14 +313,16 @@ sub _skip_space {
         if( $$buffer =~ s/^([\r\n])// ) {
             $retval .= $1 if defined wantarray;
             $self->{_start_of_line} = 1;
-            ++$self->{line};
+            $self->{line} += $self->{_line_length};
+            $self->{_line_length} = 1;
             $reset_pos = 1;
             next;
         }
         if( $$buffer =~ s/^(#.*\n)// ) {
             $retval .= $1 if defined wantarray;
             $self->{_start_of_line} = 1;
-            ++$self->{line};
+            $self->{line} += $self->{_line_length};
+            $self->{_line_length} = 1;
             $reset_pos = 1;
             next;
         }
@@ -919,7 +925,8 @@ sub _find_end {
 
                 next;
             } elsif( $c eq "\n" ) {
-                ++$self->{line};
+                $self->{line} += $self->{_line_length};
+                $self->{_line_length} = 1;
             } elsif( $paired && $c eq $quote_start ) {
                 ++$delim_count;
             } elsif( $c eq $quote_end ) {
@@ -1059,6 +1066,8 @@ sub _prepare_sublex_heredoc {
             $str .= $line;
         }
     }
+
+    $lex->{_line_length} = $str =~ tr/\n/\n/ + 2;
 
     Carp::confess( "EOF while looking for terminator '$end'" ) unless $finished;
 

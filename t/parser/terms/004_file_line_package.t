@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 6;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 8;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 __LINE__.
@@ -123,4 +119,42 @@ right: !parsetree:Constant
   context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 9
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+<<EOT; __LINE__;
+
+
+EOT
+__LINE__
+EOP
+--- !parsetree:Constant
+context: CXT_VOID
+flags: CONST_STRING
+value: "\n\n"
+--- !parsetree:Constant
+context: CXT_VOID
+flags: CONST_NUMBER|NUM_INTEGER
+value: 1
+--- !parsetree:Constant
+context: CXT_VOID
+flags: CONST_NUMBER|NUM_INTEGER
+value: 5
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+qq{
+
+
+};
+__LINE__
+EOP
+--- !parsetree:Constant
+context: CXT_VOID
+flags: CONST_STRING
+value: "\n\n\n"
+--- !parsetree:Constant
+context: CXT_VOID
+flags: CONST_NUMBER|NUM_INTEGER
+value: 5
 EOE
