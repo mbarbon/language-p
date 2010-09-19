@@ -10,7 +10,7 @@ foreach $y ( 1, 2 ) {
 EOP
 # main
 L1:
-  temporary_set index=0, slot=9 (iterator (make_list (make_list (constant_integer value=1), (constant_integer value=2))))
+  temporary_set index=0, slot=9 (iterator (make_list context=8 (make_list context=8 (constant_integer value=1), (constant_integer value=2))))
   temporary_set index=1, slot=5 (global context=4, name="y", slot=5)
   localize_glob_slot index=2, name="y", slot=1
   jump to=L2
@@ -41,7 +41,7 @@ foreach my $y ( 1, 2 ) {
 EOP
 # main
 L1:
-  temporary_set index=0, slot=9 (iterator (make_list (make_list (constant_integer value=1), (constant_integer value=2))))
+  temporary_set index=0, slot=9 (iterator (make_list context=8 (make_list context=8 (constant_integer value=1), (constant_integer value=2))))
   jump to=L2
 L2:
   set index=1 (iterator_next (temporary index=0, slot=9))
@@ -82,7 +82,7 @@ L6:
   restore_lexical_pad index=1, lexical=0
   jump to=L9
 L7:
-  temporary_set index=0, slot=9 (iterator (make_list (make_list (constant_integer value=1), (constant_integer value=2))))
+  temporary_set index=0, slot=9 (iterator (make_list context=8 (make_list context=8 (constant_integer value=1), (constant_integer value=2))))
   localize_lexical_pad index=1, lexical=0
   jump to=L2
 L8:

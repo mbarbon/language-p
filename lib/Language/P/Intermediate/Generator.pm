@@ -254,12 +254,12 @@ sub generate_use {
                       opcode_nm( OP_CONSTANT_STRING, value => ' required--this is only ' ),
                       opcode_nm( OP_GLOBAL, name => ']', slot => VALUE_SCALAR, context => CXT_SCALAR ),
                       opcode_nm( OP_CONSTANT_STRING, value => ', stopped' ),
-                      opcode_nm( OP_CONCATENATE ),
-                      opcode_nm( OP_CONCATENATE ),
-                      opcode_nm( OP_CONCATENATE ),
-                      opcode_nm( OP_CONCATENATE ),
+                      opcode_nm( OP_CONCATENATE, context => CXT_SCALAR ),
+                      opcode_nm( OP_CONCATENATE, context => CXT_SCALAR ),
+                      opcode_nm( OP_CONCATENATE, context => CXT_SCALAR ),
+                      opcode_nm( OP_CONCATENATE, context => CXT_SCALAR ),
                       opcode_nm( OP_MAKE_ARRAY, count => 1, context => CXT_LIST ),
-                      opcode_np( OP_DIE, $tree->pos ),
+                      opcode_npm( OP_DIE, $tree->pos, context => CXT_VOID ),
                       opcode_n( OP_POP );
         _add_jump $self,
                   opcode_nm( OP_JUMP, to => $return ),
@@ -1814,7 +1814,7 @@ sub _quoted_string {
             $self->dispatch( $c );
             _add_bytecode $self,
                 opcode_nm( OP_MAKE_LIST, count => 2, context => CXT_LIST ),
-                opcode_npm( OP_JOIN, $tree->pos );
+                opcode_npm( OP_JOIN, $tree->pos, context => _context( $tree ) );
         } else {
             $self->dispatch( $c );
             _add_bytecode $self,
@@ -1837,7 +1837,7 @@ sub _quoted_string {
             $self->dispatch( $c );
             _add_bytecode $self,
                 opcode_nm( OP_MAKE_LIST, count => 2, context => CXT_LIST ),
-                opcode_npm( OP_JOIN, $tree->pos );
+                opcode_npm( OP_JOIN, $tree->pos, context => _context( $tree ) );
         } else {
             $self->dispatch( $c );
         }

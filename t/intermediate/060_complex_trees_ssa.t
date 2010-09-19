@@ -24,8 +24,8 @@ L1:
   jump to=L7
 L2:
   set index=4 (phi L3, 2, L4, 3)
-  print context=2 (get index=1), (make_array (get index=4))
-  return context=1 (make_array)
+  print context=2 (get index=1), (make_array context=8 (get index=4))
+  return context=1 (make_array context=8)
   jump to=L6
 L3:
   set index=2 (constant_string value="ok\x0a")

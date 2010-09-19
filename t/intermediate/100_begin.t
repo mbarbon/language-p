@@ -20,7 +20,7 @@ L2:
 # BEGIN
 L1:
   lexical_state_set index=1
-  return context=1 (make_array (constant_integer value=3))
+  return context=1 (make_array context=8 (constant_integer value=3))
   jump to=L2
 L2:
   end
@@ -42,7 +42,7 @@ L1:
   lexical_state_set index=1
   require_file context=2 (constant_string value="Foo.pm")
   set index=1 (find_method method="import" (constant_string value="Foo"))
-  set index=2 (make_array (constant_string value="Foo"), (constant_integer value=1), (constant_integer value=2))
+  set index=2 (make_array context=8 (constant_string value="Foo"), (constant_integer value=1), (constant_integer value=2))
   jump_if_null to=L2 (get index=1)
   jump to=L3
 L2:
@@ -72,12 +72,12 @@ L3:
   constant_string value=" required--this is only "
   global context=4, name="]", slot=1
   constant_string value=", stopped"
-  concat
-  concat
-  concat
-  concat
+  concat context=4
+  concat context=4
+  concat context=4
+  concat context=4
   make_array context=8, count=1
-  die
+  die context=2
   pop
   jump to=L4
 L4:
@@ -96,7 +96,7 @@ L1:
   jump_if_f_lt to=L4 (constant_integer value=5), (global context=4, name="]", slot=1)
   jump to=L3
 L3:
-  die (make_array (concat (fresh_string value="Perl "), (concat (constant_float value=5), (concat (constant_string value=" required--this is only "), (concat (global context=4, name="]", slot=1), (constant_string value=", stopped"))))))
+  die context=2 (make_array context=8 (concat context=4 (fresh_string value="Perl "), (concat context=4 (constant_float value=5), (concat context=4 (constant_string value=" required--this is only "), (concat context=4 (global context=4, name="]", slot=1), (constant_string value=", stopped"))))))
   jump to=L4
 L4:
   end

@@ -12,8 +12,8 @@ use Language::P::Opcodes qw(:all);
 use Language::P::Assembly qw(:all);
 
 my %op_map =
-  ( OP_MAKE_LIST()        => '_make_list',
-    OP_MAKE_ARRAY()       => '_make_array',
+  ( OP_MAKE_LIST()        => '_make_list_array',
+    OP_MAKE_ARRAY()       => '_make_list_array',
     OP_POP()              => '_pop',
     OP_SWAP()             => '_swap',
     OP_DUP()              => '_dup',
@@ -415,7 +415,7 @@ sub _const_sub {
 sub _const_regex {
     my( $self, $op ) = @_;
     my $new_seg = $self->_converted_segments->{$op->{attributes}{value}};
-    my $new_op = opcode_nm( OP_CONSTANT_REGEX(), value => $new_seg );
+    my $new_op = opcode_nm( OP_CONSTANT_REGEX(), value => $new_seg, original => $op->{attributes}{original} );
 
     push @{$self->_stack}, $new_op;
     _created( $self, 1 );
@@ -451,19 +451,16 @@ sub _swap {
     $stack->[-2] = $t;
 }
 
-sub _make_array {
+sub _make_list_array {
     my( $self, $op ) = @_;
 
-    push @{$self->_stack},
-         opcode_n( OP_MAKE_ARRAY, _get_stack( $self, $op->{attributes}{count} ) );
-    _created( $self, 1 );
-}
+    my $nop = opcode_nm( $op->{opcode_n},
+                         context => $op->{attributes}{context} );
+    $nop->{parameters} = [ _get_stack( $self, $op->{attributes}{count} ) ]
+        if $op->{attributes}{count};
 
-sub _make_list {
-    my( $self, $op ) = @_;
+    push @{$self->_stack}, $nop;
 
-    push @{$self->_stack},
-         opcode_n( OP_MAKE_LIST, _get_stack( $self, $op->{attributes}{count} ) );
     _created( $self, 1 );
 }
 

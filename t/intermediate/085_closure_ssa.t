@@ -21,7 +21,7 @@ $y = sub {
 EOP
 # main
 L1:
-  assign context=2 (global context=20, name="x", slot=1), (call context=4 (make_array), (global context=4, name="outer", slot=4))
+  assign context=2 (global context=20, name="x", slot=1), (call context=4 (make_array context=8), (global context=4, name="outer", slot=4))
   assign context=2 (global context=20, name="y", slot=1), (make_closure (constant_sub value=anoncode))
   jump to=L2
 L2:
@@ -29,21 +29,21 @@ L2:
 # outer
 L1:
   lexical_state_set index=1
-  return context=1 (make_array (make_closure (constant_sub value=anoncode)))
+  return context=1 (make_array context=8 (make_closure (constant_sub value=anoncode)))
   jump to=L2
 L2:
   end
 # anoncode
 L1:
   lexical_state_set index=1
-  return context=1 (make_array (constant_integer value=3))
+  return context=1 (make_array context=8 (constant_integer value=3))
   jump to=L2
 L2:
   end
 # anoncode
 L1:
   lexical_state_set index=1
-  return context=1 (make_array (constant_integer value=4))
+  return context=1 (make_array context=8 (constant_integer value=4))
   jump to=L2
 L2:
   end

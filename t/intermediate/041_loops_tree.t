@@ -20,7 +20,7 @@ L2:
   jump_if_f_lt to=L3 (global context=4, name="i", slot=1), (constant_integer value=10)
   jump to=L5
 L3:
-  print context=2 (global context=4, name="STDOUT", slot=7), (make_array (global context=4, name="i", slot=1))
+  print context=2 (global context=4, name="STDOUT", slot=7), (make_array context=8 (global context=4, name="i", slot=1))
   jump to=L4
 L4:
   assign context=2 (global context=20, name="i", slot=1), (add context=4 (global context=4, name="i", slot=1), (constant_integer value=1))
@@ -36,7 +36,7 @@ foreach $i ( 1, 2 ) {
 EOP
 # main
 L1:
-  temporary_set index=0, slot=9 (iterator (make_list (make_list (constant_integer value=1), (constant_integer value=2))))
+  temporary_set index=0, slot=9 (iterator (make_list context=8 (make_list context=8 (constant_integer value=1), (constant_integer value=2))))
   temporary_set index=1, slot=5 (global context=4, name="i", slot=5)
   localize_glob_slot index=2, name="i", slot=1
   jump to=L2
@@ -54,7 +54,7 @@ L6:
   restore_glob_slot index=2, name="i", slot=1
   jump to=L8
 L7:
-  print context=2 (global context=4, name="STDOUT", slot=7), (make_array (global context=4, name="i", slot=1))
+  print context=2 (global context=4, name="STDOUT", slot=7), (make_array context=8 (global context=4, name="i", slot=1))
   jump to=L2
 L8:
   end
