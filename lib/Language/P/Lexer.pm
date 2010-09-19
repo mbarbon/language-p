@@ -1294,7 +1294,8 @@ sub lex {
     # single char operators
     $$_ =~ s/^([:;,()\?<>!~=\/\\\+\-\.\|^\*%@&])//x and return [ $self->{pos}, $ops{$1}, $1 ];
 
-    die "Lexer error: '$$_'";
+    _lexer_error( $self, $self->{pos},
+                  'Unrecognized character %s', substr $$_, 0, 1 );
 }
 
 sub _fill_buffer {
