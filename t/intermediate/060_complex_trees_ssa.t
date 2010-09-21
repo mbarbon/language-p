@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use t::lib::TestIntermediate tests => 3;
+use t::lib::TestIntermediate tests => 4;
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
 sub is_scalar {
@@ -56,14 +56,16 @@ EOP
 L1:
   constant_integer value=1
   jump to=L5
+L10:
+  jump to=L4
+L11:
+  jump to=L5
 L15:
   end
 L16:
   jump to=L9
 L17:
-  jump to=L5
-L18:
-  jump to=L4
+  jump to=L10
 L4:
   constant_integer value=6
   jump to=L15
@@ -74,8 +76,8 @@ L7:
   constant_integer value=2
   jump to=L9
 L9:
-  jump_if_true to=L17 (constant_integer value=4)
-  jump to=L18
+  jump_if_true to=L11 (constant_integer value=4)
+  jump to=L17
 EOI
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
@@ -101,4 +103,24 @@ L4:
   jump to=L3
 L6:
   jump to=L3
+EOI
+
+generate_ssa_and_diff( <<'EOP', <<'EOI' );
+while( 1 ) {
+    1, last
+}
+EOP
+# main
+L1:
+  jump to=L2
+L2:
+  jump_if_true to=L3 (constant_integer value=1)
+  jump to=L7
+L3:
+  constant_integer value=1
+  jump to=L5
+L5:
+  end
+L7:
+  jump to=L5
 EOI

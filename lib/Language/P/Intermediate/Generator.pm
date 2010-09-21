@@ -2011,6 +2011,10 @@ sub _jump {
     my( $self, $tree ) = @_;
     my $target = _find_jump_target( $self, $tree );
 
+    # discard temporaries present on the stack before jumping; it is a
+    # no-op when the jump is a statement
+    _add_bytecode $self, opcode_n( OP_DISCARD_STACK );
+
     my $unwind_to = $tree->op == OP_GOTO ?
                         _find_ancestor( $self, $tree, $target ) :
                         $target;

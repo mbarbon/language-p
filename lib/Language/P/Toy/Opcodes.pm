@@ -91,6 +91,14 @@ sub o_swap {
     return $pc + 1;
 }
 
+sub o_discard_stack {
+    my( $op, $runtime, $pc ) = @_;
+
+    $#{$runtime->{_stack}} = $runtime->{_frame};
+
+    return $pc + 1;
+}
+
 sub o_pop {
     my( $op, $runtime, $pc ) = @_;
 

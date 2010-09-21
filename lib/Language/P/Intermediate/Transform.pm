@@ -17,6 +17,7 @@ my %op_map =
     OP_POP()              => '_pop',
     OP_SWAP()             => '_swap',
     OP_DUP()              => '_dup',
+    OP_DISCARD_STACK()    => '_discard',
     OP_CONSTANT_SUB()     => '_const_sub',
     OP_CONSTANT_REGEX()   => '_const_regex',
     OP_JUMP_IF_TRUE()     => '_cond_jump',
@@ -417,6 +418,18 @@ sub _const_regex {
 
     push @{$self->_stack}, $new_op;
     _created( $self, 1 );
+}
+
+sub _discard {
+    my( $self, undef ) = @_;
+
+    while( @{$self->_stack} ) {
+        my $op = pop @{$self->_stack};
+        _add_bytecode $self, $op if    $op->{opcode_n} != OP_PHI
+                                    && $op->{opcode_n} != OP_GET;
+    }
+
+    _created( $self, -@{$self->_stack} );
 }
 
 sub _pop {

@@ -405,6 +405,7 @@ dereference_hash    0       same                 1   1  context=i1
 dereference_scalar  0       same                 1   1  context=i1
 dereference_sub     0       dereference_subroutine 1 1  context=i1
 die                 0       same                 1   1  context=i1
+discard_stack       0       same                -1   0  noattr
 divide              0       same                 2   1  context=i1
 divide_assign       0       same                 2   1  context=i1
 do_file             u       same                 1   1  context=i1
