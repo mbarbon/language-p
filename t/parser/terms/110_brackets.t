@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 24;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 25;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $#[1]
@@ -215,6 +211,26 @@ subscripted: !parsetree:FunctionCall
     context: CXT_SCALAR
     name: foo
     sigil: VALUE_SUB
+type: VALUE_HASH
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+( 1 )->{2};
+EOP
+--- !parsetree:Subscript
+context: CXT_VOID
+reference: 1
+subscript: !parsetree:Constant
+  context: CXT_SCALAR
+  flags: CONST_NUMBER|NUM_INTEGER
+  value: 2
+subscripted: !parsetree:Parentheses
+  context: CXT_SCALAR|CXT_VIVIFY
+  left: !parsetree:Constant
+    context: CXT_SCALAR|CXT_VIVIFY
+    flags: CONST_NUMBER|NUM_INTEGER
+    value: 1
+  op: OP_PARENTHESES
 type: VALUE_HASH
 EOE
 

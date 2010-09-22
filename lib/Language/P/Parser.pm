@@ -1997,7 +1997,12 @@ sub _parse_term_n {
         }
 
         my $bin = $prec_assoc_bin{$token->[O_TYPE]};
-        if( !$bin || $bin->[0] > $prec ) {
+        if( $token->[O_TYPE] == T_ARROW ) {
+            # TODO maybe unify with the other points where there is an
+            #      explicit check for an arrow
+            $self->lexer->unlex( $token );
+            $terminal = _parse_maybe_subscript_rest( $self, $terminal, 1 );
+        } elsif( !$bin || $bin->[0] > $prec ) {
             $self->lexer->unlex( $token );
             last;
         } elsif( $token->[O_TYPE] == T_INTERR ) {
