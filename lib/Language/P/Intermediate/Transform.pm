@@ -6,7 +6,7 @@ use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_accessors( qw(_temporary_count _current_basic_block
                               _converting _queue _stack _converted
-                              _converted_segments _bytecode) );
+                              _converted_segments _bytecode _phi) );
 
 use Language::P::Opcodes qw(:all);
 use Language::P::Assembly qw(:all);
@@ -93,6 +93,7 @@ sub to_ssa {
     $self->_temporary_count( 0 );
     $self->_stack( [] );
     $self->_converted( {} );
+    $self->_phi( [] );
 
     my $new_code = Language::P::Intermediate::Code->new
                        ( { type           => $code_segment->type,
@@ -127,14 +128,6 @@ sub to_ssa {
         my $block = shift @{$self->_queue};
 
         next if $self->_converted->{$block}{converted};
-        # process a node with input values after all its predecessors
-        # might not be possible if more values become temporaries,
-        # works for now
-        if(    ( $self->_converted->{$block}{depth} || 0 ) > 0
-            && grep !$_->dead && !$self->_converted->{$_}{converted}, @{$block->predecessors} ) {
-            push @{$self->_queue}, $block;
-            redo;
-        }
         $self->_converted->{$block} =
           { %{$self->_converted->{$block}},
             converted => 1,
@@ -151,17 +144,6 @@ sub to_ssa {
         $self->_current_basic_block( $cblock );
         $self->_bytecode( $cblock->bytecode );
         @$stack = @{$self->_converting->{in_stack} || []};
-
-        # remove dummy phi values that all get the same value
-        foreach my $value ( @$stack ) {
-            next unless $value->{opcode_n} == OP_PHI;
-            my $t = $value->{parameters}[1];
-            if( !grep $value->{parameters}[$_] != $t,
-                grep  $_ & 1,
-                      1 .. $#{$value->{parameters}} ) {
-                $value = opcode_nm( OP_GET, index => $t );
-            }
-        }
 
         # duplicated below
         foreach my $bc ( @{$block->bytecode} ) {
@@ -205,6 +187,21 @@ sub to_ssa {
                 grep $_->{opcode_n} != OP_PHI && $_->{opcode_n} != OP_GET, @$stack;
 
             push @{$new_code->scopes->[-1]{bytecode}}, \@bytecode;
+        }
+    }
+
+    # remove dummy phi values that all get the same value; doing this here
+    # will create some useless set/get pairs, but it is good enough for now
+    foreach my $phi ( @{$self->_phi} ) {
+        next if $phi->{opcode_n} == OP_GET;
+        my $t = $phi->{parameters}[1];
+        if( !grep $phi->{parameters}[$_] != $t,
+            grep  $_ & 1,
+                  1 .. $#{$phi->{parameters}} ) {
+            # morph the PHI opcode into a GET
+            $phi->{opcode_n} = OP_GET;
+            $phi->{attributes} = { index => $t };
+            $phi->{parameters} = undef;
         }
     }
 
@@ -255,7 +252,8 @@ sub _ssa_to_tree {
                 # add SET nodes to rename the variables
                 splice @{$block_from->bytecode}, $op_from_off, 0,
                        _opcode_set( $op->{attributes}{index},
-                                    opcode_nm( OP_GET, index => $variable ) );
+                                    opcode_nm( OP_GET, index => $variable ) )
+                    if $op->{attributes}{index} != $variable;
             }
 
             --$op_off;
@@ -306,6 +304,7 @@ sub _jump_to {
         if( !$converted->{in_stack} ) {
             if( @{$to->predecessors} > 1 ) {
                 $converted->{in_stack} = [ map opcode_n( OP_PHI ), @$stack ];
+                push @{$self->_phi}, @{$converted->{in_stack}};
             } else {
                 $converted->{in_stack} = [ map opcode_nm( OP_GET, index => $_ ),
                                                @$out_names ];
@@ -355,7 +354,15 @@ sub _emit_out_stack {
     # SET in the block and a GET in the out stack for all other
     # created ops
     @out_stack = @{$stack}[0 .. $i - 1];
-    @out_names = map $_->{attributes}{index}, @out_stack;
+    for( my $j = 0; $j < $i; ++$j ) {
+        my $op = $stack->[$j];
+        if( $op->{opcode_n} == OP_GET ) {
+            push @out_names, $op->{attributes}{index};
+        } else {
+            push @out_names, _local_name( $self );
+            _add_bytecode $self, _opcode_set( $out_names[-1], $op );
+        }
+    }
     for( my $j = $i; $i < @$stack; ++$i, ++$j ) {
         my $op = $stack->[$i];
         if( $op->{opcode_n} == OP_GET ) {

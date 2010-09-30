@@ -38,22 +38,22 @@ L1:
   jump_if_f_gt to=L3 (global context=4, name="a", slot=1), (constant_integer value=2)
   jump to=L4
 L2:
-  assign context=2 (global context=20, name="x", slot=1), (get index=4)
+  assign context=2 (global context=20, name="x", slot=1), (get index=2)
   jump to=L8
 L3:
   set index=1 (global context=4, name="b", slot=1)
-  set index=4 (get index=1)
+  set index=2 (get index=1)
   jump to=L2
 L4:
   jump_if_f_lt to=L6 (global context=4, name="c", slot=1), (constant_integer value=3)
   jump to=L7
 L6:
-  set index=2 (global context=4, name="d", slot=1)
-  set index=4 (get index=2)
+  set index=3 (global context=4, name="d", slot=1)
+  set index=2 (get index=3)
   jump to=L2
 L7:
-  set index=3 (global context=4, name="e", slot=1)
-  set index=4 (get index=3)
+  set index=4 (global context=4, name="e", slot=1)
+  set index=2 (get index=4)
   jump to=L2
 L8:
   end

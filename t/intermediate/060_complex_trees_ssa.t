@@ -19,15 +19,17 @@ L1:
   jump_if_true to=L5 (defined context=4 (want context=4))
   jump to=L7
 L2:
-  set index=4 (phi L3, 2, L4, 3)
-  print context=2 (get index=1), (make_array context=8 (get index=4))
+  set index=5 (phi L3, 2, L4, 4)
+  set index=6 (phi L3, 1, L4, 3)
+  print context=2 (get index=6), (make_array context=8 (get index=5))
   return context=1 (make_array context=8)
   jump to=L6
 L3:
   set index=2 (constant_string value="ok\x0a")
   jump to=L2
 L4:
-  set index=3 (constant_string value="not ok\x0a")
+  set index=3 (get index=1)
+  set index=4 (constant_string value="not ok\x0a")
   jump to=L2
 L5:
   jump_if_true to=L3 (not context=4 (want context=4))
