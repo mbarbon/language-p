@@ -97,6 +97,11 @@ sub process {
     }
     if( $tree->isa( 'Language::P::ParseTree::NamedSubroutine' ) ) {
         my $sub_int = $self->_intermediate->generate_subroutine( $tree );
+
+        if( $self->_options->{'dump-bytecode'} ) {
+            push @{$self->{_saved_subs} ||= []}, @$sub_int;
+        }
+
         my $sub = _generate_segment( $self, $sub_int->[0] );
 
         # run right away if it is a begin block
