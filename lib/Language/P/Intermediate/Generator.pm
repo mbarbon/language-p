@@ -839,7 +839,7 @@ sub _local {
 
         if( $vivify ) {
             _add_bytecode $self,
-                opcode_np( $vivify, $tree->pos );
+                opcode_npm( $vivify, $tree->pos, context => CXT_SCALAR );
         }
 
         _add_bytecode $self,
@@ -949,7 +949,7 @@ sub _binary_op {
         }
         $self->dispatch( $tree->right );
         if( $tree->op == OP_LOG_AND_ASSIGN || $tree->op == OP_LOG_OR_ASSIGN ) {
-            _add_bytecode $self, opcode_n( OP_ASSIGN );
+            _add_bytecode $self, opcode_nm( OP_ASSIGN, context => _context( $tree ) );
         }
         _add_jump $self, opcode_nm( OP_JUMP, to => $end ), $end;
         _add_blocks $self, $end;
@@ -1573,7 +1573,7 @@ sub _sort {
 
     die 'Unsupported custom sort comparison' if $tree->indirect;
     _add_bytecode $self,
-        opcode_npm( OP_SORT, $tree->pos );
+        opcode_npm( OP_SORT, $tree->pos, context => _context( $tree ) );
 }
 
 sub _for {

@@ -37,7 +37,7 @@ L1:
   jump_if_true to=L2 (get index=1)
   jump to=L5
 L2:
-  set index=2 (assign (get index=1), (global context=4, name="b", slot=1))
+  set index=2 (assign context=2 (get index=1), (global context=4, name="b", slot=1))
   jump to=L3
 L3:
   jump to=L4
@@ -77,7 +77,7 @@ L1:
   jump_if_true to=L5 (get index=1)
   jump to=L2
 L2:
-  set index=2 (assign (get index=1), (global context=4, name="b", slot=1))
+  set index=2 (assign context=2 (get index=1), (global context=4, name="b", slot=1))
   jump to=L3
 L3:
   jump to=L4
