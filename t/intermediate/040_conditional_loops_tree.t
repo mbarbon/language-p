@@ -28,22 +28,20 @@ EOP
 L1:
   jump to=L2
 L10:
-  jump to=L7
+  jump to=L5
 L2:
   jump_if_true to=L3 (constant_integer value=1)
-  jump to=L9
+  jump to=L10
 L3:
   set index=1 (constant_integer value=2)
   jump_if_true to=L6 (get index=1)
-  jump to=L10
+  jump to=L8
 L5:
   end
 L6:
   jump to=L5
-L7:
+L8:
   jump to=L2
-L9:
-  jump to=L5
 EOI
 
 generate_tree_and_diff( <<'EOP', <<'EOI' );

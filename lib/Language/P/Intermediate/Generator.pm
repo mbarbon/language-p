@@ -929,7 +929,7 @@ sub _binary_op {
         || $tree->op == OP_LOG_AND_ASSIGN || $tree->op == OP_LOG_OR_ASSIGN ) {
         $self->dispatch( $tree->left );
 
-        my( $right, $end ) = _new_blocks( $self, 2 );
+        my( $right, $end, $to_end ) = _new_blocks( $self, 3 );
 
         # jump to $end if evalutating right is not necessary
         _add_bytecode $self,
@@ -937,9 +937,18 @@ sub _binary_op {
         _add_jump $self,
              opcode_npm( OP_JUMP_IF_TRUE, $tree->pos,
                          $tree->op == OP_LOG_AND || $tree->op == OP_LOG_AND_ASSIGN ?
-                             ( true => $right, false => $end ) :
-                             ( true => $end,   false => $right ) ),
-             $right, $end;
+                             ( true => $right,  false => $to_end ) :
+                             ( true => $to_end, false => $right ) ),
+             $right, $to_end;
+
+        _add_blocks $self, $to_end;
+
+        # the left-hand tree is always in scalar context (so it always
+        # produces a value) and it needs to be discarded if the tree is in void
+        # context
+        _add_bytecode $self, opcode_n( OP_POP )
+            if _context( $tree ) == CXT_VOID;
+        _add_jump $self, opcode_nm( OP_JUMP, to => $end ), $end;
 
         _add_blocks $self, $right;
 
@@ -950,6 +959,10 @@ sub _binary_op {
         $self->dispatch( $tree->right );
         if( $tree->op == OP_LOG_AND_ASSIGN || $tree->op == OP_LOG_OR_ASSIGN ) {
             _add_bytecode $self, opcode_nm( OP_ASSIGN, context => _context( $tree ) );
+            _add_bytecode $self, opcode_n( OP_POP )
+                if _context( $tree ) == CXT_VOID;
+        } elsif( _context( $tree ) == CXT_VOID && !$tree->right->always_void ) {
+            _add_bytecode $self, opcode_n( OP_POP );
         }
         _add_jump $self, opcode_nm( OP_JUMP, to => $end ), $end;
         _add_blocks $self, $end;

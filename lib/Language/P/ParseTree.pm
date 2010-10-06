@@ -281,7 +281,8 @@ use warnings;
 use base qw(Language::P::ParseTree::Block);
 
 sub is_compound { 0 }
-sub always_void { 0 }
+# the block is void, the value is produced by the statementd
+sub always_void { 1 }
 
 package Language::P::ParseTree::EvalBlock;
 
@@ -360,6 +361,12 @@ use base qw(Language::P::ParseTree::Node);
 our @FIELDS = qw(op left right);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
+
+sub always_void {
+    return    $_[0]->op == Language::P::Opcodes::OP_LOG_AND
+           || $_[0]->op == Language::P::Opcodes::OP_LOG_OR
+           || $_[0]->op == Language::P::Opcodes::OP_LOG_AND_ASSIGN
+           || $_[0]->op == Language::P::Opcodes::OP_LOG_OR_ASSIGN ? 1 : 0 }
 
 package Language::P::ParseTree::UnOp;
 
@@ -535,8 +542,9 @@ use base qw(Language::P::ParseTree::FunctionCall);
 
 sub parsing_prototype { return $Language::P::Opcodes::PROTOTYPE{$_[0]->function} }
 sub runtime_context { return $Language::P::Opcodes::CONTEXT{$_[0]->function} }
-sub can_implicit_return { return $_[0]->function == Language::P::ParseTree::OP_RETURN ? 0 : 1 }
+sub can_implicit_return { return $_[0]->function == Language::P::ParseTree::OP_RETURN || $_[0]->function == Language::P::ParseTree::OP_DYNAMIC_GOTO ? 0 : 1 }
 sub is_plain_function { 0 }
+sub always_void { return $_[0]->function == Language::P::ParseTree::OP_DYNAMIC_GOTO ? 1 : 0 }
 
 package Language::P::ParseTree::BuiltinIndirect;
 
