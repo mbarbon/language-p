@@ -30,21 +30,12 @@ L2:
 L1:
   lexical_state_set index=1
   return context=1 (make_array context=8 (make_closure (constant_sub value=anoncode)))
-  jump to=L2
-L2:
-  end
 # anoncode
 L1:
   lexical_state_set index=1
   return context=1 (make_array context=8 (constant_integer value=3))
-  jump to=L2
-L2:
-  end
 # anoncode
 L1:
   lexical_state_set index=1
   return context=1 (make_array context=8 (constant_integer value=4))
-  jump to=L2
-L2:
-  end
 EOI

@@ -41,7 +41,4 @@ L1:
   print context=1
   make_array context=8, count=1
   return context=1
-  jump to=L2
-L2:
-  end
 EOI

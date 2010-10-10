@@ -747,6 +747,10 @@ sub _function_call {
 
         _add_bytecode $self, opcode_npm( $tree->function, $tree->pos,
                                          context => _context( $tree ) );
+
+        # discard the code emitted after a return since it is unreachable
+        _add_blocks $self, _new_block( $self )
+            if $tree->function == OP_RETURN;
     }
 }
 
