@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 2;
-
-use lib qw(t/lib);
-use TestIntermediate qw(:all);
+use t::lib::TestIntermediate tests => 3;
 
 generate_and_diff( <<'EOP', <<'EOI' );
 $x = $a > 2 ? $b : $c + 3;
@@ -31,6 +27,25 @@ L4:
   jump to=L2
 L5:
   end
+EOI
+
+generate_and_diff( <<'EOP', <<'EOI' );
+$a ? $b : $c
+EOP
+# main
+L1:
+  global context=4, name="a", slot=1
+  jump_if_true false=L4, true=L3
+L2:
+  end
+L3:
+  global context=2, name="b", slot=1
+  pop
+  jump to=L2
+L4:
+  global context=2, name="c", slot=1
+  pop
+  jump to=L2
 EOI
 
 generate_and_diff( <<'EOP', <<'EOI' );

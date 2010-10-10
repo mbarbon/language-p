@@ -1695,10 +1695,14 @@ sub _ternary {
 
     _add_blocks $self, $true;
     $self->dispatch( $tree->iftrue );
+    _add_bytecode $self, opcode_n( OP_POP )
+        if _context( $tree ) == CXT_VOID && !$tree->iftrue->always_void;
     _add_jump $self, opcode_nm( OP_JUMP, to => $end ), $end;
 
     _add_blocks $self, $false;
     $self->dispatch( $tree->iffalse );
+    _add_bytecode $self, opcode_n( OP_POP )
+        if _context( $tree ) == CXT_VOID && !$tree->iffalse->always_void;
     _add_jump $self, opcode_nm( OP_JUMP, to => $end ), $end;
 
     _add_blocks $self, $end;

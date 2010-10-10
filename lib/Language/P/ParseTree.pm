@@ -534,6 +534,8 @@ sub lvalue_context {
     return $r;
 }
 
+sub always_void { 1 }
+
 package Language::P::ParseTree::Builtin;
 
 use strict;

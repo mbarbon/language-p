@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use t::lib::TestIntermediate tests => 6;
+use t::lib::TestIntermediate tests => 7;
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
 sub is_scalar {
@@ -140,6 +140,23 @@ L4:
 L5:
   global context=2, name="y", slot=1
   jump to=L3
+EOI
+
+generate_ssa_and_diff( <<'EOP', <<'EOI' );
+$x ? do { $y } : $z
+EOP
+# main
+L1:
+  jump_if_true to=L3 (global context=4, name="x", slot=1)
+  jump to=L4
+L2:
+  end
+L3:
+  global context=2, name="y", slot=1
+  jump to=L2
+L4:
+  global context=2, name="z", slot=1
+  jump to=L2
 EOI
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
