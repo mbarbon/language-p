@@ -111,22 +111,22 @@ sub _parse {
                 } elsif( $type->[O_VALUE] eq '=' ) {
                     push @$st, Language::P::ParseTree::RXAssertionGroup->new
                                    ( { components => [],
-                                       type       => 'POSITIVE_LOOKAHEAD',
+                                       type       => RX_GROUP_POSITIVE_LOOKAHEAD,
                                        } );
                 } elsif( $type->[O_VALUE] eq '!' ) {
                     push @$st, Language::P::ParseTree::RXAssertionGroup->new
                                    ( { components => [],
-                                       type       => 'NEGATIVE_LOOKAHEAD',
+                                       type       => RX_GROUP_NEGATIVE_LOOKAHEAD,
                                        } );
                 } elsif( $type->[O_VALUE] eq '<=' ) {
                     push @$st, Language::P::ParseTree::RXAssertionGroup->new
                                    ( { components => [],
-                                       type       => 'POSITIVE_LOOKBEHIND',
+                                       type       => RX_GROUP_POSITIVE_LOOKBEHIND,
                                        } );
                 } elsif( $type->[O_VALUE] eq '<!' ) {
                     push @$st, Language::P::ParseTree::RXAssertionGroup->new
                                    ( { components => [],
-                                       type       => 'NEGATIVE_LOOKBEHIND',
+                                       type       => RX_GROUP_NEGATIVE_LOOKBEHIND,
                                        } );
                 } elsif( $type->[O_VALUE] =~ /([a-z]*)-([a-z]*)(:?)/ ) {
                     my( $add, $rem, $colon ) = ( $1, $2, $3 );
@@ -217,18 +217,18 @@ sub _parse {
             } elsif( $value->[O_RX_REST]->[0] == T_ASSERTION ) {
                 my $assertion = $value->[O_RX_REST]->[1];
 
-                if( $assertion eq 'ANY_SPECIAL' ) {
+                if( $assertion == RX_ASSERTION_ANY_SPECIAL ) {
                     $assertion =
-                      ( $flags & FLAG_RX_SINGLE_LINE ) ? 'ANY' :
-                                                         'ANY_NONEWLINE';
-                } elsif( $assertion eq 'START_SPECIAL' ) {
+                      ( $flags & FLAG_RX_SINGLE_LINE ) ? RX_ASSERTION_ANY :
+                                                         RX_ASSERTION_ANY_NONEWLINE;
+                } elsif( $assertion == RX_ASSERTION_START_SPECIAL ) {
                     $assertion =
-                      ( $flags & FLAG_RX_MULTI_LINE ) ? 'LINE_BEGINNING' :
-                                                        'BEGINNING';
-                } elsif( $assertion eq 'END_SPECIAL' ) {
+                      ( $flags & FLAG_RX_MULTI_LINE ) ? RX_ASSERTION_LINE_BEGINNING :
+                                                        RX_ASSERTION_BEGINNING;
+                } elsif( $assertion == RX_ASSERTION_END_SPECIAL ) {
                     $assertion =
-                      ( $flags & FLAG_RX_MULTI_LINE ) ? 'LINE_END' :
-                                                        'END_OR_NEWLINE';
+                      ( $flags & FLAG_RX_MULTI_LINE ) ? RX_ASSERTION_LINE_END :
+                                                        RX_ASSERTION_END_OR_NEWLINE;
                 }
 
                 push @$st, Language::P::ParseTree::RXAssertion->new
@@ -274,9 +274,22 @@ sub _parse {
     return \@values;
 }
 
-my %posix_charclasses = map { $_ => 1 } qw(alpha alnum ascii blank cntrl digit
-                                           graph lower print punct space upper
-                                           word xdigit);
+my %posix_charclasses =
+  ( alpha  => RX_POSIX_ALPHA,
+    alnum  => RX_POSIX_ALNUM,
+    ascii  => RX_POSIX_ASCII,
+    blank  => RX_POSIX_BLANK,
+    cntrl  => RX_POSIX_CNTRL,
+    digit  => RX_POSIX_DIGIT,
+    graph  => RX_POSIX_GRAPH,
+    lower  => RX_POSIX_LOWER,
+    print  => RX_POSIX_PRINT,
+    punct  => RX_POSIX_PUNCT,
+    space  => RX_POSIX_SPACE,
+    upper  => RX_POSIX_UPPER,
+    word   => RX_POSIX_WORD,
+    xdigit => RX_POSIX_XDIGIT,
+    );
 
 sub _parse_charclass {
     my( $self, $class ) = @_;
@@ -313,7 +326,7 @@ sub _parse_charclass {
             }
 
             push @$st, Language::P::ParseTree::RXPosixClass->new
-                           ( { type => $value->[O_VALUE],
+                           ( { type => $posix_charclasses{$value->[O_VALUE]},
                                 } );
             next;
         } elsif( $value->[O_TYPE] == T_CLASS ) {

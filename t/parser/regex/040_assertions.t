@@ -20,7 +20,7 @@ right: !parsetree:Pattern
         - !parsetree:RXConstant
           insensitive: 0
           value: test
-      type: POSITIVE_LOOKAHEAD
+      type: RX_GROUP_POSITIVE_LOOKAHEAD
   flags: 0
   op: OP_QL_M
   original: (?-xism:(?=test))
@@ -43,7 +43,7 @@ right: !parsetree:Pattern
         - !parsetree:RXConstant
           insensitive: 0
           value: test
-      type: NEGATIVE_LOOKAHEAD
+      type: RX_GROUP_NEGATIVE_LOOKAHEAD
   flags: 0
   op: OP_QL_M
   original: (?-xism:(?!test))
@@ -66,7 +66,7 @@ right: !parsetree:Pattern
         - !parsetree:RXConstant
           insensitive: 0
           value: test
-      type: POSITIVE_LOOKBEHIND
+      type: RX_GROUP_POSITIVE_LOOKBEHIND
   flags: 0
   op: OP_QL_M
   original: (?-xism:(?<=test))
@@ -89,7 +89,7 @@ right: !parsetree:Pattern
         - !parsetree:RXConstant
           insensitive: 0
           value: test
-      type: NEGATIVE_LOOKBEHIND
+      type: RX_GROUP_NEGATIVE_LOOKBEHIND
   flags: 0
   op: OP_QL_M
   original: (?-xism:(?<!test))

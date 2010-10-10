@@ -29,6 +29,23 @@ our @EXPORT_OK =
        DECLARATION_MY DECLARATION_OUR DECLARATION_STATE
        DECLARATION_CLOSED_OVER
 
+       RX_CLASS_WORDS RX_CLASS_NOT_WORDS RX_CLASS_SPACES RX_CLASS_NOT_SPACES
+       RX_CLASS_DIGITS RX_CLASS_NOT_DIGITS
+
+       RX_POSIX_ALPHA RX_POSIX_ALNUM RX_POSIX_ASCII RX_POSIX_BLANK
+       RX_POSIX_CNTRL RX_POSIX_DIGIT RX_POSIX_GRAPH RX_POSIX_LOWER
+       RX_POSIX_PRINT RX_POSIX_PUNCT RX_POSIX_SPACE RX_POSIX_UPPER
+       RX_POSIX_WORD RX_POSIX_XDIGIT
+
+       RX_ASSERTION_WORD_BOUNDARY RX_ASSERTION_NON_WORD_BOUNDARY
+       RX_ASSERTION_BEGINNING RX_ASSERTION_END_OR_NEWLINE RX_ASSERTION_END
+       RX_ASSERTION_POS RX_ASSERTION_START_SPECIAL RX_ASSERTION_END_SPECIAL
+       RX_ASSERTION_ANY RX_ASSERTION_ANY_SPECIAL RX_ASSERTION_ANY_NONEWLINE
+       RX_ASSERTION_LINE_BEGINNING RX_ASSERTION_LINE_END
+
+       RX_GROUP_POSITIVE_LOOKAHEAD RX_GROUP_NEGATIVE_LOOKAHEAD
+       RX_GROUP_POSITIVE_LOOKBEHIND RX_GROUP_NEGATIVE_LOOKBEHIND
+
        CHANGED_HINTS CHANGED_WARNINGS CHANGED_PACKAGE CHANGED_ALL) );
 our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,
@@ -113,6 +130,51 @@ use constant
     DECLARATION_STATE        => 4,
     DECLARATION_CLOSED_OVER  => 8,
     DECLARATION_TYPE_MASK    => 7,
+
+    # regular expression classes
+    RX_CLASS_WORDS                  => 1,
+    RX_CLASS_NOT_WORDS              => 2,
+    RX_CLASS_SPACES                 => 3,
+    RX_CLASS_NOT_SPACES             => 4,
+    RX_CLASS_DIGITS                 => 5,
+    RX_CLASS_NOT_DIGITS             => 6,
+
+    # regular expression posix classes
+    RX_POSIX_ALPHA                  => 10,
+    RX_POSIX_ALNUM                  => 11,
+    RX_POSIX_ASCII                  => 12,
+    RX_POSIX_BLANK                  => 13,
+    RX_POSIX_CNTRL                  => 14,
+    RX_POSIX_DIGIT                  => 15,
+    RX_POSIX_GRAPH                  => 16,
+    RX_POSIX_LOWER                  => 17,
+    RX_POSIX_PRINT                  => 18,
+    RX_POSIX_PUNCT                  => 19,
+    RX_POSIX_SPACE                  => 20,
+    RX_POSIX_UPPER                  => 21,
+    RX_POSIX_WORD                   => 22,
+    RX_POSIX_XDIGIT                 => 23,
+
+    # regular expression assertions
+    RX_ASSERTION_WORD_BOUNDARY      => 1,
+    RX_ASSERTION_NON_WORD_BOUNDARY  => 2,
+    RX_ASSERTION_BEGINNING          => 3,
+    RX_ASSERTION_END_OR_NEWLINE     => 4,
+    RX_ASSERTION_END                => 5,
+    RX_ASSERTION_POS                => 6,
+    RX_ASSERTION_START_SPECIAL      => 7,
+    RX_ASSERTION_END_SPECIAL        => 8,
+    RX_ASSERTION_ANY                => 9,
+    RX_ASSERTION_ANY_SPECIAL        => 10,
+    RX_ASSERTION_ANY_NONEWLINE      => 11,
+    RX_ASSERTION_LINE_BEGINNING     => 12,
+    RX_ASSERTION_LINE_END           => 13,
+
+    # regular expression assertion groups
+    RX_GROUP_POSITIVE_LOOKAHEAD    => 1,
+    RX_GROUP_NEGATIVE_LOOKAHEAD    => 2,
+    RX_GROUP_POSITIVE_LOOKBEHIND    => 3,
+    RX_GROUP_NEGATIVE_LOOKBEHIND    => 4,
 
     # lexical state
     CHANGED_HINTS      => 1,

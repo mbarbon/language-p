@@ -2120,12 +2120,12 @@ sub _exit_scope {
 }
 
 my %regex_assertions =
-  ( BEGINNING        => OP_RX_BEGINNING,
-    END              => OP_RX_END,
-    END_OR_NEWLINE   => OP_RX_END_OR_NEWLINE,
-    ANY_NONEWLINE    => OP_RX_ANY_NONEWLINE,
-    ANY              => OP_RX_ANY,
-    WORD_BOUNDARY    => OP_RX_WORD_BOUNDARY,
+  ( RX_ASSERTION_BEGINNING()        => OP_RX_BEGINNING,
+    RX_ASSERTION_END()              => OP_RX_END,
+    RX_ASSERTION_END_OR_NEWLINE()   => OP_RX_END_OR_NEWLINE,
+    RX_ASSERTION_ANY_NONEWLINE()    => OP_RX_ANY_NONEWLINE,
+    RX_ASSERTION_ANY()              => OP_RX_ANY,
+    RX_ASSERTION_WORD_BOUNDARY()    => OP_RX_WORD_BOUNDARY,
     );
 
 sub _regex_assertion {
@@ -2142,10 +2142,10 @@ sub _regex_assertion_group {
     my $type = $tree->type;
 
     my $next;
-    if( $type eq 'POSITIVE_LOOKAHEAD' ) {
+    if( $type == RX_GROUP_POSITIVE_LOOKAHEAD ) {
         _add_bytecode $self, opcode_nm( OP_RX_SAVE_POS,
                                         index => $self->_pos_count );
-    } elsif( $type eq 'NEGATIVE_LOOKAHEAD' ) {
+    } elsif( $type == RX_GROUP_NEGATIVE_LOOKAHEAD ) {
         $next = _new_block( $self );
         _add_bytecode $self, opcode_nm( OP_RX_BACKTRACK, to => $next );
     } else {
@@ -2156,11 +2156,11 @@ sub _regex_assertion_group {
         $self->dispatch_regex( $c );
     }
 
-    if( $type eq 'POSITIVE_LOOKAHEAD' ) {
+    if( $type == RX_GROUP_POSITIVE_LOOKAHEAD ) {
         _add_bytecode $self, opcode_nm( OP_RX_RESTORE_POS,
                                         index => $self->_pos_count );
         $self->_pos_count( $self->_pos_count + 1 );
-    } elsif( $type eq 'NEGATIVE_LOOKAHEAD' ) {
+    } elsif( $type == RX_GROUP_NEGATIVE_LOOKAHEAD ) {
         _add_bytecode $self,
             opcode_n( OP_RX_POP_STATE ),
             opcode_n( OP_RX_FAIL );

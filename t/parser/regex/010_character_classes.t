@@ -106,7 +106,7 @@ right: !parsetree:Pattern
           flags: CONST_STRING
           value: -
         - !parsetree:RXSpecialClass
-          type: WORDS
+          type: RX_CLASS_WORDS
       insensitive: 0
   flags: 0
   op: OP_QL_M

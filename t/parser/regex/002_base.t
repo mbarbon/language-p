@@ -16,17 +16,17 @@ op: OP_MATCH
 right: !parsetree:Pattern
   components:
     - !parsetree:RXAssertion
-      type: BEGINNING
+      type: RX_ASSERTION_BEGINNING
     - !parsetree:RXConstant
       insensitive: 0
       value: "\ntes"
     - !parsetree:RXAssertion
-      type: ANY_NONEWLINE
+      type: RX_ASSERTION_ANY_NONEWLINE
     - !parsetree:RXConstant
       insensitive: 0
       value: .
     - !parsetree:RXSpecialClass
-      type: WORDS
+      type: RX_CLASS_WORDS
   flags: 0
   op: OP_QL_M
   original: (?-xism:^\ntes.\.\w)
@@ -146,7 +146,7 @@ right: !parsetree:Pattern
     - !parsetree:RXAlternation
       left:
         - !parsetree:RXAssertion
-          type: BEGINNING
+          type: RX_ASSERTION_BEGINNING
         - !parsetree:RXConstant
           insensitive: 0
           value: t
@@ -161,7 +161,7 @@ right: !parsetree:Pattern
               insensitive: 0
               value: t
             - !parsetree:RXAssertion
-              type: END_OR_NEWLINE
+              type: RX_ASSERTION_END_OR_NEWLINE
   flags: 0
   op: OP_QL_M
   original: (?-xism:^t|es|t$)
@@ -263,7 +263,7 @@ right: !parsetree:Pattern
           insensitive: FLAG_RX_CASE_INSENSITIVE
           value: a
         - !parsetree:RXAssertion
-          type: ANY_NONEWLINE
+          type: RX_ASSERTION_ANY_NONEWLINE
   flags: FLAG_RX_SINGLE_LINE
   op: OP_QL_M
   original: (?s-xim:a(?i-s:a.))
@@ -291,12 +291,12 @@ right: !parsetree:Pattern
           insensitive: 0
           value: a
         - !parsetree:RXAssertion
-          type: ANY
+          type: RX_ASSERTION_ANY
         - !parsetree:RXConstant
           insensitive: FLAG_RX_CASE_INSENSITIVE
           value: a
         - !parsetree:RXAssertion
-          type: ANY_NONEWLINE
+          type: RX_ASSERTION_ANY_NONEWLINE
   flags: FLAG_RX_SINGLE_LINE
   op: OP_QL_M
   original: (?s-xim:a(?:a.(?i-s)a.))

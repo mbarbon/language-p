@@ -22,7 +22,7 @@ right: !parsetree:Pattern
     - !parsetree:RXClass
       elements:
         - !parsetree:RXPosixClass
-          type: alpha
+          type: RX_POSIX_ALPHA
       insensitive: 0
   flags: 0
   op: OP_QL_M

@@ -163,7 +163,7 @@ right: !parsetree:Substitution
   pattern: !parsetree:Pattern
     components:
       - !parsetree:RXAssertion
-        type: END_OR_NEWLINE
+        type: RX_ASSERTION_END_OR_NEWLINE
       - !parsetree:RXConstant
         insensitive: 0
         value: foo

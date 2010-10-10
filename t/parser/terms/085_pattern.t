@@ -16,12 +16,12 @@ op: OP_MATCH
 right: !parsetree:Pattern
   components:
     - !parsetree:RXAssertion
-      type: BEGINNING
+      type: RX_ASSERTION_BEGINNING
     - !parsetree:RXConstant
       insensitive: 0
       value: test
     - !parsetree:RXAssertion
-      type: END_OR_NEWLINE
+      type: RX_ASSERTION_END_OR_NEWLINE
   flags: 0
   op: OP_QL_M
   original: (?-xism:^test$)
@@ -40,7 +40,7 @@ op: OP_MATCH
 right: !parsetree:Pattern
   components:
     - !parsetree:RXAssertion
-      type: BEGINNING
+      type: RX_ASSERTION_BEGINNING
     - !parsetree:RXConstant
       insensitive: 0
       value: test
@@ -112,7 +112,7 @@ EOP
 --- !parsetree:Pattern
 components:
   - !parsetree:RXAssertion
-    type: BEGINNING
+    type: RX_ASSERTION_BEGINNING
   - !parsetree:RXConstant
     insensitive: 0
     value: test
@@ -165,9 +165,9 @@ op: OP_MATCH
 right: !parsetree:Pattern
   components:
     - !parsetree:RXAssertion
-      type: BEGINNING
+      type: RX_ASSERTION_BEGINNING
     - !parsetree:RXAssertion
-      type: END_OR_NEWLINE
+      type: RX_ASSERTION_END_OR_NEWLINE
     - !parsetree:RXConstant
       insensitive: 0
       value: '{foo}aaa'
@@ -300,7 +300,7 @@ right: !parsetree:Pattern
       insensitive: 0
       value: '@!'
     - !parsetree:RXSpecialClass
-      type: WORDS
+      type: RX_CLASS_WORDS
   flags: 0
   op: OP_QL_M
   original: (?-xism:@!\w)
