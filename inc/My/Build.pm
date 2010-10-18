@@ -263,13 +263,11 @@ sub _run_dotnet {
     foreach my $tag ( @tags ) {
         my( $interpreter, @directories ) = @$tag;
 
-        push @byte_compile, [ [ $interpreter, '-fdump-bytecode' ],
-                              @directories ];
         push @run, [ [ 'mono', 'support/dotnet/bin/Debug/dotnet.exe' ],
                      @directories ];
     }
 
-    $self->_run_p_tests( @byte_compile, @run );
+    $self->_run_p_tests( @run );
 }
 
 sub _byte_compile {
