@@ -3,13 +3,12 @@ using org.mbarbon.p.values;
 using System.Reflection.Emit;
 using System.Reflection;
 using System.Linq.Expressions;
-using Microsoft.Linq.Expressions;
 using Microsoft.Scripting.Ast;
 using System.Collections.Generic;
 using Type = System.Type;
 using IEnumerator = System.Collections.IEnumerator;
 using DebuggableAttribute = System.Diagnostics.DebuggableAttribute;
-using DebugInfoGenerator = Microsoft.Runtime.CompilerServices.DebugInfoGenerator;
+using DebugInfoGenerator = System.Runtime.CompilerServices.DebugInfoGenerator;
 using MemoryStream = System.IO.MemoryStream;
 using BinaryFormatter = System.Runtime.Serialization.Formatters.Binary.BinaryFormatter;
 

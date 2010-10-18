@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -8,6 +8,8 @@
     <ProjectGuid>{C65F4B5A-4D63-4D61-93C9-4EE79867D5CF}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AssemblyName>dotnet</AssemblyName>
+    <RootNamespace>dotnet</RootNamespace>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -27,13 +29,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="Microsoft.Scripting, Version=0.9.5.1, Culture=neutral, PublicKeyToken=null">
+    <Reference Include="Microsoft.Scripting, Version=1.1.0.10, Culture=neutral, PublicKeyToken=null">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\dlr-trunk\Src\Runtime\Microsoft.Scripting\Bin\Debug\Microsoft.Scripting.dll</HintPath>
+      <HintPath>..\..\..\dlr-trunk\bin\v2Debug\Microsoft.Scripting.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Scripting.Core, Version=0.9.5.1, Culture=neutral, PublicKeyToken=null">
+    <Reference Include="Microsoft.Scripting.Core, Version=1.1.0.10, Culture=neutral, PublicKeyToken=null">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\dlr-trunk\Src\Runtime\Microsoft.Scripting.Core\Bin\Debug\Microsoft.Scripting.Core.dll</HintPath>
+      <HintPath>..\..\..\dlr-trunk\bin\v2Debug\Microsoft.Scripting.Core.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -69,9 +71,4 @@
     <Folder Include="Runtime\" />
     <Folder Include="Bytecode\" />
   </ItemGroup>
-  <ProjectExtensions>
-    <MonoDevelop>
-      <Properties InternalTargetFrameworkVersion="3.5" />
-    </MonoDevelop>
-  </ProjectExtensions>
 </Project>
