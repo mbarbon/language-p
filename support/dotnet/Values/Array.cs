@@ -1,4 +1,5 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
+using Opcode = org.mbarbon.p.runtime.Opcode;
 using System.Collections.Generic;
 using System.Collections;
 
@@ -24,6 +25,29 @@ namespace org.mbarbon.p.values
         public P5Array(Runtime runtime, P5Array array) : this(runtime)
         {
             AssignIterator(runtime, array.GetEnumerator(runtime));
+        }
+
+        public static P5Array MakeFlat(Runtime runtime, params IP5Any[] data)
+        {
+            var res = new P5Array(runtime);
+
+            res.PushFlatten(data);
+
+            return res;
+        }
+
+        protected void PushFlatten(IP5Any[] data)
+        {
+            foreach (var i in data)
+            {
+                var l = i as P5List;
+
+                if (l != null)
+                    foreach (var li in l)
+                        array.Add(li);
+                else
+                    array.Add(i);
+            }
         }
 
         public int GetCount(Runtime runtime) { return array.Count; }
@@ -280,6 +304,18 @@ namespace org.mbarbon.p.values
         public virtual P5SymbolTable Blessed(Runtime runtime)
         {
             return blessed;
+        }
+
+        public IP5Any CallMethod(Runtime runtime, Opcode.ContextValues context,
+                                 string method)
+        {
+            var invocant = array[0];
+            var pmethod = invocant.FindMethod(runtime, method);
+
+            if (pmethod == null)
+                throw new System.Exception("Can't find method " + method);
+
+            return pmethod.Call(runtime, context, this);
         }
 
         private P5SymbolTable blessed;

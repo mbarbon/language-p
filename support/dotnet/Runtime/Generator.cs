@@ -370,7 +370,7 @@ namespace org.mbarbon.p.runtime
                 {
                     Expression empty_list =
                         Expression.New(
-                            typeof(P5List).GetConstructor(
+                            typeof(P5Array).GetConstructor(
                                 new Type[] { typeof(Runtime) }),
                             InitRuntime);
                     Expression call_begin =
@@ -433,8 +433,6 @@ namespace org.mbarbon.p.runtime
             new Type[] { typeof(Runtime), typeof(bool) };
         private static Type[] ProtoRuntimeDouble =
             new Type[] { typeof(Runtime), typeof(double) };
-        private static Type[] ProtoRuntimeIP5AnyArray =
-            new Type[] { typeof(Runtime), typeof(IP5Any[]) };
         private static Type[] ProtoRuntimeP5Array =
             new Type[] { typeof(Runtime), typeof(P5Array) };
         private static Type[] ProtoRuntimeAny =
@@ -926,11 +924,21 @@ namespace org.mbarbon.p.runtime
                 foreach (var i in op.Childs)
                     data.Add(Generate(sub, i));
                 return
-                    Expression.New(
-                        typeof(P5List).GetConstructor(ProtoRuntimeIP5AnyArray),
-                        new Expression[] {
-                            Runtime,
-                            Expression.NewArrayInit(typeof(IP5Any), data) });
+                    Expression.Call(
+                        typeof(P5List).GetMethod("MakeFlat"),
+                        Runtime,
+                        Expression.NewArrayInit(typeof(IP5Any), data));
+            }
+            case Opcode.OpNumber.OP_MAKE_ARRAY:
+            {
+                List<Expression> data = new List<Expression>();
+                foreach (var i in op.Childs)
+                    data.Add(Generate(sub, i));
+                return
+                    Expression.Call(
+                        typeof(P5Array).GetMethod("MakeFlat"),
+                        Runtime,
+                        Expression.NewArrayInit(typeof(IP5Any), data));
             }
             case Opcode.OpNumber.OP_ANONYMOUS_ARRAY:
             {
@@ -969,7 +977,7 @@ namespace org.mbarbon.p.runtime
                             typeof(P5Handle)),
                         Expression.Convert(
                             Generate(sub, op.Childs[1]),
-                            typeof(P5List)));
+                            typeof(P5Array)));
             }
             case Opcode.OpNumber.OP_READLINE:
             {
@@ -1478,7 +1486,7 @@ namespace org.mbarbon.p.runtime
                 return
                     Expression.Call(
                         Generate(sub, op.Childs[0]),
-                        typeof(P5List).GetMethod("CallMethod"),
+                        typeof(P5Array).GetMethod("CallMethod"),
                         Runtime, OpContext(op),
                         Expression.Constant(cm.Method));
             }

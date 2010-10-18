@@ -7,7 +7,7 @@ namespace org.mbarbon.p.runtime
 {
     public class Builtins
     {
-        public static P5Scalar Print(Runtime runtime, P5Handle handle, P5List args)
+        public static P5Scalar Print(Runtime runtime, P5Handle handle, P5Array args)
         {
             // wrong but works well enough for now
             for (int i = 0, m = args.GetCount(runtime); i < m; ++i)
