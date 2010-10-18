@@ -19,31 +19,23 @@ sub new_boolean {
                Language::P::Toy::Value::List->new( $runtime, { array => [] } );
 }
 
-sub assign {
+sub assign_array {
     my( $self, $runtime, $other ) = @_;
+    my $count = 0;
 
     # FIXME optimize: don't do it unless necessary
     my $oiter = $other->clone( $runtime, 1 )->iterator( $runtime );
     for( my $iter = $self->iterator( $runtime ); $iter->next( $runtime ); ) {
-        $iter->item->assign_iterator( $runtime, $oiter );
+        $count += $iter->item->assign_iterator( $runtime, $oiter );
     }
+
+    return $count;
 }
 
 sub push_value {
     my( $self, $runtime, @values ) = @_;
 
-    foreach my $value ( @values ) {
-        if(    $value->isa( 'Language::P::Toy::Value::Array' )
-            || $value->isa( 'Language::P::Toy::Value::Hash' ) ) {
-            for( my $it = $value->iterator( $runtime ); $it->next( $runtime ); ) {
-                push @{$self->{array}}, $it->item( $runtime );
-            }
-        } else {
-            push @{$self->{array}}, $value;
-        }
-    }
-
-    return;
+    $self->push_flatten( $runtime, @values );
 }
 
 sub as_scalar {

@@ -6,16 +6,18 @@ use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_accessors( qw(_temporary_count _current_basic_block
                               _converting _queue _stack _converted
-                              _converted_segments _bytecode) );
+                              _converted_segments _bytecode _phi) );
 
 use Language::P::Opcodes qw(:all);
 use Language::P::Assembly qw(:all);
 
 my %op_map =
-  ( OP_MAKE_LIST()        => '_make_list',
+  ( OP_MAKE_LIST()        => '_make_list_array',
+    OP_MAKE_ARRAY()       => '_make_list_array',
     OP_POP()              => '_pop',
     OP_SWAP()             => '_swap',
     OP_DUP()              => '_dup',
+    OP_DISCARD_STACK()    => '_discard',
     OP_CONSTANT_SUB()     => '_const_sub',
     OP_CONSTANT_REGEX()   => '_const_regex',
     OP_JUMP_IF_TRUE()     => '_cond_jump',
@@ -38,6 +40,7 @@ my %op_map =
     OP_RX_START_GROUP()   => '_rx_start_group',
     OP_RX_QUANTIFIER()    => '_rx_quantifier',
     OP_RX_TRY()           => '_rx_try',
+    OP_RX_BACKTRACK()     => '_rx_backtrack',
     );
 
 sub _local_name { ++$_[0]->{_temporary_count} }
@@ -58,7 +61,7 @@ sub _add_bytecode {
 }
 
 sub _opcode_set {
-    my $op = opcode_n( OP_SET, $_[1] );
+    my $op = opcode_np( OP_SET, $_[1]->{pos}, $_[1] );
     $op->{attributes}{index} = $_[0];
 
     return $op;
@@ -90,6 +93,7 @@ sub to_ssa {
     $self->_temporary_count( 0 );
     $self->_stack( [] );
     $self->_converted( {} );
+    $self->_phi( [] );
 
     my $new_code = Language::P::Intermediate::Code->new
                        ( { type           => $code_segment->type,
@@ -98,6 +102,7 @@ sub to_ssa {
                            lexicals       => $code_segment->lexicals,
                            scopes         => [],
                            lexical_states => $code_segment->lexical_states,
+                           regex_string   => $code_segment->regex_string,
                            } );
     $self->_converted_segments->{$code_segment} = $new_code;
 
@@ -108,12 +113,14 @@ sub to_ssa {
         push @{$new_code->inner}, $new_inner;
     }
 
+    $code_segment->find_alive_blocks;
+
     # find all non-empty blocks without predecessors and enqueue them
-    # (there can be more than one only if there is dead code)
+    # (there can be more than one only if there is dead code or eval blocks)
     $self->_queue( [] );
     foreach my $block ( @{$code_segment->basic_blocks} ) {
         next unless @{$block->bytecode};
-        next if @{$block->predecessors};
+        next if $block->dead || @{$block->predecessors};
         push @{$self->_queue}, $block;
     }
 
@@ -122,14 +129,6 @@ sub to_ssa {
         my $block = shift @{$self->_queue};
 
         next if $self->_converted->{$block}{converted};
-        # process a node with input values after all its predecessors
-        # might not be possible if more values become temporaries,
-        # works for now
-        if(    ( $self->_converted->{$block}{depth} || 0 ) > 0
-            && grep !$self->_converted->{$_}{converted}, @{$block->predecessors} ) {
-            push @{$self->_queue}, $block;
-            redo;
-        }
         $self->_converted->{$block} =
           { %{$self->_converted->{$block}},
             converted => 1,
@@ -140,23 +139,12 @@ sub to_ssa {
             Language::P::Intermediate::BasicBlock
                 ->new_from_label( $block->start_label,
                                   $block->lexical_state,
-                                  $block->scope );
+                                  $block->scope, $block->dead );
 
         push @{$new_code->basic_blocks}, $cblock;
         $self->_current_basic_block( $cblock );
         $self->_bytecode( $cblock->bytecode );
         @$stack = @{$self->_converting->{in_stack} || []};
-
-        # remove dummy phi values that all get the same value
-        foreach my $value ( @$stack ) {
-            next unless $value->{opcode_n} == OP_PHI;
-            my $t = $value->{parameters}[1];
-            if( !grep $value->{parameters}[$_] != $t,
-                grep  $_ & 1,
-                      1 .. $#{$value->{parameters}} ) {
-                $value = opcode_nm( OP_GET, index => $t );
-            }
-        }
 
         # duplicated below
         foreach my $bc ( @{$block->bytecode} ) {
@@ -181,6 +169,7 @@ sub to_ssa {
                pos_s         => $scope->{pos_s},
                pos_e         => $scope->{pos_e},
                lexical_state => $scope->{lexical_state},
+               exception     => $scope->{exception} ? $self->_converted->{$scope->{exception}}{block} : undef,
                };
 
        foreach my $seg ( @{$scope->{bytecode}} ) {
@@ -200,6 +189,21 @@ sub to_ssa {
                 grep $_->{opcode_n} != OP_PHI && $_->{opcode_n} != OP_GET, @$stack;
 
             push @{$new_code->scopes->[-1]{bytecode}}, \@bytecode;
+        }
+    }
+
+    # remove dummy phi values that all get the same value; doing this here
+    # will create some useless set/get pairs, but it is good enough for now
+    foreach my $phi ( @{$self->_phi} ) {
+        next if $phi->{opcode_n} == OP_GET;
+        my $t = $phi->{parameters}[1];
+        if( !grep $phi->{parameters}[$_] != $t,
+            grep  $_ & 1,
+                  1 .. $#{$phi->{parameters}} ) {
+            # morph the PHI opcode into a GET
+            $phi->{opcode_n} = OP_GET;
+            $phi->{attributes} = { index => $t };
+            $phi->{parameters} = undef;
         }
     }
 
@@ -250,7 +254,8 @@ sub _ssa_to_tree {
                 # add SET nodes to rename the variables
                 splice @{$block_from->bytecode}, $op_from_off, 0,
                        _opcode_set( $op->{attributes}{index},
-                                    opcode_nm( OP_GET, index => $variable ) );
+                                    opcode_npm( OP_GET, $op->{pos}, index => $variable ) )
+                    if $op->{attributes}{index} != $variable;
             }
 
             --$op_off;
@@ -271,7 +276,7 @@ sub _get_stack {
         next if $value->{opcode_n} != OP_PHI && !$force_get;
         my $name = _local_name( $self );
         _add_bytecode $self, _opcode_set( $name, $value );
-        $value = opcode_nm( OP_GET, index => $name );
+        $value = opcode_npm( OP_GET, $value->{pos}, index => $name );
     }
 
     return @values;
@@ -297,13 +302,11 @@ sub _jump_to {
     if( @$stack ) {
         @$out_names = _emit_out_stack( $self ) unless @$out_names;
 
-        my $created_elements = $self->_converting->{created};
-        my $inherited_elements = @$stack - $created_elements;
-
         # copy inherited elements, generated GET or PHI for created elements
         if( !$converted->{in_stack} ) {
             if( @{$to->predecessors} > 1 ) {
                 $converted->{in_stack} = [ map opcode_n( OP_PHI ), @$stack ];
+                push @{$self->_phi}, @{$converted->{in_stack}};
             } else {
                 $converted->{in_stack} = [ map opcode_nm( OP_GET, index => $_ ),
                                                @$out_names ];
@@ -327,7 +330,7 @@ sub _jump_to {
     $converted->{block} ||= Language::P::Intermediate::BasicBlock
                                 ->new_from_label( $to->start_label,
                                                   $to->lexical_state,
-                                                  $to->scope );
+                                                  $to->scope, $to->dead );
     $op->{attributes}{to} = $converted->{block};
     push @{$self->_queue}, $to;
 
@@ -344,11 +347,24 @@ sub _emit_out_stack {
     my( @out_names, @out_stack );
     my $i = @$stack - $self->_converting->{created};
 
+    die sprintf 'Inconsistent stack count in %s: %d elements in stack < %d elements created',
+                $self->_current_basic_block->start_label,
+                scalar( @$stack ), $self->_converting->{created}
+        if scalar( @$stack ) < $self->_converting->{created};
+
     # copy inherited stack elements and all created GET opcodes add a
     # SET in the block and a GET in the out stack for all other
     # created ops
     @out_stack = @{$stack}[0 .. $i - 1];
-    @out_names = map $_->{attributes}{index}, @out_stack;
+    for( my $j = 0; $j < $i; ++$j ) {
+        my $op = $stack->[$j];
+        if( $op->{opcode_n} == OP_GET ) {
+            push @out_names, $op->{attributes}{index};
+        } else {
+            push @out_names, _local_name( $self );
+            _add_bytecode $self, _opcode_set( $out_names[-1], $op );
+        }
+    }
     for( my $j = $i; $i < @$stack; ++$i, ++$j ) {
         my $op = $stack->[$i];
         if( $op->{opcode_n} == OP_GET ) {
@@ -356,7 +372,7 @@ sub _emit_out_stack {
             $out_stack[$i] = $op;
         } else {
             $out_names[$j] = _local_name( $self );
-            $out_stack[$i] = opcode_nm( OP_GET, index => $out_names[$j] );
+            $out_stack[$i] = opcode_npm( OP_GET, $op->{pos}, index => $out_names[$j] );
             _add_bytecode $self, _opcode_set( $out_names[$j], $op );
         }
     }
@@ -377,7 +393,7 @@ sub _generic {
         $new_op = opcode_nm( $op->{opcode_n}, %{$op->{attributes}} );
         $new_op->{parameters} = \@in if @in;
     } elsif( $op->{parameters} ) {
-        die "Can't handle fixed and dynamic parameters" if @in;
+        die "Can't handle fixed and dynamic parameters for $NUMBER_TO_NAME{$op->{opcode_n}}" if @in;
         $new_op = opcode_n( $op->{opcode_n}, @{$op->{parameters}} );
     } else {
         $new_op = opcode_n( $op->{opcode_n}, @in );
@@ -398,7 +414,7 @@ sub _generic {
 sub _const_sub {
     my( $self, $op ) = @_;
     my $new_seg = $self->_converted_segments->{$op->{attributes}{value}};
-    my $new_op = opcode_nm( OP_CONSTANT_SUB(), value => $new_seg );
+    my $new_op = opcode_nm( OP_CONSTANT_SUB, value => $new_seg );
 
     push @{$self->_stack}, $new_op;
     _created( $self, 1 );
@@ -407,10 +423,22 @@ sub _const_sub {
 sub _const_regex {
     my( $self, $op ) = @_;
     my $new_seg = $self->_converted_segments->{$op->{attributes}{value}};
-    my $new_op = opcode_nm( OP_CONSTANT_REGEX(), value => $new_seg );
+    my $new_op = opcode_nm( OP_CONSTANT_REGEX, value => $new_seg );
 
     push @{$self->_stack}, $new_op;
     _created( $self, 1 );
+}
+
+sub _discard {
+    my( $self, undef ) = @_;
+
+    while( @{$self->_stack} ) {
+        my $op = pop @{$self->_stack};
+        _add_bytecode $self, $op if    $op->{opcode_n} != OP_PHI
+                                    && $op->{opcode_n} != OP_GET;
+    }
+
+    _created( $self, -@{$self->_stack} );
 }
 
 sub _pop {
@@ -420,8 +448,8 @@ sub _pop {
     my $top = pop @{$self->_stack};
     _add_bytecode $self, $top if    $top->{opcode_n} != OP_PHI
                                  && $top->{opcode_n} != OP_GET;
-    _emit_out_stack( $self );
     _created( $self, -1 );
+    _emit_out_stack( $self );
 }
 
 sub _dup {
@@ -443,11 +471,16 @@ sub _swap {
     $stack->[-2] = $t;
 }
 
-sub _make_list {
+sub _make_list_array {
     my( $self, $op ) = @_;
 
-    push @{$self->_stack},
-         opcode_n( OP_MAKE_LIST, _get_stack( $self, $op->{attributes}{count} ) );
+    my $nop = opcode_npm( $op->{opcode_n}, $op->{pos},
+                          context => $op->{attributes}{context} );
+    $nop->{parameters} = [ _get_stack( $self, $op->{attributes}{count} ) ]
+        if $op->{attributes}{count};
+
+    push @{$self->_stack}, $nop;
+
     _created( $self, 1 );
 }
 
@@ -491,7 +524,7 @@ sub _replace {
     $converted->{block} ||= Language::P::Intermediate::BasicBlock
                                 ->new_from_label( $to->start_label,
                                                   $to->lexical_state,
-                                                  $to->scope );
+                                                  $to->scope, $to->dead );
     $new_jump->{attributes}{to} = $converted->{block};
     push @{$self->_queue}, $to;
 
@@ -529,6 +562,14 @@ sub _rx_quantifier {
 sub _rx_try {
     my( $self, $op ) = @_;
     my $new_jump = opcode_nm( OP_RX_TRY );
+
+    _jump_to( $self, $new_jump, $op->{attributes}{to}, [] );
+    _add_bytecode $self, $new_jump;
+}
+
+sub _rx_backtrack {
+    my( $self, $op ) = @_;
+    my $new_jump = opcode_nm( OP_RX_BACKTRACK );
 
     _jump_to( $self, $new_jump, $op->{attributes}{to}, [] );
     _add_bytecode $self, $new_jump;

@@ -192,7 +192,7 @@ EOT
             $op, $attr->[2], $attr->[3], $attr->[4], $cxt;
     }
 
-    printf $out <<'EOT', CXT_SCALAR, CXT_CALLER;
+    printf $out <<'EOT',
     );
 
 our %%CONTEXT =
@@ -201,7 +201,12 @@ our %%CONTEXT =
         [ %d ],
     OP_RETURN() =>
         [ %d ],
+    OP_DYNAMIC_GOTO() =>
+        [ %d ],
+    OP_DEFINED() =>
+        [ %d ],
 EOT
+        CXT_SCALAR, CXT_CALLER, CXT_SCALAR, CXT_SCALAR|CXT_NOCREATE;
 
     foreach my $ft ( grep /^OP_FT/, keys %op ) {
         printf $out <<'EOT', $ft, CXT_SCALAR;
@@ -211,12 +216,15 @@ EOT
     }
 
     while( my( $op, $key ) = each %op_key_map ) {
-        next if $op eq 'OP_RETURN';
+        next if $op eq 'OP_RETURN' || $op eq 'OP_DEFINED';
         my $attr = $attrs{$key} or die "Unknown builtin '$key'";
         my @cxt;
         foreach my $a ( @{$attr->[5]} ) {
             if(    $a == PROTO_ARRAY || $a == PROTO_MAKE_ARRAY
                 || $a == ( PROTO_MAKE_ARRAY|PROTO_REFERENCE ) ) {
+                push @cxt, CXT_LIST;
+            } elsif(    $a == PROTO_HASH || $a == PROTO_MAKE_HASH
+                     || $a == ( PROTO_MAKE_HASH|PROTO_REFERENCE ) ) {
                 push @cxt, CXT_LIST;
             } elsif( $a & PROTO_REFERENCE ) {
                 push @cxt, CXT_SCALAR;
@@ -364,9 +372,9 @@ backtick            0       same                 1   1  context=i1
 binmode             0       same                 1   1  context=i1
 bit_and             0       same                 2   1  context=i1
 bit_and_assign      0       same                 2   1  context=i1
+bit_not             0       same                 1   1  context=i1
 bit_or              0       same                 2   1  context=i1
 bit_or_assign       0       same                 2   1  context=i1
-bit_not             0       same                 1   1  context=i1
 bit_xor             0       same                 2   1  context=i1
 bit_xor_assign      0       same                 2   1  context=i1
 bless               u       same                 2   1  context=i1
@@ -377,8 +385,8 @@ caller              v       same                -1   1  context=i1,arg_count=i1
 chdir               u       same                 1   1  context=i1
 chr                 u       same                 1   1  context=i1
 close               u       same                 1   1  context=i1
-concatenate_assign  0       concat_assign        2   1  context=i1
 concatenate         0       concat               2   1  context=i1
+concatenate_assign  0       concat_assign        2   1  context=i1
 constant_float      0       same                 0   1  value=f
 constant_integer    0       same                 0   1  value=i
 constant_regex      0       same                 0   1  value=c
@@ -386,18 +394,26 @@ constant_string     0       same                 0   1  value=s
 constant_sub        0       same                 0   1  value=c
 constant_undef      0       same                 0   1  noattr
 defined             u       same                 1   1  context=i1
+delete              u       same                 1   1  context=i1
+delete_array        u       same                 2   1  context=i1
+delete_array_slice  u       same                 2   1  context=i1
+delete_hash         u       same                 2   1  context=i1
+delete_hash_slice   u       same                 2   1  context=i1
 dereference_array   0       same                 1   1  context=i1
 dereference_glob    0       same                 1   1  context=i1
 dereference_hash    0       same                 1   1  context=i1
 dereference_scalar  0       same                 1   1  context=i1
 dereference_sub     0       dereference_subroutine 1 1  context=i1
 die                 0       same                 1   1  context=i1
+discard_stack       0       same                -1   0  noattr
 divide              0       same                 2   1  context=i1
 divide_assign       0       same                 2   1  context=i1
 do_file             u       same                 1   1  context=i1
 dot_dot             0       same                 2   1  context=i1
 dot_dot_dot         0       same                 2   1  context=i1
 dup                 0       same                 1   2  noattr
+dynamic_goto        u       same                 1   0  noattr
+each                u       same                 1   1  context=i1
 end                 0       same                 0   0  noattr
 eval                u       same                 1   1  context=i1,hints=i,warnings=su,package=s,lexicals=eval_my,globals=eval_our
 eval_regex          u       same                 1   1  context=i1,flags=i
@@ -435,13 +451,16 @@ ft_setuid           u       same                 1   1  context=i1
 ft_sticky           u       same                 1   1  context=i1
 get                 0       same                 0   1  index=i
 glob                0       same                 1   1  context=i1
+glob_element        0       same                 2   1  context=i1
 glob_slot           0       same                 1   1  slot=i_sigil
 glob_slot_set       0       same                 2   0  slot=i_sigil
-global              0       same                 0   1  name=s,slot=i_sigil
+global              0       same                 0   1  name=s,slot=i_sigil,context=i1
 grep                0       same                 1   1  context=i1
 hash_element        0       same                 2   1  context=i1,create=i1
 hash_slice          0       same                 2   1  context=i1,create=i1
 hex                 u       same                 1   1  context=i1
+index               v       same                -1   1  context=i1,arg_count=i1
+int                 u       same                 1   1  context=i1
 iterator            0       same                 1   1  noattr
 iterator_next       0       same                 1   1  noattr
 join                0       same                 1   1  context=i1
@@ -453,6 +472,7 @@ jump_if_f_le        0       same                 2   0  to=b
 jump_if_f_lt        0       same                 2   0  to=b
 jump_if_f_ne        0       same                 2   0  to=b
 jump_if_false       0       same                 1   0  to=b
+jump_if_null        0       same                 1   0  to=b
 jump_if_s_eq        0       same                 2   0  to=b
 jump_if_s_ge        0       same                 2   0  to=b
 jump_if_s_gt        0       same                 2   0  to=b
@@ -460,30 +480,36 @@ jump_if_s_le        0       same                 2   0  to=b
 jump_if_s_lt        0       same                 2   0  to=b
 jump_if_s_ne        0       same                 2   0  to=b
 jump_if_true        0       same                 1   0  to=b
-jump_if_null        0       same                 1   0  to=b
+keys                u       same                 1   1  context=i1
 lc                  u       same                 1   1  noattr
 lcfirst             u       same                 1   1  noattr
 length              u       same                 1   1  noattr
 lexical             0       same                 0   1  index=ls
 lexical_clear       0       same                 0   0  index=ls
-lexical_set         0       same                 1   0  index=ls
 lexical_pad         0       same                 0   1  index=lp
 lexical_pad_clear   0       same                 0   0  index=lp
 lexical_pad_set     0       same                 1   0  index=lp
-lexical_state_set   0       same                 0   0  index=i
-lexical_state_save  0       same                 0   0  index=i
+lexical_set         0       same                 1   0  index=ls
 lexical_state_restore 0     same                 0   0  index=i
+lexical_state_save  0       same                 0   0  index=i
+lexical_state_set   0       same                 0   0  index=i
 list_slice          0       same                 2   1  context=i1
 local               0       same                 1   1  noattr
+localize_array_element 0    same                 2   1  index=i
 localize_glob_slot  0       same                 0   1  name=s,index=i,slot=i_sigil
+localize_hash_element 0     same                 2   1  index=i
+localize_lexical    0       same                 0   0  lexical=ls,index=i
+localize_lexical_pad 0      same                 0   0  lexical=lp,index=i
 log_and             0       same                 2   1  noattr
 log_and_assign      0       same                 2   1  context=i1
 log_not             0       not                  1   1  context=i1
 log_or              0       same                 2   1  noattr
 log_or_assign       0       same                 2   1  context=i1
 log_xor             0       same                 2   1  context=i1
+make_array          0       same                -1   1  context=i1
 make_closure        0       same                 1   1  noattr
-make_list           0       same                -1   1  noattr
+make_list           0       same                -1   1  context=i1
+make_qr             0       same                 1   1  noattr
 map                 0       same                 1   1  context=i1
 match               0       rx_match             2   1  context=i1,flags=i,index=i
 minus               0       negate               1   1  context=i1
@@ -501,8 +527,8 @@ num_gt              0       compare_f_gt_scalar  2   1  noattr
 num_le              0       compare_f_le_scalar  2   1  noattr
 num_lt              0       compare_f_lt_scalar  2   1  noattr
 num_ne              0       compare_f_ne_scalar  2   1  noattr
-open                0       same                 1   1  context=i1
 oct                 u       same                 1   1  context=i1
+open                0       same                 1   1  context=i1
 ord                 u       same                 1   1  context=i1
 parentheses         0       same                -1  -1  noattr
 phi                 0       same                -1  -1  noattr
@@ -517,6 +543,7 @@ power_assign        0       same                 2   1  context=i1
 predec              0       same                 1   1  context=i1
 preinc              0       same                 1   1  context=i1
 print               0       same                 2   1  context=i1
+push_element        0       same                 2   0  noattr
 ql_lt               0       same                -1  -1  noattr
 ql_m                0       same                -1  -1  noattr
 ql_qr               0       same                -1  -1  noattr
@@ -529,19 +556,27 @@ readline            u       same                 1   1  context=i1
 reference           u       same                 1   1  context=i1
 reftype             u       same                 1   1  context=i1
 repeat              0       same                 2   1  context=i1
+repeat_array        0       same                 2   1  context=i1
 repeat_assign       0       same                 2   1  context=i1
+repeat_scalar       0       same                 2   1  context=i1
 replace             0       rx_replace           2   1  context=i1,index=i,flags=i,to=b
 require_file        u       same                 1   1  context=i1
+restore_array_element 0     same                 0   0  index=i
 restore_glob_slot   0       same                 0   0  name=s,index=i,slot=i_sigil
-reverse             u       same                 1   1  context=i1
+restore_hash_element 0      same                 0   0  index=i
+restore_lexical     0       same                 0   0  lexical=ls,index=i
+restore_lexical_pad 0       same                 0   0  lexical=lp,index=i
 return              0       same                 1   0  context=i1
+reverse             0       same                 1   1  context=i1
 rmdir               u       same                 1   1  context=i1
+rx_split            v       same                -1   1  context=i1,arg_count=i1
+rx_split_skipspaces v       same                -1   1  context=i1,arg_count=i1
 scalar              u       same                 1   1  context=i1
 set                 0       same                 1   0  index=i
 shift_left          0       same                 2   1  context=i1
 shift_right         0       same                 2   1  context=i1
+sort                0       same                 1   1  context=i1
 splice              v       same                -1   1  context=i1,arg_count=i1
-split               v       same                -1   1  context=i1,arg_count=i1
 sprintf             0       same                 1   1  context=i1
 stop                0       same                 1   0  noattr
 str_cmp             0       same                 2   1  noattr
@@ -552,30 +587,45 @@ str_le              0       compare_s_le_scalar  2   1  noattr
 str_lt              0       compare_s_lt_scalar  2   1  noattr
 str_ne              0       compare_s_ne_scalar  2   1  noattr
 stringify           0       same                 1   1  context=i1
+substr              v       same                -1   1  context=i1,arg_count=i1
 subtract            0       same                 2   1  context=i1
 subtract_assign     0       same                 2   1  context=i1
 swap                0       same                 2   2  noattr
 temporary           0       same                 0   1  index=i,slot=i_sigil
+temporary_clear     0       same                 0   0  index=i,slot=i_sigil
 temporary_set       0       same                 1   0  index=i,slot=i_sigil
+transliterate       u       rx_transliterate     1   1  match=s,replacement=s,flags=i,context=i1
 uc                  u       same                 1   1  noattr
 ucfirst             u       same                 1   1  noattr
-undef               u       same                -1   1  context=i1
+undef               u       same                 1   0  noattr
 unlink              0       same                 1   1  context=i1
+values              u       same                 1   1  context=i1
+vec                 u       same                 3   1  context=i1
 vivify_array        0       same                 1   1  context=i1
 vivify_hash         0       same                 1   1  context=i1
 vivify_scalar       0       same                 1   1  context=i1
 wantarray           u       want                 0   1  context=i1
-warn                v       same                 1   0  noattr
+warn                0       same                 1   1  context=i1
 
 rx_accept           0       same                 0   0  groups=i
+rx_any              0       same                 0   0  noattr
+rx_any_nonewline    0       same                 0   0  noattr
+rx_backtrack        0       same                 0   0  to=b
 rx_beginning        0       same                 0   0  noattr
 rx_capture_end      0       same                 0   0  group=i
 rx_capture_start    0       same                 0   0  group=i
-rx_class            0       same                 0   0  elements=s
+rx_class            0       same                 0   0  elements=s,ranges=s,flags=i
+rx_end              0       same                 0   0  noattr
 rx_end_or_newline   0       same                 0   0  noattr
 rx_exact            0       same                 0   0  string=s,length=i
+rx_exact_i          0       same                 0   0  string=s,length=i
+rx_fail             0       same                 0   0  noattr
+rx_pop_state        0       same                 0   0  noattr
 rx_quantifier       0       same                 0   0  min=i,max=i,greedy=i1,group=i,to=b,subgroups_start=i,subgroups_end=i
+rx_restore_pos      0       same                 0   0  index=i
+rx_save_pos         0       same                 0   0  index=i
 rx_start_group      0       same                 0   0  to=b
 rx_start_match      0       same                 0   0  noattr
 rx_state_restore    0       same                 0   0  index=i
 rx_try              0       same                 0   0  to=b
+rx_word_boundary    0       same                 0   0  noattr

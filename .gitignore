@@ -17,13 +17,12 @@ cover_db
 
 # Compilation byproducts
 *.pt
+*.pb
 
 # Generated parrot files, parrot symlink
 bin/p_parrot
 t/*/*.pbc
 t/*/*.pir
 t/*/*.ir
-t/*/*.pb
-t/*/*/*.pb
 support/parrot/runtime/*.pbc
 parrot

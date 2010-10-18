@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 30;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 34;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 "";
@@ -32,6 +28,15 @@ EOP
 context: CXT_VOID
 flags: CONST_STRING
 value: "'"
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+'\\';
+EOP
+--- !parsetree:Constant
+context: CXT_VOID
+flags: CONST_STRING
+value: \
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -461,4 +466,38 @@ components:
     name: '@'
     sigil: VALUE_SCALAR
 context: CXT_VOID
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+" @f";
+EOP
+--- !parsetree:QuotedString
+components:
+  - !parsetree:Constant
+    context: CXT_SCALAR
+    flags: CONST_STRING
+    value: ' '
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: f
+    sigil: VALUE_ARRAY
+context: CXT_VOID
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+" @ f";
+EOP
+--- !parsetree:Constant
+context: CXT_VOID
+flags: CONST_STRING
+value: ' @ f'
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+" @!";
+EOP
+--- !parsetree:Constant
+context: CXT_VOID
+flags: CONST_STRING
+value: ' @!'
 EOE

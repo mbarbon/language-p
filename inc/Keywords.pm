@@ -15,11 +15,13 @@ my %types =
     );
 
 my %special =
-  ( topic    => PROTO_DEFAULT_ARG,
-    handle   => PROTO_FILEHANDLE,
-    block    => PROTO_BLOCK,
-    indirect => PROTO_INDIROBJ,
-    pattern  => PROTO_PATTERN,
+  ( topic        => PROTO_DEFAULT_ARG,
+    handle       => PROTO_FILEHANDLE,
+    block        => PROTO_BLOCK,
+    indirect     => PROTO_INDIROBJ,
+    pattern      => PROTO_PATTERN,
+    unary_list   => PROTO_UNARY_LIST,
+    sub_name     => PROTO_SUBNAME,
     );
 
 my %proto =
@@ -165,11 +167,12 @@ __DATA__
 # o: overridable builtin
 
 # special:
-# topic:    default to $_
-# handle:   indirect filehandle (es. print)
-# block:    may take a block (es. eval)
-# indirect: block or expression (es. map)
-# pattern:  the first argument might be a pattern (es. split)
+# topic:       default to $_
+# handle:      indirect filehandle (es. print)
+# block:       may take a block (es. eval)
+# indirect:    block or expression (es. map)
+# pattern:     the first argument might be a pattern (es. split)
+# unary_list:  unary operator that can take a list (es. scalar)
 
 # prototype:
 # scalar:      scalar value
@@ -212,6 +215,7 @@ package             k
 require             b       KEY_REQUIRE_FILE     1   1  0             any
 
 defined             b       same                 1   1  topic         any+amper
+delete              b       same                 1   1  0             scalar
 eval                b       same                 1   1  topic+block   any
 exists              b       same                 1   1  0             any+amper
 grep                b       same                 2  -1  indirect      list
@@ -219,8 +223,9 @@ map                 b       same                 2  -1  indirect      list
 pos                 b       same                 1   1  topic         scalar
 print               b       same                 1  -1  topic+handle  list
 return              b       default
-scalar              b       same                 1   1  0             any
-split               b       same                 0   4  pattern       scalar,scalar,scalar,scalar
+scalar              b       same                 1   1  unary_list    any
+sort                b       same                 1  -1  indirect+sub_name  list
+split               b       KEY_RX_SPLIT         0   4  pattern       scalar,scalar,scalar,scalar
 undef               b       same                 0   1  0             any
 
 abs                 o       same                 1   1  topic         scalar
@@ -231,9 +236,13 @@ chdir               o       same                 0   1  0             scalar+mak
 chr                 o       same                 1   1  topic         scalar
 close               o       same                 0   1  0             make_glob
 die                 o       default
+each                o       same                 1   1  0             make_hash+reference
 glob                o       same                 1  -1  topic         scalar
 hex                 o       same                 1   1  topic         scalar
+index               o       same                 2   3  0             scalar,scalar,scalar
+int                 o       same                 1   1  topic         scalar
 join                o       same                 1  -1  0             scalar,list
+keys                o       same                 1   1  0             make_hash+reference
 lc                  o       same                 1   1  topic         scalar
 lcfirst             o       same                 1   1  topic         scalar
 length              o       same                 1   1  topic         scalar
@@ -251,9 +260,12 @@ rmdir               o       same                 1   1  topic         scalar
 shift               o       same                 1   1  topic         make_array+reference
 splice              o       same                 1  -1  0             make_array+reference,scalar,scalar,list
 sprintf             o       same                 1  -1  0             scalar,list
+substr              o       same                 2   4  0             scalar,scalar,scalar,scalar
 uc                  o       same                 1   1  topic         scalar
 ucfirst             o       same                 1   1  topic         scalar
 unlink              o       same                 1  -1  topic         list
 unshift             o       same                 1  -1  0             make_array+reference
+values              o       same                 1   1  0             make_hash+reference
+vec                 o       same                 3   3  0             scalar,scalar,scalar
 wantarray           o       same                 0   0  0             0
 warn                o       default

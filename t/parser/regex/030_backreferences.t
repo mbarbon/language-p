@@ -22,13 +22,14 @@ right: !parsetree:Pattern
     - !parsetree:RXGroup
       capture: 1
       components:
-        - !parsetree:Constant
-          flags: CONST_STRING
+        - !parsetree:RXConstant
+          insensitive: 0
           value: a
     - !parsetree:RXBackreference
       group: 1
   flags: 0
   op: OP_QL_M
+  original: (?-xism:(a)\1)
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -48,11 +49,12 @@ right: !parsetree:Pattern
     - !parsetree:RXGroup
       capture: 1
       components: []
-    - !parsetree:Constant
-      flags: CONST_STRING
+    - !parsetree:RXConstant
+      insensitive: 0
       value: "\x08"
   flags: 0
   op: OP_QL_M
+  original: (?-xism:\1()\10)
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -73,6 +75,7 @@ right: !parsetree:Substitution
         components: []
     flags: 0
     op: OP_QL_S
+    original: (?-xism:())
   replacement: !parsetree:QuotedString
     components:
       - !parsetree:Constant

@@ -105,12 +105,19 @@ sub process {
         my $sub = _generate_segment( $self, $sub_int->[0] );
 
         # run right away if it is a begin block
-        if( $tree->name eq 'BEGIN' ) {
+        if( $tree->name eq 'BEGIN' || $tree->name =~ /::BEGIN$/ ) {
             my $args = Language::P::Toy::Value::List->new( $self->runtime );
-            $self->runtime->call_subroutine( $sub, CXT_VOID, $args );
+            $self->runtime->call_subroutine( $sub, CXT_VOID, $args,
+                                             $tree->pos_e );
         }
 
         return;
+    }
+    if( $tree->isa( 'Language::P::ParseTree::LexicalState' ) ) {
+        if( $tree->changed & CHANGED_PACKAGE ) {
+            $self->runtime->symbol_table->get_package( $self->runtime,
+                                                       $tree->package, 1 );
+        }
     }
 
     push @{$self->{_pending}}, $tree;
@@ -124,7 +131,16 @@ sub add_declaration {
                     { name      => _qualify( $name ),
                       prototype => $prototype,
                       } );
-    $self->runtime->symbol_table->set_symbol( $self->runtime, $name, '&', $sub );
+    my $slot = $self->runtime->symbol_table->get_symbol( $self->runtime, $name, '&' );
+
+    if( $slot && $slot->is_defined ) {
+        # TODO warn about prototype mismatch
+    } elsif( $slot ) {
+        # TODO warn about prototype mismatch
+        $slot->assign( $self->runtime, $sub );
+    } else {
+        $self->runtime->symbol_table->set_symbol( $self->runtime, $name, '&', $sub );
+    }
 }
 
 my %opcode_map =
@@ -157,17 +173,35 @@ my %opcode_map =
     OP_LEXICAL_STATE_RESTORE()       => \&_lexical_state_restore,
     OP_TEMPORARY()                   => \&_temporary,
     OP_TEMPORARY_SET()               => \&_temporary_set,
+    OP_TEMPORARY_CLEAR()             => \&_temporary_clear,
     OP_LOCALIZE_GLOB_SLOT()          => \&_map_slot_index,
     OP_RESTORE_GLOB_SLOT()           => \&_map_slot_index,
+    OP_LOCALIZE_HASH_ELEMENT()       => \&_map_index,
+    OP_RESTORE_HASH_ELEMENT()        => \&_map_index,
+    OP_LOCALIZE_ARRAY_ELEMENT()      => \&_map_index,
+    OP_RESTORE_ARRAY_ELEMENT()       => \&_map_index,
+    OP_LOCALIZE_LEXICAL()            => \&_map_lexical_index,
+    OP_RESTORE_LEXICAL()             => \&_map_lexical_index,
+    OP_LOCALIZE_LEXICAL_PAD()        => \&_map_lexical_index,
+    OP_RESTORE_LEXICAL_PAD()         => \&_map_lexical_index,
     OP_END()                         => \&_end,
     OP_STOP()                        => \&_stop,
+    OP_DOT_DOT()                     => \&_dot_dot,
 
     OP_RX_QUANTIFIER()               => \&_rx_quantifier,
     OP_RX_START_GROUP()              => \&_direct_jump,
     OP_RX_TRY()                      => \&_direct_jump,
+    OP_RX_BACKTRACK()                => \&_direct_jump,
     OP_RX_STATE_RESTORE()            => \&_rx_state_restore,
+    OP_RX_CLASS()                    => \&_rx_class,
     OP_MATCH()                       => \&_match,
     OP_REPLACE()                     => \&_replace,
+
+    OP_DEREFERENCE_ARRAY()           => \&_dereference,
+    OP_DEREFERENCE_GLOB()            => \&_dereference,
+    OP_DEREFERENCE_HASH()            => \&_dereference,
+    OP_DEREFERENCE_SCALAR()          => \&_dereference,
+    OP_DEREFERENCE_SUB()             => \&_dereference,
     );
 
 sub _qualify {
@@ -248,14 +282,12 @@ sub _generate_scope {
                  $s = $self->_segment->scopes->[$s]->{outer} ) {
                 $is_inside = $s == $scope_id;
             }
-            _generate_scope( $self, $block->scope, $converted );
+            _generate_scope( $self, $block->scope, $converted ) if $is_inside;
         } else {
             _generate_block( $self, $block, $converted );
+            $self->_code->scopes->[$scope_id]->{end} = @{$self->_code->bytecode};
         }
     }
-
-# XXX scope must end before the 'end' opcode
-    $self->_code->scopes->[$scope_id]->{end} = @{$self->_code->bytecode};
 }
 
 sub _generate_segment {
@@ -276,8 +308,9 @@ sub _generate_segment {
     } elsif( $is_regex && !$code ) {
         $code = Language::P::Toy::Value::Regex->new
                     ( $self->runtime,
-                      { bytecode   => [],
-                        stack_size => 0,
+                      { bytecode     => [],
+                        stack_size   => 0,
+                        regex_string => $segment->regex_string,
                         } );
     } elsif( !$code ) {
         $code = Language::P::Toy::Value::Code->new
@@ -297,7 +330,7 @@ sub _generate_segment {
     $self->_generated->{$segment} = $code;
 
     foreach my $inner ( @{$segment->inner} ) {
-        next unless $inner;
+        next if !$inner || $self->_generated->{$inner};
         _generate_segment( $self, $inner );
     }
 
@@ -325,8 +358,15 @@ sub _generate_segment {
 
     $self->_allocate_lexicals( $segment, $code )
       if $segment->lexicals;
-    $self->runtime->symbol_table->set_symbol( $self->runtime, $segment->name, '&', $code )
-      if defined $segment->name;
+    # install into the symbol table; use assignment in case something
+    # took a reference
+    if( defined $segment->name && $segment->name ne 'BEGIN' ) {
+        my $slot = $self->runtime->symbol_table->get_symbol( $self->runtime, $segment->name, '&' );
+
+        # TODO warn redefinition
+        $slot->assign( $self->runtime, $code );
+    }
+
     pop @{$self->{_processing}};
 
     return $code;
@@ -357,6 +397,31 @@ sub set_data_handle {
     $self->runtime->set_data_handle( $package, $handle );
 }
 
+sub _dump_path {
+    my( $runtime, $path ) = @_;
+    my $prefix = $ENV{P_BYTECODE_PATH};
+
+    require File::Spec;
+
+    if( $prefix && File::Spec->file_name_is_absolute( $path ) ) {
+        my $inc = $runtime->symbol_table->get_symbol( $runtime, 'INC', '@', 1 );
+
+        for( my $it = $inc->iterator( $runtime ); $it->next( $runtime ); ) {
+            my $incpath = $it->item->as_string( $runtime );
+
+            next if index( $path, $incpath ) != 0;
+            $path = substr $path, length $incpath;
+            $path =~ s{^/}{};
+
+            return File::Spec->catfile( $prefix, $path );;
+        }
+    } elsif( $prefix && $path =~ m{^lib/} ) {
+        return File::Spec->catfile( $prefix, substr $path, 4 );
+    } else {
+        return $path;
+    }
+}
+
 sub finished {
     my( $self ) = @_;
     my $main_int = $self->_intermediate->generate_bytecode( $self->_pending );
@@ -364,6 +429,7 @@ sub finished {
 
     # perform code generation before serializing, for regexes
     my $head = pop @{$self->{_processing}};
+
     my $res = _generate_segment( $self, $main_int->[0], $head );
     $main_int->[0]->weaken; # allow GC to happen
     $self->_cleanup;
@@ -376,7 +442,13 @@ sub finished {
         my $serialize = Language::P::Intermediate::Serialize->new;
         my $tree = $transform->all_to_tree( [ @$main_int,
                                               @{$self->_saved_subs || []} ] );
-        ( my $outfile = $self->_intermediate->file_name ) =~ s/(\.\w+)?$/.pb/;
+        my $outfile = _dump_path( $self->runtime,
+                                  $self->_intermediate->file_name . '.pb' );
+
+        require File::Path;
+        require File::Basename;
+
+        File::Path::mkpath( File::Basename::dirname( $outfile ) );
 
         $serialize->serialize( $tree, $outfile, $data_handle );
         $tree->[0]->weaken; # allow GC to happen
@@ -438,7 +510,7 @@ sub _end {
         # generation and automatically handles the 'return undef on
         # failure' behaviour of eval
         push @$bytecode,
-            o( 'make_list', count => 0 ),
+            o( 'make_list', count => 0, context => CXT_LIST ),
             o( 'return' );
     } else {
         push @$bytecode, o( 'end' );
@@ -451,6 +523,13 @@ sub _stop {
     push @$bytecode, o( 'end' );
 }
 
+sub _dot_dot {
+    my( $self, $bytecode, $op ) = @_;
+    die "Can only generate ranges for now" if $op->{attributes}{context} != CXT_LIST;
+
+    push @$bytecode, o( 'range' );
+}
+
 sub _global {
     my( $self, $bytecode, $op ) = @_;
 
@@ -459,7 +538,14 @@ sub _global {
              o( 'glob',
                 pos    => $op->{pos},
                 name   => $op->{attributes}{name},
-                create => 1 );
+                create => !($op->{attributes}{context} & CXT_NOCREATE) );
+        return;
+    } elsif( $op->{attributes}{slot} == VALUE_STASH ) {
+        push @$bytecode,
+             o( 'stash',
+                pos    => $op->{pos},
+                name   => substr( $op->{attributes}{name}, 0, -2 ),
+                create => !($op->{attributes}{context} & CXT_NOCREATE) );
         return;
     }
 
@@ -474,6 +560,15 @@ sub _global {
          o( 'glob_slot_create',
             pos    => $op->{pos},
             slot   => $slot );
+}
+
+sub _dereference {
+    my( $self, $bytecode, $op ) = @_;
+
+    push @$bytecode,
+         o( $NUMBER_TO_NAME{$op->{opcode_n}},
+            pos    => $op->{pos},
+            create => !($op->{attributes}{context} & CXT_NOCREATE) );
 }
 
 sub _const_string {
@@ -496,7 +591,7 @@ sub _const_integer {
     my( $self, $bytecode, $op ) = @_;
 
     my $v = Language::P::Toy::Value::StringNumber->new
-                ( $self->runtime, { integer => $op->{attributes}{value} } );
+                ( $self->runtime, { integer => $op->{attributes}{value} + 0 } );
     push @$bytecode,
          o( 'constant', value => $v );
 }
@@ -505,7 +600,7 @@ sub _const_float {
     my( $self, $bytecode, $op ) = @_;
 
     my $v = Language::P::Toy::Value::StringNumber->new
-                ( $self->runtime, { float => $op->{attributes}{value} } );
+                ( $self->runtime, { float => $op->{attributes}{value} + 0.0 } );
     push @$bytecode,
          o( 'constant', value => $v );
 }
@@ -579,6 +674,22 @@ sub _temporary_set {
          o( 'lexical_set', index => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ) );
 }
 
+sub _temporary_clear {
+    my( $self, $bytecode, $op ) = @_;
+
+    push @$bytecode,
+         o( 'lexical_clear', index => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ) );
+}
+
+sub _map_index {
+    my( $self, $bytecode, $op ) = @_;
+
+    push @$bytecode,
+         o( $NUMBER_TO_NAME{$op->{opcode_n}},
+            index => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ),
+            );
+}
+
 sub _map_slot_index {
     my( $self, $bytecode, $op ) = @_;
 
@@ -587,6 +698,16 @@ sub _map_slot_index {
             name  => $op->{attributes}{name},
             slot  => $sigil_to_slot{$op->{attributes}{slot}},
             index => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ),
+            );
+}
+
+sub _map_lexical_index {
+    my( $self, $bytecode, $op ) = @_;
+
+    push @$bytecode,
+         o( $NUMBER_TO_NAME{$op->{opcode_n}},
+            index   => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ),
+            lexical => $op->{attributes}{lexical},
             );
 }
 
@@ -623,6 +744,8 @@ sub _replace {
     my( $self, $bytecode, $op ) = @_;
     my %params = %{$op->{attributes}};
     delete $params{to};
+    $params{pos} = $op->{pos} if $op->{pos};
+    $params{index} = _temporary_index( $self, IDX_REGEX, $op->{attributes}{index} );
 
     push @$bytecode,
          o( ( $params{flags} & FLAG_RX_GLOBAL ) ? 'rx_replace_global' :
@@ -647,6 +770,58 @@ sub _rx_state_restore {
 
     push @$bytecode,
          o( 'rx_state_restore', index => _temporary_index( $self, IDX_REGEX, $op->{attributes}{index} ) );
+}
+
+# quick and dirty, and adequate for the Toy runtime
+my %element_map =
+  ( RX_CLASS_WORDS()      => '\\w',
+    RX_CLASS_NOT_WORDS()  => '\\W',
+    RX_CLASS_DIGITS()     => '\\d',
+    RX_CLASS_NOT_DIGITS() => '\\D',
+    RX_CLASS_SPACES()     => '\\s',
+    RX_CLASS_NOT_SPACES() => '\\S',
+    RX_POSIX_ALPHA()      => '[[:alpha:]]',
+    RX_POSIX_ALNUM()      => '[[:alnum:]]',
+    RX_POSIX_ASCII()      => '[[:ascii:]]',
+    RX_POSIX_BLANK()      => '[[:blank:]]',
+    RX_POSIX_CNTRL()      => '[[:cntrl:]]',
+    RX_POSIX_DIGIT()      => '[[:digit:]]',
+    RX_POSIX_GRAPH()      => '[[:graph:]]',
+    RX_POSIX_LOWER()      => '[[:lower:]]',
+    RX_POSIX_PRINT()      => '[[:print:]]',
+    RX_POSIX_PUNCT()      => '[[:punct:]]',
+    RX_POSIX_SPACE()      => '[[:space:]]',
+    RX_POSIX_UPPER()      => '[[:upper:]]',
+    RX_POSIX_WORD()       => '[[:word:]]',
+    RX_POSIX_XDIGIT()     => '[[:xdigit:]]',
+    );
+
+sub _rx_class {
+    my( $self, $bytecode, $op ) = @_;
+    my $elements = $op->{attributes}{elements};
+
+    # ranges
+    my $r = $op->{attributes}{ranges};
+    for( my $i = 0; $i < length $r; $i += 2 ) {
+        $elements .= join '', substr( $r, $i, 1 ) .. substr( $r, $i + 1, 1 );
+    }
+
+    # case-insensitivity
+    if( $op->{attributes}{flags} & 1 ) {
+        $elements = lc $elements . uc $elements;
+    }
+
+    my @special;
+    for( my $i = 1; $i < 31; ++$i ) {
+        my $v = $op->{attributes}{flags} & ( 1 << $i );
+        next unless $v;
+        die $v unless exists $element_map{$v};
+        my $c = $element_map{$v};
+        push @special, qr/$c/;
+    }
+
+    push @$bytecode,
+         o( 'rx_class', elements => $elements, special => \@special );
 }
 
 sub _allocate_lexicals {

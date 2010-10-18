@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 4;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 5;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 if( $a > 2 ) {
@@ -162,4 +158,66 @@ iftrues:
         context: CXT_SCALAR
         flags: CONST_NUMBER|NUM_INTEGER
         value: 3
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+if( my $x ) {
+    $x;
+} elsif( $x && my $y ) {
+    $x; $y;
+}
+$x; $y;
+EOP
+--- !parsetree:Conditional
+iffalse: ~
+iftrues:
+  - !parsetree:ConditionalBlock
+    block: !parsetree:Block
+      lines:
+        - !parsetree:LexicalSymbol
+          context: CXT_VOID
+          level: 0
+          name: x
+          sigil: VALUE_SCALAR
+    block_type: if
+    condition: !parsetree:LexicalDeclaration
+      context: CXT_SCALAR
+      flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
+      name: x
+      sigil: VALUE_SCALAR
+  - !parsetree:ConditionalBlock
+    block: !parsetree:Block
+      lines:
+        - !parsetree:LexicalSymbol
+          context: CXT_VOID
+          level: 0
+          name: x
+          sigil: VALUE_SCALAR
+        - !parsetree:LexicalSymbol
+          context: CXT_VOID
+          level: 0
+          name: y
+          sigil: VALUE_SCALAR
+    block_type: if
+    condition: !parsetree:BinOp
+      context: CXT_SCALAR
+      left: !parsetree:LexicalSymbol
+        context: CXT_SCALAR
+        level: 0
+        name: x
+        sigil: VALUE_SCALAR
+      op: OP_LOG_AND
+      right: !parsetree:LexicalDeclaration
+        context: CXT_SCALAR
+        flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
+        name: y
+        sigil: VALUE_SCALAR
+--- !parsetree:Symbol
+context: CXT_VOID
+name: x
+sigil: VALUE_SCALAR
+--- !parsetree:Symbol
+context: CXT_VOID
+name: y
+sigil: VALUE_SCALAR
 EOE

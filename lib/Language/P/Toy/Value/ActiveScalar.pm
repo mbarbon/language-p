@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use base qw(Language::P::Toy::Value::Scalar);
 
+sub type { 14 }
+
 sub _get {
     my( $self, $runtime ) = @_;
 
@@ -20,6 +22,12 @@ sub as_scalar {
     my( $self, $runtime ) = @_;
 
     return $self->_get( $runtime );
+}
+
+sub as_boolean_int {
+    my( $self, $runtime ) = @_;
+
+    return $self->_get( $runtime )->as_boolean_int( $runtime );
 }
 
 sub get_length_int {
@@ -86,6 +94,24 @@ sub is_defined {
     my( $self, $runtime ) = @_;
 
     return $self->_get( $runtime )->is_defined( $runtime );
+}
+
+sub is_string {
+    my( $self, $runtime ) = @_;
+
+    return $self->_get( $runtime )->is_string( $runtime );
+}
+
+sub is_float {
+    my( $self, $runtime ) = @_;
+
+    return $self->_get( $runtime )->is_float( $runtime );
+}
+
+sub is_integer {
+    my( $self, $runtime ) = @_;
+
+    return $self->_get( $runtime )->is_integer( $runtime );
 }
 
 package Language::P::Toy::Value::ActiveScalarCallbacks;

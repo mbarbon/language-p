@@ -12,7 +12,7 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
-use Scalar::Util ();
+use Scalar::Util; # weaken
 
 sub new {
     my( $class, $args ) = @_;
@@ -30,6 +30,7 @@ sub is_compound { 0 }
 sub is_loop { 0 }
 sub is_plain_function { 0 }
 sub is_empty { 0 }
+sub is_pattern { 0 }
 sub can_implicit_return { 1 }
 sub always_void { 0 }
 sub is_declaration { 0 }
@@ -97,15 +98,19 @@ our @FIELDS = qw(changed package hints warnings);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub can_implicit_return { 0 }
+
 package Language::P::ParseTree::Use;
 
 use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(package version import is_no);
+our @FIELDS = qw(package version import is_no lexical_state);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
+
+sub can_implicit_return { 0 }
 
 package Language::P::ParseTree::Empty;
 
@@ -276,7 +281,8 @@ use warnings;
 use base qw(Language::P::ParseTree::Block);
 
 sub is_compound { 0 }
-sub always_void { 0 }
+# the block is void, the value is produced by the statementd
+sub always_void { 1 }
 
 package Language::P::ParseTree::EvalBlock;
 
@@ -355,6 +361,12 @@ use base qw(Language::P::ParseTree::Node);
 our @FIELDS = qw(op left right);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
+
+sub always_void {
+    return    $_[0]->op == Language::P::Opcodes::OP_LOG_AND
+           || $_[0]->op == Language::P::Opcodes::OP_LOG_OR
+           || $_[0]->op == Language::P::Opcodes::OP_LOG_AND_ASSIGN
+           || $_[0]->op == Language::P::Opcodes::OP_LOG_OR_ASSIGN ? 1 : 0 }
 
 package Language::P::ParseTree::UnOp;
 
@@ -522,6 +534,8 @@ sub lvalue_context {
     return $r;
 }
 
+sub always_void { 1 }
+
 package Language::P::ParseTree::Builtin;
 
 use strict;
@@ -530,8 +544,9 @@ use base qw(Language::P::ParseTree::FunctionCall);
 
 sub parsing_prototype { return $Language::P::Opcodes::PROTOTYPE{$_[0]->function} }
 sub runtime_context { return $Language::P::Opcodes::CONTEXT{$_[0]->function} }
-sub can_implicit_return { return $_[0]->function == Language::P::ParseTree::OP_RETURN ? 0 : 1 }
+sub can_implicit_return { return $_[0]->function == Language::P::ParseTree::OP_RETURN || $_[0]->function == Language::P::ParseTree::OP_DYNAMIC_GOTO ? 0 : 1 }
 sub is_plain_function { 0 }
+sub always_void { return $_[0]->function == Language::P::ParseTree::OP_DYNAMIC_GOTO ? 1 : 0 }
 
 package Language::P::ParseTree::BuiltinIndirect;
 
@@ -577,15 +592,19 @@ our @FIELDS = qw(op string flags);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub is_pattern { 1 }
+
 package Language::P::ParseTree::Pattern;
 
 use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(op components flags);
+our @FIELDS = qw(op components flags original);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
+
+sub is_pattern { 1 }
 
 package Language::P::ParseTree::Substitution;
 
@@ -597,6 +616,8 @@ our @FIELDS = qw(pattern replacement);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub is_pattern { 1 }
+
 package Language::P::ParseTree::Transliteration;
 
 use strict;
@@ -604,6 +625,18 @@ use warnings;
 use base qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(match replacement flags);
+
+__PACKAGE__->mk_ro_accessors( @FIELDS );
+
+sub is_pattern { 1 }
+
+package Language::P::ParseTree::RXConstant;
+
+use strict;
+use warnings;
+use base qw(Language::P::ParseTree::Node);
+
+our @FIELDS = qw(value insensitive);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
@@ -653,7 +686,7 @@ use strict;
 use warnings;
 use base qw(Language::P::ParseTree::Node);
 
-our @FIELDS = qw(elements);
+our @FIELDS = qw(elements insensitive);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 

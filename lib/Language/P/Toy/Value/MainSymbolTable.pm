@@ -25,16 +25,33 @@ sub new {
     my( $class, $runtime, $args ) = @_;
     my $self = $class->SUPER::new( $runtime, $args );
 
+    my $irs = Language::P::Toy::Value::Scalar->new_string( $runtime, "\n" );
+    $self->set_symbol( $runtime, '/', '$', $irs );
+
+    my $ais = Language::P::Toy::Value::Scalar->new_string( $runtime, " " );
+    $self->set_symbol( $runtime, '"', '$', $ais );
+
     my $out = Language::P::Toy::Value::Handle->new( $runtime, { handle => \*STDOUT } );
     $self->set_symbol( $runtime, 'STDOUT', 'I', $out );
+
+    my $err = Language::P::Toy::Value::Handle->new( $runtime, { handle => \*STDERR } );
+    $self->set_symbol( $runtime, 'STDERR', 'I', $err );
 
     my $interpreter = Language::P::Toy::Value::Scalar->new_string( $runtime, $^X );
     $self->set_symbol( $runtime, "\030", '$', $interpreter );
 
+    # TODO make readonly
+    my $version = Language::P::Toy::Value::Scalar->new_float( $runtime, 5.008009 );
+    $self->set_symbol( $runtime, ']', '$', $version );
+
     my $inc = Language::P::Toy::Value::Array->new( $runtime );
     $inc->push_value( $runtime, Language::P::Toy::Value::Scalar->new_string( $runtime, $_ ) )
-        foreach grep !m{/$Config{archname}$}, @INC;
+        foreach 'support/toy/lib', grep !m{/$Config{archname}$}, @INC;
     $self->set_symbol( $runtime, 'INC', '@', $inc );
+    $self->set_symbol( $runtime, 'Internals::add_overload', '&',
+                       $runtime->wrap_method( $runtime, 'add_overload' ) );
+    $self->set_symbol( $runtime, 'UNIVERSAL::isa', '&',
+                       $runtime->wrap_method( $runtime, 'derived_from' ) );
 
     return $self;
 }
@@ -52,6 +69,7 @@ sub _tied_to_rt_variable {
     return Language::P::Toy::Value::ActiveScalarCallbacks->new
                ( $runtime,
                  { get_callback => $get,
+                   set_callback => sub { die "Readonly $name" },
                    } )
 }
 
@@ -92,6 +110,13 @@ sub _apply_magic {
                                                     'set_warnings' ) );
         }
     }
+}
+
+sub get_symbol {
+    my( $self, $runtime, $name, $sigil, $create ) = @_;
+    return $self if $name eq 'main::' && $sigil eq '::';
+
+    return $self->SUPER::get_symbol( $runtime, $name, $sigil, $create );
 }
 
 1;

@@ -12,10 +12,10 @@ push @foo, 1, 2;
 EOP
 # main
 L1:
-  global name="foo", slot=2
+  global context=8, name="foo", slot=2
   constant_integer value=1
   constant_integer value=2
-  make_list count=2
+  make_array context=8, count=2
   array_push context=2
   pop
   jump to=L2
@@ -28,7 +28,7 @@ pop @foo;
 EOP
 # main
 L1:
-  global name="foo", slot=2
+  global context=8, name="foo", slot=2
   array_pop context=2
   pop
   jump to=L2
@@ -43,12 +43,12 @@ mypush @foo, 1, 2;
 EOP
 # main
 L1:
-  global name="foo", slot=2
+  global context=8, name="foo", slot=2
   reference
   constant_integer value=1
   constant_integer value=2
-  make_list count=3
-  global name="mypush", slot=4
+  make_array context=8, count=3
+  global context=4, name="mypush", slot=4
   call context=2
   pop
   jump to=L2

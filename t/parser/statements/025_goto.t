@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
-use strict;
-use warnings;
-use Test::More tests => 11;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 12;
+use Test::More import => [ qw(is) ];
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 goto FOO;
@@ -18,12 +14,30 @@ EOE
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 goto $foo;
 EOP
---- !parsetree:Jump
-left: !parsetree:Symbol
-  context: CXT_SCALAR
-  name: foo
-  sigil: VALUE_SCALAR
-op: OP_GOTO
+--- !parsetree:Builtin
+arguments:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: foo
+    sigil: VALUE_SCALAR
+context: CXT_VOID
+function: OP_DYNAMIC_GOTO
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+goto &foo;
+EOP
+--- !parsetree:Builtin
+arguments:
+  - !parsetree:UnOp
+    context: CXT_SCALAR
+    left: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: foo
+      sigil: VALUE_SUB
+    op: OP_REFERENCE
+context: CXT_VOID
+function: OP_DYNAMIC_GOTO
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -45,19 +59,21 @@ EOE
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 goto ("FOO", "X");
 EOP
---- !parsetree:Jump
-left: !parsetree:List
-  context: CXT_SCALAR
-  expressions:
-    - !parsetree:Constant
-      context: CXT_VOID
-      flags: CONST_STRING
-      value: FOO
-    - !parsetree:Constant
-      context: CXT_SCALAR
-      flags: CONST_STRING
-      value: X
-op: OP_GOTO
+--- !parsetree:Builtin
+arguments:
+  - !parsetree:List
+    context: CXT_SCALAR
+    expressions:
+      - !parsetree:Constant
+        context: CXT_VOID
+        flags: CONST_STRING
+        value: FOO
+      - !parsetree:Constant
+        context: CXT_SCALAR
+        flags: CONST_STRING
+        value: X
+context: CXT_VOID
+function: OP_DYNAMIC_GOTO
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

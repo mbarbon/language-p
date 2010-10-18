@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 7;
+use Test::More tests => 8;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -13,6 +13,11 @@ EOP
 --- !parsetree:Use
 import: ~
 is_no: 0
+lexical_state: !parsetree:LexicalState
+  changed: CHANGED_ALL
+  hints: 0
+  package: main
+  warnings: ~
 package: ~
 version: 5
 EOE
@@ -23,6 +28,11 @@ EOP
 --- !parsetree:Use
 import: ~
 is_no: 1
+lexical_state: !parsetree:LexicalState
+  changed: CHANGED_ALL
+  hints: 0
+  package: main
+  warnings: ~
 package: ~
 version: 5
 EOE
@@ -33,8 +43,34 @@ EOP
 --- !parsetree:Use
 import: ~
 is_no: 0
+lexical_state: !parsetree:LexicalState
+  changed: CHANGED_ALL
+  hints: 0
+  package: main
+  warnings: ~
 package: strict
 version: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+package X;
+use strict;
+EOP
+--- !parsetree:Use
+import: ~
+is_no: 0
+lexical_state: !parsetree:LexicalState
+  changed: CHANGED_ALL
+  hints: 0
+  package: X
+  warnings: ~
+package: strict
+version: ~
+--- !parsetree:LexicalState
+changed: CHANGED_PACKAGE
+hints: 0
+package: X
+warnings: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -43,6 +79,11 @@ EOP
 --- !parsetree:Use
 import: ~
 is_no: 0
+lexical_state: !parsetree:LexicalState
+  changed: CHANGED_ALL
+  hints: 0
+  package: main
+  warnings: ~
 package: strict
 version: 5.0
 EOE
@@ -53,6 +94,11 @@ EOP
 --- !parsetree:Use
 import: ~
 is_no: 0
+lexical_state: !parsetree:LexicalState
+  changed: CHANGED_ALL
+  hints: 0
+  package: main
+  warnings: ~
 package: strict
 version: 5.0
 EOE
@@ -67,6 +113,11 @@ import:
     flags: CONST_STRING
     value: vars
 is_no: 0
+lexical_state: !parsetree:LexicalState
+  changed: CHANGED_ALL
+  hints: 0
+  package: main
+  warnings: ~
 package: strict
 version: ~
 EOE
@@ -85,6 +136,11 @@ import:
     flags: CONST_STRING
     value: refs
 is_no: 0
+lexical_state: !parsetree:LexicalState
+  changed: CHANGED_ALL
+  hints: 0
+  package: main
+  warnings: ~
 package: strict
 version: 5.0
 EOE

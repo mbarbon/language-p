@@ -16,15 +16,12 @@ foo( 1 );
 EOP
 # main
 L1:
-  call context=2 (make_list (constant_integer value=1)), (global name="foo", slot=4)
+  call context=2 (make_array context=8 (constant_integer value=1)), (global context=4, name="foo", slot=4)
   jump to=L2
 L2:
   end
 # foo
 L1:
   lexical_state_set index=1
-  return context=1 (make_list (print context=1 (global name="STDOUT", slot=7), (make_list (concat_assign context=4 (concat_assign context=4 (concat_assign context=4 (fresh_string value=""), (constant_string value="ok ")), (array_element create=0, context=4 (constant_integer value=0), (lexical index=0, slot=2))), (constant_string value="\x0a")))))
-  jump to=L2
-L2:
-  end
+  return context=1 (make_list context=8 (print context=1 (global context=4, name="STDOUT", slot=7), (make_array context=8 (concat_assign context=4 (concat_assign context=4 (concat_assign context=4 (fresh_string value=""), (constant_string value="ok ")), (array_element context=4, create=0 (constant_integer value=0), (lexical index=0, slot=2))), (constant_string value="\x0a")))))
 EOI

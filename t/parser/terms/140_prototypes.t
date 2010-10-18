@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 17;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 20;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 print defined 1, 2
@@ -15,7 +11,7 @@ arguments:
   - !parsetree:Builtin
     arguments:
       - !parsetree:Constant
-        context: CXT_SCALAR
+        context: CXT_SCALAR|CXT_NOCREATE
         flags: CONST_NUMBER|NUM_INTEGER
         value: 1
     context: CXT_LIST
@@ -93,6 +89,23 @@ function: OP_PRINT
 indirect: !parsetree:Symbol
   context: CXT_SCALAR
   name: FILE
+  sigil: VALUE_GLOB
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print main::FILE $stuff;
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: stuff
+    sigil: VALUE_SCALAR
+context: CXT_VOID
+function: OP_PRINT
+indirect: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: main::FILE
   sigil: VALUE_GLOB
 EOE
 
@@ -316,6 +329,40 @@ arguments:
     context: CXT_SCALAR
     name: foo
     sigil: VALUE_SCALAR
+context: CXT_VOID
+function: OP_PRINT
+indirect: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: foo
+  sigil: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print $foo 1;
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:Constant
+    context: CXT_LIST
+    flags: CONST_NUMBER|NUM_INTEGER
+    value: 1
+context: CXT_VOID
+function: OP_PRINT
+indirect: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: foo
+  sigil: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print $foo @boo;
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:Symbol
+    context: CXT_LIST
+    name: boo
+    sigil: VALUE_ARRAY
 context: CXT_VOID
 function: OP_PRINT
 indirect: !parsetree:Symbol

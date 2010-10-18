@@ -15,7 +15,8 @@ sub new {
     my( $class, $args ) = @_;
     my $self = $class->SUPER::new( $args );
 
-    $self->{symbol_table} ||= Language::P::Toy::Value::MainSymbolTable->new( $self );
+    $self->{symbol_table} ||= Language::P::Toy::Value::MainSymbolTable->new
+                                  ( $self, { name => 'main' } );
     $self->{_variables} = { osname      => $^O,
                             hints       => 0,
                             };
@@ -57,7 +58,7 @@ sub run_last_file {
     # FIXME duplicates Language::P::Toy::Value::Code::call
     my $frame = $self->push_frame( $code->stack_size + 3 );
     my $stack = $self->{_stack};
-    $stack->[$frame - 2] = [ -2, $self->{_bytecode}, $context, $self->{_code}, $self->{_lex} ];
+    $stack->[$frame - 2] = [ -2, $self->{_bytecode}, $context, $self->{_code}, $self->{_lex}, undef ];
     $stack->[$frame - 1] = $code->lexicals || 'no_pad';
     $self->set_bytecode( $code->bytecode );
     $self->{_pc} = 0;
@@ -71,17 +72,43 @@ sub run_last_file {
     $self->run;
 }
 
+sub _before_parse {
+    my( $self, $program_name ) = @_;
+
+    $self->{_code} = undef;
+    $self->{_bytecode} = undef;
+    $self->{_pc} = 0;
+    $self->{_lex} =
+        { package  => 'main',
+          hints    => 0,
+          warnings => undef,
+          };
+}
+
+sub _after_parse {
+    my( $self, $program_name ) = @_;
+
+    $self->{_code} = undef;
+    $self->{_bytecode} = undef;
+    $self->{_pc} = 0;
+    $self->{_lex} = undef;
+}
+
 sub run_file {
     my( $self, $program, $is_main, $context ) = @_;
 
     $context ||= CXT_VOID;
     my $parser = $self->parser->safe_instance;
+    $self->_before_parse( $program ) if $is_main;
     my $code = do {
         local $self->{_parser} = $parser;
         my $flags =   PARSE_ADD_RETURN
                     | ( $is_main             ? PARSE_MAIN : 0 );
+        local $self->{_variables}{hints} = 0;
+        local $self->{_variables}{warnings} = "";
         $parser->parse_file( $program, $flags );
     };
+    $self->_after_parse( $program ) if $is_main;
     $self->run_last_file( $code, $context );
 }
 
@@ -90,12 +117,16 @@ sub run_string {
 
     $context ||= CXT_VOID;
     my $parser = $self->parser->safe_instance;
+    $self->_before_parse( $program_name ) if $is_main;
     my $code = do {
         local $self->{_parser} = $parser;
         my $flags =   ( $context != CXT_VOID ? PARSE_ADD_RETURN : 0 )
                     | ( $is_main             ? PARSE_MAIN : 0 );
+        local $self->{_variables}{hints} = 0;
+        local $self->{_variables}{warnings} = "";
         $parser->parse_string( $program, $flags, $program_name );
     };
+    $self->_after_parse( $program ) if $is_main;
     $self->run_last_file( $code, $context );
 }
 
@@ -148,9 +179,11 @@ sub compile_regex {
                          interpolate => 1,
                          flags       => $flags,
                          } );
+    my $original = Language::P::Parser::Regex->quote_original( \$string, 0 );
     my $parsed_rx = $parser->parse_string( $string );
     my $pattern = Language::P::ParseTree::Pattern->new
                       ( { components => $parsed_rx,
+                          original   => $original,
                           flags      => $flags,
                           } );
     my $re = $generator->process_regex( $pattern );
@@ -179,10 +212,12 @@ sub search_file {
 }
 
 sub call_subroutine {
-    my( $self, $code, $context, $args ) = @_;
+    my( $self, $code, $context, $args, $pos ) = @_;
 
     push @{$self->{_stack}}, $args;
     $code->call( $self, -2, $context );
+    # TODO allow setting hints and warnings as well?
+    local $self->{_stack}->[$self->{_frame} - 2][5] = $pos if $pos;
     $self->run;
 }
 
@@ -215,11 +250,11 @@ sub run {
         }
     };
     if( my $e = $@ ) {
-        if( $e->isa( 'Language::P::Exception' ) ) {
+        if( ref( $e ) && $e->isa( 'Language::P::Exception' ) ) {
             $self->{_pc} = $self->throw_exception( $e );
             goto &run;
         } else {
-            die;
+            die $e;
         }
     }
 }
@@ -253,9 +288,10 @@ sub _frame_info {
     my $op = $stack->[$frame - 2][1][$stack->[$frame - 2][0]];
     my $lex = $stack->[$frame - 2][4];
     my $code = $stack->[$frame - 2][3];
+    my $pos = $stack->[$frame - 2][5] || $op->{pos};
 
-    return { file       => $op->{pos}[0],
-             line       => $op->{pos}[1],
+    return { file       => $pos->[0],
+             line       => $pos->[1],
              code       => $code,
              code_name  => $code && $code->name,
              context    => $stack->[$frame - 2][2],
@@ -406,6 +442,7 @@ sub return_undef {
 
 sub set_exception {
     my( $self, $exc ) = @_;
+    die $exc unless ref $exc;
 
     my $scalar = Language::P::Toy::Value::Scalar->new_string
                      ( $self, $exc->full_message );
@@ -438,7 +475,7 @@ sub throw_exception {
 
                 $self->run_bytecode( $scope->{bytecode} );
             };
-            die "Exception during stack unwind: $@" if $@;
+            die "Exception during stack unwind: $@\nduring: ", $exc if $@;
 
             if( $scope->{flags} & 2 ) {
                 $self->set_exception( $exc );
@@ -460,7 +497,34 @@ sub throw_exception {
         $self->{_pc} = $rpc + 1;
     }
 
-   die $exc;
+    die $exc;
+}
+
+sub exit_subroutine {
+    my( $self ) = @_;
+
+    my $info = $self->current_frame_info;
+    my $scope;
+
+    foreach my $s ( @{$info->{code}->scopes} ) {
+        if( $s->{start} <= $self->{_pc} && $s->{end} > $self->{_pc} ) {
+            $scope = $s;
+        }
+    }
+
+    while( $scope ) {
+        eval {
+            # TODO catch exceptions during stack unwinding
+            local $self->{_pc};
+            local $self->{_bytecode};
+
+            $self->run_bytecode( $scope->{bytecode} );
+        };
+        die "Exception during stack unwind: $@" if $@;
+
+        last if $scope->{outer} < 0;
+        $scope = $info->{code}->scopes->[$scope->{outer}];
+    }
 }
 
 sub get_symbol {
@@ -473,6 +537,13 @@ sub get_package {
     my( $self, $name ) = @_;
 
     return $self->symbol_table->get_package( $self, $name );
+}
+
+sub is_declared {
+    my( $self, $name, $sigil ) = @_;
+    my $glob = $self->symbol_table->get_symbol( $self, $name, '*', 0 );
+
+    return $glob && ( $glob->imported & ( 1 << $sigil - 1 ) );
 }
 
 sub set_hints {
@@ -501,7 +572,7 @@ sub set_warnings {
 sub get_warnings {
     my( $self ) = @_;
 
-    return Language::P::Toy::Value->new_integer
+    return Language::P::Toy::Value::Scalar->new_string
                ( $self, $_[0]->{_variables}{warnings} );
 }
 
@@ -536,6 +607,75 @@ sub get_last_match {
     my( $self ) = @_;
 
     return $self->{_last_match};
+}
+
+sub wrap_method {
+    {
+        package Language::P::Toy::Value::WrappedSub;
+
+        sub prototype { Language::P::Constants::PROTO_DEFAULT }
+        sub call { shift->( @_ ) }
+    }
+
+    my( $self, $receiver, $method ) = @_;
+
+    my $sub = sub {
+        my( $self, $runtime, $pc, $context ) = @_;
+        my $args = pop @{$runtime->{_stack}};
+
+        my $res = $receiver->$method( $runtime, $pc, $context, $args );
+        if( $res ) {
+            push @{$runtime->{_stack}}, $res;
+        } else {
+            push @{$runtime->{_stack}},
+                 Language::P::Toy::Value::List->new( $runtime );
+        }
+
+        return $pc + 1;
+    };
+    bless $sub, 'Language::P::Toy::Value::WrappedSub';
+
+    return $sub;
+}
+
+sub add_overload {
+    my( $self, $runtime, $pc, $context, $args ) = @_;
+    my $pack = $args->get_item( $runtime, 0 )->as_string( $runtime );
+    my $list = $args->get_item( $runtime, 1 )->reference;
+    my %val;
+
+    for( my $iter = $list->iterator( $runtime ); $iter->next; ) {
+        my $key = $iter->item->as_string( $runtime );
+        $iter->next;
+        my $code = $iter->item;
+
+        $val{$key} = $code;
+    }
+
+    my $stash = $runtime->symbol_table->get_package( $runtime, $pack, 0 );
+    $stash->{overload} = \%val;
+
+    return;
+}
+
+sub derived_from {
+    my( $self, $runtime, $pc, $context, $args ) = @_;
+    my $ref = $args->get_item( $runtime, 0 );
+    my $pack = $args->get_item( $runtime, 1 )->as_string( $runtime );
+    my $base = $runtime->symbol_table->get_package( $runtime, $pack, 0 );
+    my $stash;
+
+    if( $ref->isa( 'Language::P::Toy::Value::Reference' ) ) {
+        return unless $ref->reference->is_blessed;
+        $stash = $ref->reference->stash;
+    } else {
+        my $class = $ref->as_string( $runtime );
+        $stash = $runtime->symbol_table->get_package( $runtime, $class, 0 );
+    }
+
+    my $isa = $stash ? $stash->derived_from( $runtime, $base ) : 0;
+
+    return Language::P::Toy::Value::Scalar->new_boolean( $runtime, $isa );
 }
 
 1;

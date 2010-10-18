@@ -19,6 +19,10 @@ sub clone {
                    } );
 }
 
+sub is_string { defined $_[0]->{string} }
+sub is_float { defined $_[0]->{float} }
+sub is_integer { defined $_[0]->{integer} }
+
 sub as_string {
     my( $self, $runtime ) = @_;
 
@@ -49,7 +53,7 @@ sub as_float {
 sub assign {
     my( $self, $runtime, $other ) = @_;
 
-    Language::P::Toy::Value::Scalar::assign( $self, $runtime, $other )
+    return Language::P::Toy::Value::Scalar::assign( $self, $runtime, $other )
         unless ref( $self ) eq ref( $other );
 
     $self->{string} = $other->{string};

@@ -9,9 +9,7 @@ use Language::P::Intermediate::SerializeGenerated;
 
 sub serialize {
     my( $self, $tree, $file, $data_handle ) = @_;
-    # TODO handle the case where the source file is in a read-only
-    #      directory by saving the bytecode in an user-defined directory
-    open my $out, '>', $file or return; # die "open '$file': $!";
+    open my $out, '>', $file or die "Unable to write '$file': $! (maybe set $ENV{P_BYTECODE_PATH} before running)";
 
     $self->{sub_map} = {};
     $self->{file_map} = {};
@@ -60,6 +58,11 @@ sub _write_sub {
 
     _write_string( $out, defined $name ? $name : '' );
 
+    $self->{bb_map} = {};
+    for( my $i = 0; $i <= $#$bb; ++$i ) {
+        $self->{bb_map}{$bb->[$i]} = $i;
+    }
+
     print $out pack 'C', $code->type;
     print $out pack 'V', $code->outer ? $self->{sub_map}{$code->outer} : -1;
     if( !$code->is_regex ) {
@@ -70,6 +73,7 @@ sub _write_sub {
     print $out pack 'V', scalar @{$code->scopes};
     print $out pack 'V', scalar @{$code->lexical_states};
     print $out pack 'V', scalar @$bb;
+    _write_string( $out, $code->regex_string ) if $code->is_regex;
 
     # TODO serialize prototype
 
@@ -87,11 +91,6 @@ sub _write_sub {
 
     foreach my $l ( @{$code->lexical_states} ) {
         _write_lex_state( $self, $out, $l );
-    }
-
-    $self->{bb_map} = {};
-    for( my $i = 0; $i <= $#$bb; ++$i ) {
-        $self->{bb_map}{$bb->[$i]} = $i;
     }
 
     for( my $i = 0; $i <= $#$bb; ++$i ) {
@@ -121,6 +120,8 @@ sub _write_scope {
     _write_pos( $self, $out, $scope->{pos_s} );
     _write_pos( $self, $out, $scope->{pos_e} );
     print $out pack 'V', $scope->{lexical_state};
+    print $out pack 'V', $scope->{exception} ?
+        $self->{bb_map}{$scope->{exception}} : -1;
     print $out pack 'V', scalar @{$scope->{bytecode}};
 
     foreach my $bc ( @{$scope->{bytecode}} ) {

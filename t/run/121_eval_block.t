@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-print "1..7\n";
+print "1..8\n";
 
 $x = 2;
 
@@ -27,4 +27,5 @@ $x = eval {
     print "ok 6\n";
     7;
 };
-print "ok $x\n";
+print $x ? "ok $x\n" : "not ok\n";
+print $@ ? "not ok\n" : "ok\n";

@@ -35,11 +35,12 @@ arguments:
     op: OP_MATCH
     right: !parsetree:Pattern
       components:
-        - !parsetree:Constant
-          flags: CONST_STRING
+        - !parsetree:RXConstant
+          insensitive: 0
           value: test
       flags: 0
       op: OP_QL_M
+      original: (?-xism:test)
   - !parsetree:Symbol
     context: CXT_LIST
     name: x
@@ -63,11 +64,12 @@ arguments:
     op: OP_MATCH
     right: !parsetree:Pattern
       components:
-        - !parsetree:Constant
-          flags: CONST_STRING
+        - !parsetree:RXConstant
+          insensitive: 0
           value: test
       flags: 0
       op: OP_QL_M
+      original: (?-xism:test)
   - !parsetree:Symbol
     context: CXT_LIST
     name: x

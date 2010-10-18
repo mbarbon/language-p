@@ -41,13 +41,24 @@ sub new_float {
 }
 
 sub as_scalar { return $_[0] }
+sub as_integer { return int( $_[0]->as_float( $_[1] ) ) }
+sub as_float { return $_[0]->as_integer( $_[1] ) }
+
+sub undefine {
+    my( $self, $runtime ) = @_;
+
+    %$self = ();
+    bless $self, 'Language::P::Toy::Value::Undef';
+}
 
 sub assign {
     my( $self, $runtime, $other ) = @_;
 
     Carp::confess() if ref( $other ) eq __PACKAGE__;
     # avoid the need to special-case scalar context everywhere
-    if( !$other->isa( 'Language::P::Toy::Value::Scalar' ) ) {
+    if(    (    !$other->isa( 'Language::P::Toy::Value::Scalar' )
+             && !$other->isa( 'Language::P::Toy::Value::Typeglob' ) )
+        || $other->isa( 'Language::P::Toy::Value::ActiveScalar' ) ) {
         assign( $self, $runtime, $other->as_scalar );
         return;
     }
@@ -62,8 +73,16 @@ sub assign {
 sub assign_iterator {
     my( $self, $runtime, $iter ) = @_;
 
-    die unless $iter->next; # FIXME, must assign undef
-    $self->assign( $runtime, $iter->item );
+    if( $iter && $iter->next ) {
+        $self->assign( $runtime, $iter->item );
+
+        return 1;
+    } else {
+        $self->assign( $runtime,
+                       Language::P::Toy::Value::Undef->new( $runtime ) );
+
+        return 0;
+    }
 }
 
 sub set_pos { $_[0]->{pos} = $_[2] }
@@ -85,7 +104,7 @@ sub find_method {
     my( $self, $runtime, $name ) = @_;
     my $stash = $runtime->symbol_table->get_package( $runtime, $self->as_string( $runtime ) );
 
-    return undef unless $stash;
+    $stash ||= $runtime->symbol_table->get_package( $runtime, 'UNIVERSAL' );
     return $stash->find_method( $runtime, $name );
 }
 

@@ -5,9 +5,9 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_ro_accessors( qw(bytecode start_label lexical_state scope
-                                 predecessors successors) );
+                                 predecessors successors dead) );
 
-use Scalar::Util qw();
+use Scalar::Util; # weaken
 use Language::P::Assembly qw(label);
 use Language::P::Opcodes qw(OP_JUMP);
 
@@ -18,6 +18,7 @@ sub new {
     $self->{predecessors} ||= [];
     $self->{successors} ||= [];
     $self->{bytecode} ||= [];
+    $self->{dead} = 1 unless defined $self->{dead};
     push @{$self->bytecode}, label( $self->start_label )
       unless @{$self->bytecode};
 
@@ -28,6 +29,7 @@ sub new_from_label {
     return $_[0]->new( { start_label   => $_[1],
                          lexical_state => $_[2],
                          scope         => $_[3],
+                         dead          => $_[4],
                          } );
 }
 

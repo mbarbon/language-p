@@ -12,6 +12,8 @@ sub clone {
     return Language::P::Toy::Value::Undef->new( $runtime );
 }
 
+sub is_string { 1 }
+
 sub as_string {
     my( $self, $runtime ) = @_;
 
@@ -42,6 +44,27 @@ sub assign {
     # nothing to do
 }
 
+sub set_string {
+    my( $self, $runtime, $value ) = @_;
+
+    bless $self, 'Language::P::Toy::Value::StringNumber';
+    $self->{string} = $value;
+}
+
+sub set_integer {
+    my( $self, $runtime, $value ) = @_;
+
+    bless $self, 'Language::P::Toy::Value::StringNumber';
+    $self->{integer} = $value;
+}
+
+sub set_float {
+    my( $self, $runtime, $value ) = @_;
+
+    bless $self, 'Language::P::Toy::Value::StringNumber';
+    $self->{float} = $value;
+}
+
 sub as_boolean_int {
     my( $self, $runtime ) = @_;
 
@@ -68,7 +91,7 @@ sub vivify_scalar {
                       } );
     $self->assign( $runtime, $new );
 
-    return $self->dereference_scalar( $runtime );
+    return $self->dereference_scalar( $runtime, 0 );
 }
 
 sub vivify_array {
@@ -79,7 +102,7 @@ sub vivify_array {
                       } );
     $self->assign( $runtime, $new );
 
-    return $self->dereference_array( $runtime );
+    return $self->dereference_array( $runtime, 0 );
 }
 
 sub vivify_hash {
@@ -90,7 +113,18 @@ sub vivify_hash {
                       } );
     $self->assign( $runtime, $new );
 
-    return $self->dereference_hash( $runtime );
+    return $self->dereference_hash( $runtime, 0 );
+}
+
+sub set_handle {
+    my( $self, $runtime, $handle ) = @_;
+    # TODO propagate the name
+    my $new = Language::P::Toy::Value::Reference->new
+                  ( $runtime,
+                    { reference => Language::P::Toy::Value::Typeglob->new,
+                      } );
+    $self->assign( $runtime, $new );
+    $self->set_handle( $runtime, $handle );
 }
 
 1;

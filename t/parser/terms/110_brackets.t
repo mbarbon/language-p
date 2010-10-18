@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 23;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 25;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $#[1]
@@ -135,7 +131,24 @@ subscripted: !parsetree:Symbol
   context: CXT_SCALAR
   name: foo
   sigil: VALUE_GLOB
-type: VALUE_HASH
+type: VALUE_GLOB
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+*$foo{HASH}
+EOP
+--- !parsetree:Subscript
+context: CXT_VOID
+reference: 1
+subscript: !parsetree:Constant
+  context: CXT_SCALAR
+  flags: CONST_STRING
+  value: HASH
+subscripted: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: foo
+  sigil: VALUE_SCALAR
+type: VALUE_GLOB
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -198,6 +211,26 @@ subscripted: !parsetree:FunctionCall
     context: CXT_SCALAR
     name: foo
     sigil: VALUE_SUB
+type: VALUE_HASH
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+( 1 )->{2};
+EOP
+--- !parsetree:Subscript
+context: CXT_VOID
+reference: 1
+subscript: !parsetree:Constant
+  context: CXT_SCALAR
+  flags: CONST_NUMBER|NUM_INTEGER
+  value: 2
+subscripted: !parsetree:Parentheses
+  context: CXT_SCALAR|CXT_VIVIFY
+  left: !parsetree:Constant
+    context: CXT_SCALAR|CXT_VIVIFY
+    flags: CONST_NUMBER|NUM_INTEGER
+    value: 1
+  op: OP_PARENTHESES
 type: VALUE_HASH
 EOE
 

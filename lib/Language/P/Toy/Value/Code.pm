@@ -49,11 +49,13 @@ sub call {
         }
     }
     $stack->[$frame - 2] = [ $pc, $runtime->{_bytecode}, $context,
-                             $runtime->{_code}, $runtime->{_lex} ];
+                             $runtime->{_code}, $runtime->{_lex}, undef ];
 
     $runtime->set_bytecode( $self->bytecode );
     # FIXME encapsulation
     $runtime->{_code} = $self;
+
+    return 0;
 }
 
 sub as_boolean_int { return 1 }

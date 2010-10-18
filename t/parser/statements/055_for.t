@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 8;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 9;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 for(;;) {
@@ -84,6 +80,35 @@ step: !parsetree:BinOp
       context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+foreach ( my $i; ; ) {
+    $i;
+}
+$i
+EOP
+--- !parsetree:For
+block: !parsetree:Block
+  lines:
+    - !parsetree:LexicalSymbol
+      context: CXT_VOID
+      level: 0
+      name: i
+      sigil: VALUE_SCALAR
+block_type: for
+condition: ~
+continue: ~
+initializer: !parsetree:LexicalDeclaration
+  context: CXT_VOID
+  flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
+  name: i
+  sigil: VALUE_SCALAR
+step: ~
+--- !parsetree:Symbol
+context: CXT_VOID
+name: i
+sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );

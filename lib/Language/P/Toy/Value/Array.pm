@@ -39,16 +39,31 @@ sub localize {
     return __PACKAGE__->new( $runtime );
 }
 
-sub assign {
+sub localize_element {
+    my( $self, $runtime, $index ) = @_;
+    my $value = $self->get_item_or_undef( $runtime, $index );
+    my $new = Language::P::Toy::Value::Undef->new( $runtime );
+
+    # no need to check boundaries after get_item_or_undef
+    $self->{array}->[$index] = $new;
+
+    return $value;
+}
+
+sub assign { assign_array( @_ ) }
+
+sub assign_array {
     my( $self, $runtime, $other ) = @_;
 
     # FIXME multiple dispatch
     if( $other->isa( 'Language::P::Toy::Value::Scalar' ) ) {
         $self->{array} = [ $other->clone( $runtime, 1 ) ];
+
+        return 1;
     } else {
         # FIXME optimize: don't do it unless necessary
         my $oiter = $other->clone( $runtime, 1 )->iterator( $runtime );
-        $self->assign_iterator( $runtime, $oiter );
+        return $self->assign_iterator( $runtime, $oiter );
     }
 }
 
@@ -56,9 +71,11 @@ sub assign_iterator {
     my( $self, $runtime, $iter ) = @_;
 
     $self->{array} = [];
-    while( $iter->next ) {
+    while( $iter && $iter->next ) {
         push @{$self->{array}}, $iter->item;
     }
+
+    return scalar @{$self->{array}};
 }
 
 sub push_value {
@@ -74,6 +91,24 @@ sub push_list {
 
     return Language::P::Toy::Value::StringNumber->new
                ( $runtime, { integer => scalar @{$self->array} } );
+}
+
+sub push_flatten {
+    my( $self, $runtime, @values ) = @_;
+
+    foreach my $value ( @values ) {
+        if(    $value->isa( 'Language::P::Toy::Value::Array' )
+            || $value->isa( 'Language::P::Toy::Value::Range' )
+            || $value->isa( 'Language::P::Toy::Value::Hash' ) ) {
+            for( my $it = $value->iterator( $runtime ); $it->next( $runtime ); ) {
+                push @{$self->{array}}, $it->item( $runtime );
+            }
+        } else {
+            push @{$self->{array}}, $value;
+        }
+    }
+
+    return;
 }
 
 sub pop_value {
@@ -116,6 +151,15 @@ sub get_item {
         if $index < 0 || $index > $#{$self->{array}};
 
     return $self->{array}->[$index];
+}
+
+sub restore_item {
+    my( $self, $runtime, $index, $value ) = @_;
+
+    Carp::confess( "Array index out of range ($index > $#{$self->{array}})" )
+        if $index < 0 || $index > $#{$self->{array}};
+
+    $self->{array}->[$index] = $value;
 }
 
 sub get_item_or_undef {
@@ -165,6 +209,32 @@ sub exists {
     return Language::P::Toy::Value::Scalar->new_boolean( $runtime, $index > $#{$self->{array}} );
 }
 
+sub delete_item {
+    my( $self, $runtime, $index ) = @_;
+    my $value = delete $self->{array}[$index];
+
+    $value ||= Language::P::Toy::Value::Undef->new( $runtime );
+
+    return Language::P::Toy::Value::List->new( $runtime,
+                                               { array => [ $value ] } );
+}
+
+sub delete_slice {
+    my( $self, $runtime, $indices ) = @_;
+    my @res;
+
+    for( my $iter = $indices->iterator; $iter->next; ) {
+        my $index = $iter->item->as_integer( $runtime );
+        my $value = delete $self->{array}[$index];
+
+        $value ||= Language::P::Toy::Value::Undef->new( $runtime );
+
+        push @res, $value;
+    }
+
+    return Language::P::Toy::Value::List->new( $runtime, { array => \@res } );
+}
+
 sub get_count {
     my( $self, $runtime ) = @_;
 
@@ -181,6 +251,18 @@ sub as_boolean_int {
     my( $self, $runtime ) = @_;
 
     return $self->get_count( $runtime ) ? 1 : 0;
+}
+
+sub as_integer {
+    my( $self, $runtime ) = @_;
+
+    return $self->get_count( $runtime );
+}
+
+sub as_float {
+    my( $self, $runtime ) = @_;
+
+    return $self->get_count( $runtime );
 }
 
 package Language::P::Toy::Value::Array::Iterator;

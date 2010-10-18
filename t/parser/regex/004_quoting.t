@@ -19,11 +19,12 @@ left: !parsetree:Symbol
 op: OP_MATCH
 right: !parsetree:Pattern
   components:
-    - !parsetree:Constant
-      flags: CONST_STRING
+    - !parsetree:RXConstant
+      insensitive: 0
       value: .
   flags: 0
   op: OP_QL_M
+  original: (?-xism:\.)
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -65,9 +66,10 @@ left: !parsetree:Symbol
 op: OP_MATCH
 right: !parsetree:Pattern
   components:
-    - !parsetree:Constant
-      flags: CONST_STRING
+    - !parsetree:RXConstant
+      insensitive: 0
       value: .
   flags: 0
   op: OP_QL_M
+  original: (?-xism:\.)
 EOE

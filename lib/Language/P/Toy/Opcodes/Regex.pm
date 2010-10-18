@@ -9,8 +9,11 @@ use Language::P::Constants qw(:all);
 our @EXPORT_OK = qw(o_rx_start_match o_rx_accept o_rx_exact o_rx_start_group
                     o_rx_quantifier o_rx_capture_start o_rx_capture_end o_rx_try
                     o_rx_beginning o_rx_end_or_newline o_rx_state_restore
-                    o_rx_match o_rx_match_global o_rx_replace
-                    o_rx_replace_global o_rx_class);
+                    o_rx_end o_rx_exact_i o_rx_word_boundary
+                    o_rx_match o_rx_match_global o_rx_replace o_rx_transliterate
+                    o_rx_replace_global o_rx_class o_rx_any_nonewline o_rx_any
+                    o_rx_save_pos o_rx_restore_pos o_rx_fail o_rx_backtrack
+                    o_rx_pop_state o_rx_split o_rx_split_skipspaces);
 
 our %EXPORT_TAGS =
   ( opcodes => \@EXPORT_OK,
@@ -136,6 +139,22 @@ sub _backtrack {
 
         return $rpc + 1;
     }
+}
+
+sub o_rx_split {
+    my( $op, $runtime, $pc ) = @_;
+
+    die 'Unimplemented';
+
+    return $pc + 1;
+}
+
+sub o_rx_split_skipspaces {
+    my( $op, $runtime, $pc ) = @_;
+
+    die 'Unimplemented';
+
+    return $pc + 1;
 }
 
 sub o_rx_match {
@@ -359,6 +378,63 @@ sub o_rx_replace_global {
     return $pc + 1;
 }
 
+sub o_rx_transliterate {
+    my( $op, $runtime, $pc ) = @_;
+    my $string = pop @{$runtime->{_stack}};
+    my( $match, $replacement, $flags ) = ( $op->{match}, $op->{replacement}, $op->{flags} );
+    my $s = $string->as_string( $runtime );
+    my( $count, $new, $last_r ) = ( 0, '', '' );
+
+    for( my $i = 0; $i < length $s; ++$i ) {
+        my $c = substr $s, $i, 1;
+        my $idx = index $match, $c;
+        my $r = $c;
+
+        if( $idx == -1 && ( $flags & 1 ) ) { # complement
+            if( $flags & 2 ) { # delete
+                $r = '';
+            } elsif( length $replacement ) {
+                $r = substr $replacement, -1, 1;
+            }
+
+            if( $last_r eq $r && ( $flags & 4 ) ) { # squeeze
+                $r = '';
+            } else {
+                $last_r = $r;
+            }
+
+            $count += 1;
+        } elsif( $idx != -1 && !( $flags & 1 ) ) {
+            if( $idx >= length $replacement && ( $flags & 2 ) ) { # delete
+                $r = '';
+            } elsif( $idx >= length $replacement ) {
+                $r = substr $replacement, -1, 1;
+            } elsif( $idx < length $replacement ) {
+                $r = substr $replacement, $idx, 1;
+            }
+
+            if( $last_r eq $r && ( $flags & 4 ) ) { # squeeze
+                $r = '';
+            } else {
+                $last_r = $r;
+            }
+
+            $count += 1;
+        } else {
+            $last_r = '';
+        }
+
+        $new .= $r;
+    }
+
+    $string->set_string( $runtime, $new );
+
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::Scalar->new_integer( $runtime, $count );
+
+    return $pc + 1;
+}
+
 sub o_rx_start_match {
     my( $op, $runtime, $pc ) = @_;
     my $string = $runtime->{_stack}[$runtime->{_frame} - 3];
@@ -420,18 +496,35 @@ sub o_rx_exact {
     return $pc + 1;
 }
 
+sub o_rx_exact_i {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    v "Exact (i) '$op->{string}' at $cxt->{pos}\n";
+    if(    lc substr( $cxt->{string}, $cxt->{pos}, $op->{length} )
+        ne lc $op->{string} ) {
+        return _backtrack( $runtime, $cxt );
+    }
+    $cxt->{pos} += $op->{length};
+
+    return $pc + 1;
+}
+
 sub o_rx_class {
     my( $op, $runtime, $pc ) = @_;
     my $cxt = $runtime->{_stack}->[-1];
 
-    v "Class '$op->{elements}' at $cxt->{pos}\n";
+    v "Class '$op->{elements}', '@{$op->{special}}} at $cxt->{pos}\n";
     my $chr = substr $cxt->{string}, $cxt->{pos}, 1;
-    if( index( $op->{elements}, $chr ) < 0 ) {
-        return _backtrack( $runtime, $cxt );
-    }
-    $cxt->{pos} += 1;
+    if(    $cxt->{pos} < length( $cxt->{string} )
+        && (    index( $op->{elements}, $chr ) >= 0
+             || grep $chr =~ $_, @{$op->{special}} ) ) {
+        $cxt->{pos} += 1;
 
-    return $pc + 1;
+        return $pc + 1;
+    }
+
+    return _backtrack( $runtime, $cxt );
 }
 
 sub o_rx_start_group {
@@ -470,7 +563,7 @@ sub o_rx_quantifier {
         return $pc + 1;
     }
 
-    my $groups = defined $op->{subgroups_start} && ( $count == 0 || $count >= $op->{min} ) ?
+    my $groups = ( $count == 0 || $count >= $op->{min} ) ?
                      _save_groups( $cxt, $op, $count == 0 ) : undef;
 
     if( $count == 0 && $op->{min} > 0 ) {
@@ -481,7 +574,7 @@ sub o_rx_quantifier {
                group_count   => -1,
                saved_groups  => $groups,
                };
-    } elsif( $count >= $op->{min} ) {
+    } elsif( $op->{greedy} && $count >= $op->{min} ) {
         push @{$cxt->{states}},
              { pos           => $cxt->{pos},
                ret_pc        => $pc + 1,
@@ -494,8 +587,12 @@ sub o_rx_quantifier {
 
     # if nongreedy, match at least min
     if( !$op->{greedy} && $count >= $op->{min} ) {
-        # TODO why pops the group?
-        pop @{$cxt->{groups}};
+        push @{$cxt->{states}},
+             { pos           => $cxt->{pos},
+               ret_pc        => $op->{to},
+               group_count   => scalar @{$cxt->{groups}},
+               saved_groups  => $groups,
+               };
         return $pc + 1;
     }
 
@@ -549,6 +646,17 @@ sub o_rx_beginning {
     return $pc + 1;
 }
 
+sub o_rx_end {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    if( $cxt->{pos} != $cxt->{length} ) {
+        return _backtrack( $runtime, $cxt );
+    }
+
+    return $pc + 1;
+}
+
 sub o_rx_end_or_newline {
     my( $op, $runtime, $pc ) = @_;
     my $cxt = $runtime->{_stack}->[-1];
@@ -562,6 +670,43 @@ sub o_rx_end_or_newline {
     return $pc + 1;
 }
 
+sub o_rx_any_nonewline {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    if(    $cxt->{pos} == $cxt->{length}
+        || substr( $cxt->{string}, $cxt->{pos}, 1 ) eq "\n" ) {
+        return _backtrack( $runtime, $cxt );
+    }
+    $cxt->{pos} += 1;
+
+    return $pc + 1;
+}
+
+sub o_rx_any {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    if( $cxt->{pos} == $cxt->{length} ) {
+        return _backtrack( $runtime, $cxt );
+    }
+    $cxt->{pos} += 1;
+
+    return $pc + 1;
+}
+
+sub o_rx_word_boundary {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    pos( $cxt->{string} ) = $cxt->{pos};
+    if( $cxt->{string} !~ /\G\b/cg ) {
+        return _backtrack( $runtime, $cxt );
+    }
+
+    return $pc + 1;
+}
+
 sub o_rx_state_restore {
     my( $op, $runtime, $pc ) = @_;
     my $old = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
@@ -569,6 +714,54 @@ sub o_rx_state_restore {
     $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = undef;
     $runtime->set_last_match( $old )
         if $old;
+
+    return $pc + 1;
+}
+
+sub o_rx_save_pos {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    $cxt->{saved_pos}[$op->{index}] = $cxt->{pos};
+
+    return $pc + 1;
+}
+
+sub o_rx_restore_pos {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    $cxt->{pos} = $cxt->{saved_pos}[$op->{index}];
+
+    return $pc + 1;
+}
+
+sub o_rx_fail {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    return _backtrack( $runtime, $cxt );
+}
+
+sub o_rx_pop_state {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    pop @{$cxt->{states}};
+
+    return $pc + 1;
+}
+
+sub o_rx_backtrack {
+    my( $op, $runtime, $pc ) = @_;
+    my $cxt = $runtime->{_stack}->[-1];
+
+    push @{$cxt->{states}},
+         { pos           => $cxt->{pos},
+           ret_pc        => $op->{to},
+           group_count   => scalar @{$cxt->{groups}},
+           saved_groups  => undef,
+           };
 
     return $pc + 1;
 }

@@ -13,6 +13,7 @@ sub new {
     my $self = $class->SUPER::new( $runtime, $args );
 
     $self->{hash} ||= {};
+    $self->{iterator} ||= undef;
 
     return $self;
 }
@@ -33,29 +34,60 @@ sub clone {
     return $clone;
 }
 
+sub as_boolean_int {
+    my( $self, $runtime ) = @_;
+
+    return %{$self->{hash}} ? 1 : 0;
+}
+
 sub localize {
     my( $self, $runtime ) = @_;
 
     return __PACKAGE__->new( $runtime );
 }
 
-sub assign {
+sub localize_element {
+    my( $self, $runtime, $key ) = @_;
+    # if there is no key, it is ok to return undef
+    my $value = $self->{hash}->{$key};
+    my $new = Language::P::Toy::Value::Undef->new( $runtime );
+
+    $self->{hash}->{$key} = $new;
+
+    return $value;
+}
+
+sub assign { assign_array( @_ ) }
+
+sub assign_array {
     my( $self, $runtime, $other ) = @_;
 
     # FIXME optimize: don't do it unless necessary
     my $oiter = $other->clone( $runtime, 1 )->iterator( $runtime );
-    $self->assign_iterator( $runtime, $oiter );
+    return $self->assign_iterator( $runtime, $oiter );
 }
 
 sub assign_iterator {
     my( $self, $runtime, $iter ) = @_;
 
     $self->{hash} = {};
-    while( $iter->next ) {
+    while( $iter && $iter->next ) {
         my $k = $iter->item;
         $iter->next;
         my $v = $iter->item;
         $self->{hash}{$k->as_string( $runtime )} = $v;
+    }
+
+    return 2 * keys %{$self->{hash}};
+}
+
+sub restore_item {
+    my( $self, $runtime, $key, $value ) = @_;
+
+    if( !defined $value ) {
+        delete $self->{hash}->{$key};
+    } else {
+        $self->{hash}->{$key} = $value;
     }
 }
 
@@ -109,6 +141,32 @@ sub exists {
     return Language::P::Toy::Value::Scalar->new_boolean( $runtime, exists $self->{hash}{$key} );
 }
 
+sub delete_item {
+    my( $self, $runtime, $key ) = @_;
+    my $value = delete $self->{hash}{$key};
+
+    $value ||= Language::P::Toy::Value::Undef->new( $runtime );
+
+    return Language::P::Toy::Value::List->new( $runtime,
+                                               { array => [ $value ] } );
+}
+
+sub delete_slice {
+    my( $self, $runtime, $indices ) = @_;
+    my @res;
+
+    for( my $iter = $indices->iterator; $iter->next; ) {
+        my $key = $iter->item->as_string( $runtime );
+        my $value = delete $self->{hash}{$key};
+
+        $value ||= Language::P::Toy::Value::Undef->new( $runtime );
+
+        push @res, $value;
+    }
+
+    return Language::P::Toy::Value::List->new( $runtime, { array => \@res } );
+}
+
 sub iterator {
     my( $self, $runtime ) = @_;
 
@@ -119,6 +177,45 @@ sub iterator {
                                     $self->{hash}->{$_} }
                                   keys %{$self->hash} ] } )
                ->iterator( $runtime );
+}
+
+sub key_iterator {
+    my( $self, $runtime ) = @_;
+
+    return Language::P::Toy::Value::Array->new
+               ( $runtime,
+                 { array => [ map { Language::P::Toy::Value::Scalar
+                                        ->new_string( $runtime, $_ ) }
+                                  keys %{$self->hash} ] } )
+               ->iterator( $runtime );
+}
+
+sub value_iterator {
+    my( $self, $runtime ) = @_;
+
+    return Language::P::Toy::Value::Array->new
+               ( $runtime,
+                 { array => [ map { $self->{hash}->{$_} }
+                                  keys %{$self->hash} ] } )
+               ->iterator( $runtime );
+}
+
+sub start_iteration {
+    my( $self, $runtime ) = @_;
+    $self->{iterator} = $self->key_iterator( $runtime );
+}
+
+sub next_key {
+    my( $self, $runtime ) = @_;
+    $self->start_iteration unless $self->{iterator};
+
+    if( !$self->{iterator}->next( $runtime ) ) {
+        $self->{iterator} = undef;
+
+        return undef;
+    }
+
+    return $self->{iterator}->item( $runtime );
 }
 
 1;

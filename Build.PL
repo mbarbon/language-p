@@ -17,7 +17,6 @@ my $build = My::Build->new
           'TAP::Harness'      => '3.10',
           'perl'              => '5.8.3',
           },
-    recursive_test_files => 1,
     get_options          =>
         { parrot         =>
               { type     => '=s',

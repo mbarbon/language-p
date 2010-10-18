@@ -2,29 +2,30 @@ package Language::P::Toy::Value::SymbolTable;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::Any);
+use base qw(Language::P::Toy::Value::Hash);
 
-__PACKAGE__->mk_ro_accessors( qw(symbols) );
+__PACKAGE__->mk_ro_accessors( qw(name) );
 
 use Language::P::Toy::Value::Typeglob;
 
 sub type { 7 }
 sub is_main { 0 }
+# TODO inheritance
+sub has_overloading { $_[0]->{overload} ? 1 : 0 }
+sub overload_table { $_[0]->{overload} }
 
 sub new {
     my( $class, $runtime, $args ) = @_;
     my $self = $class->SUPER::new( $runtime, $args );
-
-    $self->{symbols} ||= {};
 
     return $self;
 }
 
 sub get_package {
     my( $self, $runtime, $package, $create ) = @_;
+    my( $pack ) = $self->get_symbol( $runtime, $package . '::', '::', $create );
 
-    return $self if $self->is_main && $package eq 'main';
-    return $self->_get_symbol( $runtime, $package, '::', $create );
+    return $pack;
 }
 
 sub _tied_to_regex_capture {
@@ -41,7 +42,7 @@ sub _tied_to_regex_capture {
     return Language::P::Toy::Value::ActiveScalarCallbacks->new
                ( $runtime,
                  { get_callback => $get,
-                   set_callback => sub { die "Readonly"; },
+                   set_callback => sub { die "Readonly capture"; },
                    } );
 }
 
@@ -62,58 +63,65 @@ our %sigils =
     '*'  => [ undef,        'Language::P::Toy::Value::Typeglob' ],
     'I'  => [ 'io',         'Language::P::Toy::Value::Handle' ],
     'F'  => [ 'format',     'Language::P::Toy::Value::Format' ],
-    '::' => [ undef,        'language::P::Toy::Value::SymbolTable' ],
+    '::' => [ 'hash',       'language::P::Toy::Value::SymbolTable' ],
     );
 
 sub get_symbol {
     my( $self, $runtime, $name, $sigil, $create ) = @_;
-    my( $symbol, $created ) = $self->_get_symbol( $runtime, $name, '*', $create );
+    my( $symbol, $created ) = $self->_get_glob( $runtime, $name, $create );
 
     return $symbol unless $symbol;
-    if( !$created ) {
-        return $symbol if $sigil eq '*';
-        return $create ? $symbol->get_or_create_slot( $runtime, $sigils{$sigil}[0] ) :
-                         $symbol->get_slot( $runtime, $sigils{$sigil}[0] );
-    }
-    $self->_apply_magic( $runtime, $name, $symbol );
+
+    $self->_apply_magic( $runtime, $name, $symbol ) if $created;
 
     return $symbol if $sigil eq '*';
-    return $create ? $symbol->get_or_create_slot( $runtime, $sigils{$sigil}[0] ) :
-                     $symbol->get_slot( $runtime, $sigils{$sigil}[0] );
+
+    my $value = $symbol->get_slot( $runtime, $sigils{$sigil}[0] );
+    return $value if $value || !$create;
+
+    if( $sigil eq '::' ) {
+        $value = Language::P::Toy::Value::SymbolTable->new
+                     ( $runtime, { name => substr $name, 0, -2 } );
+        $symbol->set_slot( $runtime, 'hash', $value );
+
+        return $value;
+    }
+
+    return $symbol->get_or_create_slot( $runtime, $sigils{$sigil}[0] );
 }
 
-sub _get_symbol {
-    my( $self, $runtime, $name, $sigil, $create ) = @_;
-    my( @packages ) = split /::/, $name;
-    if( $self->is_main && ( $packages[0] eq '' || $packages[0] eq 'main' ) ) {
-        shift @packages;
+sub _get_glob {
+    my( $self, $runtime, $name, $create ) = @_;
+    my( @packages ) = split /(?<=::)/, $name;
+    my $name_prefix = '';
+    if( $self->is_main ) {
+        shift @packages if $packages[0] eq 'main::';
+        $name_prefix = 'main::' if @packages == 1;
     }
 
     my $index = 0;
     my $current = $self;
     foreach my $package ( @packages ) {
-        if( $index == $#packages && $sigil ne '::' ) {
-            my $glob = $current->{symbols}{$package};
-            my $created = 0;
-            return ( undef, $created ) if !$glob && !$create;
-            if( !$glob ) {
-                $created = 1;
-                $glob = $current->{symbols}{$package} =
-                    Language::P::Toy::Value::Typeglob->new( $runtime );
-            }
-            return ( $glob, $created ) if $sigil eq '*';
-            return ( $create ? $glob->get_or_create_slot( $runtime, $sigils{$sigil}[0] ) :
-                               $glob->get_slot( $runtime, $sigils{$sigil}[0] ),
-                     $created );
-        } else {
-            my $subpackage = $package . '::';
-            if( !exists $current->{symbols}{$subpackage} ) {
-                return ( undef, 0 ) unless $create;
+        my $glob = $current->{hash}{$package};
+        return ( undef, 0 ) if !$glob && !$create;
+        my $created = 0;
+        if( !$glob ) {
+            $created = 1;
+            $glob = $current->{hash}{$package} =
+                Language::P::Toy::Value::Typeglob->new
+                    ( $runtime, { name => $name_prefix . $name } );
+        }
 
-                $current = $current->{symbols}{$subpackage} =
-                  Language::P::Toy::Value::SymbolTable->new( $runtime );
-            } else {
-                $current = $current->{symbols}{$subpackage};
+        if( $index == $#packages ) {
+            return ( $glob, $created );
+        } else {
+            $current = $glob->get_slot( $runtime, 'hash' );
+            if( !$current ) {
+                return ( undef, 0 ) unless $create;
+                my $pack_name = join '', @packages[0 .. $index];
+                $current = Language::P::Toy::Value::SymbolTable->new
+                               ( $runtime, { name => substr $pack_name, 0, -2 } );
+                $glob->set_slot( $runtime, 'hash', $current );
             }
 
             return $current if $index == $#packages;
@@ -135,15 +143,21 @@ sub set_symbol {
 sub find_method {
     my( $self, $runtime, $name ) = @_;
 
-    my $name_glob = $self->{symbols}{$name};
+    my $name_glob = $self->{hash}{$name};
     if( $name_glob ) {
         my $sub = $name_glob->body->subroutine;
 
         return $sub if $sub;
     }
 
-    my $isa_glob = $self->{symbols}{ISA};
-    return unless $isa_glob;
+    my $isa_glob = $self->{hash}{ISA};
+    unless( $isa_glob ) {
+        my $universal_stash = $runtime->symbol_table->get_package( $runtime, 'UNIVERSAL' );
+
+        return $universal_stash->find_method( $runtime, $name )
+            if $self != $universal_stash;
+        return undef;
+    }
     my $isa_array = $isa_glob->body->array;
 
     for( my $i = 0; $i < $isa_array->get_count( $runtime ); ++$i ) {
@@ -156,6 +170,32 @@ sub find_method {
     }
 
     return undef;
+}
+
+sub derived_from {
+    my( $self, $runtime, $base ) = @_;
+
+    return 0 unless $base;
+    return 1 if $self == $base;
+
+    my $isa_glob = $self->{hash}{ISA};
+    unless( $isa_glob ) {
+        my $universal_stash = $runtime->symbol_table->get_package( $runtime, 'UNIVERSAL' );
+
+        return $universal_stash == $base ? 1 : 0;
+    }
+    my $isa_array = $isa_glob->body->array;
+
+    for( my $i = 0; $i < $isa_array->get_count( $runtime ); ++$i ) {
+        my $base_name = $isa_array->get_item( $runtime, $i )->as_string( $runtime );
+        my $base_stash = $runtime->symbol_table->get_package( $runtime, $base_name, 0 );
+        next unless $base_stash;
+
+        return 1 if $base_stash == $base;
+        return 1 if $base_stash->derived_from( $runtime, $base );
+    }
+
+    return 0;
 }
 
 1;

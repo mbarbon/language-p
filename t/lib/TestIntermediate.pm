@@ -2,7 +2,7 @@ package TestIntermediate;
 
 use strict;
 use warnings;
-use TestParser qw(parse_string);
+use t::lib::TestParser;
 
 use Language::P::Intermediate::Generator;
 use Language::P::Intermediate::Transform;
@@ -55,11 +55,13 @@ sub blocks_as_string {
     my $str = '';
 
     foreach my $segment ( @$segments ) {
+        $segment->find_alive_blocks;
         my $name = $segment->is_main ? 'main' :
                                        $segment->name || 'anoncode';
         $str .= "# " . $name . "\n";
         foreach my $block ( sort { $a->start_label cmp $b->start_label}
                                  @{$segment->basic_blocks} ) {
+            next if $block->dead;
             foreach my $instr ( @{$block->bytecode} ) {
                 $str .= $instr->as_string( $op_map, $op_attr )
             }
@@ -100,6 +102,17 @@ sub generate_ssa_and_diff {
 
     local $Test::Builder::Level = $Test::Builder::Level + 1;
     Test::Differences::eq_or_diff( $asm_string, $assembly );
+}
+
+package t::lib::TestIntermediate;
+
+sub import {
+    shift;
+
+    strict->import;
+    warnings->import;
+    Test::More->import( @_ );
+    Exporter::export( 'TestIntermediate', scalar caller, ':all' );
 }
 
 1;

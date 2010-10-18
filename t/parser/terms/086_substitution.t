@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 7;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 7;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 s/foo/bar/g;
@@ -20,11 +16,12 @@ op: OP_MATCH
 right: !parsetree:Substitution
   pattern: !parsetree:Pattern
     components:
-      - !parsetree:Constant
-        flags: CONST_STRING
+      - !parsetree:RXConstant
+        insensitive: 0
         value: foo
     flags: FLAG_RX_GLOBAL
     op: OP_QL_S
+    original: (?-xism:foo)
   replacement: !parsetree:Constant
     context: CXT_SCALAR
     flags: CONST_STRING
@@ -44,11 +41,12 @@ op: OP_MATCH
 right: !parsetree:Substitution
   pattern: !parsetree:Pattern
     components:
-      - !parsetree:Constant
-        flags: CONST_STRING
+      - !parsetree:RXConstant
+        insensitive: 0
         value: foo
     flags: 0
     op: OP_QL_S
+    original: (?-xism:foo)
   replacement: !parsetree:QuotedString
     components:
       - !parsetree:Symbol
@@ -71,11 +69,12 @@ op: OP_MATCH
 right: !parsetree:Substitution
   pattern: !parsetree:Pattern
     components:
-      - !parsetree:Constant
-        flags: CONST_STRING
+      - !parsetree:RXConstant
+        insensitive: 0
         value: foo
     flags: 0
     op: OP_QL_S
+    original: (?-xism:foo)
   replacement: !parsetree:Constant
     context: CXT_SCALAR
     flags: CONST_STRING
@@ -95,11 +94,12 @@ op: OP_MATCH
 right: !parsetree:Substitution
   pattern: !parsetree:Pattern
     components:
-      - !parsetree:Constant
-        flags: CONST_STRING
+      - !parsetree:RXConstant
+        insensitive: 0
         value: foo
     flags: FLAG_RX_GLOBAL|FLAG_RX_EVAL
     op: OP_QL_S
+    original: (?-xism:foo)
   replacement: !parsetree:Block
     lines:
       - !parsetree:BinOp
@@ -163,12 +163,13 @@ right: !parsetree:Substitution
   pattern: !parsetree:Pattern
     components:
       - !parsetree:RXAssertion
-        type: END_OR_NEWLINE
-      - !parsetree:Constant
-        flags: CONST_STRING
+        type: RX_ASSERTION_END_OR_NEWLINE
+      - !parsetree:RXConstant
+        insensitive: 0
         value: foo
     flags: FLAG_RX_GLOBAL
     op: OP_QL_S
+    original: (?-xism:$foo)
   replacement: !parsetree:Constant
     context: CXT_SCALAR
     flags: CONST_STRING
@@ -181,7 +182,7 @@ xxxbaz
 EOTi
  EOT
 EOT
-# 1;
+__LINE__
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
@@ -193,26 +194,28 @@ op: OP_MATCH
 right: !parsetree:Substitution
   pattern: !parsetree:Pattern
     components:
-      - !parsetree:Constant
-        flags: CONST_STRING
+      - !parsetree:RXConstant
+        insensitive: 0
         value: foo
     flags: FLAG_RX_EVAL
     op: OP_QL_S
+    original: (?-xism:foo)
   replacement: !parsetree:Block
     lines:
-      - !parsetree:FunctionCall
+      - !parsetree:Overridable
         arguments:
           - !parsetree:Constant
-            context: CXT_LIST
+            context: CXT_SCALAR
             flags: CONST_STRING
             value: "xxxbaz\nEOTi\n EOT\n"
           - !parsetree:Constant
-            context: CXT_LIST
+            context: CXT_SCALAR
             flags: CONST_NUMBER|NUM_INTEGER
             value: 3
         context: CXT_SCALAR
-        function: !parsetree:Symbol
-          context: CXT_SCALAR
-          name: substr
-          sigil: VALUE_SUB
+        function: OP_SUBSTR
+--- !parsetree:Constant
+context: CXT_VOID
+flags: CONST_NUMBER|NUM_INTEGER
+value: 6
 EOE

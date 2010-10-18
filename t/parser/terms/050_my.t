@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 7;
+use Test::More tests => 8;
 
 use lib 't/lib';
 use TestParser qw(:all);
@@ -145,4 +145,32 @@ right: !parsetree:LexicalSymbol
   level: 0
   name: x
   sigil: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+my $x = ${"foo"};
+$x;
+EOP
+--- !parsetree:BinOp
+context: CXT_VOID
+left: !parsetree:LexicalDeclaration
+  context: CXT_SCALAR|CXT_LVALUE
+  flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
+  name: x
+  sigil: VALUE_SCALAR
+op: OP_ASSIGN
+right: !parsetree:Dereference
+  context: CXT_SCALAR
+  left: !parsetree:Block
+    lines:
+      - !parsetree:Constant
+        context: CXT_SCALAR
+        flags: CONST_STRING
+        value: foo
+  op: OP_DEREFERENCE_SCALAR
+--- !parsetree:LexicalSymbol
+context: CXT_VOID
+level: 0
+name: x
+sigil: VALUE_SCALAR
 EOE

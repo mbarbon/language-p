@@ -8,6 +8,7 @@ use Language::P::Toy::Runtime;
 use Language::P::Toy::Opcodes qw(o);
 use Language::P::Toy::Value::StringNumber;
 use Language::P::Toy::Value::Handle;
+use Language::P::Constants qw(:all);
 
 my $runtime = Language::P::Toy::Runtime->new;
 
@@ -26,7 +27,7 @@ my @program1 =
     o( 'constant',
        value => Language::P::Toy::Value::StringNumber->new( $runtime, { string => "Hello, world!\n" } ),
        ),
-    o( 'make_list', count => 1 ),
+    o( 'make_list', count => 1, context => CXT_LIST ),
     o( 'print' ),
     o( 'end' ),
   );
@@ -49,7 +50,7 @@ my @program2 =
     o( 'constant',
        value => Language::P::Toy::Value::StringNumber->new( $runtime, { string => "\n" } ),
        ),
-    o( 'make_list', count => 3 ),
+    o( 'make_list', count => 3, context => CXT_LIST, context => CXT_LIST ),
     o( 'print' ),
     o( 'end' ),
     );

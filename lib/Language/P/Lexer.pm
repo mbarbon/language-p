@@ -6,6 +6,7 @@ use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_ro_accessors( qw(stream buffer tokens runtime
                                  file line _start_of_line _heredoc_lexer
+                                 _line_length
                                  ) );
 __PACKAGE__->mk_accessors( qw(quote) );
 
@@ -97,6 +98,7 @@ sub new {
     $self->{pending_brackets} = [];
     $self->{line} ||= 1;
     $self->{_start_of_line} = 1;
+    $self->{_line_length} = 1;
     $self->{pos} = [ $self->file, $self->line ];
 
     return $self;
@@ -241,24 +243,24 @@ my %quoted_chars =
     );
 
 my %quoted_pattern =
-  ( w  => [ T_CLASS, 'WORDS' ],
-    W  => [ T_CLASS, 'NON_WORDS' ],
-    s  => [ T_CLASS, 'SPACES' ],
-    S  => [ T_CLASS, 'NOT_SPACES' ],
-    d  => [ T_CLASS, 'DIGITS' ],
-    D  => [ T_CLASS, 'NOT_DIGITS' ],
-    b  => [ T_ASSERTION, 'WORD_BOUNDARY' ],
-    B  => [ T_ASSERTION, 'NON_WORD_BOUNDARY' ],
-    A  => [ T_ASSERTION, 'BEGINNING' ],
-    Z  => [ T_ASSERTION, 'END_OR_NEWLINE' ],
-    z  => [ T_ASSERTION, 'END' ],
-    G  => [ T_ASSERTION, 'POS' ],
+  ( w  => [ T_CLASS, RX_CLASS_WORDS ],
+    W  => [ T_CLASS, RX_CLASS_NOT_WORDS ],
+    s  => [ T_CLASS, RX_CLASS_SPACES ],
+    S  => [ T_CLASS, RX_CLASS_NOT_SPACES ],
+    d  => [ T_CLASS, RX_CLASS_DIGITS ],
+    D  => [ T_CLASS, RX_CLASS_NOT_DIGITS ],
+    b  => [ T_ASSERTION, RX_ASSERTION_WORD_BOUNDARY ],
+    B  => [ T_ASSERTION, RX_ASSERTION_NON_WORD_BOUNDARY ],
+    A  => [ T_ASSERTION, RX_ASSERTION_BEGINNING ],
+    Z  => [ T_ASSERTION, RX_ASSERTION_END_OR_NEWLINE ],
+    z  => [ T_ASSERTION, RX_ASSERTION_END ],
+    G  => [ T_ASSERTION, RX_ASSERTION_POS ],
     );
 
 my %pattern_special =
-  ( '^'  => [ T_ASSERTION, 'START_SPECIAL' ],
-    '$'  => [ T_ASSERTION, 'END_SPECIAL' ],
-    '.'  => [ T_ASSERTION, 'ANY_SPECIAL' ],
+  ( '^'  => [ T_ASSERTION, RX_ASSERTION_START_SPECIAL ],
+    '$'  => [ T_ASSERTION, RX_ASSERTION_END_SPECIAL ],
+    '.'  => [ T_ASSERTION, RX_ASSERTION_ANY_SPECIAL ],
     '*'  => [ T_QUANTIFIER, 0, -1, 1 ],
     '+'  => [ T_QUANTIFIER, 1, -1, 1 ],
     '?'  => [ T_QUANTIFIER, 0,  1, 1 ],
@@ -290,11 +292,13 @@ sub _skip_space {
                  && $$buffer =~ /^=[a-zA-Z]/ ) {
             $reset_pos = 1;
             do {
-                ++$self->{line};
+                $self->{line} += $self->{_line_length};
+                $self->{_line_length} = 1;
                 $$buffer = '';
                 $self->_fill_buffer;
             } while( $$buffer && $$buffer !~ /^=cut\b/ );
-            ++$self->{line};
+            $self->{line} += $self->{_line_length};
+            $self->{_line_length} = 1;
             $$buffer = '';
             next;
         } elsif(    $self->{_start_of_line}
@@ -309,18 +313,21 @@ sub _skip_space {
         if( $$buffer =~ s/^([\r\n])// ) {
             $retval .= $1 if defined wantarray;
             $self->{_start_of_line} = 1;
-            ++$self->{line};
+            $self->{line} += $self->{_line_length};
+            $self->{_line_length} = 1;
             $reset_pos = 1;
             next;
         }
         if( $$buffer =~ s/^(#.*\n)// ) {
             $retval .= $1 if defined wantarray;
             $self->{_start_of_line} = 1;
-            ++$self->{line};
+            $self->{line} += $self->{_line_length};
+            $self->{_line_length} = 1;
             $reset_pos = 1;
             next;
         }
 
+        $self->{_start_of_line} = 0;
         last if length $$buffer;
     }
 
@@ -411,7 +418,7 @@ sub lex_pattern_group {
 
     die unless length $$buffer; # no whitespace allowed after '(?'
 
-    $$buffer =~ s/^(\#|:|[imsx]*\-[imsx]*:?|!|=|<=|<!|{|\?{|\?>)//x
+    $$buffer =~ s/^(\#|:|[a-zA-Z ]*\-[a-zA-Z ]*:?|!|=|<=|<!|{|\?{|\?>)//x
       or die "Invalid character after (?";
 
     return [ $self->{pos}, T_PATTERN, $1 ];
@@ -568,7 +575,16 @@ sub lex_quote {
                 }
             }
 
-            if( $c eq '\\' && $self->quote->{interpolate} ) {
+            if( $c eq '\\' && !$self->quote->{interpolate} ) {
+                my $qc = substr $$buffer, 0, 1;
+
+                if( $qc eq '\\' ) {
+                    # eat character
+                    substr $$buffer, 0, 1, '';
+                }
+
+                $v .= '\\';
+            } elsif( $c eq '\\' && $self->quote->{interpolate} ) {
                 my $qc = substr $$buffer, 0, 1, '';
 
                 if( $qc =~ /^[a-zA-Z]$/ ) {
@@ -648,10 +664,13 @@ sub lex_quote {
                     }
                 }
 
-                if(    $interpolated_pattern
-                    && (    !length( $$buffer )
-                         || index( "()| \r\n\t",
-                                   substr( $$buffer, 0, 1 ) ) != -1 ) ) {
+                if(    $c eq '@' && length( $$buffer )
+                    && $$buffer !~ /^[a-zA-Z0-9_{]/ ) {
+                    $v .= $c;
+                } elsif(    $interpolated_pattern
+                         && (    !length( $$buffer )
+                              || index( "()| \r\n\t",
+                                        substr( $$buffer, 0, 1 ) ) != -1 ) ) {
                     $v .= $c;
                 } elsif( length $v ) {
                     $self->unlex( [ $self->{pos}, $ops{$c}, $c ] );
@@ -751,7 +770,7 @@ sub lex_identifier {
     $id or $$_ =~ s/^{//x and do {
         my $spcbef = _skip_space( $self );
         my $maybe_id;
-        if( $$_ =~ s/^(\w+)//x ) {
+        if( $$_ =~ s/^([\w\x00-\x1f]\w*)//x ) {
             $maybe_id = $1;
         } else {
             $$_ = '{' . $spcbef . $$_;
@@ -793,9 +812,10 @@ sub lex_number {
     $$_ =~ s/^0([xb]?)//x and do {
         if( $1 eq 'b' ) {
             # binary number
-            if( $$_ =~ s/^([01]+)// ) {
+            if( $$_ =~ s/^([01_]+)// ) {
                 $flags = NUM_BINARY;
                 $num .= $1;
+                $num =~ tr/_//d;
 
                 return [ $self->{pos}, T_NUMBER, $num, $flags ];
             } else {
@@ -803,9 +823,10 @@ sub lex_number {
             }
         } elsif( $1 eq 'x' ) {
             # hexadecimal number
-            if( $$_ =~ s/^([0-9a-fA-F]+)// ) {
+            if( $$_ =~ s/^([0-9a-fA-F_]+)// ) {
                 $flags = NUM_HEXADECIMAL;
                 $num .= $1;
+                $num =~ tr/_//d;
 
                 return [ $self->{pos}, T_NUMBER, $num, $flags ];
             } else {
@@ -813,10 +834,11 @@ sub lex_number {
             }
         } else {
             # maybe octal number
-            if( $$_ =~ s/^([0-7]+)// ) {
+            if( $$_ =~ s/^([0-7_]+)// ) {
                 $flags = NUM_OCTAL;
                 $num .= $1;
                 $$_ =~ /^[89]/ and die "Invalid octal digit";
+                $num =~ tr/_//d;
 
                 return [ $self->{pos}, T_NUMBER, $num, $flags ];
             } else {
@@ -825,21 +847,26 @@ sub lex_number {
             }
         }
     };
-    $$_ =~ s/^(\d+)//x and do {
+    $$_ =~ s/^([0-9][0-9_]*)//x and do {
         $flags = NUM_INTEGER;
         $num .= $1;
     };
     # '..' operator (es. 12..15)
-    $$_ =~ /^\.\./ and return [ $self->{pos}, T_NUMBER, $num, $flags ];
-    $$_ =~ s/^\.(\d*)//x and do {
+    length $num and $$_ =~ /^\.\./
+      and $num =~ tr/_//d, return [ $self->{pos}, T_NUMBER, $num, $flags ];
+    if( !length $num && $$_ =~ s/^\.(_*[0-9][0-9_]*)//x ) {
         $flags = NUM_FLOAT;
-        $num = '0' unless length $num;
+        $num = '0';
         $num .= ".$1" if length $1;
-    };
-    $$_ =~ s/^[eE]([+-]?\d+)//x and do {
+    } elsif( length $num && $$_ =~ s/^\.(_*[0-9][0-9_]*)?//x ) {
+        $flags = NUM_FLOAT;
+        $num .= ".$1" if defined $1;
+    }
+    length $num and $$_ =~ s/^[eE]([+-]?[0-9][0-9_]*)//x and do {
         $flags = NUM_FLOAT;
         $num .= "e$1";
     };
+    $num =~ tr/_//d;
 
     return [ $self->{pos}, T_NUMBER, $num, $flags ];
 }
@@ -898,7 +925,8 @@ sub _find_end {
 
                 next;
             } elsif( $c eq "\n" ) {
-                ++$self->{line};
+                $self->{line} += $self->{_line_length};
+                $self->{_line_length} = 1;
             } elsif( $paired && $c eq $quote_start ) {
                 ++$delim_count;
             } elsif( $c eq $quote_end ) {
@@ -912,7 +940,14 @@ sub _find_end {
 
                 if(    length( $nc )
                     && $nc ne $quote_end
+                    && $c eq '$'
                     && index( "()| \r\n\t", $nc ) == -1 ) {
+                    $interpolated = 1;
+                }
+                if(    length( $nc )
+                    && $nc ne $quote_end
+                    && $c eq '@'
+                    && $nc =~ /^[a-zA-Z0-9_{]$/ ) {
                     $interpolated = 1;
                 }
             }
@@ -997,7 +1032,7 @@ sub _prepare_sublex_heredoc {
         }
     } else {
         # <<\EOT, <<EOT
-        if( $$_ =~ s/\\// ) {
+        if( $$_ =~ s/^\\// ) {
             $quote = "'";
         }
 
@@ -1015,7 +1050,7 @@ sub _prepare_sublex_heredoc {
     my $finished = 0;
     if( !$lex->stream ) {
         $_ = $lex->buffer;
-        if( $$_ =~ s/(.*)^$end//m ) {
+        if( $$_ =~ s/(.*\n)^$end//m ) {
             $str .= $1;
             $finished = 1;
         }
@@ -1031,6 +1066,8 @@ sub _prepare_sublex_heredoc {
             $str .= $line;
         }
     }
+
+    $lex->{_line_length} = $str =~ tr/\n/\n/ + 2;
 
     Carp::confess( "EOF while looking for terminator '$end'" ) unless $finished;
 
@@ -1057,7 +1094,7 @@ sub lex {
     $$_ =~ /^\d|^\.\d/ and do {
         _lexer_error( $self, $self->{pos},
                       "Number found where operator expected" )
-            if $expect == X_OPERATOR;
+            if $expect == X_OPERATOR && !$indir;
         return $self->lex_number;
     };
     # quote and quote-like operators
@@ -1140,7 +1177,7 @@ sub lex {
     $$_ =~ s/^(["'`])//x and do {
         _lexer_error( $self, $self->{pos},
                       "String found where operator expected" )
-            if $expect == X_OPERATOR;
+            if $expect == X_OPERATOR && !$indir;
         return _prepare_sublex( $self, $1, $1 );
     };
     # < when not operator (<> glob, <> file read, << here doc)
@@ -1260,13 +1297,14 @@ sub lex {
     $$_ =~ s/^\@// and do {
         _lexer_error( $self, $self->{pos},
                       "Array found where operator expected" )
-            if $expect == X_OPERATOR;
+            if $expect == X_OPERATOR && !$indir;
         return [ $self->{pos}, T_AT, '@' ];
     };
     # single char operators
     $$_ =~ s/^([:;,()\?<>!~=\/\\\+\-\.\|^\*%@&])//x and return [ $self->{pos}, $ops{$1}, $1 ];
 
-    die "Lexer error: '$$_'";
+    _lexer_error( $self, $self->{pos},
+                  'Unrecognized character %s', substr $$_, 0, 1 );
 }
 
 sub _fill_buffer {

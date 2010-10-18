@@ -70,6 +70,7 @@ my @lines;
     sub get_package { $_[0]->_symbol_table->get_package( $_[0], $_[1] ) }
     sub _symbol_table { $_[0]->{symbol_table} }
     sub set_bytecode { }
+    sub wrap_method { }
 }
 
 sub fresh_parser {
@@ -135,7 +136,7 @@ sub parse_string {
 sub parse_and_diff_yaml {
     my( $expr, $expected ) = @_;
 
-    $expected =~ s{ ((?:NUM|CXT|FLAG|CONST|STRING|VALUE|OP|DECLARATION|PROTO|CHANGED)_[A-Z_ \|]+)}
+    $expected =~ s{ ((?:NUM|CXT|FLAG|CONST|STRING|VALUE|OP|DECLARATION|PROTO|CHANGED|RX_CLASS|RX_GROUP|RX_POSIX|RX_ASSERTION)_[A-Z_ \|]+)}
                   {" " . ( eval $1 or die $@ )}eg;
 
     require Language::P::ParseTree::DumpYAML;

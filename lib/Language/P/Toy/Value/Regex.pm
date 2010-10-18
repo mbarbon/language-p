@@ -4,12 +4,16 @@ use strict;
 use warnings;
 use base qw(Language::P::Toy::Value::Code);
 
+__PACKAGE__->mk_ro_accessors( qw(regex_string) );
+
 use Language::P::Constants qw(:all);
 
 use constant
   { REGEXP_NO_MORE_MATCHES => -1,
     REGEXP_SCAN_ALL        => -2,
     };
+
+sub type { 15 }
 
 sub next_start {
     my( $self, $start ) = @_;

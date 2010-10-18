@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 3;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 4;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 while( $a > 2 ) {
@@ -93,4 +89,39 @@ continue: !parsetree:Block
       context: CXT_VOID
       flags: CONST_NUMBER|NUM_INTEGER
       value: 2
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+while( my $x ) {
+    $x;
+} continue {
+    $x;
+}
+$x
+EOP
+--- !parsetree:ConditionalLoop
+block: !parsetree:Block
+  lines:
+    - !parsetree:LexicalSymbol
+      context: CXT_VOID
+      level: 0
+      name: x
+      sigil: VALUE_SCALAR
+block_type: while
+condition: !parsetree:LexicalDeclaration
+  context: CXT_SCALAR
+  flags: DECLARATION_MY|DECLARATION_CLOSED_OVER
+  name: x
+  sigil: VALUE_SCALAR
+continue: !parsetree:Block
+  lines:
+    - !parsetree:LexicalSymbol
+      context: CXT_VOID
+      level: 0
+      name: x
+      sigil: VALUE_SCALAR
+--- !parsetree:Symbol
+context: CXT_VOID
+name: x
+sigil: VALUE_SCALAR
 EOE

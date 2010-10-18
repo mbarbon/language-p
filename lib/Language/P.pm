@@ -98,7 +98,7 @@ sub process_command_line {
             push @remaining, @{$argv}[$i + 1 .. $#$argv];
             last;
         };
-        $arg =~ /^-f(\S+)/ and do {
+        $arg =~ /^-Z(\S+)/ and do {
             $self->generator->set_option( $1 );
             $self->runtime->set_option( $1 );
             next;

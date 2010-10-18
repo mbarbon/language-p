@@ -16,15 +16,14 @@ EOP
 L1:
   constant_integer value=1
   constant_integer value=2
-  make_list count=2
-  make_list count=1
+  make_list context=8, count=2
+  make_list context=8, count=1
   iterator
   temporary_set index=0, slot=9
-  global name="y", slot=5
-  dup
-  glob_slot slot=1
-  temporary_set index=2, slot=1
+  global context=4, name="y", slot=5
   temporary_set index=1, slot=5
+  localize_glob_slot index=2, name="y", slot=1
+  pop
   jump to=L2
 L2:
   temporary index=0, slot=9
@@ -40,9 +39,8 @@ L5:
   pop
   jump to=L6
 L6:
-  temporary index=1, slot=5
-  temporary index=2, slot=1
-  glob_slot_set slot=1
+  temporary_clear index=1, slot=5
+  restore_glob_slot index=2, name="y", slot=1
   jump to=L8
 L7:
   constant_integer value=3

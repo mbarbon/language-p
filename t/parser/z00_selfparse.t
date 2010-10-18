@@ -2,13 +2,14 @@
 
 use strict;
 use warnings;
-use Test::More tests => 17;
+use Test::More tests => 18;
 
 use lib 't/lib';
 use TestParser qw(:all);
 
 parse_ok( 'lib', 'Language::P' );
 parse_ok( 'lib', 'Language::P::Assembly' );
+parse_ok( 'lib', 'Language::P::Constants' );
 parse_ok( 'lib', 'Language::P::Exception' );
 parse_ok( 'lib', 'Language::P::Intermediate::BasicBlock' );
 parse_ok( 'lib', 'Language::P::Intermediate::Code' );
