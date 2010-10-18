@@ -49,6 +49,10 @@ namespace org.mbarbon.p.runtime
             int scope_count = reader.ReadInt32();
             int state_count = reader.ReadInt32();
             int bb_count = reader.ReadInt32();
+            string regex = null;
+
+            if (type == (int)Subroutine.CodeType.REGEX)
+                regex = ReadString(reader);
 
             var lexicals = new LexicalInfo[lex_count];
             for (int i = 0; i < lex_count; ++i)
@@ -61,6 +65,7 @@ namespace org.mbarbon.p.runtime
                 sub.Name = name;
             sub.Outer = outer_sub;
             sub.Type = type;
+            sub.OriginalRegex = regex;
 
             sub.Scopes = new Scope[scope_count];
             for (int i = 0; i < scope_count; ++i)
@@ -446,6 +451,7 @@ namespace org.mbarbon.p.runtime
         public LexicalInfo[] Lexicals;
         public Scope[] Scopes;
         public LexicalState[] LexicalStates;
+        public string OriginalRegex;
     }
 
     public class CompilationUnit
