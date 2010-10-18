@@ -49,6 +49,7 @@ my %dotnet_classes =
     'OP_LEXICAL_STATE_SET' => 'LexState',
     'OP_TEMPORARY'         => 'Temporary',
     'OP_TEMPORARY_SET'     => 'Temporary',
+    'OP_TEMPORARY_CLEAR'   => 'Temporary',
     'OP_ARRAY_ELEMENT'     => 'ElementAccess',
     'OP_ARRAY_SLICE'       => 'ElementAccess',
     'OP_HASH_ELEMENT'      => 'ElementAccess',

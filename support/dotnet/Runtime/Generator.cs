@@ -1435,6 +1435,14 @@ namespace org.mbarbon.p.runtime
 
                 return Expression.Assign(GetTemporary(tm.Index, exp.Type), exp);
             }
+            case Opcode.OpNumber.OP_TEMPORARY_CLEAR:
+            {
+                Temporary tm = (Temporary)op;
+                var type = TypeForSlot(tm.Slot);
+
+                return Expression.Assign(GetTemporary(tm.Index, type),
+                                         Expression.Constant(null, type));
+            }
             case Opcode.OpNumber.OP_LEXICAL:
             {
                 Lexical lx = (Lexical)op;
