@@ -39,6 +39,6 @@ L1:
   concat_assign context=4
   make_array context=8, count=1
   print context=1
-  make_array context=8, count=1
+  make_list context=8, count=1
   return context=1
 EOI

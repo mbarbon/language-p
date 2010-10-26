@@ -22,7 +22,7 @@ L2:
   set index=5 (phi L3, 2, L4, 4)
   set index=6 (phi L3, 1, L4, 3)
   print context=2 (get index=6), (make_array context=8 (get index=5))
-  return context=1 (make_array context=8)
+  return context=1 (make_list context=8)
 L3:
   set index=2 (constant_string value="ok\x0a")
   jump to=L2
@@ -98,7 +98,7 @@ L2:
 L3:
   end
 L4:
-  return context=1 (make_array context=8 (call context=1 (make_array context=8 (constant_integer value=123)), (global context=4, name="xx", slot=4)))
+  return context=1 (make_list context=8 (call context=1 (make_array context=8 (constant_integer value=123)), (global context=4, name="xx", slot=4)))
 L7:
   jump to=L3
 EOI
@@ -171,5 +171,5 @@ L1:
 L1:
   lexical_state_set index=1
   set index=1 (global context=1, name="x", slot=1)
-  return context=1 (make_array context=8)
+  return context=1 (make_list context=8)
 EOI

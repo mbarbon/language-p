@@ -729,7 +729,8 @@ sub _function_call {
     }
 
     _add_bytecode $self,
-         opcode_nm( OP_MAKE_ARRAY, count => $argcount, context => CXT_LIST );
+         opcode_nm( $tree->function == OP_RETURN ? OP_MAKE_LIST : OP_MAKE_ARRAY,
+                    count => $argcount, context => CXT_LIST );
 
     if( $is_func ) {
         $self->dispatch( $tree->function );
