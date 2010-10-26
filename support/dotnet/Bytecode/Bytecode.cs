@@ -207,10 +207,13 @@ namespace org.mbarbon.p.runtime
     {
         public enum ContextValues
         {
-            CALLER = 1,
-            VOID   = 2,
-            SCALAR = 4,
-            LIST   = 8,
+            CALLER     = 1,
+            VOID       = 2,
+            SCALAR     = 4,
+            LIST       = 8,
+            LVALUE     = 16,
+            VIVIFY     = 32,
+            NOCREATE   = 64,
         }
 
         public const int RX_CASE_INSENSITIVE = 4;
