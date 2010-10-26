@@ -325,6 +325,16 @@ namespace org.mbarbon.p.runtime
         }
     }
 
+    public class LocalLexical : Lexical
+    {
+        public int Index;
+    }
+
+    public class LocalElement : Opcode
+    {
+        public int Index;
+    }
+
     public class CallMethod : Opcode
     {
         public string Method;
@@ -338,7 +348,8 @@ namespace org.mbarbon.p.runtime
 
     public class RegexClass : Opcode
     {
-        public string Elements;
+        public string Elements, Ranges;
+        public int Flags;
     }
 
     public class RegexAccept : Opcode
@@ -352,6 +363,11 @@ namespace org.mbarbon.p.runtime
     }
 
     public class RegexTry : Opcode
+    {
+        public int To;
+    }
+
+    public class RegexBacktrack : Opcode
     {
         public int To;
     }
@@ -380,6 +396,18 @@ namespace org.mbarbon.p.runtime
         public int Index;
         public int Flags;
         public int To; // for replace only
+    }
+
+    public class RegexEval : Opcode
+    {
+        public int Flags;
+    }
+
+    public class RegexTransliterate : Opcode
+    {
+        public string Match;
+        public string Replacement;
+        public int Flags;
     }
 
     public class Scope
