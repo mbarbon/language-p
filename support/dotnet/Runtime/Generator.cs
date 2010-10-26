@@ -611,6 +611,7 @@ namespace org.mbarbon.p.runtime
         }
 
         private Dictionary<int, bool> GeneratedScopes;
+        private Scope CurrentScope;
 
         public void GenerateScope(Subroutine sub, Scope scope)
         {
@@ -638,6 +639,7 @@ namespace org.mbarbon.p.runtime
                 else
                 {
                     List<Expression> exps = new List<Expression>();
+                    CurrentScope = scope;
 
                     if ((scope.Flags & Scope.SCOPE_EVAL) != 0)
                     {
