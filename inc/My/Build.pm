@@ -171,7 +171,7 @@ sub _run_p_tests {
         my @tests = sort map $self->expand_test_dir( $_ ), @directories;
 
         if( $run_bc ) {
-            s/\.t$/.pb/ foreach @tests;
+            $_ .= '.pb' foreach @tests;
         }
 
         local $ENV{PERL5OPT} = $ENV{HARNESS_PERL_SWITCHES}

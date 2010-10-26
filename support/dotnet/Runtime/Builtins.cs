@@ -61,8 +61,8 @@ namespace org.mbarbon.p.runtime
         internal static string SearchFile(Runtime runtime, string file)
         {
             string file_pb;
-            if (Path.HasExtension(file))
-                file_pb = Path.ChangeExtension(file, "pb");
+            if (Path.GetExtension(file) != ".pb")
+                file_pb = file + ".pb";
             else
                 file_pb = file;
 
