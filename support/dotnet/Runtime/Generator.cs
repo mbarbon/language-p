@@ -496,6 +496,7 @@ namespace org.mbarbon.p.runtime
                    slot == Opcode.Sigil.ARRAY    ? typeof(P5Array) :
                    slot == Opcode.Sigil.HASH     ? typeof(P5Hash) :
                    slot == Opcode.Sigil.ITERATOR ? typeof(IEnumerator<IP5Any>) :
+                   slot == Opcode.Sigil.GLOB     ? typeof(P5Typeglob) :
                                                    typeof(void);
         }
 
