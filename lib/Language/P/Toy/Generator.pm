@@ -421,7 +421,7 @@ sub finished {
         my $serialize = Language::P::Intermediate::Serialize->new;
         my $tree = $transform->all_to_tree( [ @$main_int,
                                               @{$self->_saved_subs || []} ] );
-        ( my $outfile = $self->_intermediate->file_name ) =~ s/(\.\w+)?$/.pb/;
+        my $outfile = $self->_intermediate->file_name . '.pb';
 
         $serialize->serialize( $tree, $outfile, $data_handle );
         $tree->[0]->weaken; # allow GC to happen
