@@ -498,8 +498,8 @@ local               0       same                 1   1  noattr
 localize_array_element 0    same                 2   1  index=i
 localize_glob_slot  0       same                 0   1  name=s,index=i,slot=i_sigil
 localize_hash_element 0     same                 2   1  index=i
-localize_lexical    0       same                 0   0  lexical=i,index=i
-localize_lexical_pad 0      same                 0   0  lexical=i,index=i
+localize_lexical    0       same                 0   0  lexical=ls,index=i
+localize_lexical_pad 0      same                 0   0  lexical=lp,index=i
 log_and             0       same                 2   1  noattr
 log_and_assign      0       same                 2   1  context=i1
 log_not             0       not                  1   1  context=i1
@@ -564,8 +564,8 @@ require_file        u       same                 1   1  context=i1
 restore_array_element 0     same                 0   0  index=i
 restore_glob_slot   0       same                 0   0  name=s,index=i,slot=i_sigil
 restore_hash_element 0      same                 0   0  index=i
-restore_lexical     0       same                 0   0  lexical=i,index=i
-restore_lexical_pad 0       same                 0   0  lexical=i,index=i
+restore_lexical     0       same                 0   0  lexical=ls,index=i
+restore_lexical_pad 0       same                 0   0  lexical=lp,index=i
 return              0       same                 1   0  context=i1
 reverse             0       same                 1   1  context=i1
 rmdir               u       same                 1   1  context=i1
