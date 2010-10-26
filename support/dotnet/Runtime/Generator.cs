@@ -1121,6 +1121,13 @@ namespace org.mbarbon.p.runtime
                         Runtime,
                         Context);
             }
+            case Opcode.OpNumber.OP_SCALAR:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(IP5Any).GetMethod("AsScalar"),
+                    Runtime);
+            }
             case Opcode.OpNumber.OP_RETURN:
             {
                 if (op.Childs.Length == 0)
