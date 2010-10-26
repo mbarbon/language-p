@@ -29,7 +29,7 @@ namespace org.mbarbon.p.runtime
                 {
                     var name = ReadString(reader);
                     var value = ReadString(reader);
-                    var glob = runtime.SymbolTable.GetOrCreateGlob(runtime, name + "::DATA");
+                    var glob = runtime.SymbolTable.GetGlob(runtime, name + "::DATA", true);
                     var input = new System.IO.StringReader(value);
 
                     glob.Handle = new P5Handle(runtime, input, null);
@@ -230,6 +230,7 @@ namespace org.mbarbon.p.runtime
             GLOB      = 5,
             HANDLE    = 7,
             ITERATOR  = 9,
+            STASH     = 10,
         }
 
         public OpNumber Number;

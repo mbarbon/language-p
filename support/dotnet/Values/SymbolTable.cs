@@ -4,87 +4,88 @@ using StringSplitOptions = System.StringSplitOptions;
 
 namespace org.mbarbon.p.values
 {
-    public class P5SymbolTable
+    public class P5SymbolTable : P5Hash
     {
-        public P5SymbolTable(Runtime runtime)
+        public P5SymbolTable(Runtime runtime) : base(runtime)
         {
-            symbols = new Dictionary<string, P5Typeglob>();
-            packages = new Dictionary<string, P5SymbolTable>();
         }
 
-        public P5Scalar GetOrCreateScalar(Runtime runtime, string name)
+        public P5Scalar GetScalar(Runtime runtime, string name, bool create)
         {
-            var glob = GetOrCreateGlob(runtime, name);
+            var glob = GetGlob(runtime, name, true);
             P5Scalar scalar;
-            if ((scalar = glob.Scalar) == null)
+            if ((scalar = glob.Scalar) == null && create)
                 scalar = glob.Scalar = new P5Scalar(runtime);
 
             return scalar;
         }
 
-        public P5Array GetOrCreateArray(Runtime runtime, string name)
+        public P5Array GetArray(Runtime runtime, string name, bool create)
         {
-            var glob = GetOrCreateGlob(runtime, name);
+            var glob = GetGlob(runtime, name, true);
             P5Array array;
-            if ((array = glob.Array) == null)
+            if ((array = glob.Array) == null && create)
                 array = glob.Array = new P5Array(runtime);
 
             return array;
         }
 
-        public P5Hash GetOrCreateHash(Runtime runtime, string name)
+        public P5Hash GetHash(Runtime runtime, string name, bool create)
         {
-            var glob = GetOrCreateGlob(runtime, name);
+            var glob = GetGlob(runtime, name, true);
             P5Hash hash;
-            if ((hash = glob.Hash) == null)
+            if ((hash = glob.Hash) == null && create)
                 hash = glob.Hash = new P5Hash(runtime);
 
             return hash;
         }
 
-        public P5Handle GetOrCreateHandle(Runtime runtime, string name)
+        public P5Handle GetHandle(Runtime runtime, string name, bool create)
         {
-            var glob = GetOrCreateGlob(runtime, name);
+            var glob = GetGlob(runtime, name, true);
             P5Handle handle;
-            if ((handle = glob.Handle) == null)
+            if ((handle = glob.Handle) == null && create)
                 handle = glob.Handle = new P5Handle(runtime, null, null);
 
             return handle;
         }
 
-        public P5Typeglob GetGlob(Runtime runtime, string name)
-        {
-            string[] packs = name.Split(separator, StringSplitOptions.None);
-            P5SymbolTable st = GetPackage(runtime, packs, true, false);
-            P5Typeglob glob;
-
-            if (st == null)
-                return null;
-            if (!st.symbols.TryGetValue(packs[packs.Length - 1], out glob))
-                return null;
-
-            return glob;
-        }
-
-        public P5Typeglob GetOrCreateGlob(Runtime runtime, string name)
+        public P5Typeglob GetGlob(Runtime runtime, string name, bool create)
         {
             string[] packs = name.Split(separator, StringSplitOptions.None);
             P5SymbolTable st = GetPackage(runtime, packs, true, true);
 
-            P5Typeglob glob;
-            if (!st.symbols.TryGetValue(packs[packs.Length - 1], out glob))
-            {
-                glob = new P5Typeglob(runtime);
-                ApplyMagic(runtime, packs[packs.Length - 1], glob);
-                st.symbols.Add(packs[packs.Length - 1], glob);
-            }
-
-            return glob;
+            return st.GetStashGlob(runtime, packs[packs.Length - 1], create);
         }
 
-        public P5Code GetCode(Runtime runtime, string name)
+        public P5Typeglob GetStashGlob(Runtime runtime, string name, bool create)
         {
-            P5Typeglob glob = GetGlob(runtime, name);
+            IP5Any value;
+            if (!hash.TryGetValue(name, out value) && create)
+            {
+                P5Typeglob glob = new P5Typeglob(runtime);
+                ApplyMagic(runtime, name, glob);
+                hash.Add(name, glob);
+                value = glob;
+            }
+
+            return value as P5Typeglob;
+        }
+
+        public P5Code GetCode(Runtime runtime, string name, bool create)
+        {
+            P5Typeglob glob = GetGlob(runtime, name, create);
+            // TODO create a stub subroutine if !glob or !glob.Code
+            if (glob != null)
+                return glob.Code;
+
+            return null;
+        }
+
+        public P5Code GetStashCode(Runtime runtime, string name, bool create)
+        {
+            P5Typeglob glob = GetStashGlob(runtime, name, create);
+            // TODO create a stub subroutine if !glob or !glob.Code
             if (glob != null)
                 return glob.Code;
 
@@ -93,23 +94,23 @@ namespace org.mbarbon.p.values
 
         public void SetCode(Runtime runtime, string name, P5Code code)
         {
-            P5Typeglob glob = GetOrCreateGlob(runtime, name);
+            P5Typeglob glob = GetGlob(runtime, name, true);
             glob.Code = code;
         }
 
-        public P5SymbolTable GetOrCreatePackage(Runtime runtime, string pack)
+        public P5SymbolTable GetPackage(Runtime runtime, string pack)
         {
             string[] packs = pack.Split(separator, StringSplitOptions.None);
 
             return GetPackage(runtime, packs, false, true);
         }
 
-        public P5SymbolTable GetOrCreatePackage(Runtime runtime, string pack,
-                                                bool skip_last)
+        public P5SymbolTable GetPackage(Runtime runtime, string pack,
+                                        bool create)
         {
             string[] packs = pack.Split(separator, StringSplitOptions.None);
 
-            return GetPackage(runtime, packs, skip_last, true);
+            return GetPackage(runtime, packs, false, create);
         }
 
         virtual protected void ApplyMagic(Runtime runtime, string name,
@@ -135,7 +136,8 @@ namespace org.mbarbon.p.values
         internal P5SymbolTable GetPackage(Runtime runtime, string[] packs,
                                           bool skip_last, bool create)
         {
-            P5SymbolTable current = this, next;
+            P5SymbolTable current = this;
+            IP5Any value;
 
             int last = packs.Length + (skip_last ? -1 : 0);
             int first = 0;
@@ -143,30 +145,32 @@ namespace org.mbarbon.p.values
                 first = 1;
             for (int i = first; i < last; ++i)
             {
-                if (!current.packages.TryGetValue(packs[i], out next))
+                if (!current.hash.TryGetValue(packs[i] + "::", out value))
                 {
                     if (!create)
                         return null;
 
-                    next = new P5SymbolTable(runtime);
-                    current.packages.Add(packs[i], next);
+                    P5Typeglob glob = new P5Typeglob(runtime);
+                    glob.Hash = new P5SymbolTable(runtime);
+                    current.hash.Add(packs[i] + "::", glob);
+                    value = glob;
                 }
-                current = next;
+                current = (value as P5Typeglob).Hash as P5SymbolTable;
             }
 
             return current;
         }
 
-        public P5Code FindMethod(Runtime runtime, string method)
+        public new P5Code FindMethod(Runtime runtime, string method)
         {
-            var code = GetCode(runtime, method);
+            var code = GetStashCode(runtime, method, false);
             if (code != null)
                 return code;
 
-            P5Typeglob isa;
-            if (!symbols.TryGetValue("ISA", out isa))
+            IP5Any isa;
+            if (!hash.TryGetValue("ISA", out isa))
                 return null;
-            P5Array isa_array = isa.Array;
+            P5Array isa_array = (isa as P5Typeglob).Array;
             if (isa_array == null)
                 return null;
 
@@ -191,21 +195,19 @@ namespace org.mbarbon.p.values
         }
 
         protected readonly string[] separator = new string [] {"::"};
-        protected Dictionary<string, P5Typeglob> symbols;
-        protected Dictionary<string, P5SymbolTable> packages;
     }
 
     public class P5MainSymbolTable : P5SymbolTable
     {
         public P5MainSymbolTable(Runtime runtime) : base(runtime)
         {
-            var stdout = GetOrCreateGlob(runtime, "STDOUT");
+            var stdout = GetGlob(runtime, "STDOUT", true);
             stdout.Handle = new P5Handle(runtime, null, System.Console.Out);
 
-            var stdin = GetOrCreateGlob(runtime, "STDIN");
+            var stdin = GetGlob(runtime, "STDIN", true);
             stdin.Handle = new P5Handle(runtime, System.Console.In, null);
 
-            var stderr = GetOrCreateGlob(runtime, "STDERR");
+            var stderr = GetGlob(runtime, "STDERR", true);
             stderr.Handle = new P5Handle(runtime, null, System.Console.Error);
         }
 

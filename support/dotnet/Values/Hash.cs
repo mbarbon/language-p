@@ -207,6 +207,6 @@ namespace org.mbarbon.p.values
         }
 
         private P5SymbolTable blessed;
-        private Dictionary<string, IP5Any> hash;
+        protected Dictionary<string, IP5Any> hash;
     }
 }

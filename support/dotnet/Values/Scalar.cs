@@ -245,7 +245,7 @@ namespace org.mbarbon.p.values
             }
             else
             {
-                var stash = runtime.SymbolTable.GetOrCreatePackage(runtime, AsString(runtime));
+                var stash = runtime.SymbolTable.GetPackage(runtime, AsString(runtime), false, true);
 
                 return stash.FindMethod(runtime, method);
             }

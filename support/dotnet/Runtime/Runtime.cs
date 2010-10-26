@@ -41,13 +41,13 @@ namespace org.mbarbon.p.runtime
             CallStack = new Stack<StackFrame>();
 
             // set up INC
-            SymbolTable.GetOrCreateArray(this, "INC").Assign(
+            SymbolTable.GetArray(this, "INC", true).Assign(
                 this, new P5Scalar(this, "."));
         }
 
         public void SetException(System.Exception e)
         {
-            SymbolTable.GetOrCreateScalar(this, "@")
+            SymbolTable.GetScalar(this, "@", true)
                 .Assign(this, new P5Scalar(this, e.Message));
         }
 

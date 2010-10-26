@@ -21,7 +21,7 @@ namespace org.mbarbon.p.runtime
         public static P5Scalar Bless(Runtime runtime, P5Scalar reference, P5Scalar pack)
         {
             var pack_str = pack.AsString(runtime);
-            var stash = runtime.SymbolTable.GetOrCreatePackage(runtime, pack_str);
+            var stash = runtime.SymbolTable.GetPackage(runtime, pack_str, true);
 
             reference.BlessReference(runtime, stash);
 
@@ -66,7 +66,7 @@ namespace org.mbarbon.p.runtime
             else
                 file_pb = file;
 
-            var inc = runtime.SymbolTable.GetOrCreateArray(runtime, "INC");
+            var inc = runtime.SymbolTable.GetArray(runtime, "INC", true);
             foreach (var i in inc)
             {
                 var iStr = i.AsString(runtime);
@@ -97,7 +97,7 @@ namespace org.mbarbon.p.runtime
             P5Code main = new Generator(runtime).Generate(null, cu);
             var ret = main.Call(runtime, context, null);
 
-            var inc = runtime.SymbolTable.GetOrCreateHash(runtime, "INC");
+            var inc = runtime.SymbolTable.GetHash(runtime, "INC", true);
             inc.SetItem(runtime, file_s, new P5Scalar(runtime, path));
 
             return ret;
@@ -108,7 +108,7 @@ namespace org.mbarbon.p.runtime
                                          P5Scalar file)
         {
             var file_s = file.AsString(runtime);
-            var inc = runtime.SymbolTable.GetOrCreateHash(runtime, "INC");
+            var inc = runtime.SymbolTable.GetHash(runtime, "INC", true);
 
             if (inc.ExistsKey(runtime, file_s))
                 return new P5Scalar(runtime, 1);

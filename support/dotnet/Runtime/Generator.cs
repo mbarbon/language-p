@@ -439,6 +439,8 @@ namespace org.mbarbon.p.runtime
             new Type[] { typeof(Runtime), typeof(IP5Any) };
         private static Type[] ProtoStringString =
             new Type[] { typeof(string), typeof(string) };
+        private static Type[] ProtoRuntimeStringBool =
+            new Type[] { typeof(Runtime), typeof(string), typeof(bool) };
 
         public SubGenerator(ModuleGenerator module_generator,
                             List<ModuleGenerator.SubInfo> subroutines)
@@ -500,17 +502,17 @@ namespace org.mbarbon.p.runtime
             switch (slot)
             {
             case Opcode.Sigil.SCALAR:
-                return "GetOrCreateScalar";
+                return "GetScalar";
             case Opcode.Sigil.ARRAY:
-                return "GetOrCreateArray";
+                return "GetArray";
             case Opcode.Sigil.HASH:
-                return "GetOrCreateHash";
+                return "GetHash";
             case Opcode.Sigil.SUB:
                 return "GetCode";
             case Opcode.Sigil.GLOB:
-                return "GetOrCreateGlob";
+                return "GetGlob";
             case Opcode.Sigil.HANDLE:
-                return "GetOrCreateHandle";
+                return "GetHandle";
             default:
                 throw new System.Exception(string.Format("Unhandled slot {0:D}", slot));
             }
@@ -823,6 +825,28 @@ namespace org.mbarbon.p.runtime
             return Expression.IfThen(cmp, jump);
         }
 
+        private Expression UndefIfNull(Expression e)
+        {
+            var temp = Expression.Parameter(typeof(IP5Any));
+            var exps = new List<Expression>();
+            var undef =
+                Expression.New(
+                    typeof(P5Scalar).GetConstructor(ProtoRuntime),
+                    new Expression[] { Runtime } );
+
+            exps.Add(Expression.Assign(temp, e));
+            exps.Add(
+                Expression.Condition(
+                    Expression.Equal(temp, Expression.Constant(null, typeof(IP5Any))),
+                    Expression.Convert(undef, typeof(IP5Any)), temp));
+
+            return
+                Expression.Block(
+                    typeof(IP5Any),
+                    new ParameterExpression[] { temp },
+                    exps);
+        }
+
         public Expression Generate(Subroutine sub, Opcode op)
         {
             switch(op.Number)
@@ -881,13 +905,32 @@ namespace org.mbarbon.p.runtime
             {
                 Global gop = (Global)op;
                 var st = typeof(Runtime).GetField("SymbolTable");
-                string name = MethodForSlot(gop.Slot);
-                return
+                MethodInfo method;
+                string name;
+
+                if (gop.Slot == Opcode.Sigil.STASH)
+                {
+                    method = typeof(P5SymbolTable).GetMethod("GetPackage", ProtoRuntimeStringBool);
+                    name = gop.Name.Substring(0, gop.Name.Length - 2);
+                }
+                else
+                {
+                    method = typeof(P5SymbolTable).GetMethod(MethodForSlot(gop.Slot));
+                    name = gop.Name;
+                }
+                bool create = (gop.Context & (int)Opcode.ContextValues.NOCREATE) == 0;
+                var global =
                     Expression.Call(
                         Expression.Field(Runtime, st),
-                        typeof(P5SymbolTable).GetMethod(name),
+                        method,
                         Runtime,
-                        Expression.Constant(gop.Name));
+                        Expression.Constant(name),
+                        Expression.Constant(create));
+
+                if (create)
+                    return global;
+                else
+                    return UndefIfNull(global);
             }
             case Opcode.OpNumber.OP_GLOB_SLOT:
             {
@@ -1608,9 +1651,10 @@ namespace org.mbarbon.p.runtime
                         glob,
                         Expression.Call(
                             Expression.Field(Runtime, st),
-                            typeof(P5SymbolTable).GetMethod("GetOrCreateGlob"),
+                            typeof(P5SymbolTable).GetMethod("GetGlob"),
                             Runtime,
-                            Expression.Constant(lop.Name))));
+                            Expression.Constant(lop.Name),
+                            Expression.Constant(true))));
                 exps.Add(
                     Expression.Assign(
                         temp,
@@ -1618,7 +1662,8 @@ namespace org.mbarbon.p.runtime
                             Expression.Field(Runtime, st),
                             typeof(P5SymbolTable).GetMethod(MethodForSlot(lop.Slot)),
                             Runtime,
-                            Expression.Constant(lop.Name))));
+                            Expression.Constant(lop.Name),
+                            Expression.Constant(true))));
                 exps.Add(
                     Expression.Assign(
                         saved,
@@ -1655,9 +1700,10 @@ namespace org.mbarbon.p.runtime
                         glob,
                         Expression.Call(
                             Expression.Field(Runtime, st),
-                            typeof(P5SymbolTable).GetMethod("GetOrCreateGlob"),
+                            typeof(P5SymbolTable).GetMethod("GetGlob"),
                             Runtime,
-                            Expression.Constant(lop.Name))));
+                            Expression.Constant(lop.Name),
+                            Expression.Constant(true))));
                 exps.Add(
                     Expression.Assign(
                         Expression.Property(
