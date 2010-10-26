@@ -1144,6 +1144,37 @@ namespace org.mbarbon.p.runtime
                     return ReturnExpression(Generate(sub, op.Childs[0]));
                 }
             }
+            case Opcode.OpNumber.OP_DYNAMIC_GOTO:
+            {
+                // TODO handle goto $LABEL
+                var exit_scope = new List<Expression>();
+
+                for (var s = CurrentScope; s != null; s = s.Outer != -1 ? sub.Scopes[s.Outer] : null)
+                    for (int j = s.Opcodes.Length - 1; j >= 0; --j)
+                        Generate(sub, s.Opcodes[j], exit_scope);
+
+                exit_scope.Add(
+                    Expression.Call(
+                        Expression.Field(Runtime, "CallStack"),
+                        typeof(Stack<StackFrame>).GetMethod("Pop")));
+
+                var code =
+                    Expression.Call(
+                        Generate(sub, op.Childs[0]),
+                        typeof(IP5Any).GetMethod("DereferenceSubroutine"),
+                        Runtime);
+                // TODO this is not a real tail call: the .Net stack grows
+                exit_scope.Add(
+                    ReturnExpression(
+                        Expression.Call(
+                            code,
+                            typeof(P5Code).GetMethod("Call"),
+                            Runtime,
+                            Context,
+                            Arguments)));
+
+                return Expression.Block(typeof(void), exit_scope);
+            }
             case Opcode.OpNumber.OP_ASSIGN:
             {
                 return

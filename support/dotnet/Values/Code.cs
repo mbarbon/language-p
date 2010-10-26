@@ -15,9 +15,12 @@ namespace org.mbarbon.p.values
         public IP5Any Call(Runtime runtime, Opcode.ContextValues context,
                            P5Array args)
         {
+            // TODO emit this in the subroutine prologue/epilogue code,
+            //      as is done for eval BLOCK
             P5ScratchPad pad = scratchpad;
             if (scratchpad != null && !is_main)
                 pad = scratchpad.NewScope(runtime);
+            int size = runtime.CallStack.Count;
 
             try
             {
@@ -29,7 +32,8 @@ namespace org.mbarbon.p.values
             }
             finally
             {
-                runtime.CallStack.Pop();
+                while (runtime.CallStack.Count > size)
+                    runtime.CallStack.Pop();
             }
         }
 
