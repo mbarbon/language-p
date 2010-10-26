@@ -11,7 +11,8 @@ sub tail_sum {
 
 # too slow for the Toy runtime
 # print tail_sum( 60000, 0 ) == 1800030000 ? "ok\n" : "not ok\n";
-print tail_sum( 3000, 0 ) == 4501500 ? "ok\n" : "not ok\n";
+$sum = tail_sum( 3000, 0 );
+print $sum == 4501500 ? "ok\n" : "not ok - $sum\n";
 
 $t = 4;
 $c = 0;

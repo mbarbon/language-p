@@ -10,7 +10,7 @@ sub ok_7 {
 
 my $x;
 
-print "ok $x\n";
+print "ok $x - 4\n";
 
 $x = 6;
 
@@ -21,10 +21,10 @@ BEGIN {
 }
 
 print "ok 5\n";
-print "ok $x\n";
+print "ok $x - 6\n";
 
 BEGIN {
-    print "ok $x\n";
+    print "ok $x - 2\n";
     $x = 4;
 }
 
