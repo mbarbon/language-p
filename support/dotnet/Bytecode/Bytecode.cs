@@ -314,7 +314,7 @@ namespace org.mbarbon.p.runtime
     {
         public LexicalInfo LexicalInfo;
 
-        public int Index
+        public int LexicalIndex
         {
             get { return LexicalInfo.Index; }
         }

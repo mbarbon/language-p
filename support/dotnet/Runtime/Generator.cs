@@ -1490,19 +1490,19 @@ namespace org.mbarbon.p.runtime
             {
                 Lexical lx = (Lexical)op;
 
-                return lx.Index == 0 && !IsMain ? Arguments : GetLexical(lx.Index, lx.Slot);
+                return lx.LexicalIndex == 0 && !IsMain ? Arguments : GetLexical(lx.LexicalIndex, lx.Slot);
             }
             case Opcode.OpNumber.OP_LEXICAL_CLEAR:
             {
                 Lexical lx = (Lexical)op;
-                Expression lexvar = GetLexical(lx.Index, lx.Slot);
+                Expression lexvar = GetLexical(lx.LexicalIndex, lx.Slot);
 
                 return Expression.Assign(lexvar, Expression.Constant(null, lexvar.Type));
             }
             case Opcode.OpNumber.OP_LEXICAL_SET:
             {
                 Lexical lx = (Lexical)op;
-                Expression lexvar = GetLexical(lx.Index, lx.Slot);
+                Expression lexvar = GetLexical(lx.LexicalIndex, lx.Slot);
 
                 return Expression.Assign(
                     lexvar,
