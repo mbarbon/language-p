@@ -1535,6 +1535,42 @@ namespace org.mbarbon.p.runtime
 
                 return Expression.Assign(lexvar, Expression.Constant(null, lexvar.Type));
             }
+            case Opcode.OpNumber.OP_LEXICAL_PAD_SET:
+            {
+                Lexical lx = (Lexical)op;
+                Expression lexvar = GetLexicalPad(lx.LexicalInfo, true);
+
+                return Expression.Assign(
+                    lexvar,
+                    Expression.Convert(Generate(sub, op.Childs[0]), lexvar.Type));
+            }
+            case Opcode.OpNumber.OP_LOCALIZE_LEXICAL_PAD:
+            {
+                LocalLexical lx = (LocalLexical)op;
+                Expression lexvar = GetLexicalPad(lx.LexicalInfo, true);
+                var saved = GetTemporary(lx.Index, typeof(IP5Any));
+
+                return Expression.Assign(saved, lexvar);
+            }
+            case Opcode.OpNumber.OP_RESTORE_LEXICAL_PAD:
+            {
+                var exps = new List<Expression>();
+                LocalLexical lx = (LocalLexical)op;
+                Expression lexvar = GetLexicalPad(lx.LexicalInfo, true);
+                var saved = GetTemporary(lx.Index, typeof(IP5Any));
+
+                exps.Add(
+                    Expression.IfThen(
+                        Expression.NotEqual(
+                            saved,
+                            Expression.Constant(null, saved.Type)),
+                        Expression.Assign(lexvar, saved)));
+                exps.Add(Expression.Assign(
+                             saved,
+                             Expression.Constant(null, saved.Type)));
+
+                return Expression.Block(typeof(void), exps);
+            }
             case Opcode.OpNumber.OP_BLESS:
             {
                 return
