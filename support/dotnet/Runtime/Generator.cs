@@ -366,7 +366,9 @@ namespace org.mbarbon.p.runtime
                     Initializers.Add(set_main_pad);
                     main = si.CodeField;
                 }
-                else if (si.SubName == "BEGIN")
+                else if (   si.SubName != null
+                         && (   si.SubName == "BEGIN"
+                             || si.SubName.EndsWith("::BEGIN")))
                 {
                     Expression empty_list =
                         Expression.New(
