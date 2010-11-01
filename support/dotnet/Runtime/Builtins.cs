@@ -125,5 +125,47 @@ namespace org.mbarbon.p.runtime
 
             return ret;
         }
+
+        public static int ParseInteger(string s)
+        {
+            if (s.Length == 0)
+                return 0;
+            if (s[0] != '-' && !char.IsDigit(s[0]) && !char.IsWhiteSpace(s[0]))
+                return 0;
+
+            // TODO this does not work for " 123", "-1_234", "12abc"
+            return int.Parse(s);
+        }
+
+        public static P5Scalar BitOr(Runtime runtime, P5Scalar a, P5Scalar b)
+        {
+            if (a.IsString(runtime) && b.IsString(runtime))
+            {
+                string sa = a.AsString(runtime), sb = b.AsString(runtime);
+                System.Text.StringBuilder t;
+
+                if (sa.Length > sb.Length)
+                {
+                    t = new System.Text.StringBuilder(sa);
+
+                    for (int i = 0; i < sb.Length; ++i)
+                        t[i] |= sb[i];
+                }
+                else
+                {
+                    t = new System.Text.StringBuilder(sb);
+
+                    for (int i = 0; i < sa.Length; ++i)
+                        t[i] |= sa[i];
+                }
+
+                return new P5Scalar(runtime, t.ToString());
+            }
+            else
+            {
+                // TODO take into account signed/unsigned?
+                return new P5Scalar(runtime, a.AsInteger(runtime) | b.AsInteger(runtime));
+            }
+        }
     }
 }

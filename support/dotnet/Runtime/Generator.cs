@@ -1,9 +1,11 @@
 using org.mbarbon.p.values;
 
+using System; // Func
 using System.Reflection.Emit;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.Scripting.Ast;
+using CallInfo = System.Dynamic.CallInfo;
 using System.Collections.Generic;
 using Type = System.Type;
 using IEnumerator = System.Collections.IEnumerator;
@@ -1328,6 +1330,31 @@ namespace org.mbarbon.p.runtime
                 return Expression.New(
                     typeof(P5Scalar).GetConstructor(ProtoRuntimeInt),
                     new Expression[] { Runtime, len_1 });
+            }
+            case Opcode.OpNumber.OP_BIT_OR:
+            {
+                var delegateType = typeof(Func<CallSite, object, object, object>);
+                var siteType = typeof(CallSite<Func<CallSite, object, object, object>>);
+                var initExpr = Expression.Call(
+                    siteType.GetMethod("Create"),
+                    Expression.New(
+                        typeof(P5BinaryOperationBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
+                        Expression.Constant(ExpressionType.Or),
+                        ModuleGenerator.InitRuntime));
+                var staticField = ModuleGenerator.AddField(initExpr, siteType);
+
+                var res =
+                    Expression.Call(
+                        Expression.Field(
+                            Expression.Field(null, staticField),
+                            siteType.GetField("Target")
+                            ),
+                        delegateType.GetMethod("Invoke"),
+                        Expression.Field(null, staticField),
+                        Generate(sub, op.Childs[0]),
+                        Generate(sub, op.Childs[1]));
+
+                return Expression.Convert(res, typeof(IP5Any));
             }
             case Opcode.OpNumber.OP_ADD:
             {

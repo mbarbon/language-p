@@ -62,7 +62,7 @@ sub ACTION_code_dlr {
         $self->add_to_cleanup( 'support/dotnet/Bytecode/BytecodeGenerated.cs' );
     }
 
-    my @files = map glob( "support/dotnet/$_" ), qw(*.cs */*.cs);
+    my @files = map glob( "support/dotnet/$_" ), qw(*.cs */*.cs */*/*.cs);
 
     # only works with MonoDevelop and when mdtool is in path
     if( !$self->up_to_date( [ @files ],
