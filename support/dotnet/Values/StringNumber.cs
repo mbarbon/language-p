@@ -61,6 +61,21 @@ namespace org.mbarbon.p.values
             throw new System.Exception();
         }
 
+        public virtual bool IsInteger(Runtime runtime)
+        {
+            return (flags & HasInteger) != 0;
+        }
+
+        public virtual bool IsString(Runtime runtime)
+        {
+            return (flags & HasString) != 0;
+        }
+
+        public virtual bool IsFloat(Runtime runtime)
+        {
+            return (flags & HasFloat) != 0;
+        }
+
         public virtual bool AsBoolean(Runtime runtime)
         {
             return    ((flags & HasInteger) != 0 && integerValue != 0)

@@ -19,6 +19,10 @@ namespace org.mbarbon.p.values
         public virtual bool AsBoolean(Runtime runtime) { return false; }
         public virtual int Length(Runtime runtime) { return 0; }
 
+        public virtual bool IsInteger(Runtime runtime) { return true; }
+        public virtual bool IsString(Runtime runtime) { return true; }
+        public virtual bool IsFloat(Runtime runtime) { return true; }
+
         public virtual P5Scalar ReferenceType(Runtime runtime)
         {
             return new P5Scalar(runtime);

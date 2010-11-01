@@ -29,6 +29,10 @@ namespace org.mbarbon.p.values
             return AsInteger(runtime);
         }
 
+        public virtual bool IsInteger(Runtime runtime) { return true; }
+        public virtual bool IsString(Runtime runtime) { return true; }
+        public virtual bool IsFloat(Runtime runtime) { return false; }
+
         public virtual bool AsBoolean(Runtime runtime)
         {
             return true;

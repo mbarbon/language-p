@@ -44,6 +44,21 @@ namespace org.mbarbon.p.values
             return Get(runtime).AsBoolean(runtime);
         }
 
+        public virtual bool IsInteger(Runtime runtime)
+        {
+            return Get(runtime).Body.IsInteger(runtime);
+        }
+
+        public virtual bool IsString(Runtime runtime)
+        {
+            return Get(runtime).Body.IsString(runtime);
+        }
+
+        public virtual bool IsFloat(Runtime runtime)
+        {
+            return Get(runtime).Body.IsFloat(runtime);
+        }
+
         public virtual P5Scalar ReferenceType(Runtime runtime)
         {
             return Get(runtime).ReferenceType(runtime);

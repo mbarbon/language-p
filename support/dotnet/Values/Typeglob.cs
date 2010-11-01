@@ -128,6 +128,10 @@ namespace org.mbarbon.p.values
         public virtual int AsInteger(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual double AsFloat(Runtime runtime) { throw new System.NotImplementedException(); }
 
+        public virtual bool IsInteger(Runtime runtime) { return false; }
+        public virtual bool IsString(Runtime runtime) { return true; }
+        public virtual bool IsFloat(Runtime runtime) { return false; }
+
         public virtual bool AsBoolean(Runtime runtime)
         {
             return true;

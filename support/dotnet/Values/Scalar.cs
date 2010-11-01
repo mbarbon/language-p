@@ -80,6 +80,10 @@ namespace org.mbarbon.p.values
         public virtual bool AsBoolean(Runtime runtime) { return body.AsBoolean(runtime); }
         public virtual bool IsDefined(Runtime runtime) { return !(body is P5Undef); }
 
+        public virtual bool IsInteger(Runtime runtime) { return body.IsInteger(runtime); }
+        public virtual bool IsString(Runtime runtime) { return body.IsString(runtime); }
+        public virtual bool IsFloat(Runtime runtime) { return body.IsFloat(runtime); }
+
         public virtual P5Handle AsHandle(Runtime runtime)
         {
             throw new System.NotImplementedException("No AsHandle for P5Scalar");
@@ -285,6 +289,10 @@ namespace org.mbarbon.p.values
         double AsFloat(Runtime runtime);
         bool AsBoolean(Runtime runtime);
         int Length(Runtime runtime);
+
+        bool IsInteger(Runtime runtime);
+        bool IsString(Runtime runtime);
+        bool IsFloat(Runtime runtime);
 
         int GetPos(Runtime runtime);
         void SetPos(Runtime runtime, int pos);
