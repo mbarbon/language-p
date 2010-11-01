@@ -143,7 +143,7 @@ namespace org.mbarbon.p.runtime
             var ops = new List<Regex.Op>();
             var targets = new List<int>();
             var exact = new List<string>();
-            int captures = 0;
+            int captures = 0, saved = 0;
 
             foreach (var bb in sub.BasicBlocks)
             {
@@ -153,6 +153,10 @@ namespace org.mbarbon.p.runtime
                 {
                     switch (op.Number)
                     {
+                    case Opcode.OpNumber.OP_RX_ANY:
+                    case Opcode.OpNumber.OP_RX_ANY_NONEWLINE:
+                    case Opcode.OpNumber.OP_RX_FAIL:
+                    case Opcode.OpNumber.OP_RX_POP_STATE:
                     case Opcode.OpNumber.OP_RX_BEGINNING:
                     case Opcode.OpNumber.OP_RX_END_OR_NEWLINE:
                     case Opcode.OpNumber.OP_RX_START_MATCH:
@@ -166,11 +170,21 @@ namespace org.mbarbon.p.runtime
                         break;
                     }
                     case Opcode.OpNumber.OP_RX_EXACT:
+                    case Opcode.OpNumber.OP_RX_EXACT_I:
                     {
                         var ex = (RegexExact)op;
 
                         ops.Add(new Regex.Op(ex.Number, exact.Count));
                         exact.Add(ex.String);
+                        break;
+                    }
+                    case Opcode.OpNumber.OP_RX_SAVE_POS:
+                    case Opcode.OpNumber.OP_RX_RESTORE_POS:
+                    {
+                        var st = (RegexState)op;
+
+                        ops.Add(new Regex.Op(st.Number, st.Index));
+                        ++saved;
                         break;
                     }
                     case Opcode.OpNumber.OP_RX_CLASS:
@@ -191,6 +205,13 @@ namespace org.mbarbon.p.runtime
                     case Opcode.OpNumber.OP_RX_TRY:
                     {
                         var tr = (RegexTry)op;
+
+                        ops.Add(new Regex.Op(tr.Number, tr.To));
+                        break;
+                    }
+                    case Opcode.OpNumber.OP_RX_BACKTRACK:
+                    {
+                        var tr = (RegexBacktrack)op;
 
                         ops.Add(new Regex.Op(tr.Number, tr.To));
                         break;
@@ -235,7 +256,7 @@ namespace org.mbarbon.p.runtime
 
             return new Regex(ops.ToArray(), targets.ToArray(),
                              exact.ToArray(), quantifiers.ToArray(),
-                             captures);
+                             captures, saved);
         }
 
         public void AddMethod(int index, Subroutine sub)

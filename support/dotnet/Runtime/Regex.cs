@@ -72,6 +72,7 @@ namespace org.mbarbon.p.runtime
         public List<RxState> States;
         public List<int> StateBacktrack;
         public RxCapture[] Captures;
+        public int[] Saved;
     }
 
     public struct RxResult
@@ -118,13 +119,14 @@ namespace org.mbarbon.p.runtime
         }
 
         public Regex(Op[] ops, int[] targets, string[] exact,
-                     RxQuantifier[] quantifiers, int captures)
+                     RxQuantifier[] quantifiers, int captures, int saved)
         {
             Ops = ops;
             Targets = targets;
             Exact = exact;
             Quantifiers = quantifiers;
             Captures = captures;
+            Saved = saved;
         }
 
         private void SaveGroups(ref RxContext cxt, int start, int end,
@@ -352,6 +354,10 @@ namespace org.mbarbon.p.runtime
                 cxt.Captures = new RxCapture[Captures];
             else
                 cxt.Captures = null;
+            if (Saved > 0)
+                cxt.Saved = new int[Saved];
+            else
+                cxt.Saved = null;
             cxt.LastOpenCapture = cxt.LastClosedCapture = -1;
 
             for (int index = 0; index >= 0;)
@@ -363,15 +369,56 @@ namespace org.mbarbon.p.runtime
                     ++index;
                     break;
                 case Opcode.OpNumber.OP_RX_EXACT:
+                case Opcode.OpNumber.OP_RX_EXACT_I:
                 {
                     var s = Exact[Ops[index].Index];
+                    bool case_insensitive = Ops[index].Number == Opcode.OpNumber.OP_RX_EXACT_I;
 
                     if (   cxt.Pos + s.Length > len
-                        || string.Compare(str, cxt.Pos, s, 0, s.Length) != 0)
+                        || string.Compare(str, cxt.Pos, s, 0, s.Length,
+                                          case_insensitive) != 0)
                         index = Backtrack(ref cxt);
                     else
                     {
                         cxt.Pos += s.Length;
+                        ++index;
+                    }
+
+                    break;
+                }
+                case Opcode.OpNumber.OP_RX_SAVE_POS:
+                {
+                    cxt.Saved[Ops[index].Index] = cxt.Pos;
+
+                    ++index;
+                    break;
+                }
+                case Opcode.OpNumber.OP_RX_RESTORE_POS:
+                {
+                    cxt.Pos = cxt.Saved[Ops[index].Index];
+
+                    ++index;
+                    break;
+                }
+                case Opcode.OpNumber.OP_RX_ANY_NONEWLINE:
+                {
+                    if (cxt.Pos == len || str[cxt.Pos] == '\n')
+                        index = Backtrack(ref cxt);
+                    else
+                    {
+                        ++cxt.Pos;
+                        ++index;
+                    }
+
+                    break;
+                }
+                case Opcode.OpNumber.OP_RX_ANY:
+                {
+                    if (cxt.Pos == len)
+                        index = Backtrack(ref cxt);
+                    else
+                    {
+                        ++cxt.Pos;
                         ++index;
                     }
 
@@ -411,6 +458,7 @@ namespace org.mbarbon.p.runtime
                     index = Targets[Ops[index].Index];
                     break;
                 }
+                case Opcode.OpNumber.OP_RX_BACKTRACK:
                 case Opcode.OpNumber.OP_RX_TRY:
                 {
                     var st = new RxState(cxt.Pos, Targets[Ops[index].Index],
@@ -419,6 +467,18 @@ namespace org.mbarbon.p.runtime
                     cxt.States.Add(st);
 
                     ++index;
+                    break;
+                }
+                case Opcode.OpNumber.OP_RX_POP_STATE:
+                {
+                    cxt.States.RemoveAt(cxt.States.Count - 1);
+
+                    ++index;
+                    break;
+                }
+                case Opcode.OpNumber.OP_RX_FAIL:
+                {
+                    index = Backtrack(ref cxt);
                     break;
                 }
                 case Opcode.OpNumber.OP_RX_QUANTIFIER:
@@ -555,6 +615,6 @@ namespace org.mbarbon.p.runtime
         private string[] Exact;
         private int[] Targets;
         private RxQuantifier[] Quantifiers;
-        private int Captures;
+        private int Captures, Saved;
     }
 }
