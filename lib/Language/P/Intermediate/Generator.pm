@@ -2245,42 +2245,36 @@ sub _regex_exact {
 
 sub _regex_class {
     my( $self, $tree ) = @_;
+    my( $elements, $ranges, $flags ) = ( '', '', 0 );
 
-    my @elements;
+    $flags |= 1 if $tree->insensitive;
     foreach my $e ( @{$tree->elements} ) {
         if( $e->is_constant ) {
-            if( $tree->insensitive ) {
-                push @elements,
-                     opcode_nm( OP_RX_EXACT_I, string => $e->value,
-                                length => length( $e->value ) );
-            } else {
-                push @elements,
-                     opcode_nm( OP_RX_EXACT, string => $e->value,
-                                length => length( $e->value ) );
-            }
+            $elements .= $e->value;
         } elsif( $e->isa( 'Language::P::ParseTree::RXRange' ) ) {
-            push @elements,
-                 opcode_nm( OP_RX_RANGE, start => $e->start, end => $e->end );
+            $ranges .= $e->start . $e->end;
         } else {
-            push @elements,
-                 opcode_nm( OP_RX_SPECIAL_CLASS, type => $e->type );
+            $flags |= $e->type;
         }
     }
 
-    if( @elements == 1 ) {
-        _add_bytecode $self, $elements[0];
-    } else {
-        _add_bytecode $self,
-            opcode_nm( OP_RX_CLASS,
-                       elements => \@elements );
-    }
+    _add_bytecode $self,
+        opcode_nm( OP_RX_CLASS,
+                   elements => $elements,
+                   ranges   => $ranges,
+                   flags    => $flags,
+                   );
 }
 
 sub _regex_special_class {
     my( $self, $tree ) = @_;
 
     _add_bytecode $self,
-        opcode_nm( OP_RX_SPECIAL_CLASS, type => $tree->type );
+        opcode_nm( OP_RX_CLASS,
+                   elements => '',
+                   ranges   => '',
+                   flags    => $tree->type,
+                   );
 }
 
 sub _regex_alternate {

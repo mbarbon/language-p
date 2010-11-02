@@ -194,8 +194,6 @@ my %opcode_map =
     OP_RX_BACKTRACK()                => \&_direct_jump,
     OP_RX_STATE_RESTORE()            => \&_rx_state_restore,
     OP_RX_CLASS()                    => \&_rx_class,
-    OP_RX_RANGE()                    => \&_rx_range,
-    OP_RX_SPECIAL_CLASS()            => \&_rx_special_class,
     OP_MATCH()                       => \&_match,
     OP_REPLACE()                     => \&_replace,
     OP_TRANSLITERATE()               => \&_transliterate,
@@ -785,48 +783,30 @@ my %element_map =
 
 sub _rx_class {
     my( $self, $bytecode, $op ) = @_;
-    my $elements = '';
-    my @special;
+    my $elements = $op->{attributes}{elements};
 
-    foreach my $e ( @{$op->{attributes}{elements}} ) {
-        if( $e->{opcode_n} == OP_RX_EXACT ) {
-            $elements .= $e->{attributes}{string};
-        } elsif( $e->{opcode_n} == OP_RX_EXACT_I ) {
-            $elements .= lc $e->{attributes}{string} .
-                         uc $e->{attributes}{string};
-        } elsif( $e->{opcode_n} == OP_RX_RANGE ) {
-            $elements .= join '', $e->{attributes}{start} ..
-                                  $e->{attributes}{end};
-        } else {
-            die $e->{attributes}{type}
-                unless exists $element_map{$e->{attributes}{type}};
-            my $c = $element_map{$e->{attributes}{type}};
-            push @special, qr/$c/;
-        }
+    # ranges
+    my $r = $op->{attributes}{ranges};
+    for( my $i = 0; $i < length $r; $i += 2 ) {
+        $elements .= join '', substr( $r, $i, 1 ) .. substr( $r, $i + 1, 1 );
+    }
+
+    # case-insensitivity
+    if( $op->{attributes}{flags} & 1 ) {
+        $elements = lc $elements . uc $elements;
+    }
+
+    my @special;
+    for( my $i = 1; $i < 31; ++$i ) {
+        my $v = $op->{attributes}{flags} & ( 1 << $i );
+        next unless $v;
+        die $v unless exists $element_map{$v};
+        my $c = $element_map{$v};
+        push @special, qr/$c/;
     }
 
     push @$bytecode,
          o( 'rx_class', elements => $elements, special => \@special );
-}
-
-sub _rx_range {
-    my( $self, $bytecode, $op ) = @_;
-    my $elements = join '', $op->{attributes}{start} ..
-                            $op->{attributes}{end};
-
-    push @$bytecode,
-         o( 'rx_class', elements => $elements, special => [] );
-}
-
-sub _rx_special_class {
-    my( $self, $bytecode, $op ) = @_;
-
-    die $op->{attributes}{type}
-        unless exists $element_map{$op->{attributes}{type}};
-
-    my $c = $element_map{$op->{attributes}{type}};
-    push @$bytecode,
-         o( 'rx_class', elements => '', special => [ qr/$c/ ] );
 }
 
 sub _allocate_lexicals {
