@@ -253,6 +253,7 @@ t/run/021_regexp.t
 t/run/021_regexp_i.t
 t/run/021_regexp_zw.t
 t/run/021_substitution.t
+t/run/021_transliteration.t
 t/run/025_begin.t
 t/run/035_local.t
 t/run/035_local_element.t
