@@ -1603,7 +1603,7 @@ namespace org.mbarbon.p.runtime
                 Temporary tm = (Temporary)op;
                 Expression exp = Generate(sub, op.Childs[0]);
 
-                return Expression.Assign(GetTemporary(tm.Index, exp.Type), exp);
+                return Expression.Assign(GetTemporary(tm.Index, TypeForSlot(tm.Slot)), exp);
             }
             case Opcode.OpNumber.OP_TEMPORARY_CLEAR:
             {
