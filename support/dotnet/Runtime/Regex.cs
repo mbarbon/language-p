@@ -559,7 +559,7 @@ namespace org.mbarbon.p.runtime
 
                         cxt.States.Add(st);
                     }
-                    else if (group.Count >= quant.MinCount)
+                    else if (quant.IsGreedy && group.Count >= quant.MinCount)
                     {
                         var st = new RxState(cxt.Pos, index, cxt.Groups.Count - 1);
                         st.Groups = gr;
@@ -572,8 +572,10 @@ namespace org.mbarbon.p.runtime
                     // if nongreedy, match at least min
                     if (!quant.IsGreedy && group.Count >= quant.MinCount)
                     {
-                        // it seems that popping the group is not needed
-                        cxt.Groups.RemoveAt(cxt.Groups.Count - 1);
+                        var st = new RxState(cxt.Pos, Targets[quant.To], cxt.Groups.Count);
+                        st.Groups = gr;
+
+                        cxt.States.Add(st);
                         break;
                     }
 
