@@ -25,6 +25,19 @@ namespace org.mbarbon.p.runtime
         public int SubgroupStart, SubgroupEnd;
     }
 
+    [Serializable]
+    public struct RxClass
+    {
+        public RxClass(string exact, int flags)
+        {
+            Exact = exact;
+            Flags = flags;
+        }
+
+        public string Exact;
+        public int Flags;
+    }
+
     public struct RxCapture
     {
         public int Start;
@@ -119,12 +132,14 @@ namespace org.mbarbon.p.runtime
         }
 
         public Regex(Op[] ops, int[] targets, string[] exact,
-                     RxQuantifier[] quantifiers, int captures, int saved)
+                     RxQuantifier[] quantifiers, RxClass[] classes,
+                     int captures, int saved)
         {
             Ops = ops;
             Targets = targets;
             Exact = exact;
             Quantifiers = quantifiers;
+            Classes = classes;
             Captures = captures;
             Saved = saved;
         }
@@ -334,6 +349,11 @@ namespace org.mbarbon.p.runtime
             return false;
         }
 
+        private static bool IsWord(char c)
+        {
+            return char.IsLetterOrDigit(c) || c == '_';
+        }
+
         public bool MatchAt(Runtime runtime, string str, int pos,
                             out RxResult res)
         {
@@ -426,17 +446,33 @@ namespace org.mbarbon.p.runtime
                 }
                 case Opcode.OpNumber.OP_RX_CLASS:
                 {
-                    var s = Exact[Ops[index].Index];
+                    var c = Classes[Ops[index].Index];
 
-                    if (   cxt.Pos >= len
-                        || s.IndexOf(str[cxt.Pos]) < 0)
-                        index = Backtrack(ref cxt);
-                    else
+                    if (cxt.Pos < len)
                     {
+                        char ch = str[cxt.Pos];
+
                         ++cxt.Pos;
                         ++index;
+
+                        if (c.Exact.IndexOf(ch) >= 0)
+                            break;
+
+                        if ((c.Flags & Opcode.RX_CLASS_WORDS) != 0 && IsWord(ch))
+                            break;
+                        if ((c.Flags & Opcode.RX_CLASS_NOT_WORDS) != 0 && !IsWord(ch))
+                            break;
+                        if ((c.Flags & Opcode.RX_CLASS_DIGITS) != 0 && char.IsDigit(ch))
+                            break;
+                        if ((c.Flags & Opcode.RX_CLASS_NOT_DIGITS) != 0 && !char.IsDigit(ch))
+                            break;
+                        if ((c.Flags & Opcode.RX_CLASS_SPACES) != 0 && char.IsWhiteSpace(ch))
+                            break;
+                        if ((c.Flags & Opcode.RX_CLASS_NOT_SPACES) != 0 && !char.IsWhiteSpace(ch))
+                            break;
                     }
 
+                    index = Backtrack(ref cxt);
                     break;
                 }
                 case Opcode.OpNumber.OP_RX_BEGINNING:
@@ -615,6 +651,7 @@ namespace org.mbarbon.p.runtime
         private string[] Exact;
         private int[] Targets;
         private RxQuantifier[] Quantifiers;
+        private RxClass[] Classes;
         private int Captures, Saved;
     }
 }

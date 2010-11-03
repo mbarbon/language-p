@@ -143,6 +143,7 @@ namespace org.mbarbon.p.runtime
             var ops = new List<Regex.Op>();
             var targets = new List<int>();
             var exact = new List<string>();
+            var classes = new List<RxClass>();
             int captures = 0, saved = 0;
 
             foreach (var bb in sub.BasicBlocks)
@@ -190,9 +191,13 @@ namespace org.mbarbon.p.runtime
                     case Opcode.OpNumber.OP_RX_CLASS:
                     {
                         var cl = (RegexClass)op;
+                        string ex = cl.Elements;
 
-                        ops.Add(new Regex.Op(cl.Number, exact.Count));
-                        exact.Add(cl.Elements);
+                        if ((cl.Flags & 1) != 0)
+                            ex = ex.ToLower() + ex.ToUpper();
+
+                        ops.Add(new Regex.Op(cl.Number, classes.Count));
+                        classes.Add(new RxClass(ex, cl.Flags & ~1));
                         break;
                     }
                     case Opcode.OpNumber.OP_RX_START_GROUP:
@@ -256,7 +261,7 @@ namespace org.mbarbon.p.runtime
 
             return new Regex(ops.ToArray(), targets.ToArray(),
                              exact.ToArray(), quantifiers.ToArray(),
-                             captures, saved);
+                             classes.ToArray(), captures, saved);
         }
 
         public void AddMethod(int index, Subroutine sub)

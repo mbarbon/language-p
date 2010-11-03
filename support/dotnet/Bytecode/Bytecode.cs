@@ -221,6 +221,27 @@ namespace org.mbarbon.p.runtime
         public const int RX_GLOBAL           = 32;
         public const int RX_KEEP             = 64;
 
+        public const int RX_CLASS_WORDS       = 1 << 1;
+        public const int RX_CLASS_NOT_WORDS   = 1 << 2;
+        public const int RX_CLASS_SPACES      = 1 << 3;
+        public const int RX_CLASS_NOT_SPACES  = 1 << 4;
+        public const int RX_CLASS_DIGITS      = 1 << 5;
+        public const int RX_CLASS_NOT_DIGITS  = 1 << 6;
+        public const int RX_POSIX_ALPHA       = 1 << 10;
+        public const int RX_POSIX_ALNUM       = 1 << 11;
+        public const int RX_POSIX_ASCII       = 1 << 12;
+        public const int RX_POSIX_BLANK       = 1 << 13;
+        public const int RX_POSIX_CNTRL       = 1 << 14;
+        public const int RX_POSIX_DIGIT       = 1 << 15;
+        public const int RX_POSIX_GRAPH       = 1 << 16;
+        public const int RX_POSIX_LOWER       = 1 << 17;
+        public const int RX_POSIX_PRINT       = 1 << 18;
+        public const int RX_POSIX_PUNCT       = 1 << 19;
+        public const int RX_POSIX_SPACE       = 1 << 20;
+        public const int RX_POSIX_UPPER       = 1 << 21;
+        public const int RX_POSIX_WORD        = 1 << 22;
+        public const int RX_POSIX_XDIGIT      = 1 << 23;
+
         public enum Sigil
         {
             SCALAR    = 1,
