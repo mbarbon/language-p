@@ -563,7 +563,7 @@ sub o_rx_quantifier {
         return $pc + 1;
     }
 
-    my $groups = defined $op->{subgroups_start} && ( $count == 0 || $count >= $op->{min} ) ?
+    my $groups = ( $count == 0 || $count >= $op->{min} ) ?
                      _save_groups( $cxt, $op, $count == 0 ) : undef;
 
     if( $count == 0 && $op->{min} > 0 ) {
