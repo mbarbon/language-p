@@ -246,7 +246,6 @@ t/run/017_references.t
 t/run/017_stash.t
 t/run/018_vivification.t
 t/run/020_lexicals.t
-t/run/021_interpolated_regexp.t
 t/run/021_map_grep.t
 t/run/021_qr.t
 t/run/021_regexp.t
@@ -266,7 +265,6 @@ t/run/085_closure.t
 t/run/100_do_file.t
 t/run/102_require_file.t
 t/run/103_use_file.t
-t/run/110_eval.t
 t/run/115_data_handle.t
 t/run/120_stack_unwind.t
 t/run/121_eval_block.t
@@ -279,6 +277,10 @@ t/run/files/Bar.pm
 t/run/files/Foo.pm
 t/run/files/Moo.pm
 t/run/files/foo.pl
+t/run/parser/021_interpolated_regexp.t
+t/run/parser/110_eval.t
+t/run/parser/120_stack_unwind.t
+t/run/parser/123_caller.t
 t/run/z00_selfparse.t
 t/runtime/001_load.t
 t/runtime/002_base.t
