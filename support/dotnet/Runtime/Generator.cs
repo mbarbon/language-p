@@ -915,6 +915,32 @@ namespace org.mbarbon.p.runtime
                     exps);
         }
 
+        private Expression BinaryOperator(Subroutine sub, Opcode op, ExpressionType operation)
+        {
+            var delegateType = typeof(Func<CallSite, object, object, object>);
+            var siteType = typeof(CallSite<Func<CallSite, object, object, object>>);
+            var initExpr = Expression.Call(
+                siteType.GetMethod("Create"),
+                Expression.New(
+                    typeof(P5BinaryOperationBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
+                    Expression.Constant(operation),
+                    ModuleGenerator.InitRuntime));
+            var staticField = ModuleGenerator.AddField(initExpr, siteType);
+
+            var res =
+                Expression.Call(
+                    Expression.Field(
+                        Expression.Field(null, staticField),
+                        siteType.GetField("Target")
+                        ),
+                    delegateType.GetMethod("Invoke"),
+                    Expression.Field(null, staticField),
+                    Generate(sub, op.Childs[0]),
+                    Generate(sub, op.Childs[1]));
+
+            return Expression.Convert(res, typeof(IP5Any));
+        }
+
         public Expression Generate(Subroutine sub, Opcode op)
         {
             switch(op.Number)
@@ -1369,30 +1395,7 @@ namespace org.mbarbon.p.runtime
                     new Expression[] { Runtime, len_1 });
             }
             case Opcode.OpNumber.OP_BIT_OR:
-            {
-                var delegateType = typeof(Func<CallSite, object, object, object>);
-                var siteType = typeof(CallSite<Func<CallSite, object, object, object>>);
-                var initExpr = Expression.Call(
-                    siteType.GetMethod("Create"),
-                    Expression.New(
-                        typeof(P5BinaryOperationBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
-                        Expression.Constant(ExpressionType.Or),
-                        ModuleGenerator.InitRuntime));
-                var staticField = ModuleGenerator.AddField(initExpr, siteType);
-
-                var res =
-                    Expression.Call(
-                        Expression.Field(
-                            Expression.Field(null, staticField),
-                            siteType.GetField("Target")
-                            ),
-                        delegateType.GetMethod("Invoke"),
-                        Expression.Field(null, staticField),
-                        Generate(sub, op.Childs[0]),
-                        Generate(sub, op.Childs[1]));
-
-                return Expression.Convert(res, typeof(IP5Any));
-            }
+                return BinaryOperator(sub, op, ExpressionType.Or);
             case Opcode.OpNumber.OP_ADD:
             {
                 Expression sum =
