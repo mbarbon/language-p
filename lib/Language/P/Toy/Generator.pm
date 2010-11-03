@@ -283,14 +283,12 @@ sub _generate_scope {
                  $s = $self->_segment->scopes->[$s]->{outer} ) {
                 $is_inside = $s == $scope_id;
             }
-            _generate_scope( $self, $block->scope, $converted );
+            _generate_scope( $self, $block->scope, $converted ) if $is_inside;
         } else {
             _generate_block( $self, $block, $converted );
+            $self->_code->scopes->[$scope_id]->{end} = @{$self->_code->bytecode};
         }
     }
-
-# XXX scope must end before the 'end' opcode
-    $self->_code->scopes->[$scope_id]->{end} = @{$self->_code->bytecode};
 }
 
 sub _generate_segment {
