@@ -1124,11 +1124,15 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_DIE:
             {
-                return Expression.Throw(
-                    Expression.New(
-                        typeof(P5Exception).GetConstructor(ProtoRuntimeAny),
-                        Runtime,
-                        Generate(sub, op.Childs[0])));
+                return Expression.Block(
+                    Expression.Throw(
+                        Expression.New(
+                            typeof(P5Exception).GetConstructor(ProtoRuntimeAny),
+                            Runtime,
+                            Generate(sub, op.Childs[0]))),
+                    // this is only to trick the type checker into
+                    // thinking that this is a "normal" expression
+                    Expression.Constant(null, typeof(IP5Any)));
             }
             case Opcode.OpNumber.OP_DO_FILE:
             {
