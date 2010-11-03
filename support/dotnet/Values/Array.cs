@@ -27,6 +27,12 @@ namespace org.mbarbon.p.values
             AssignIterator(runtime, array.GetEnumerator(runtime));
         }
 
+        public virtual void Undef(Runtime runtime)
+        {
+            if (array.Count != 0)
+                array = new List<IP5Any>();
+        }
+
         public static P5Array MakeFlat(Runtime runtime, params IP5Any[] data)
         {
             var res = new P5Array(runtime);

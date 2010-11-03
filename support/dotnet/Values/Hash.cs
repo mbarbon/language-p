@@ -15,6 +15,12 @@ namespace org.mbarbon.p.values
             AssignIterator(runtime, array.GetEnumerator(runtime));
         }
 
+        public virtual void Undef(Runtime runtime)
+        {
+            if (hash.Count != 0)
+                new Dictionary<string, IP5Any>();
+        }
+
         internal void SetItem(Runtime runtime, string key, IP5Any value)
         {
             hash[key] = value;

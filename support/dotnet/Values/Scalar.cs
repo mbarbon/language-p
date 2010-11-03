@@ -25,6 +25,12 @@ namespace org.mbarbon.p.values
             : this(val ? new P5StringNumber(runtime, 1) : new P5StringNumber(runtime, "")) {}
         public P5Scalar(Runtime runtime, IP5Referrable val) : this(new P5Reference(runtime, val)) {}
 
+        public virtual void Undef(Runtime runtime)
+        {
+            if (!(body is P5Undef))
+                body = new P5Undef(runtime);
+        }
+
         public virtual IP5Any Assign(Runtime runtime, IP5Any other)
         {
             body = other.AsScalar(runtime).body.CloneBody(runtime);

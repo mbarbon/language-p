@@ -25,6 +25,7 @@ namespace org.mbarbon.p.values
         IP5Any Assign(Runtime runtime, IP5Any other);
         IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> e);
         IP5Any ConcatAssign(Runtime runtime, IP5Any other);
+        void Undef(Runtime runtime);
 
         IP5Any Clone(Runtime runtime, int depth);
         IP5Any Localize(Runtime runtime);

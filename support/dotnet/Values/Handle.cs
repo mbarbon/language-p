@@ -11,6 +11,12 @@ namespace org.mbarbon.p.values
             Output = output;
         }
 
+        public virtual void Undef(Runtime runtime)
+        {
+            Input = null;
+            Output = null;
+        }
+
         public int Write(Runtime runtime, IP5Any scalar, int offset, int length)
         {
             // TODO use offset/length

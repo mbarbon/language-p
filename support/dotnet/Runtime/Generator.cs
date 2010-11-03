@@ -964,6 +964,13 @@ namespace org.mbarbon.p.runtime
 
                 return Expression.Field(null, Subroutines[cs.Value].CodeField);
             }
+            case Opcode.OpNumber.OP_UNDEF:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(IP5Any).GetMethod("Undef"),
+                    Runtime);
+            }
             case Opcode.OpNumber.OP_GLOBAL:
             {
                 Global gop = (Global)op;
