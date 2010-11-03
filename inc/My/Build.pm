@@ -187,6 +187,7 @@ my %test_tags =
     'runtime'    => [ [ undef,   _all_subdirs( 't/runtime' ) ] ],
     'intermediate' => [ [ undef, _all_subdirs( 't/intermediate' ) ] ],
     'perl5'      => [ [ 'bin/p', _all_subdirs( 't/perl5' ) ] ],
+    'run_np'     => [ [ 'bin/p', 't/run' ] ],
     'run'        => [ [ 'bin/p', _all_subdirs( 't/run' ) ] ],
     'all'        => [ 'parser', 'intermediate', 'runtime', 'run', 'perl5' ],
     'parrot'     => [ 'parser', 'intermediate', 'parrot_run', 'parrot_perl5' ],
@@ -288,7 +289,7 @@ sub _byte_compile {
 sub ACTION_test_dotnet_run {
     my( $self ) = @_;
 
-    $self->_run_dotnet( _expand_tags( $self, 'run' ) );
+    $self->_run_dotnet( _expand_tags( $self, 'run_np' ) );
 }
 
 sub ACTION_test_dump_bytecode {
