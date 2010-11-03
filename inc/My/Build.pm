@@ -86,6 +86,23 @@ sub ACTION_code {
     $self->SUPER::ACTION_code;
 }
 
+sub _all_subdirs {
+    my( $dir ) = @_;
+    my @subdirs;
+
+    local $_;
+
+    my $subr = sub {
+        return unless -d $File::Find::name;
+        push @subdirs, $File::Find::name;
+    };
+
+    require File::Find;
+    File::Find::find( {wanted => $subr, no_chdir => 1 }, $dir );
+
+    return @subdirs;
+}
+
 sub _run_p_tests {
     my( $self, @test_dirs ) = @_;
 
@@ -122,7 +139,7 @@ sub _run_p_tests {
                   } );
         }
 
-        my @tests = $self->expand_test_dir( @directories );
+        my @tests = sort map $self->expand_test_dir( $_ ), @directories;
 
         local $ENV{PERL5OPT} = $ENV{HARNESS_PERL_SWITCHES}
           if $ENV{HARNESS_PERL_SWITCHES};
@@ -133,15 +150,15 @@ sub _run_p_tests {
 }
 
 my %test_tags =
-  ( 'parser'     => [ [ undef,   't/parser' ] ],
-    'runtime'    => [ [ undef,   't/runtime' ] ],
-    'intermediate' => [ [ undef, 't/intermediate' ] ],
-    'perl5'      => [ [ 'bin/p', 't/perl5' ] ],
-    'run'        => [ [ 'bin/p', 't/run' ] ],
+  ( 'parser'     => [ [ undef,   _all_subdirs( 't/parser' ) ] ],
+    'runtime'    => [ [ undef,   _all_subdirs( 't/runtime' ) ] ],
+    'intermediate' => [ [ undef, _all_subdirs( 't/intermediate' ) ] ],
+    'perl5'      => [ [ 'bin/p', _all_subdirs( 't/perl5' ) ] ],
+    'run'        => [ [ 'bin/p', _all_subdirs( 't/run' ) ] ],
     'all'        => [ 'parser', 'intermediate', 'runtime', 'run', 'perl5' ],
     'parrot'     => [ 'parser', 'intermediate', 'parrot_run', 'parrot_perl5' ],
-    'parrot_run' => [ [ 'bin/p_parrot', 't/run' ] ],
-    'parrot_perl5'=>[ [ 'bin/p_parrot', 't/perl5' ] ],
+    'parrot_run' => [ [ 'bin/p_parrot', _all_subdirs( 't/run' ) ] ],
+    'parrot_perl5'=>[ [ 'bin/p_parrot', _all_subdirs( 't/perl5' ) ] ],
     );
 
 =head2 test_parser
