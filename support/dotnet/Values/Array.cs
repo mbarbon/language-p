@@ -5,7 +5,7 @@ using System.Collections;
 
 namespace org.mbarbon.p.values
 {
-    public class P5Array : IP5Any, IP5Referrable, IEnumerable<IP5Any>
+    public class P5Array : IP5Any, IP5Referrable, IEnumerable<IP5Any>, IP5Enumerable
     {
         public P5Array(Runtime runtime)
         {
@@ -40,6 +40,20 @@ namespace org.mbarbon.p.values
             res.PushFlatten(data);
 
             return res;
+        }
+
+        public void PushFlatten(Runtime runtime, IP5Any value)
+        {
+            var v = value as IP5Enumerable;
+
+            if (v != null)
+            {
+                var iter = v.GetEnumerator(runtime);
+                while (iter.MoveNext())
+                    array.Add(iter.Current);
+            }
+            else
+                array.Add(value);
         }
 
         protected void PushFlatten(IP5Any[] data)

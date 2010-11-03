@@ -43,4 +43,9 @@ namespace org.mbarbon.p.values
 
         P5Code FindMethod(Runtime runtime, string method);
     }
+
+    interface IP5Enumerable
+    {
+        IEnumerator<IP5Any> GetEnumerator(Runtime runtime);
+    }
 }

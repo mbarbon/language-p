@@ -1501,6 +1501,14 @@ namespace org.mbarbon.p.runtime
                     Runtime,
                     Generate(sub, op.Childs[0]));
             }
+            case Opcode.OpNumber.OP_PUSH_ELEMENT:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(P5Array).GetMethod("PushFlatten"),
+                    Runtime,
+                    Generate(sub, op.Childs[1]));
+            }
             case Opcode.OpNumber.OP_ARRAY_PUSH:
             {
                 return Expression.Call(

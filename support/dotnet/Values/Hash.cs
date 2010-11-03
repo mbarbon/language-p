@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
 {
-    public class P5Hash : IP5Any, IP5Referrable
+    public class P5Hash : IP5Any, IP5Referrable, IP5Enumerable
     {
         public P5Hash(Runtime runtime)
         {
