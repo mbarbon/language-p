@@ -167,5 +167,36 @@ namespace org.mbarbon.p.runtime
                 return new P5Scalar(runtime, a.AsInteger(runtime) | b.AsInteger(runtime));
             }
         }
+
+        public static P5Scalar BitAnd(Runtime runtime, P5Scalar a, P5Scalar b)
+        {
+            if (a.IsString(runtime) && b.IsString(runtime))
+            {
+                string sa = a.AsString(runtime), sb = b.AsString(runtime);
+                System.Text.StringBuilder t;
+
+                if (sa.Length > sb.Length)
+                {
+                    t = new System.Text.StringBuilder(sa);
+
+                    for (int i = 0; i < sb.Length; ++i)
+                        t[i] &= sb[i];
+                }
+                else
+                {
+                    t = new System.Text.StringBuilder(sb);
+
+                    for (int i = 0; i < sa.Length; ++i)
+                        t[i] &= sa[i];
+                }
+
+                return new P5Scalar(runtime, t.ToString());
+            }
+            else
+            {
+                // TODO take into account signed/unsigned?
+                return new P5Scalar(runtime, a.AsInteger(runtime) & b.AsInteger(runtime));
+            }
+        }
     }
 }

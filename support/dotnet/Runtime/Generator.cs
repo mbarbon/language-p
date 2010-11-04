@@ -1396,6 +1396,8 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_BIT_OR:
                 return BinaryOperator(sub, op, ExpressionType.Or);
+            case Opcode.OpNumber.OP_BIT_AND:
+                return BinaryOperator(sub, op, ExpressionType.And);
             case Opcode.OpNumber.OP_ADD:
             {
                 Expression sum =

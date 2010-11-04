@@ -35,19 +35,21 @@ namespace org.mbarbon.p.runtime
 
         public override DynamicMetaObject FallbackBinaryOperation(DynamicMetaObject target, DynamicMetaObject arg, DynamicMetaObject errorSuggestion)
         {
-            if (Operation == ExpressionType.Or)
-                return BindBitOr(target, arg, errorSuggestion);
+            if (Operation == ExpressionType.Or || Operation == ExpressionType.And)
+                return BindBitOp(target, arg, errorSuggestion);
 
             return null;
         }
 
-        private DynamicMetaObject BindBitOr(DynamicMetaObject target, DynamicMetaObject arg, DynamicMetaObject errorSuggestion)
+        private DynamicMetaObject BindBitOp(DynamicMetaObject target, DynamicMetaObject arg, DynamicMetaObject errorSuggestion)
         {
+            string method_name = Operation == ExpressionType.Or ? "BitOr" : "BitAnd";
+
             if (IsScalar(target) && IsScalar(arg))
             {
                 return new DynamicMetaObject(
                     Expression.Call(
-                        typeof(Builtins).GetMethod("BitOr"),
+                        typeof(Builtins).GetMethod(method_name),
                         Expression.Constant(Runtime),
                         CastScalar(target),
                         CastScalar(arg)),
@@ -61,7 +63,8 @@ namespace org.mbarbon.p.runtime
                         typeof(P5Scalar).GetConstructor(new System.Type[] {typeof(Runtime), typeof(int)}),
                         new Expression[] {
                             Expression.Constant(Runtime),
-                            Expression.Or(
+                            Expression.MakeBinary(
+                                Operation,
                                 Expression.Call(
                                     CastAny(target),
                                     typeof(IP5Any).GetMethod("AsInteger"),
