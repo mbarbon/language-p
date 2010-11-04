@@ -198,5 +198,25 @@ namespace org.mbarbon.p.runtime
                 return new P5Scalar(runtime, a.AsInteger(runtime) & b.AsInteger(runtime));
             }
         }
+
+        public static P5Scalar JoinList(Runtime runtime, P5Array array)
+        {
+            var iter = array.GetEnumerator();
+            var res = new System.Text.StringBuilder();
+            bool first = true;
+
+            iter.MoveNext();
+            var sep = iter.Current.AsString(runtime);
+
+            while (iter.MoveNext())
+            {
+                if (!first)
+                    res.Append(sep);
+                first = false;
+                res.Append(iter.Current.AsString(runtime));
+            }
+
+            return new P5Scalar(runtime, res.ToString());
+        }
     }
 }

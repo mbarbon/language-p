@@ -1544,6 +1544,13 @@ namespace org.mbarbon.p.runtime
                     typeof(P5Array).GetMethod("ShiftElement"),
                     Runtime);
             }
+            case Opcode.OpNumber.OP_JOIN:
+            {
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("JoinList"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
+            }
             case Opcode.OpNumber.OP_ITERATOR:
             {
                 return Expression.Call(
