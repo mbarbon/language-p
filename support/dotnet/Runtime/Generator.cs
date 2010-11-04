@@ -1440,6 +1440,20 @@ namespace org.mbarbon.p.runtime
                     typeof(P5Scalar).GetConstructor(ProtoRuntimeDouble),
                     new Expression[] { Runtime, sum });
             }
+            case Opcode.OpNumber.OP_DIVIDE:
+            {
+                Expression sum =
+                    Expression.Divide(
+                        Expression.Call(
+                            Generate(sub, op.Childs[0]),
+                            typeof(IP5Any).GetMethod("AsFloat"), Runtime),
+                        Expression.Call(
+                            Generate(sub, op.Childs[1]),
+                            typeof(IP5Any).GetMethod("AsFloat"), Runtime));
+                return Expression.New(
+                    typeof(P5Scalar).GetConstructor(ProtoRuntimeDouble),
+                    new Expression[] { Runtime, sum });
+            }
             case Opcode.OpNumber.OP_PREINC:
             {
                 return Expression.Call(
