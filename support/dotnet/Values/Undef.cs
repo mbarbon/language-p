@@ -1,4 +1,5 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
+using Builtins = org.mbarbon.p.runtime.Builtins;
 
 namespace org.mbarbon.p.values
 {
@@ -30,17 +31,17 @@ namespace org.mbarbon.p.values
 
         public virtual P5Scalar DereferenceScalar(Runtime runtime)
         {
-            throw new System.InvalidOperationException("Not a reference");
+            return Builtins.SymbolicReferenceScalar(runtime, this, true);
         }
 
         public virtual P5Array DereferenceArray(Runtime runtime)
         {
-            throw new System.InvalidOperationException("Not a reference");
+            return Builtins.SymbolicReferenceArray(runtime, this, true);
         }
 
         public virtual P5Hash DereferenceHash(Runtime runtime)
         {
-            throw new System.InvalidOperationException("Not a reference");
+            return Builtins.SymbolicReferenceHash(runtime, this, true);
         }
 
         public virtual P5Typeglob DereferenceGlob(Runtime runtime)

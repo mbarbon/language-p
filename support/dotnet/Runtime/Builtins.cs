@@ -218,5 +218,67 @@ namespace org.mbarbon.p.runtime
 
             return new P5Scalar(runtime, res.ToString());
         }
+
+        public static P5Typeglob SymbolicReference(Runtime runtime, string name, bool create)
+        {
+            // TODO strict check
+
+            if (name.IndexOf("::") == -1 && name.IndexOf("'") == -1)
+            {
+                name = runtime.Package + "::" + name;
+            }
+
+            // TODO must handle punctuation variables and other special cases
+            var glob = runtime.SymbolTable.GetGlob(runtime, name, create);
+
+            return glob;
+        }
+
+        public static P5Scalar SymbolicReferenceScalar(Runtime runtime, IP5ScalarBody any, bool create)
+        {
+            string name = any.AsString(runtime);
+            var glob = SymbolicReference(runtime, name, create);
+
+            if (glob == null)
+                return null;
+            if (glob.Scalar != null || !create)
+                return glob.Scalar;
+
+            return glob.Scalar = new P5Scalar(runtime);
+        }
+
+        public static P5Array SymbolicReferenceArray(Runtime runtime, IP5ScalarBody any, bool create)
+        {
+            string name = any.AsString(runtime);
+            var glob = SymbolicReference(runtime, name, create);
+
+            if (glob == null)
+                return null;
+            if (glob.Array != null || !create)
+                return glob.Array;
+
+            return glob.Array = new P5Array(runtime);
+        }
+
+        public static P5Hash SymbolicReferenceHash(Runtime runtime, IP5ScalarBody any, bool create)
+        {
+            string name = any.AsString(runtime);
+
+            if (name.EndsWith("::"))
+            {
+                var pack = runtime.SymbolTable.GetPackage(runtime, name.Substring(0, name.Length - 2), create);
+
+                return pack;
+            }
+
+            var glob = SymbolicReference(runtime, name, create);
+
+            if (glob == null)
+                return null;
+            if (glob.Hash != null || !create)
+                return glob.Hash;
+
+            return glob.Hash = new P5Hash(runtime);
+        }
     }
 }
