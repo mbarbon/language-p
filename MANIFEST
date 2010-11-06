@@ -80,6 +80,8 @@ t/intermediate/011_call.t
 t/intermediate/011_call_tree.t
 t/intermediate/030_if.t
 t/intermediate/031_eval.t
+t/intermediate/032_do_block.t
+t/intermediate/032_do_block_ssa.t
 t/intermediate/040_conditional_loops.t
 t/intermediate/040_conditional_loops_ssa.t
 t/intermediate/040_conditional_loops_tree.t
@@ -256,6 +258,7 @@ t/run/021_transliteration.t
 t/run/025_begin.t
 t/run/035_local.t
 t/run/035_local_element.t
+t/run/037_do_block.t
 t/run/038_goto.t
 t/run/039_loop_control.t
 t/run/070_objects.t
