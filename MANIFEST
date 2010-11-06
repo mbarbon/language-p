@@ -80,6 +80,7 @@ t/intermediate/011_call.t
 t/intermediate/011_call_tree.t
 t/intermediate/030_if.t
 t/intermediate/031_eval.t
+t/intermediate/031_eval_ssa.t
 t/intermediate/032_do_block.t
 t/intermediate/032_do_block_ssa.t
 t/intermediate/040_conditional_loops.t

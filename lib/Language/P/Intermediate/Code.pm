@@ -56,8 +56,9 @@ sub weaken   { $_->weaken, Scalar::Util::weaken( $_ ) foreach @{$_[0]->inner} }
 
 sub find_alive_blocks {
     my( $self ) = @_;
-    my @queue = $self->basic_blocks->[0];
-    $queue[0]->{dead} = 0;
+    my @queue = ( $self->basic_blocks->[0],
+                  grep defined, map $_->{exception}, @{$self->scopes} );
+    $_->{dead} = 0 foreach @queue;
 
     while( @queue ) {
         my $block = shift @queue;

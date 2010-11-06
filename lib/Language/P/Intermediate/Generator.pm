@@ -101,6 +101,7 @@ sub push_block {
            id            => $id,
            flags         => $flags,
            context       => $context || 0, # for eval BLOCK only
+           exception     => undef, # for eval BLOCK only
            pos_s         => $start_pos,
            pos_e         => $exit_pos,
            lexical_state => $outer ? $outer->{lexical_state} : 0,
@@ -1751,8 +1752,25 @@ sub _block {
             opcode_nm( OP_GLOBAL, name => '@', slot => VALUE_SCALAR, context => CXT_SCALAR ),
             opcode_nm( OP_UNDEF );
     }
-    $self->pop_block;
-    _start_bb( $self ) if $is_eval;
+    my $block = $self->pop_block;
+    # emit landing point for eval
+    if( $is_eval ) {
+        my( $except, $resume ) = _new_blocks( $self, 2 );
+
+        $self->_code_segments->[0]->scopes->[$block->{id}]->{exception} = $except;
+
+        # execution resumes here for both success and failure
+        _add_jump $self, opcode_nm( OP_JUMP, to => $resume ), $resume;
+
+        # landing point for exceptions
+        _add_blocks $self, $except;
+        _add_bytecode $self, opcode_n( OP_CONSTANT_UNDEF )
+            if _context( $tree ) != CXT_VOID;
+        _add_jump $self, opcode_nm( OP_JUMP, to => $resume ), $resume;
+
+        # add the resume block
+        _add_blocks $self, $resume;
+    }
 }
 
 sub _bare_block {

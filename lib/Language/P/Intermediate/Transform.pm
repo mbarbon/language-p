@@ -115,7 +115,7 @@ sub to_ssa {
     $code_segment->find_alive_blocks;
 
     # find all non-empty blocks without predecessors and enqueue them
-    # (there can be more than one only if there is dead code)
+    # (there can be more than one only if there is dead code or eval blocks)
     $self->_queue( [] );
     foreach my $block ( @{$code_segment->basic_blocks} ) {
         next unless @{$block->bytecode};
@@ -168,6 +168,7 @@ sub to_ssa {
                pos_s         => $scope->{pos_s},
                pos_e         => $scope->{pos_e},
                lexical_state => $scope->{lexical_state},
+               exception     => $scope->{exception} ? $self->_converted->{$scope->{exception}}{block} : undef,
                };
 
        foreach my $seg ( @{$scope->{bytecode}} ) {
