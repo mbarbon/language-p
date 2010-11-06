@@ -172,30 +172,6 @@ namespace org.mbarbon.p.values
             return code;
         }
 
-        public virtual P5Scalar VivifyScalar(Runtime runtime)
-        {
-            if (scalar == null)
-                scalar = new P5Scalar(runtime);
-
-            return scalar;
-        }
-
-        public virtual P5Array VivifyArray(Runtime runtime)
-        {
-            if (array == null)
-                array = new P5Array(runtime);
-
-            return array;
-        }
-
-        public virtual P5Hash VivifyHash(Runtime runtime)
-        {
-            if (hash == null)
-                hash = new P5Hash(runtime);
-
-            return hash;
-        }
-
         public virtual int GetPos(Runtime runtime)
         {
             return pos;
