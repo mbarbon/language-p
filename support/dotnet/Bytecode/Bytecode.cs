@@ -116,6 +116,7 @@ namespace org.mbarbon.p.runtime
             ReadPos(reader, out scope.Start);
             ReadPos(reader, out scope.End);
             scope.LexicalState = reader.ReadInt32();
+            scope.Exception = reader.ReadInt32();
 
             int leave_count = reader.ReadInt32();
 
@@ -389,6 +390,7 @@ namespace org.mbarbon.p.runtime
         public Position Start;
         public Position End;
         public int LexicalState;
+        public int Exception;
     }
 
     public class LexicalState
