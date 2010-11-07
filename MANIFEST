@@ -281,6 +281,7 @@ t/run/files/Bar.pm
 t/run/files/Foo.pm
 t/run/files/Moo.pm
 t/run/files/foo.pl
+t/run/files/my_strict.pm
 t/run/parser/021_interpolated_regexp.t
 t/run/parser/110_eval.t
 t/run/parser/120_stack_unwind.t

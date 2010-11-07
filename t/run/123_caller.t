@@ -54,7 +54,7 @@ foo();
 # hints/warnings
 print hints() == 0 ? "ok - hints\n" : "not ok - hints\n";;
 {
-    use strict;
+    use my_strict;
     print hints() == 2 ? "ok\n" : "not ok\n";;
 }
 
