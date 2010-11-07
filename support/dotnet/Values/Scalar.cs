@@ -89,6 +89,7 @@ namespace org.mbarbon.p.values
         public virtual bool IsInteger(Runtime runtime) { return body.IsInteger(runtime); }
         public virtual bool IsString(Runtime runtime) { return body.IsString(runtime); }
         public virtual bool IsFloat(Runtime runtime) { return body.IsFloat(runtime); }
+        public virtual bool IsReference(Runtime runtime) { return body as P5Reference != null; }
 
         public virtual P5Handle AsHandle(Runtime runtime)
         {

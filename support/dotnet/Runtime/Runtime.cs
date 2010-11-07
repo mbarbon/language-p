@@ -45,10 +45,14 @@ namespace org.mbarbon.p.runtime
                 this, new P5Scalar(this, "."));
         }
 
-        public void SetException(System.Exception e)
+        public void SetException(P5Exception e)
         {
-            SymbolTable.GetScalar(this, "@", true)
-                .Assign(this, new P5Scalar(this, e.Message));
+            P5Scalar s = e.Reference;
+
+            if (s == null)
+                s = new P5Scalar(this, e.Message);
+
+            SymbolTable.GetStashScalar(this, "@", true).Assign(this, s);
         }
 
         public IP5Any CallerNoArg(Opcode.ContextValues cxt)

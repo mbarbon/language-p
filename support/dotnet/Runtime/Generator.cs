@@ -700,7 +700,8 @@ namespace org.mbarbon.p.runtime
                     if ((scope.Flags & Scope.SCOPE_EVAL) != 0)
                     {
                         var except = new List<Expression>();
-                        var ex = Expression.Variable(typeof(System.Exception));
+                        var ex = Expression.Variable(typeof(P5Exception));
+                        var exception_block = sub.BasicBlocks[scope.Exception];
                         for (int j = scope.Opcodes.Length - 1; j >= 0; --j)
                             Generate(sub, scope.Opcodes[j], except);
                         except.Add(
@@ -708,10 +709,7 @@ namespace org.mbarbon.p.runtime
                                 Runtime,
                                 typeof(Runtime).GetMethod("SetException"),
                                 ex));
-                        except.Add(
-                            Expression.New(
-                                typeof(P5Scalar).GetConstructor(ProtoRuntime),
-                                Runtime));
+                        Generate(sub, exception_block, except);
 
                         body = Expression.Block(
                             typeof(IP5Any),
@@ -1152,8 +1150,8 @@ namespace org.mbarbon.p.runtime
             {
                 return Expression.Block(
                     Expression.Throw(
-                        Expression.New(
-                            typeof(P5Exception).GetConstructor(ProtoRuntimeAny),
+                        Expression.Call(
+                            typeof(Builtins).GetMethod("Die"),
                             Runtime,
                             Generate(sub, op.Childs[0]))),
                     // this is only to trick the type checker into

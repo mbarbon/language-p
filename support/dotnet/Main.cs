@@ -14,8 +14,27 @@ namespace org.mbarbon.p
             var runtime = new Runtime();
             var cu = Serializer.ReadCompilationUnit(runtime, args[0]);
 
-            P5Code main = new Generator(runtime).Generate(null, cu);
-            main.Call(runtime, Opcode.ContextValues.VOID, null);
+            try
+            {
+                P5Code main = new Generator(runtime).Generate(null, cu);
+                main.Call(runtime, Opcode.ContextValues.VOID, null);
+            }
+            catch (System.Reflection.TargetInvocationException te)
+            {
+                var e = te.InnerException as P5Exception;
+
+                if (e == null)
+                {
+                    System.Console.WriteLine();
+                    System.Console.WriteLine(te.InnerException.ToString());
+                }
+                else
+                    System.Console.WriteLine(e.AsString(runtime));
+            }
+            catch (P5Exception e)
+            {
+                System.Console.WriteLine(e.AsString(runtime));
+            }
         }
     }
 }

@@ -115,7 +115,7 @@ namespace org.mbarbon.p.runtime
 
             var path = SearchFile(runtime, file_s);
             if (path == null)
-                throw new System.Exception("File not found");
+                throw new P5Exception(runtime, string.Format("Can't locate {0:S} in @INC", file_s));
 
             var cu = Serializer.ReadCompilationUnit(runtime, path);
             P5Code main = new Generator(runtime).Generate(null, cu);
@@ -217,6 +217,39 @@ namespace org.mbarbon.p.runtime
             }
 
             return new P5Scalar(runtime, res.ToString());
+        }
+
+        public static P5Exception Die(Runtime runtime, P5Array args)
+        {
+            int argc = args.GetCount(runtime);
+
+            if (argc == 1)
+            {
+                var s = args.GetItem(runtime, 0) as P5Scalar;
+
+                if (s.IsReference(runtime))
+                    return new P5Exception(runtime, s);
+            }
+
+            string message;
+            if (argc == 0)
+            {
+                var exc = runtime.SymbolTable.GetStashScalar(runtime, "@", true);
+
+                if (exc.IsDefined(runtime))
+                    message = exc.AsString(runtime) + "\t...propagated";
+                else
+                    message = "Died";
+            }
+            else
+            {
+                var t = new System.Text.StringBuilder();
+                foreach (var e in args)
+                    t.Append(e.AsString(runtime));
+                message = t.ToString();
+            }
+
+            return new P5Exception(runtime, message);
         }
 
         public static P5Typeglob SymbolicReference(Runtime runtime, string name, bool create)
