@@ -13,11 +13,19 @@ namespace org.mbarbon.p.values
         public P5Scalar GetScalar(Runtime runtime, string name, bool create)
         {
             var glob = GetGlob(runtime, name, true);
-            P5Scalar scalar;
-            if ((scalar = glob.Scalar) == null && create)
-                scalar = glob.Scalar = new P5Scalar(runtime);
+            if (glob.Scalar == null && create)
+                glob.Scalar = new P5Scalar(runtime);
 
-            return scalar;
+            return glob.Scalar;
+        }
+
+        public P5Scalar GetStashScalar(Runtime runtime, string name, bool create)
+        {
+            var glob = GetStashGlob(runtime, name, true);
+            if (glob.Scalar == null && create)
+                glob.Scalar = new P5Scalar(runtime);
+
+            return glob.Scalar;
         }
 
         public P5Array GetArray(Runtime runtime, string name, bool create)
