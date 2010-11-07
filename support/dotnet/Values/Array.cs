@@ -200,6 +200,13 @@ namespace org.mbarbon.p.values
 
         public virtual IP5Any Assign(Runtime runtime, IP5Any other)
         {
+            AssignArray(runtime, other);
+
+            return this;
+        }
+
+        public virtual int AssignArray(Runtime runtime, IP5Any other)
+        {
             // FIXME multiple dispatch
             P5Scalar s = other as P5Scalar;
             P5Array a = other as P5Array;
@@ -208,17 +215,23 @@ namespace org.mbarbon.p.values
             {
                 array = new List<IP5Any>(1);
                 array.Add(s.Clone(runtime, 1));
+
+                return 1;
             }
             else if (h != null)
             {
                 AssignIterator(runtime, ((P5Hash)h.Clone(runtime, 1)).GetEnumerator(runtime));
+
+                return h.GetCount(runtime) * 2;
             }
             else if (a != null)
             {
                 AssignIterator(runtime, ((P5Array)a.Clone(runtime, 1)).GetEnumerator(runtime));
+
+                return a.GetCount(runtime);
             }
 
-            return this;
+            return 0;
         }
 
         public virtual IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> iter)

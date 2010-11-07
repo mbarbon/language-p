@@ -44,24 +44,34 @@ namespace org.mbarbon.p.values
 
         public override IP5Any Assign(Runtime runtime, IP5Any other)
         {
+            AssignArray(runtime, other);
+
+            return this;
+        }
+
+        public override int AssignArray(Runtime runtime, IP5Any other)
+        {
             // FIXME multiple dispatch
             P5Scalar s = other as P5Scalar;
             P5Array a = other as P5Array;
             IEnumerator<IP5Any> e = null;
+            int c = 0;
 
             if (s != null)
             {
                 e = new List<IP5Any>(new IP5Any[] { s }).GetEnumerator();
+                c = 1;
             }
             else if (a != null)
             {
                 e = ((P5Array)a.Clone(runtime, 1)).GetEnumerator(runtime);
+                c = a.GetCount(runtime);
             }
 
             foreach (var i in this)
                 i.AssignIterator(runtime, e);
 
-            return this;
+            return c;
         }
 
         public P5List Slice(Runtime runtime, P5Array keys)

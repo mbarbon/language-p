@@ -15,6 +15,11 @@ namespace org.mbarbon.p.values
             AssignIterator(runtime, array.GetEnumerator(runtime));
         }
 
+        public int GetCount(Runtime runtime)
+        {
+            return hash.Count;
+        }
+
         public virtual void Undef(Runtime runtime)
         {
             if (hash.Count != 0)

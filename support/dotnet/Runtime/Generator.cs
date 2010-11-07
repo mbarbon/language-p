@@ -1242,11 +1242,45 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_ASSIGN:
             {
-                return
-                    Expression.Call(
-                        Generate(sub, op.Childs[0]),
-                        typeof(IP5Any).GetMethod("Assign"), Runtime,
+                var le = Generate(sub, op.Childs[0]);
+
+                if (le.Type.IsSubclassOf(typeof(P5Array)))
+                {
+                    var e = Expression.Parameter(typeof(int));
+                    var l = Expression.Parameter(le.Type);
+                    var v = Expression.Call(
+                        l,
+                        typeof(P5Array).GetMethod("AssignArray"),
+                        Runtime,
                         Generate(sub, op.Childs[1]));
+                    var r = Expression.Condition(
+                        Expression.Equal(
+                            OpContext(op),
+                            Expression.Constant(Opcode.ContextValues.SCALAR)),
+                        Expression.New(
+                            typeof(P5Scalar).GetConstructor(ProtoRuntimeInt),
+                            Runtime,
+                            v),
+                        l,
+                        typeof(IP5Any));
+
+                    return Expression.Block(
+                        typeof(IP5Any),
+                        new ParameterExpression[] { e, l },
+                        new Expression[] {
+                            Expression.Assign(l, le),
+                            Expression.Assign(e, v),
+                            r,
+                        }
+                        );
+                }
+                else
+                    return
+                        Expression.Call(
+                            le,
+                            typeof(IP5Any).GetMethod("Assign"),
+                            Runtime,
+                            Generate(sub, op.Childs[1]));
             }
             case Opcode.OpNumber.OP_GET:
             {
