@@ -3,10 +3,18 @@ using System.Collections.Generic;
 
 namespace org.mbarbon.p.runtime
 {
-    internal struct SavedLexState
+    public struct SavedLexState
     {
         public string Package;
         public int Hints;
+    }
+
+    public struct SavedValue
+    {
+        public IP5Any container;
+        public IP5Any value;
+        public int int_key;
+        public string str_key;
     }
 
     public class StackFrame

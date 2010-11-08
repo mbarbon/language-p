@@ -313,5 +313,54 @@ namespace org.mbarbon.p.runtime
 
             return glob.Hash = new P5Hash(runtime);
         }
+
+        public static IP5Any LocalizeArrayElement(Runtime runtime, P5Array array, IP5Any index, ref SavedValue state)
+        {
+            int int_index = array.GetItemIndex(runtime, index.AsInteger(runtime), true);
+            var saved = array.LocalizeElement(runtime, int_index);
+
+            state.container = array;
+            state.int_key = int_index;
+            state.value = saved;
+
+            return array.GetItem(runtime, int_index);
+        }
+
+        public static void RestoreArrayElement(Runtime runtime, ref SavedValue state)
+        {
+            if (state.container == null)
+                return;
+
+            (state.container as P5Array).RestoreElement(runtime, state.int_key, state.value);
+            state.container = null;
+            state.str_key = null;
+            state.value = null;
+        }
+
+        public static IP5Any LocalizeHashElement(Runtime runtime, P5Hash hash, IP5Any index, ref SavedValue state)
+        {
+            string str_index = index.AsString(runtime);
+            var saved = hash.LocalizeElement(runtime, str_index);
+            var new_value = new P5Scalar(runtime);
+
+            state.container = hash;
+            state.str_key = str_index;
+            state.value = saved;
+
+            hash.SetItem(runtime, str_index, new_value);
+
+            return new_value;
+        }
+
+        public static void RestoreHashElement(Runtime runtime, ref SavedValue state)
+        {
+            if (state.container == null)
+                return;
+
+            (state.container as P5Hash).RestoreElement(runtime, state.str_key, state.value);
+            state.container = null;
+            state.str_key = null;
+            state.value = null;
+        }
     }
 }

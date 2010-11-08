@@ -31,6 +31,8 @@ namespace org.mbarbon.p.values
             hash[key] = value;
         }
 
+        public IP5Any GetItem(Runtime runtime, string key) { return hash[key]; }
+
         public IP5Any GetItemOrUndef(Runtime runtime, IP5Any key, bool create)
         {
             string k = key.AsString(runtime);
@@ -150,6 +152,24 @@ namespace org.mbarbon.p.values
         public virtual IP5Any Localize(Runtime runtime)
         {
             return new P5Hash(runtime);
+        }
+
+        public IP5Any LocalizeElement(Runtime runtime, string key)
+        {
+            IP5Any v;
+
+            hash.TryGetValue(key, out v); // ok to return null
+            hash[key] = new P5Scalar(runtime);
+
+            return v;
+        }
+
+        public virtual void RestoreElement(Runtime runtime, string key, IP5Any value)
+        {
+            if (value == null)
+                hash.Remove(key);
+            else
+                hash[key] = value;
         }
 
         public virtual P5Scalar ReferenceType(Runtime runtime)

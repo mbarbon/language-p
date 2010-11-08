@@ -280,6 +280,24 @@ namespace org.mbarbon.p.values
             return new P5Array(runtime);
         }
 
+        public virtual IP5Any LocalizeElement(Runtime runtime, int index)
+        {
+            if (index == -1)
+                throw new System.Exception("Modification of non-creatable array value attempted, subscript " + index.ToString());
+
+            var value = array[index];
+            var new_value = new P5Scalar(runtime);
+
+            array[index] = new_value;
+
+            return value;
+        }
+
+        public virtual void RestoreElement(Runtime runtime, int index, IP5Any value)
+        {
+            array[index] = value;
+        }
+
         public virtual P5Scalar ReferenceType(Runtime runtime)
         {
             return new P5Scalar(runtime);

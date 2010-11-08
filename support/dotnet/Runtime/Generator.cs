@@ -1950,6 +1950,46 @@ namespace org.mbarbon.p.runtime
                         Expression.Constant(null, typeof(IP5Any))),
                     Expression.Block(typeof(IP5Any), vars, exps));
             }
+            case Opcode.OpNumber.OP_LOCALIZE_ARRAY_ELEMENT:
+            {
+                var le = (LocalElement)op;
+
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("LocalizeArrayElement"),
+                    Runtime,
+                    Generate(sub, le.Childs[1]),
+                    Generate(sub, le.Childs[0]),
+                    GetTemporary(le.Index, typeof(SavedValue)));
+            }
+            case Opcode.OpNumber.OP_RESTORE_ARRAY_ELEMENT:
+            {
+                var le = (LocalElement)op;
+
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("RestoreArrayElement"),
+                    Runtime,
+                    GetTemporary(le.Index, typeof(SavedValue)));
+            }
+            case Opcode.OpNumber.OP_LOCALIZE_HASH_ELEMENT:
+            {
+                var le = (LocalElement)op;
+
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("LocalizeHashElement"),
+                    Runtime,
+                    Generate(sub, le.Childs[1]),
+                    Generate(sub, le.Childs[0]),
+                    GetTemporary(le.Index, typeof(SavedValue)));
+            }
+            case Opcode.OpNumber.OP_RESTORE_HASH_ELEMENT:
+            {
+                var le = (LocalElement)op;
+
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("RestoreHashElement"),
+                    Runtime,
+                    GetTemporary(le.Index, typeof(SavedValue)));
+            }
             case Opcode.OpNumber.OP_LEXICAL_STATE_SET:
             {
                 var ls = (LexState)op;
