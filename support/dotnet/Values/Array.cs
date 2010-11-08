@@ -72,30 +72,41 @@ namespace org.mbarbon.p.values
 
         public int GetCount(Runtime runtime) { return array.Count; }
         public IP5Any GetItem(Runtime runtime, int i) { return array[i]; }
+
+        public int GetItemIndex(Runtime runtime, int i, bool create)
+        {
+            if (i < 0 && -i > array.Count)
+                return -1;
+            if (i < 0)
+                return array.Count + i;
+
+            if (i < array.Count)
+                return i;
+            if (create)
+            {
+                while (array.Count <= i)
+                    array.Add(new P5Scalar(runtime));
+                return i;
+            }
+            else
+                return -2;
+        }
+
         public IP5Any GetItemOrUndef(Runtime runtime, IP5Any index, bool create)
         {
-            int i = index.AsInteger(runtime);
+            int i = GetItemIndex(runtime, index.AsInteger(runtime), create);
 
-            if (i < 0 && -i > array.Count)
+            if (i == -1)
             {
                 if (create)
                     throw new System.Exception("Modification of non-creatable array value attempted, subscript " + i.ToString());
                 else
                     return new P5Scalar(runtime);
             }
-            if (i < 0)
-                return array[array.Count + i];
+            else if (i == -2)
+                return new P5Scalar(runtime);
 
-            if (i < array.Count)
-                return array[i];
-            if (create)
-            {
-                while (array.Count <= i)
-                    array.Add(new P5Scalar(runtime));
-                return array[i];
-            }
-
-            return new P5Scalar(runtime);
+            return array[i];
         }
 
         public P5List Slice(Runtime runtime, P5Array keys, bool create)
