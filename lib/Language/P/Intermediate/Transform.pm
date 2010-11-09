@@ -61,7 +61,7 @@ sub _add_bytecode {
 }
 
 sub _opcode_set {
-    my $op = opcode_n( OP_SET, $_[1] );
+    my $op = opcode_np( OP_SET, $_[1]->{pos}, $_[1] );
     $op->{attributes}{index} = $_[0];
 
     return $op;
@@ -254,7 +254,7 @@ sub _ssa_to_tree {
                 # add SET nodes to rename the variables
                 splice @{$block_from->bytecode}, $op_from_off, 0,
                        _opcode_set( $op->{attributes}{index},
-                                    opcode_nm( OP_GET, index => $variable ) )
+                                    opcode_npm( OP_GET, $op->{pos}, index => $variable ) )
                     if $op->{attributes}{index} != $variable;
             }
 
@@ -276,7 +276,7 @@ sub _get_stack {
         next if $value->{opcode_n} != OP_PHI && !$force_get;
         my $name = _local_name( $self );
         _add_bytecode $self, _opcode_set( $name, $value );
-        $value = opcode_nm( OP_GET, index => $name );
+        $value = opcode_npm( OP_GET, $value->{pos}, index => $name );
     }
 
     return @values;
@@ -372,7 +372,7 @@ sub _emit_out_stack {
             $out_stack[$i] = $op;
         } else {
             $out_names[$j] = _local_name( $self );
-            $out_stack[$i] = opcode_nm( OP_GET, index => $out_names[$j] );
+            $out_stack[$i] = opcode_npm( OP_GET, $op->{pos}, index => $out_names[$j] );
             _add_bytecode $self, _opcode_set( $out_names[$j], $op );
         }
     }
@@ -414,7 +414,7 @@ sub _generic {
 sub _const_sub {
     my( $self, $op ) = @_;
     my $new_seg = $self->_converted_segments->{$op->{attributes}{value}};
-    my $new_op = opcode_nm( OP_CONSTANT_SUB(), value => $new_seg );
+    my $new_op = opcode_nm( OP_CONSTANT_SUB, value => $new_seg );
 
     push @{$self->_stack}, $new_op;
     _created( $self, 1 );
@@ -423,7 +423,7 @@ sub _const_sub {
 sub _const_regex {
     my( $self, $op ) = @_;
     my $new_seg = $self->_converted_segments->{$op->{attributes}{value}};
-    my $new_op = opcode_nm( OP_CONSTANT_REGEX(), value => $new_seg );
+    my $new_op = opcode_nm( OP_CONSTANT_REGEX, value => $new_seg );
 
     push @{$self->_stack}, $new_op;
     _created( $self, 1 );
@@ -474,8 +474,8 @@ sub _swap {
 sub _make_list_array {
     my( $self, $op ) = @_;
 
-    my $nop = opcode_nm( $op->{opcode_n},
-                         context => $op->{attributes}{context} );
+    my $nop = opcode_npm( $op->{opcode_n}, $op->{pos},
+                          context => $op->{attributes}{context} );
     $nop->{parameters} = [ _get_stack( $self, $op->{attributes}{count} ) ]
         if $op->{attributes}{count};
 
