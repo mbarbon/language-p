@@ -1821,6 +1821,13 @@ namespace org.mbarbon.p.runtime
                     typeof(P5Code).GetMethod("MakeClosure"),
                     Runtime, Pad);
             }
+            case Opcode.OpNumber.OP_MAKE_QR:
+            {
+                return Expression.New(
+                    typeof(P5Scalar).GetConstructor(new System.Type[] { typeof(Runtime), typeof(IP5Referrable) }),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
+            }
             case Opcode.OpNumber.OP_LOCALIZE_GLOB_SLOT:
             {
                 var exps = new List<Expression>();

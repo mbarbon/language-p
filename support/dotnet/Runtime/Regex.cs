@@ -110,7 +110,7 @@ namespace org.mbarbon.p.runtime
     }
 
     [Serializable]
-    public class Regex
+    public class Regex : IP5Referrable
     {
         [Serializable]
         public struct Op
@@ -142,6 +142,21 @@ namespace org.mbarbon.p.runtime
             Classes = classes;
             Captures = captures;
             Saved = saved;
+        }
+
+        public virtual void Bless(Runtime runtime, P5SymbolTable stash)
+        {
+            // do nothing
+        }
+
+        public virtual bool IsBlessed(Runtime runtime)
+        {
+            return true;
+        }
+
+        public virtual P5SymbolTable Blessed(Runtime runtime)
+        {
+            return runtime.SymbolTable.GetPackage(runtime, "Regexp");
         }
 
         private void SaveGroups(ref RxContext cxt, int start, int end,
