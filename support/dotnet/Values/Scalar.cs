@@ -1,4 +1,5 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
+using Regex = org.mbarbon.p.runtime.Regex;
 using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
@@ -179,6 +180,12 @@ namespace org.mbarbon.p.values
         public virtual P5Code DereferenceSubroutine(Runtime runtime)
         {
             return body.DereferenceSubroutine(runtime);
+        }
+
+        // must be checked by the called
+        public virtual Regex DereferenceRegex(Runtime runtime)
+        {
+            return (body as P5Reference).Referred as Regex;
         }
 
         public virtual P5Scalar VivifyScalar(Runtime runtime)

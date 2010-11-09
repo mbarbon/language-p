@@ -261,7 +261,8 @@ namespace org.mbarbon.p.runtime
 
             return new Regex(ops.ToArray(), targets.ToArray(),
                              exact.ToArray(), quantifiers.ToArray(),
-                             classes.ToArray(), captures, saved);
+                             classes.ToArray(), captures, saved,
+                             sub.OriginalRegex);
         }
 
         public void AddMethod(int index, Subroutine sub)
@@ -2050,6 +2051,16 @@ namespace org.mbarbon.p.runtime
                 ConstantSub cs = (ConstantSub)op;
 
                 return Expression.Field(null, Subroutines[cs.Value].CodeField);
+            }
+            case Opcode.OpNumber.OP_EVAL_REGEX:
+            {
+                RegexEval re = (RegexEval)op;
+
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("CompileRegex"),
+                    Runtime,
+                    Generate(sub, re.Childs[0]),
+                    Expression.Constant(re.Flags));
             }
             case Opcode.OpNumber.OP_POS:
             {

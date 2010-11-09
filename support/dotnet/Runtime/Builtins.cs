@@ -362,5 +362,18 @@ namespace org.mbarbon.p.runtime
             state.str_key = null;
             state.value = null;
         }
+
+        public static Regex CompileRegex(Runtime runtime, P5Scalar value, int flags)
+        {
+            if (value.IsReference(runtime))
+            {
+                var rx = value.DereferenceRegex(runtime);
+
+                if (rx != null)
+                    return rx;
+            }
+
+            throw new System.Exception("P5: Needs compiler to recompile string expression");
+        }
     }
 }

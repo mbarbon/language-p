@@ -133,7 +133,7 @@ namespace org.mbarbon.p.runtime
 
         public Regex(Op[] ops, int[] targets, string[] exact,
                      RxQuantifier[] quantifiers, RxClass[] classes,
-                     int captures, int saved)
+                     int captures, int saved, string orig)
         {
             Ops = ops;
             Targets = targets;
@@ -142,6 +142,7 @@ namespace org.mbarbon.p.runtime
             Classes = classes;
             Captures = captures;
             Saved = saved;
+            original = orig;
         }
 
         public virtual void Bless(Runtime runtime, P5SymbolTable stash)
@@ -664,11 +665,14 @@ namespace org.mbarbon.p.runtime
             value.Assign(runtime, new P5Scalar(runtime, str));
         }
 
+        public string Original { get { return original; } }
+
         private Op[] Ops;
         private string[] Exact;
         private int[] Targets;
         private RxQuantifier[] Quantifiers;
         private RxClass[] Classes;
         private int Captures, Saved;
+        private string original;
     }
 }
