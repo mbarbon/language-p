@@ -187,7 +187,6 @@ sub compile_regex {
                           flags      => $flags,
                           } );
     my $re = $generator->process_regex( $pattern );
-    $re->{regex_string} = $original;
 
     return $re;
 }

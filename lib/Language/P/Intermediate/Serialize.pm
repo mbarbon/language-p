@@ -75,6 +75,7 @@ sub _write_sub {
     print $out pack 'V', scalar @{$code->scopes};
     print $out pack 'V', scalar @{$code->lexical_states};
     print $out pack 'V', scalar @$bb;
+    _write_string( $out, $code->regex_string ) if $code->is_regex;
 
     # TODO serialize prototype
 

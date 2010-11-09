@@ -389,7 +389,7 @@ concatenate         0       concat               2   1  context=i1
 concatenate_assign  0       concat_assign        2   1  context=i1
 constant_float      0       same                 0   1  value=f
 constant_integer    0       same                 0   1  value=i
-constant_regex      0       same                 0   1  value=c,original=s
+constant_regex      0       same                 0   1  value=c
 constant_string     0       same                 0   1  value=s
 constant_sub        0       same                 0   1  value=c
 constant_undef      0       same                 0   1  noattr

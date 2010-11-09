@@ -8,7 +8,7 @@ split /aa/, $_
 EOP
 # main
 L1:
-  constant_regex original="(?-xism:aa)", value=anoncode
+  constant_regex value=anoncode
   global context=4, name="_", slot=1
   rx_split arg_count=2, context=2
   pop
@@ -22,7 +22,7 @@ split "aa", $_
 EOP
 # main
 L1:
-  constant_regex original="(?-xism:aa)", value=anoncode
+  constant_regex value=anoncode
   global context=4, name="_", slot=1
   rx_split arg_count=2, context=2
   pop
@@ -36,7 +36,7 @@ split / /, $_
 EOP
 # main
 L1:
-  constant_regex original="(?-xism: )", value=anoncode
+  constant_regex value=anoncode
   global context=4, name="_", slot=1
   rx_split arg_count=2, context=2
   pop
@@ -50,7 +50,7 @@ split ' ', $_
 EOP
 # main
 L1:
-  constant_regex original="(?-xism: )", value=anoncode
+  constant_regex value=anoncode
   global context=4, name="_", slot=1
   rx_split_skipspaces arg_count=2, context=2
   pop

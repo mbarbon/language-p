@@ -183,6 +183,7 @@ sub _generate_regex {
          Language::P::Intermediate::Code->new
              ( { type         => CODE_REGEX,
                  basic_blocks => [],
+                 regex_string => $regex->original,
                  } );
     push @{$outer->inner}, $self->_code_segments->[-1] if $outer;
 
@@ -2113,10 +2114,7 @@ sub _pattern {
                             } );
 
     my $re = $generator->_generate_regex( $tree, $self->_code_segments->[0] );
-    _add_bytecode $self, opcode_nm( OP_CONSTANT_REGEX,
-                                    value    => $re->[0],
-                                    original => $tree->original,
-                                    );
+    _add_bytecode $self, opcode_nm( OP_CONSTANT_REGEX, value => $re->[0] );
     _add_bytecode $self, opcode_n( OP_MAKE_QR )
         if $tree->op == OP_QL_QR;
 }

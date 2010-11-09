@@ -102,6 +102,7 @@ sub to_ssa {
                            lexicals       => $code_segment->lexicals,
                            scopes         => [],
                            lexical_states => $code_segment->lexical_states,
+                           regex_string   => $code_segment->regex_string,
                            } );
     $self->_converted_segments->{$code_segment} = $new_code;
 
@@ -422,7 +423,7 @@ sub _const_sub {
 sub _const_regex {
     my( $self, $op ) = @_;
     my $new_seg = $self->_converted_segments->{$op->{attributes}{value}};
-    my $new_op = opcode_nm( OP_CONSTANT_REGEX(), value => $new_seg, original => $op->{attributes}{original} );
+    my $new_op = opcode_nm( OP_CONSTANT_REGEX(), value => $new_seg );
 
     push @{$self->_stack}, $new_op;
     _created( $self, 1 );

@@ -7,7 +7,8 @@ use base qw(Class::Accessor::Fast);
 use Scalar::Util; # weaken
 
 __PACKAGE__->mk_ro_accessors( qw(type name basic_blocks outer inner
-                                 lexicals prototype scopes lexical_states) );
+                                 lexicals prototype scopes lexical_states
+                                 regex_string) );
 
 use Exporter 'import';
 
@@ -43,6 +44,7 @@ sub new {
             hints    => 0,
             warnings => undef,
             } ];
+    $self->{regex_string} ||= undef;
 
     return $self;
 }
