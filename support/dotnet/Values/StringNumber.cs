@@ -84,6 +84,13 @@ namespace org.mbarbon.p.values
                    || ((flags & HasFloat) != 0 && floatValue != 0);
         }
 
+        public void SetString(Runtime runtime, string value)
+        {
+            pos = -1;
+            flags = HasString;
+            stringValue = value;
+        }
+
         public virtual int Length(Runtime runtime)
         {
             return AsString(runtime).Length;

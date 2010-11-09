@@ -97,6 +97,16 @@ namespace org.mbarbon.p.values
             throw new System.NotImplementedException("No AsHandle for P5Scalar");
         }
 
+        public void SetString(Runtime runtime, string value)
+        {
+            var str_num = body as P5StringNumber;
+
+            if (str_num != null)
+                str_num.SetString(runtime, value);
+            else
+                body = new P5StringNumber(runtime, value);
+        }
+
         public virtual int Length(Runtime runtime)
         {
             return body.Length(runtime);

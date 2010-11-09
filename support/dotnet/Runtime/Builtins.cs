@@ -375,5 +375,63 @@ namespace org.mbarbon.p.runtime
 
             throw new System.Exception("P5: Needs compiler to recompile string expression");
         }
+
+        public static int Transliterate(Runtime runtime, P5Scalar scalar,
+                                        string match, string replacement,
+                                        int flags)
+        {
+            bool complement = (flags & Opcode.FLAG_RX_COMPLEMENT) != 0;
+            bool delete = (flags & Opcode.FLAG_RX_DELETE) != 0;
+            bool squeeze = (flags & Opcode.FLAG_RX_SQUEEZE) != 0;
+            var s = scalar.AsString(runtime);
+            int count = 0, last_r = -1;
+            var new_str = new System.Text.StringBuilder();
+
+            for (int i = 0; i < s.Length; ++i)
+            {
+                int idx = match.IndexOf(s[i]);
+                int replace = s[i];
+
+                if (idx == -1 && complement)
+                {
+                    if (delete)
+                        replace = -1;
+                    else if (replacement.Length > 0)
+                        replace = replacement[replacement.Length - 1];
+
+                    if (last_r == replace && squeeze)
+                        replace = -1;
+                    else
+                        last_r = replace;
+
+                    count += 1;
+                }
+                else if (idx != -1 && !complement)
+                {
+                    if (idx >= replacement.Length && delete)
+                        replace = -1;
+                    else if (idx >= replacement.Length)
+                        replace = replacement[replacement.Length - 1];
+                    else if (idx < replacement.Length)
+                        replace = replacement[idx];
+
+                    if (last_r == replace && squeeze)
+                        replace = -1;
+                    else
+                        last_r = replace;
+
+                    count += 1;
+                }
+                else
+                    last_r = -1;
+
+                if (replace != -1)
+                    new_str.Append((char)replace);
+            }
+
+            scalar.SetString(runtime, new_str.ToString());
+
+            return count;
+        }
     }
 }

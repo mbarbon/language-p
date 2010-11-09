@@ -242,6 +242,10 @@ namespace org.mbarbon.p.runtime
         public const int RX_POSIX_WORD        = 1 << 22;
         public const int RX_POSIX_XDIGIT      = 1 << 23;
 
+        public const int FLAG_RX_COMPLEMENT   = 1;
+        public const int FLAG_RX_DELETE       = 2;
+        public const int FLAG_RX_SQUEEZE      = 4;
+
         public enum Sigil
         {
             SCALAR    = 1,

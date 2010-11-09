@@ -2103,6 +2103,22 @@ namespace org.mbarbon.p.runtime
                 else
                     return GenerateSubstitution(sub, rm);
             }
+            case Opcode.OpNumber.OP_TRANSLITERATE:
+            {
+                RegexTransliterate rt = (RegexTransliterate)op;
+
+                return
+                    Expression.New(
+                        typeof(P5Scalar).GetConstructor(ProtoRuntimeInt),
+                        Runtime,
+                        Expression.Call(
+                            typeof(Builtins).GetMethod("Transliterate"),
+                            Runtime,
+                            Generate(sub, rt.Childs[0]),
+                            Expression.Constant(rt.Match),
+                            Expression.Constant(rt.Replacement),
+                            Expression.Constant(rt.Flags)));
+            }
             default:
                 throw new System.Exception(string.Format("Unhandled opcode {0:S} in generation", op.Number.ToString()));
             }
