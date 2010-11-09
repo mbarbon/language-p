@@ -989,8 +989,8 @@ sub _binary_op {
             _add_bytecode $self,
                 opcode_npm( OP_TRANSLITERATE, $tree->pos,
                             context     => _context( $tree ),
-                            match       => $tree->right->match,
-                            replacement => $tree->right->replacement,
+                            match       => ( join '', @{$tree->right->match} ),
+                            replacement => ( join '', @{$tree->right->replacement} ),
                             flags       => $tree->right->flags );
 
             if( $tree->op == OP_NOT_MATCH ) {
