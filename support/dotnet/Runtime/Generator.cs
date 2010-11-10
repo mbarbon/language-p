@@ -1063,12 +1063,18 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_MAKE_LIST:
             {
+                MethodInfo method;
+                if ((op.Context & (int)Opcode.ContextValues.LVALUE) != 0)
+                    method = typeof(P5List).GetMethod("MakeNonFlat");
+                else
+                    method = typeof(P5List).GetMethod("MakeFlat");
+
                 List<Expression> data = new List<Expression>();
                 foreach (var i in op.Childs)
                     data.Add(Generate(sub, i));
                 return
                     Expression.Call(
-                        typeof(P5List).GetMethod("MakeFlat"),
+                        method,
                         Runtime,
                         Expression.NewArrayInit(typeof(IP5Any), data));
             }

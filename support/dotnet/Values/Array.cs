@@ -37,7 +37,7 @@ namespace org.mbarbon.p.values
         {
             var res = new P5Array(runtime);
 
-            res.PushFlatten(data);
+            res.PushFlatten(runtime, data);
 
             return res;
         }
@@ -56,18 +56,10 @@ namespace org.mbarbon.p.values
                 array.Add(value);
         }
 
-        protected void PushFlatten(IP5Any[] data)
+        protected void PushFlatten(Runtime runtime, IP5Any[] data)
         {
             foreach (var i in data)
-            {
-                var l = i as P5List;
-
-                if (l != null)
-                    foreach (var li in l)
-                        array.Add(li);
-                else
-                    array.Add(i);
-            }
+                PushFlatten(runtime, i);
         }
 
         public int GetCount(Runtime runtime) { return array.Count; }

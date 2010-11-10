@@ -32,9 +32,14 @@ namespace org.mbarbon.p.values
         {
             var res = new P5List(runtime);
 
-            res.PushFlatten(data);
+            res.PushFlatten(runtime, data);
 
             return res;
+        }
+
+        public static P5List MakeNonFlat(Runtime runtime, params IP5Any[] data)
+        {
+            return new P5List(runtime, data);
         }
 
         public override P5Scalar AsScalar(Runtime runtime)
