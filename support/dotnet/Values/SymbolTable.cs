@@ -217,6 +217,9 @@ namespace org.mbarbon.p.values
 
             var stderr = GetGlob(runtime, "STDERR", true);
             stderr.Handle = new P5Handle(runtime, null, System.Console.Error);
+
+            var dquote = GetGlob(runtime, "\"", true);
+            dquote.Scalar = new P5Scalar(runtime, " ");
         }
 
         public override bool IsMain {
