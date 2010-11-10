@@ -37,6 +37,8 @@ namespace org.mbarbon.p.runtime
         {
             if (Operation == ExpressionType.Or || Operation == ExpressionType.And)
                 return BindBitOp(target, arg, errorSuggestion);
+            if (Operation == ExpressionType.GreaterThan)
+                return BindRelOp(target, arg, errorSuggestion);
 
             return null;
         }
@@ -72,6 +74,32 @@ namespace org.mbarbon.p.runtime
                                 Expression.Call(
                                     CastAny(arg),
                                     typeof(IP5Any).GetMethod("AsInteger"),
+                                    Expression.Constant(Runtime)))}),
+                    BindingRestrictions.GetTypeRestriction(arg.Expression, arg.RuntimeType)
+                    .Merge(BindingRestrictions.GetTypeRestriction(target.Expression, target.RuntimeType)));
+            }
+
+            return null;
+        }
+
+        private DynamicMetaObject BindRelOp(DynamicMetaObject target, DynamicMetaObject arg, DynamicMetaObject errorSuggestion)
+        {
+            if (IsAny(target) && IsAny(arg))
+            {
+                return new DynamicMetaObject(
+                    Expression.New(
+                        typeof(P5Scalar).GetConstructor(new System.Type[] {typeof(Runtime), typeof(bool)}),
+                        new Expression[] {
+                            Expression.Constant(Runtime),
+                            Expression.MakeBinary(
+                                Operation,
+                                Expression.Call(
+                                    CastAny(target),
+                                    typeof(IP5Any).GetMethod("AsFloat"),
+                                    Expression.Constant(Runtime)),
+                                Expression.Call(
+                                    CastAny(arg),
+                                    typeof(IP5Any).GetMethod("AsFloat"),
                                     Expression.Constant(Runtime)))}),
                     BindingRestrictions.GetTypeRestriction(arg.Expression, arg.RuntimeType)
                     .Merge(BindingRestrictions.GetTypeRestriction(target.Expression, target.RuntimeType)));
