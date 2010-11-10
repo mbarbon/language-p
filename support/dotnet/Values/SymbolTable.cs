@@ -209,16 +209,16 @@ namespace org.mbarbon.p.values
     {
         public P5MainSymbolTable(Runtime runtime) : base(runtime)
         {
-            var stdout = GetGlob(runtime, "STDOUT", true);
+            var stdout = GetStashGlob(runtime, "STDOUT", true);
             stdout.Handle = new P5Handle(runtime, null, System.Console.Out);
 
-            var stdin = GetGlob(runtime, "STDIN", true);
+            var stdin = GetStashGlob(runtime, "STDIN", true);
             stdin.Handle = new P5Handle(runtime, System.Console.In, null);
 
-            var stderr = GetGlob(runtime, "STDERR", true);
+            var stderr = GetStashGlob(runtime, "STDERR", true);
             stderr.Handle = new P5Handle(runtime, null, System.Console.Error);
 
-            var dquote = GetGlob(runtime, "\"", true);
+            var dquote = GetStashGlob(runtime, "\"", true);
             dquote.Scalar = new P5Scalar(runtime, " ");
         }
 
