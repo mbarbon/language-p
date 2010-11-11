@@ -48,7 +48,8 @@ print $oc->s_a == 4 ? "ok 9\n" : "not ok 9\n";
 print $oc->Bar::a == 1 ? "ok\n" : "not ok\n";
 
 # ref
-print ref $oc eq 'Baz' ? "ok\n" : "not ok\n";
+$c = ref $oc;
+print $c eq 'Baz' ? "ok\n" : "not ok - $c\n";
 
 # indirect method calls
 $foo_a1 = \&Foo::a;
