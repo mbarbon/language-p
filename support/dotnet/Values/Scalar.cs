@@ -268,6 +268,13 @@ namespace org.mbarbon.p.values
             return blessed != null;
         }
 
+        public P5SymbolTable BlessedReferenceStash(Runtime runtime)
+        {
+            var refbody = body as P5Reference;
+
+            return refbody != null ? refbody.Referred.Blessed(runtime) : null;
+        }
+
         public virtual P5Code FindMethod(Runtime runtime, string method)
         {
             var refbody = body as P5Reference;
