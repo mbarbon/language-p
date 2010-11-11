@@ -265,18 +265,20 @@ namespace org.mbarbon.p.values
         public virtual P5Code FindMethod(Runtime runtime, string method)
         {
             var refbody = body as P5Reference;
-            if (refbody != null)
-            {
-                var stash = refbody.Referred.Blessed(runtime);
+            int colon = method.LastIndexOf("::");
+            P5SymbolTable stash;
 
-                return stash.FindMethod(runtime, method);
+            if (colon != -1)
+            {
+                stash = runtime.SymbolTable.GetPackage(runtime, method, true, true);
+                method = method.Substring(colon + 2);
             }
+            else if (refbody != null)
+                stash = refbody.Referred.Blessed(runtime);
             else
-            {
-                var stash = runtime.SymbolTable.GetPackage(runtime, AsString(runtime), false, true);
+                stash = runtime.SymbolTable.GetPackage(runtime, AsString(runtime), true);
 
-                return stash.FindMethod(runtime, method);
-            }
+            return stash.FindMethod(runtime, method);
         }
 
         internal void BlessReference(Runtime runtime, P5SymbolTable stash)
