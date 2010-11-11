@@ -228,10 +228,21 @@ namespace org.mbarbon.p.values
 
             var dquote = GetStashGlob(runtime, "\"", true);
             dquote.Scalar = new P5Scalar(runtime, " ");
+
+            // UNIVERSAL
+            universal = GetPackage(runtime, "UNIVERSAL", true);
         }
 
-        public override bool IsMain {
+        public override bool IsMain
+        {
             get { return true; }
         }
+
+        public P5SymbolTable Universal
+        {
+            get { return universal; }
+        }
+
+        private P5SymbolTable universal;
     }
 }
