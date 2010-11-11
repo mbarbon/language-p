@@ -6,8 +6,14 @@ namespace org.mbarbon.p.values
 {
     public class P5SymbolTable : P5Hash
     {
-        public P5SymbolTable(Runtime runtime) : base(runtime)
+        public P5SymbolTable(Runtime runtime, string _name) : base(runtime)
         {
+            name = _name;
+        }
+
+        public string GetName(Runtime runtime)
+        {
+            return name;
         }
 
         public P5Scalar GetScalar(Runtime runtime, string name, bool create)
@@ -158,8 +164,9 @@ namespace org.mbarbon.p.values
                     if (!create)
                         return null;
 
+                    var name = string.Join("::", packs, 0, i - first + 1);
                     P5Typeglob glob = new P5Typeglob(runtime);
-                    glob.Hash = new P5SymbolTable(runtime);
+                    glob.Hash = new P5SymbolTable(runtime, name);
                     current.hash.Add(packs[i] + "::", glob);
                     value = glob;
                 }
@@ -203,11 +210,12 @@ namespace org.mbarbon.p.values
         }
 
         protected readonly string[] separator = new string [] {"::"};
+        protected string name;
     }
 
     public class P5MainSymbolTable : P5SymbolTable
     {
-        public P5MainSymbolTable(Runtime runtime) : base(runtime)
+        public P5MainSymbolTable(Runtime runtime, string name) : base(runtime, name)
         {
             var stdout = GetStashGlob(runtime, "STDOUT", true);
             stdout.Handle = new P5Handle(runtime, null, System.Console.Out);

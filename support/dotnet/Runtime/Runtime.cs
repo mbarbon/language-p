@@ -45,7 +45,7 @@ namespace org.mbarbon.p.runtime
 
         public Runtime()
         {
-            SymbolTable = new P5MainSymbolTable(this);
+            SymbolTable = new P5MainSymbolTable(this, "main");
             CallStack = new Stack<StackFrame>();
 
             // set up INC
