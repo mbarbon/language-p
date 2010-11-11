@@ -372,6 +372,25 @@ namespace org.mbarbon.p.values
             return pmethod.Call(runtime, context, this);
         }
 
+        public IP5Any CallMethodIndirect(Runtime runtime, Opcode.ContextValues context,
+                                         P5Scalar method)
+        {
+            var pmethod = method.IsReference(runtime) ? method.Dereference(runtime) as P5Code : null;
+
+            if (pmethod == null)
+            {
+                string method_name = method.AsString(runtime);
+                var invocant = array[0];
+
+                pmethod = invocant.FindMethod(runtime, method_name);
+
+                if (pmethod == null)
+                    throw new System.Exception("Can't find method " + method_name);
+            }
+
+            return pmethod.Call(runtime, context, this);
+        }
+
         private P5SymbolTable blessed;
         protected List<IP5Any> array;
     }

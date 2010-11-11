@@ -192,10 +192,16 @@ namespace org.mbarbon.p.values
             return body.DereferenceSubroutine(runtime);
         }
 
-        // must be checked by the called
+        // must be checked by the caller
         public virtual Regex DereferenceRegex(Runtime runtime)
         {
             return (body as P5Reference).Referred as Regex;
+        }
+
+        // must be checked by the caller
+        public virtual IP5Referrable Dereference(Runtime runtime)
+        {
+            return (body as P5Reference).Referred;
         }
 
         public virtual P5Scalar VivifyScalar(Runtime runtime)

@@ -1768,6 +1768,15 @@ namespace org.mbarbon.p.runtime
                         Runtime, OpContext(op),
                         Expression.Constant(cm.Method));
             }
+            case Opcode.OpNumber.OP_CALL_METHOD_INDIRECT:
+            {
+                return
+                    Expression.Call(
+                        Generate(sub, op.Childs[1]),
+                        typeof(P5Array).GetMethod("CallMethodIndirect"),
+                        Runtime, OpContext(op),
+                        Generate(sub, op.Childs[0]));
+            }
             case Opcode.OpNumber.OP_FIND_METHOD:
             {
                 CallMethod cm = (CallMethod)op;
