@@ -1,6 +1,8 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
 using System.Collections.Generic;
 using StringSplitOptions = System.StringSplitOptions;
+using Opcode = org.mbarbon.p.runtime.Opcode;
+using Builtins = org.mbarbon.p.runtime.Builtins;
 
 namespace org.mbarbon.p.values
 {
@@ -262,6 +264,19 @@ namespace org.mbarbon.p.values
 
             // UNIVERSAL
             universal = GetPackage(runtime, "UNIVERSAL", true);
+
+            var isa = universal.GetStashGlob(runtime, "isa", true);
+            isa.Code = new P5NativeCode(new P5Code.Sub(WrapIsa));
+        }
+
+        private static IP5Any WrapIsa(Runtime runtime, Opcode.ContextValues context,
+                                      P5ScratchPad pad, P5Array args)
+        {
+            var value = args.GetItem(runtime, 0) as P5Scalar;
+            var parent = args.GetItem(runtime, 1);
+            bool is_derived = Builtins.IsDerivedFrom(runtime, value, parent);
+
+            return new P5Scalar(runtime, is_derived);
         }
 
         public override bool IsMain
