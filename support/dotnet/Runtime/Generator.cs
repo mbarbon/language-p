@@ -52,6 +52,7 @@ namespace org.mbarbon.p.runtime
             ClassBuilder = class_builder;
             Initializers = new List<Expression>();
             Subroutines = new List<SubInfo>();
+            CreatedPackages = new HashSet<string>();
             InitRuntime = Expression.Parameter(typeof(Runtime), "runtime");
         }
 
@@ -74,6 +75,24 @@ namespace org.mbarbon.p.runtime
         public FieldInfo AddField(Expression initializer)
         {
             return AddField(initializer, typeof(P5Scalar));
+        }
+
+        public void AddInitPackage(string name)
+        {
+            if (CreatedPackages.Contains(name))
+                return;
+            CreatedPackages.Add(name);
+
+            var create_package = Expression.Call(
+                Expression.Field(
+                    InitRuntime,
+                    typeof(Runtime).GetField("SymbolTable")),
+                typeof(P5SymbolTable).GetMethod("GetPackage", new System.Type[] { typeof(Runtime), typeof(string), typeof(bool) }),
+                InitRuntime,
+                Expression.Constant(name),
+                Expression.Constant(true));
+
+            Initializers.Add(create_package);
         }
 
         public void AddRegexInfo(Subroutine sub)
@@ -449,6 +468,7 @@ namespace org.mbarbon.p.runtime
         private List<Expression> Initializers;
         private List<SubInfo> Subroutines;
         private int MethodIndex = 0;
+        private HashSet<string> CreatedPackages;
         public ParameterExpression InitRuntime;
     }
 
@@ -2012,6 +2032,10 @@ namespace org.mbarbon.p.runtime
             {
                 var ls = (LexState)op;
                 var state = sub.LexicalStates[ls.Index];
+
+                // force package creation
+                if (state.Package != null)
+                    ModuleGenerator.AddInitPackage(state.Package);
 
                 return Expression.Block(
                     typeof(void),
