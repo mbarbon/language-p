@@ -276,13 +276,16 @@ namespace org.mbarbon.p.values
 
             if (colon != -1)
             {
-                stash = runtime.SymbolTable.GetPackage(runtime, method, true, true);
+                stash = runtime.SymbolTable.GetPackage(runtime, method, true, false);
                 method = method.Substring(colon + 2);
             }
             else if (refbody != null)
                 stash = refbody.Referred.Blessed(runtime);
             else
-                stash = runtime.SymbolTable.GetPackage(runtime, AsString(runtime), true);
+                stash = runtime.SymbolTable.GetPackage(runtime, AsString(runtime), false);
+
+            if (stash == null)
+                return null;
 
             return stash.FindMethod(runtime, method);
         }
