@@ -184,16 +184,23 @@ namespace org.mbarbon.p.values
 
             IP5Any isa;
             if (!hash.TryGetValue("ISA", out isa))
-                return null;
+            {
+                var universal = runtime.SymbolTable.Universal;
+
+                // avoid infinite recursion when searching in UNIVERSAL
+                if (this == universal)
+                    return null;
+                return universal.FindMethod(runtime, method);
+            }
+
             P5Array isa_array = (isa as P5Typeglob).Array;
             if (isa_array == null)
                 return null;
 
-            var main_st = runtime.SymbolTable;
             foreach (var c in isa_array)
             {
                 var c_str = c.AsString(runtime);
-                var super = main_st.GetPackage(runtime, c_str, false, false);
+                var super = runtime.SymbolTable.GetPackage(runtime, c_str, false);
                 if (super == null)
                     continue;
 
