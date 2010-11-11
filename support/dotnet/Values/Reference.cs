@@ -52,6 +52,8 @@ namespace org.mbarbon.p.values
 
         public virtual P5Scalar ReferenceType(Runtime runtime)
         {
+            if (referred.IsBlessed(runtime))
+                return new P5Scalar(runtime, referred.Blessed(runtime).GetName(runtime));
             if (referred as P5Scalar != null)
                 return new P5Scalar(runtime, "SCALAR");
             if (referred as P5Array != null)
@@ -62,8 +64,6 @@ namespace org.mbarbon.p.values
                 return new P5Scalar(runtime, "GLOB");
             if (referred as P5Code != null)
                 return new P5Scalar(runtime, "CODE");
-            if (referred as Regex != null)
-                return new P5Scalar(runtime, "Regexp");
 
             // TODO use package for blessed values
             return new P5Scalar(runtime);
