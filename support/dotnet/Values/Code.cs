@@ -12,8 +12,8 @@ namespace org.mbarbon.p.values
             is_main = main;
         }
 
-        public IP5Any Call(Runtime runtime, Opcode.ContextValues context,
-                           P5Array args)
+        public virtual IP5Any Call(Runtime runtime, Opcode.ContextValues context,
+                                   P5Array args)
         {
             // TODO emit this in the subroutine prologue/epilogue code,
             //      as is done for eval BLOCK
@@ -72,6 +72,8 @@ namespace org.mbarbon.p.values
             set { scratchpad = value; }
         }
 
+        protected Sub Subref { get { return subref; } }
+
         public delegate IP5Any Sub(Runtime runtime,
                                    Opcode.ContextValues context,
                                    P5ScratchPad pad, P5Array args);
@@ -80,5 +82,32 @@ namespace org.mbarbon.p.values
         private Sub subref;
         private P5ScratchPad scratchpad;
         private bool is_main;
+    }
+
+    public class P5NativeCode : P5Code
+    {
+        public P5NativeCode(System.Delegate code) : base(code, false)
+        {
+        }
+
+        public override IP5Any Call(Runtime runtime, Opcode.ContextValues context,
+                                    P5Array args)
+        {
+            int size = runtime.CallStack.Count;
+
+            try
+            {
+                runtime.CallStack.Push(new StackFrame(runtime.Package,
+                                                      runtime.File,
+                                                      runtime.Line, this,
+                                                      context, false));
+                return Subref(runtime, context, null, args);
+            }
+            finally
+            {
+                while (runtime.CallStack.Count > size)
+                    runtime.CallStack.Pop();
+            }
+        }
     }
 }
