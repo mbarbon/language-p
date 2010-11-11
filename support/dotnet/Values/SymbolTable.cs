@@ -212,6 +212,30 @@ namespace org.mbarbon.p.values
             return null;
         }
 
+        public bool IsDerivedFrom(Runtime runtime, P5SymbolTable parent)
+        {
+            if (this == parent)
+                return true;
+
+            IP5Any isa;
+            if (!hash.TryGetValue("ISA", out isa))
+                return parent == runtime.SymbolTable.Universal;
+
+            var isa_array = (isa as P5Typeglob).Array;
+            foreach (var e in isa_array)
+            {
+                var base_name = e.AsString(runtime);
+                var base_stash = runtime.SymbolTable.GetPackage(runtime, base_name);
+
+                if (base_stash == null)
+                    continue;
+                if (base_stash == parent || base_stash.IsDerivedFrom(runtime, parent))
+                    return true;
+            }
+
+            return false;
+        }
+
         public virtual bool IsMain {
             get { return false; }
         }

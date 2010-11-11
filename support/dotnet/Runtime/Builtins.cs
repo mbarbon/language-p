@@ -433,5 +433,21 @@ namespace org.mbarbon.p.runtime
 
             return count;
         }
+
+        public static bool IsDerivedFrom(Runtime runtime, P5Scalar value, IP5Any pack)
+        {
+            P5SymbolTable stash = value.BlessedReferenceStash(runtime);
+
+            if (stash == null)
+                stash = runtime.SymbolTable.GetPackage(runtime, value.AsString(runtime), false);
+
+            string pack_name = pack.AsString(runtime);
+            P5SymbolTable parent = runtime.SymbolTable.GetPackage(runtime, pack_name, false);
+
+            if (parent == null || stash == null)
+                return false;
+
+            return stash.IsDerivedFrom(runtime, parent);
+        }
     }
 }
