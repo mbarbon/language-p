@@ -234,6 +234,7 @@ sub _byte_compile {
                               @directories ];
     }
 
+    local $ENV{P_BYTECODE_PATH} = 'support/bytecode';
     $self->_run_p_tests( @byte_compile );
 }
 

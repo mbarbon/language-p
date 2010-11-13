@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN { print "1..18\n" }
-BEGIN { unshift @INC, 'lib' }
+BEGIN { unshift @INC, 'support/bytecode', 'lib' }
 
 use Language::P::Constants qw(:all);
 BEGIN { print "ok\n" }

@@ -1,6 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN { print "1..14\n" }
+BEGIN { unshift @INC, 'support/bytecode', 'lib' }
 
 use 5;
 require 5;
