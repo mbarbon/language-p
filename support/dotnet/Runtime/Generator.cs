@@ -1271,31 +1271,31 @@ namespace org.mbarbon.p.runtime
 
                 if (le.Type.IsSubclassOf(typeof(P5Array)))
                 {
-                    var e = Expression.Parameter(typeof(int));
-                    var l = Expression.Parameter(le.Type);
-                    var v = Expression.Call(
-                        l,
+                    var assign_result = Expression.Parameter(typeof(int));
+                    var lvalue = Expression.Parameter(le.Type);
+                    var assignment = Expression.Call(
+                        lvalue,
                         typeof(P5Array).GetMethod("AssignArray"),
                         Runtime,
                         Generate(sub, op.Childs[1]));
-                    var r = Expression.Condition(
+                    var result = Expression.Condition(
                         Expression.Equal(
                             OpContext(op),
                             Expression.Constant(Opcode.ContextValues.SCALAR)),
                         Expression.New(
                             typeof(P5Scalar).GetConstructor(ProtoRuntimeInt),
                             Runtime,
-                            v),
-                        l,
+                            assign_result),
+                        lvalue,
                         typeof(IP5Any));
 
                     return Expression.Block(
                         typeof(IP5Any),
-                        new ParameterExpression[] { e, l },
+                        new ParameterExpression[] { assign_result, lvalue },
                         new Expression[] {
-                            Expression.Assign(l, le),
-                            Expression.Assign(e, v),
-                            r,
+                            Expression.Assign(lvalue, le),
+                            Expression.Assign(assign_result, assignment),
+                            result,
                         }
                         );
                 }
