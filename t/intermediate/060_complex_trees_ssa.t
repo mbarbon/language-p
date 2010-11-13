@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use t::lib::TestIntermediate tests => 7;
+use t::lib::TestIntermediate tests => 8;
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
 sub is_scalar {
@@ -172,4 +172,26 @@ L1:
   lexical_state_set index=1
   set index=1 (global context=1, name="x", slot=1)
   return context=1 (make_list context=8)
+EOI
+
+generate_ssa_and_diff( <<'EOP', <<'EOI' );
+while( my( $k, $v ) = each %x ) {
+    1;
+}
+EOP
+# main
+L1:
+  jump to=L2
+L2:
+  jump_if_true to=L3 (assign context=4 (make_list context=24 (lexical_pad index=0, slot=1), (lexical_pad index=1, slot=1)), (each context=8 (global context=8, name="x", slot=3)))
+  jump to=L5
+L3:
+  constant_integer value=1
+  jump to=L2
+L5:
+  lexical_pad_clear index=1, slot=1
+  lexical_pad_clear index=0, slot=1
+  jump to=L6
+L6:
+  end
 EOI
