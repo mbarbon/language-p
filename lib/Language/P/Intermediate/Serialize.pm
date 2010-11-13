@@ -9,9 +9,7 @@ use Language::P::Intermediate::SerializeGenerated;
 
 sub serialize {
     my( $self, $tree, $file, $data_handle ) = @_;
-    # TODO handle the case where the source file is in a read-only
-    #      directory by saving the bytecode in an user-defined directory
-    open my $out, '>', $file or return; # die "open '$file': $!";
+    open my $out, '>', $file or die "Unable to write '$file': $! (maybe set $ENV{P_BYTECODE_PATH} before running)";
 
     $self->{sub_map} = {};
     $self->{file_map} = {};

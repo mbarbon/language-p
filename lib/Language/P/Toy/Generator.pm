@@ -397,6 +397,31 @@ sub set_data_handle {
     $self->runtime->set_data_handle( $package, $handle );
 }
 
+sub _dump_path {
+    my( $runtime, $path ) = @_;
+    my $prefix = $ENV{P_BYTECODE_PATH};
+
+    require File::Spec;
+
+    if( $prefix && File::Spec->file_name_is_absolute( $path ) ) {
+        my $inc = $runtime->symbol_table->get_symbol( $runtime, 'INC', '@', 1 );
+
+        for( my $it = $inc->iterator( $runtime ); $it->next( $runtime ); ) {
+            my $incpath = $it->item->as_string( $runtime );
+
+            next if index( $path, $incpath ) != 0;
+            $path = substr $path, length $incpath;
+            $path =~ s{^/}{};
+
+            return File::Spec->catfile( $prefix, $path );;
+        }
+    } elsif( $prefix && $path =~ m{^lib/} ) {
+        return File::Spec->catfile( $prefix, substr $path, 4 );
+    } else {
+        return $path;
+    }
+}
+
 sub finished {
     my( $self ) = @_;
     my $main_int = $self->_intermediate->generate_bytecode( $self->_pending );
@@ -417,7 +442,13 @@ sub finished {
         my $serialize = Language::P::Intermediate::Serialize->new;
         my $tree = $transform->all_to_tree( [ @$main_int,
                                               @{$self->_saved_subs || []} ] );
-        my $outfile = $self->_intermediate->file_name . '.pb';
+        my $outfile = _dump_path( $self->runtime,
+                                  $self->_intermediate->file_name . '.pb' );
+
+        require File::Path;
+        require File::Basename;
+
+        File::Path::mkpath( File::Basename::dirname( $outfile ) );
 
         $serialize->serialize( $tree, $outfile, $data_handle );
         $tree->[0]->weaken; # allow GC to happen
