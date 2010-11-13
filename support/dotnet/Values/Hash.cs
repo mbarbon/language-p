@@ -23,7 +23,10 @@ namespace org.mbarbon.p.values
         public virtual void Undef(Runtime runtime)
         {
             if (hash.Count != 0)
-                new Dictionary<string, IP5Any>();
+            {
+                hash.Clear();
+                iterator = null;
+            }
         }
 
         internal void SetItem(Runtime runtime, string key, IP5Any value)
@@ -105,6 +108,8 @@ namespace org.mbarbon.p.values
             foreach (var e in h.hash)
                 hash[e.Key] = e.Value.Clone(runtime, 0);
 
+            iterator = null;
+
             return this;
         }
 
@@ -120,6 +125,8 @@ namespace org.mbarbon.p.values
                 hash[k.AsString(runtime)] = v;
             }
 
+            iterator = null;
+
             return this;
         }
 
@@ -130,6 +137,54 @@ namespace org.mbarbon.p.values
                 yield return new P5Scalar(runtime, i.Key);
                 yield return i.Value;
             }
+        }
+
+        public P5List Keys(Runtime runtime)
+        {
+            iterator = null;
+
+            var data = new List<IP5Any>(hash.Count);
+
+            foreach (var k in hash.Keys)
+                data.Add(new P5Scalar(runtime, k));
+
+            return new P5List(runtime, data);
+        }
+
+        public P5List Values(Runtime runtime)
+        {
+            iterator = null;
+
+            var data = new List<IP5Any>(hash.Count);
+
+            foreach (var v in hash.Values)
+                data.Add(v);
+
+            return new P5List(runtime, data);
+        }
+
+        private IEnumerator<string> KeyIterator()
+        {
+            return new List<string>(hash.Keys).GetEnumerator();
+        }
+
+        public bool NextKey(Runtime runtime, out P5Scalar key, out P5Scalar value)
+        {
+            if (iterator == null)
+                iterator = KeyIterator();
+
+            if (!iterator.MoveNext())
+            {
+                key = value = null;
+                iterator.Reset();
+
+                return false;
+            }
+
+            key = new P5Scalar(runtime, iterator.Current);
+            value = hash[iterator.Current] as P5Scalar;
+
+            return true;
         }
 
         public virtual IP5Any ConcatAssign(Runtime runtime, IP5Any other) { throw new System.InvalidOperationException(); }
@@ -239,5 +294,6 @@ namespace org.mbarbon.p.values
 
         private P5SymbolTable blessed;
         protected Dictionary<string, IP5Any> hash;
+        private IEnumerator<string> iterator;
     }
 }

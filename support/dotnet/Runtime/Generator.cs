@@ -1676,6 +1676,22 @@ namespace org.mbarbon.p.runtime
                     Runtime,
                     Generate(sub, op.Childs[0]));
             }
+            case Opcode.OpNumber.OP_KEYS:
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(P5Hash).GetMethod("Keys"),
+                    Runtime);
+            case Opcode.OpNumber.OP_VALUES:
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(P5Hash).GetMethod("Values"),
+                    Runtime);
+            case Opcode.OpNumber.OP_EACH:
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("HashEach"),
+                    Runtime,
+                    OpContext(op),
+                    Generate(sub, op.Childs[0]));
             case Opcode.OpNumber.OP_TEMPORARY:
             {
                 Temporary tm = (Temporary)op;

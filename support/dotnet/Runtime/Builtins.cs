@@ -449,5 +449,25 @@ namespace org.mbarbon.p.runtime
 
             return stash.IsDerivedFrom(runtime, parent);
         }
+
+        public static IP5Any HashEach(Runtime runtime, Opcode.ContextValues cxt, P5Hash hash)
+        {
+            P5Scalar key, value;
+
+            if (hash.NextKey(runtime, out key, out value))
+            {
+                if (cxt == Opcode.ContextValues.SCALAR)
+                    return key;
+                else
+                    return new P5List(runtime, key, value);
+            }
+            else
+            {
+                if (cxt == Opcode.ContextValues.SCALAR)
+                    return new P5Scalar(runtime);
+                else
+                    return new P5List(runtime);
+            }
+        }
     }
 }
