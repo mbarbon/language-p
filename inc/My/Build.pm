@@ -230,7 +230,7 @@ sub _byte_compile {
     foreach my $tag ( @tags ) {
         my( $interpreter, @directories ) = @$tag;
 
-        push @byte_compile, [ [ $interpreter, '-fdump-bytecode' ],
+        push @byte_compile, [ [ $interpreter, '-Zdump-bytecode' ],
                               @directories ];
     }
 
