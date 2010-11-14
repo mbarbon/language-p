@@ -37,11 +37,6 @@ namespace org.mbarbon.p.values
             return res;
         }
 
-        public static P5List MakeNonFlat(Runtime runtime, params IP5Any[] data)
-        {
-            return new P5List(runtime, data);
-        }
-
         public override P5Scalar AsScalar(Runtime runtime)
         {
             return array.Count == 0 ? new P5Scalar(runtime) : array[array.Count - 1].AsScalar(runtime);
@@ -79,7 +74,7 @@ namespace org.mbarbon.p.values
             return c;
         }
 
-        public P5List Slice(Runtime runtime, P5Array keys)
+        public virtual P5List Slice(Runtime runtime, P5Array keys)
         {
             var res = new P5List(runtime);
             var list = new List<IP5Any>();
@@ -97,5 +92,71 @@ namespace org.mbarbon.p.values
 
             return res;
         }
+    }
+
+    public class P5LvalueList : P5List, IP5Enumerable
+    {
+        public P5LvalueList(Runtime runtime, params IP5Any[] data) :
+            base(runtime, data)
+        {
+            flattened = false;
+        }
+
+        public static P5List MakeNonFlat(Runtime runtime, params IP5Any[] data)
+        {
+            return new P5LvalueList(runtime, data);
+        }
+
+        public override IP5Any Clone(Runtime runtime, int depth)
+        {
+            P5Array clone = new P5Array(runtime);
+
+            if (depth > 0)
+            {
+                foreach (var i in this)
+                {
+                    var enumerable = i as IP5Enumerable;
+
+                    if (enumerable != null)
+                        clone.PushFlatten(runtime, i);
+                    else
+                        clone.Push(runtime, i.Clone(runtime, depth - 1));
+                }
+            }
+            else
+                foreach (var i in this)
+                    clone.PushFlatten(runtime, i);
+
+            return clone;
+        }
+
+        public override P5List Slice(Runtime runtime, P5Array keys)
+        {
+            if (!flattened)
+                Flatten(runtime);
+
+            return base.Slice(runtime, keys);
+        }
+
+        public new IEnumerator<IP5Any> GetEnumerator(Runtime runtime)
+        {
+            if (!flattened)
+                Flatten(runtime);
+
+            return base.GetEnumerator();
+        }
+
+        private void Flatten(Runtime runtime)
+        {
+            var old = array;
+
+            array = new List<IP5Any>();
+            foreach (var i in old)
+                PushFlatten(runtime, i);
+
+            flattened = true;
+        }
+
+        bool flattened;
     }
 }

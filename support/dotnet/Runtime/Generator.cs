@@ -1095,7 +1095,7 @@ namespace org.mbarbon.p.runtime
 
                 if ((op.Context & (int)Opcode.ContextValues.LVALUE) != 0)
                 {
-                    method = typeof(P5List).GetMethod("MakeNonFlat");
+                    method = typeof(P5LvalueList).GetMethod("MakeNonFlat");
                     array_type = typeof(IP5Any);
                 }
                 else
