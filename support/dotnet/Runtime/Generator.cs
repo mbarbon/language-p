@@ -1276,43 +1276,19 @@ namespace org.mbarbon.p.runtime
             {
                 var le = Generate(sub, op.Childs[0]);
 
-                if (le.Type.IsSubclassOf(typeof(P5Array)))
-                {
-                    var assign_result = Expression.Parameter(typeof(int));
-                    var lvalue = Expression.Parameter(le.Type);
-                    var assignment = Expression.Call(
-                        lvalue,
-                        typeof(P5Array).GetMethod("AssignArray"),
+                if (typeof(P5Array).IsAssignableFrom(le.Type))
+                    return BinaryOperator(
+                        sub, op,
+                        Expression.New(
+                            typeof(P5ArrayAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime), typeof(Opcode.ContextValues) }),
+                            ModuleGenerator.InitRuntime,
+                            Expression.Constant((Opcode.ContextValues)op.Context)));
+                else
+                    return Expression.Call(
+                        le,
+                        typeof(IP5Any).GetMethod("Assign"),
                         Runtime,
                         Generate(sub, op.Childs[1]));
-                    var result = Expression.Condition(
-                        Expression.Equal(
-                            OpContext(op),
-                            Expression.Constant(Opcode.ContextValues.SCALAR)),
-                        Expression.New(
-                            typeof(P5Scalar).GetConstructor(ProtoRuntimeInt),
-                            Runtime,
-                            assign_result),
-                        lvalue,
-                        typeof(IP5Any));
-
-                    return Expression.Block(
-                        typeof(IP5Any),
-                        new ParameterExpression[] { assign_result, lvalue },
-                        new Expression[] {
-                            Expression.Assign(lvalue, le),
-                            Expression.Assign(assign_result, assignment),
-                            result,
-                        }
-                        );
-                }
-                else
-                    return
-                        Expression.Call(
-                            le,
-                            typeof(IP5Any).GetMethod("Assign"),
-                            Runtime,
-                            Generate(sub, op.Childs[1]));
             }
             case Opcode.OpNumber.OP_GET:
             {

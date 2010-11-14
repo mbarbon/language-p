@@ -125,6 +125,11 @@ namespace org.mbarbon.p.runtime
             }
         }
 
+        public Opcode.ContextValues CurrentContext()
+        {
+            return CallStack.Peek().Context;
+        }
+
         public P5MainSymbolTable SymbolTable;
         public Stack<StackFrame> CallStack;
         public string File, Package;
