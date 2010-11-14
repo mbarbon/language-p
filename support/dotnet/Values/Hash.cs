@@ -97,20 +97,35 @@ namespace org.mbarbon.p.values
 
         public virtual IP5Any Assign(Runtime runtime, IP5Any other)
         {
+            AssignArray(runtime, other);
+
+            return this;
+        }
+
+        public virtual int AssignArray(Runtime runtime, IP5Any other)
+        {
             // FIXME multiple dispatch
             P5Array a = other as P5Array;
             P5Hash h = other as P5Hash;
 
-            if (a != null)
-                return AssignIterator(runtime, a.GetEnumerator(runtime));
-
-            hash.Clear();
-            foreach (var e in h.hash)
-                hash[e.Key] = e.Value.Clone(runtime, 0);
-
             iterator = null;
 
-            return this;
+            if (a != null)
+            {
+                AssignIterator(runtime, a.GetEnumerator(runtime));
+
+                return a.GetCount(runtime);
+            }
+            else if (h != null)
+            {
+                hash.Clear();
+                foreach (var e in h.hash)
+                    hash[e.Key] = e.Value.Clone(runtime, 0);
+
+                return h.GetCount(runtime) * 2;
+            }
+
+            return 0;
         }
 
         public virtual IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> e)

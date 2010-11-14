@@ -1276,7 +1276,8 @@ namespace org.mbarbon.p.runtime
             {
                 var le = Generate(sub, op.Childs[0]);
 
-                if (typeof(P5Array).IsAssignableFrom(le.Type))
+                if (   typeof(P5Array).IsAssignableFrom(le.Type)
+                    || typeof(P5Hash).IsAssignableFrom(le.Type))
                     return BinaryOperator(
                         sub, op,
                         Expression.New(
