@@ -28,7 +28,7 @@ namespace org.mbarbon.p.values
         {
         }
 
-        public static new P5List MakeFlat(Runtime runtime, params IP5Any[] data)
+        public static new P5List MakeFlat(Runtime runtime, params IP5Value[] data)
         {
             var res = new P5List(runtime);
 

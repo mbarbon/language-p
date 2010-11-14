@@ -3,7 +3,11 @@ using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
 {
-    public interface IP5Referrable
+    public interface IP5Value
+    {
+    }
+
+    public interface IP5Referrable : IP5Value
     {
         void Bless(Runtime runtime, P5SymbolTable stash);
         bool IsBlessed(Runtime runtime);
@@ -44,7 +48,7 @@ namespace org.mbarbon.p.values
         P5Code FindMethod(Runtime runtime, string method);
     }
 
-    interface IP5Enumerable
+    public interface IP5Enumerable : IP5Value
     {
         IEnumerator<IP5Any> GetEnumerator(Runtime runtime);
     }

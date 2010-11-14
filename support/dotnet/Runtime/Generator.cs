@@ -1091,10 +1091,18 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_MAKE_LIST:
             {
                 MethodInfo method;
+                Type array_type;
+
                 if ((op.Context & (int)Opcode.ContextValues.LVALUE) != 0)
+                {
                     method = typeof(P5List).GetMethod("MakeNonFlat");
+                    array_type = typeof(IP5Any);
+                }
                 else
+                {
                     method = typeof(P5List).GetMethod("MakeFlat");
+                    array_type = typeof(IP5Value);
+                }
 
                 List<Expression> data = new List<Expression>();
                 foreach (var i in op.Childs)
@@ -1103,7 +1111,7 @@ namespace org.mbarbon.p.runtime
                     Expression.Call(
                         method,
                         Runtime,
-                        Expression.NewArrayInit(typeof(IP5Any), data));
+                        Expression.NewArrayInit(array_type, data));
             }
             case Opcode.OpNumber.OP_MAKE_ARRAY:
             {
@@ -1114,7 +1122,7 @@ namespace org.mbarbon.p.runtime
                     Expression.Call(
                         typeof(P5Array).GetMethod("MakeFlat"),
                         Runtime,
-                        Expression.NewArrayInit(typeof(IP5Any), data));
+                        Expression.NewArrayInit(typeof(IP5Value), data));
             }
             case Opcode.OpNumber.OP_ANONYMOUS_ARRAY:
             {

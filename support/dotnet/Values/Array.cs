@@ -33,7 +33,7 @@ namespace org.mbarbon.p.values
                 array = new List<IP5Any>();
         }
 
-        public static P5Array MakeFlat(Runtime runtime, params IP5Any[] data)
+        public static P5Array MakeFlat(Runtime runtime, params IP5Value[] data)
         {
             var res = new P5Array(runtime);
 
@@ -42,7 +42,7 @@ namespace org.mbarbon.p.values
             return res;
         }
 
-        public void PushFlatten(Runtime runtime, IP5Any value)
+        public void PushFlatten(Runtime runtime, IP5Value value)
         {
             var v = value as IP5Enumerable;
 
@@ -53,10 +53,10 @@ namespace org.mbarbon.p.values
                     array.Add(iter.Current);
             }
             else
-                array.Add(value);
+                array.Add(value as IP5Any);
         }
 
-        protected void PushFlatten(Runtime runtime, IP5Any[] data)
+        protected void PushFlatten(Runtime runtime, IP5Value[] data)
         {
             foreach (var i in data)
                 PushFlatten(runtime, i);
