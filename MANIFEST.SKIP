@@ -9,8 +9,9 @@
 .pb$
 ^support/parrot/runtime/.*\.pbc$
 ^support/dotnet/bin/
-^support/dotnet/(?:configure|dotnet\.in|.*\.make|Makefile\.include)$
 ^support/dotnet/Bytecode/BytecodeGenerated\.cs$
+^support/dotnet/dotnet.pidb$
+^support/dotnet/dotnet.userprefs$
 ^lib/Language/P/Intermediate/SerializeGenerated\.pm$
 ^MYMETA.yml$
 
