@@ -1520,7 +1520,8 @@ sub o_assign {
     my $vr = pop @{$runtime->{_stack}};
     my $vl = pop @{$runtime->{_stack}};
 
-    if( $vl->isa( 'Language::P::Toy::Value::Array' ) ) {
+    if(    $vl->isa( 'Language::P::Toy::Value::Array' )
+        || $vl->isa( 'Language::P::Toy::Value::Hash' ) ) {
         my $count = $vl->assign_array( $runtime, $vr );
 
         if( _context( $op, $runtime ) == CXT_SCALAR ) {
