@@ -934,16 +934,13 @@ namespace org.mbarbon.p.runtime
                     exps);
         }
 
-        private Expression BinaryOperator(Subroutine sub, Opcode op, ExpressionType operation)
+        private Expression BinaryOperator(Subroutine sub, Opcode op, Expression binder)
         {
             var delegateType = typeof(Func<CallSite, object, object, object>);
             var siteType = typeof(CallSite<Func<CallSite, object, object, object>>);
             var initExpr = Expression.Call(
                 siteType.GetMethod("Create"),
-                Expression.New(
-                    typeof(P5BinaryOperationBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
-                    Expression.Constant(operation),
-                    ModuleGenerator.InitRuntime));
+                binder);
             var staticField = ModuleGenerator.AddField(initExpr, siteType);
 
             var res =
@@ -958,6 +955,16 @@ namespace org.mbarbon.p.runtime
                     Generate(sub, op.Childs[1]));
 
             return Expression.Convert(res, typeof(IP5Any));
+        }
+
+        private Expression BinaryOperator(Subroutine sub, Opcode op, ExpressionType operation)
+        {
+            return BinaryOperator(
+                sub, op,
+                Expression.New(
+                    typeof(P5BinaryOperationBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
+                    Expression.Constant(operation),
+                    ModuleGenerator.InitRuntime));
         }
 
         public Expression Generate(Subroutine sub, Opcode op)
