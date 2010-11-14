@@ -22,9 +22,9 @@ namespace org.mbarbon.p.values
             array = data;
         }
 
-        public P5Array(Runtime runtime, P5Array array) : this(runtime)
+        public P5Array(Runtime runtime, IP5Enumerable items) : this(runtime)
         {
-            AssignIterator(runtime, array.GetEnumerator(runtime));
+            AssignIterator(runtime, items.GetEnumerator(runtime));
         }
 
         public virtual void Undef(Runtime runtime)

@@ -10,9 +10,9 @@ namespace org.mbarbon.p.values
             hash = new Dictionary<string, IP5Any>();
         }
 
-        public P5Hash(Runtime runtime, P5Array array) : this(runtime)
+        public P5Hash(Runtime runtime, IP5Enumerable items) : this(runtime)
         {
-            AssignIterator(runtime, array.GetEnumerator(runtime));
+            AssignIterator(runtime, items.GetEnumerator(runtime));
         }
 
         public int GetCount(Runtime runtime)
