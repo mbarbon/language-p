@@ -363,6 +363,12 @@ namespace org.mbarbon.p.runtime
             state.value = null;
         }
 
+        public static P5Range MakeRange(Runtime runtime, IP5Any start, IP5Any end)
+        {
+            // TODO handle string range
+            return new P5Range(runtime, start.AsInteger(runtime), end.AsInteger(runtime));
+        }
+
         public static Regex CompileRegex(Runtime runtime, P5Scalar value, int flags)
         {
             if (value.IsReference(runtime))

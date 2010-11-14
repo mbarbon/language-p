@@ -67,6 +67,7 @@
     <Compile Include="Values\Capture.cs" />
     <Compile Include="Values\ActiveScalar.cs" />
     <Compile Include="Values\Pos.cs" />
+    <Compile Include="Values\Range.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

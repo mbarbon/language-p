@@ -1124,6 +1124,16 @@ namespace org.mbarbon.p.runtime
                         Runtime,
                         Expression.NewArrayInit(typeof(IP5Value), data));
             }
+            case Opcode.OpNumber.OP_DOT_DOT:
+            {
+                // TODO needs to handle the flip/flop mode in scalar context
+                return
+                    Expression.Call(
+                        typeof(Builtins).GetMethod("MakeRange"),
+                        Runtime,
+                        Generate(sub, op.Childs[0]),
+                        Generate(sub, op.Childs[1]));
+            }
             case Opcode.OpNumber.OP_ANONYMOUS_ARRAY:
             {
                 return
