@@ -2,7 +2,7 @@ package Language::P::Toy::Value::Regex;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::Code);
+use parent qw(Language::P::Toy::Value::Code);
 
 __PACKAGE__->mk_ro_accessors( qw(regex_string) );
 
@@ -22,8 +22,8 @@ sub next_start {
 }
 
 sub match {
-    my( $self, $runtime, $string, $pos ) = @_;
-    my $start = $pos || 0;
+    my( $self, $runtime, $string, $pos, $allow_zero_width ) = @_;
+    my $start = !defined $pos || $pos < 0 ? 0 : $pos;
 
     # print "String: $string\n";
 
@@ -40,7 +40,7 @@ sub match {
 
         next unless $rv->{matched};
         # disallow matching twice at the same position with a zero-length match
-        if( defined $pos && $pos == $rv->{match_end} ) {
+        if( defined $pos && $pos == $rv->{match_end} && !$allow_zero_width ) {
             $rv->{matched} = 0;
             next;
         }

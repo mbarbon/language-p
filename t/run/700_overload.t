@@ -1,3 +1,5 @@
+BEGIN { unshift @INC, 'support/bytecode' }
+
 package X;
 
 use overload "+" => \&foo;
@@ -21,6 +23,6 @@ $X::inv = -1;
 print $a + 1 == 4 ? "ok\n" : "not ok\n";
 print !$X::inv ? "ok\n" : "not ok\n";
 
-$X::inv = -1;
+$X::inv = 0;
 print 1 + $a == 4 ? "ok\n" : "not ok\n";
 print $X::inv ? "ok\n" : "not ok\n";

@@ -2,7 +2,7 @@ package Language::P::Lexer;
 
 use strict;
 use warnings;
-use base qw(Class::Accessor::Fast);
+use parent qw(Language::P::Object);
 
 __PACKAGE__->mk_ro_accessors( qw(stream buffer tokens runtime
                                  file line _start_of_line _heredoc_lexer
@@ -28,6 +28,7 @@ BEGIN {
   our @TOKENS =
     qw(T_ID T_FQ_ID T_SUB_ID T_EOF T_PACKAGE T_FILETEST
        T_PATTERN T_STRING T_NUMBER T_QUOTE T_OR T_XOR T_SHIFT_LEFT T_SHIFT_RIGHT
+       T_SHIFT_LEFT_EQUAL T_SHIFT_RIGHT_EQUAL
        T_SEMICOLON T_COLON T_COMMA T_OPPAR T_CLPAR T_OPSQ T_CLSQ
        T_OPBRK T_CLBRK T_OPHASH T_OPAN T_CLPAN T_INTERR
        T_NOT T_SLESS T_CLAN T_SGREAT T_EQUAL T_LESSEQUAL T_SLESSEQUAL
@@ -142,7 +143,9 @@ my %ops =
     '?'   => T_INTERR,
     '!'   => T_NOT,
     '>>'  => T_SHIFT_RIGHT,
+    '>>=' => T_SHIFT_RIGHT_EQUAL,
     '<<'  => T_SHIFT_LEFT,
+    '<<=' => T_SHIFT_LEFT_EQUAL,
     '<'   => T_OPAN,
     'lt'  => T_SLESS,
     '>'   => T_CLAN,
@@ -505,11 +508,44 @@ sub lex_quote {
 
         my $to_return;
         my $pattern = $self->quote->{pattern};
+        my $interpolate = $self->quote->{interpolate};
         my $interpolated_pattern = $self->quote->{interpolated_pattern};
         my $substitution = $self->quote->{substitution};
 
         while( length $$buffer ) {
             my $c = substr $$buffer, 0, 1, '';
+
+            if( $c eq '\\' && ( $interpolated_pattern || $interpolate ) ) {
+                my $qc = substr $$buffer, 0, 1;
+
+                if(    $qc eq 'Q' || $qc eq 'E' || $qc eq 'l'
+                    || $qc eq 'u' || $qc eq 'L' || $qc eq 'U' ) {
+                    substr $$buffer, 0, 1, ''; # eat character
+
+                    if( $qc eq 'Q' ) {
+                        $to_return = [ $self->{pos}, T_QUOTE, OP_QUOTEMETA ];
+                    } elsif( $qc eq 'l' ) {
+                        $to_return = [ $self->{pos}, T_QUOTE, OP_LCFIRST ];
+                    } elsif( $qc eq 'u' ) {
+                        $to_return = [ $self->{pos}, T_QUOTE, OP_UCFIRST ];
+                    } elsif( $qc eq 'L' ) {
+                        $to_return = [ $self->{pos}, T_QUOTE, OP_LC ];
+                    } elsif( $qc eq 'U' ) {
+                        $to_return = [ $self->{pos}, T_QUOTE, OP_UC ];
+                    } elsif( $qc eq 'E' ) {
+                        $to_return = [ $self->{pos}, T_QUOTE, 0 ];
+                    }
+
+                    if( length $v ) {
+                        $self->unlex( $to_return );
+                        return [ $self->{pos}, T_STRING, $v, 1 ];
+                    } else {
+                        return $to_return;
+                    }
+                }
+
+                # fall-through if not a special quote
+            }
 
             if( $pattern || $interpolated_pattern ) {
                 if( $c eq '\\' ) {
@@ -532,6 +568,8 @@ sub lex_quote {
                         $to_return = [ $self->{pos}, T_PATTERN, $1,
                                        [ T_BACKREFERENCE, $1 ] ];
                     }
+
+                    # fall-through: handle normal string escapes below
                 } elsif(    $c eq '{'
                          && !$interpolated_pattern
                          && $$buffer =~ s/^([0-9]+)(?:(,)([0-9]+)?)?}(\?)?// ) {
@@ -598,28 +636,6 @@ sub lex_quote {
                             $v .= chr( oct '0x' . $1 );
                         } else {
                             $v .= "\0";
-                        }
-                    } elsif(    $qc eq 'Q' || $qc eq 'E' || $qc eq 'l'
-                             || $qc eq 'u' || $qc eq 'L' || $qc eq 'U' ) {
-                        if( $qc eq 'Q' ) {
-                            $to_return = [ $self->{pos}, T_QUOTE, OP_QUOTEMETA ];
-                        } elsif( $qc eq 'l' ) {
-                            $to_return = [ $self->{pos}, T_QUOTE, OP_LCFIRST ];
-                        } elsif( $qc eq 'u' ) {
-                            $to_return = [ $self->{pos}, T_QUOTE, OP_UCFIRST ];
-                        } elsif( $qc eq 'L' ) {
-                            $to_return = [ $self->{pos}, T_QUOTE, OP_LC ];
-                        } elsif( $qc eq 'U' ) {
-                            $to_return = [ $self->{pos}, T_QUOTE, OP_UC ];
-                        } elsif( $qc eq 'E' ) {
-                            $to_return = [ $self->{pos}, T_QUOTE, 0 ];
-                        }
-
-                        if( length $v ) {
-                            $self->unlex( $to_return );
-                            return [ $self->{pos}, T_STRING, $v, 1 ];
-                        } else {
-                            return $to_return;
                         }
                     } else {
                         die "Invalid escape '$qc'";
@@ -1191,7 +1207,7 @@ sub lex {
         }
     };
     # multi char operators
-    $$_ =~ s/^(<=|>=|==|!=|=>|->|<<|>>
+    $$_ =~ s/^(<=|>=|==|!=|=>|->|>>=|<<=|<<|>>
                 |=~|!~
                 |\.\.|\.\.\.
                 |\+\+|\-\-

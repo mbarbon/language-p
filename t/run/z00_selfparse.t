@@ -1,8 +1,10 @@
 #!/usr/bin/perl -w
 
-BEGIN { print "1..18\n" }
+BEGIN { print "1..19\n" }
 BEGIN { unshift @INC, 'support/bytecode', 'lib' }
 
+use Language::P::Object qw(:all);
+BEGIN { print "ok\n" }
 use Language::P::Constants qw(:all);
 BEGIN { print "ok\n" }
 use Language::P::Keywords qw(:all);

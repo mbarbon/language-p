@@ -12,28 +12,28 @@ sub c2 {
     return caller;
 }
 
-print defined caller() ? "not ok\n" : "ok\n";
+print defined caller() ? "not ok 3\n" : "ok 3\n";
 print c1() eq 'p1' ? "ok\n" : "not ok\n";
 print c2() eq 'main' ? "ok\n" : "not ok\n";
 
 ( $cp1, $cf1, $cl1 ) = c1();
 ( $cp2, $cf2, $cl2 ) = c2();
 
-print "$cp1 $cf1 $cl1" eq 'p1 t/run/123_caller.t 7' ? "ok\n" : "not ok\n";
-print "$cp2 $cf2 $cl2" eq 'main t/run/123_caller.t 20' ? "ok\n" : "not ok\n";
+print "$cp1 $cf1 $cl1" eq 'p1 t/run/123_caller.t 7' ? "ok\n" : "not ok - $cp1 $cf1 $cl1\n";
+print "$cp2 $cf2 $cl2" eq 'main t/run/123_caller.t 20' ? "ok 7\n" : "not ok 7 - $cp2 $cf2 $cl2\n";
 
 sub cc_scalar {
     my $c = ( caller 0 )[5];
 
-    print( defined $c && !$c ? "ok\n" : "not ok\n" );
+    print( defined $c && !$c ? "ok\n" : "not ok - scalar\n" );
 }
 
 sub cc_array {
-    print( ( caller 0 )[5] ? "ok\n" : "not ok\n" );
+    print( ( caller 0 )[5] ? "ok\n" : "not ok - array\n" );
 }
 
 sub cc_void {
-    print( !defined( ( caller 0 )[5] ) ? "ok\n" : "not ok\n" );
+    print( !defined( ( caller 0 )[5] ) ? "ok\n" : "not ok - void\n" );
 }
 
 sub subname { return ( caller 1 )[3]; }
@@ -66,7 +66,7 @@ print hints() == 0 ? "ok\n" : "not ok\n";;;
 
 # eval scopes
 eval {
-    print subname() eq '(eval)' ? "ok\n" : "not ok\n";
+    print subname() eq '(eval)' ? "ok 16\n" : "not ok 16\n";
     package x;
     print caller eq 'main' ? "ok\n" : "not ok\n";
 };

@@ -2,7 +2,7 @@ package Language::P::Toy::Value::Undef;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::Scalar);
+use parent qw(Language::P::Toy::Value::Scalar);
 
 sub type { 12 }
 

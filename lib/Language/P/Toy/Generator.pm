@@ -2,7 +2,7 @@ package Language::P::Toy::Generator;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Visitor);
+use parent qw(Language::P::ParseTree::Visitor);
 
 __PACKAGE__->mk_ro_accessors( qw(runtime) );
 __PACKAGE__->mk_accessors( qw(_code _pending _block_map _index_map
@@ -415,8 +415,8 @@ sub _dump_path {
 
             return File::Spec->catfile( $prefix, $path );;
         }
-    } elsif( $prefix && $path =~ m{^lib/} ) {
-        return File::Spec->catfile( $prefix, substr $path, 4 );
+    } elsif( $prefix && $path =~ s{^lib/|^support/toy/lib/}{} ) {
+        return File::Spec->catfile( $prefix, $path );
     } else {
         return $path;
     }

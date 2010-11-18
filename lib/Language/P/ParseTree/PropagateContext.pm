@@ -2,7 +2,7 @@ package Language::P::ParseTree::PropagateContext;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Visitor);
+use parent qw(Language::P::ParseTree::Visitor);
 
 use Language::P::Constants qw(:all);
 use Language::P::Opcodes qw(:all);

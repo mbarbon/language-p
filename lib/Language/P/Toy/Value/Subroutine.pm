@@ -2,7 +2,7 @@ package Language::P::Toy::Value::Subroutine;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::Code);
+use parent qw(Language::P::Toy::Value::Code);
 
 __PACKAGE__->mk_ro_accessors( qw(name prototype) );
 
@@ -61,7 +61,7 @@ package Language::P::Toy::Value::Subroutine::Stub;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::Subroutine);
+use parent qw(Language::P::Toy::Value::Subroutine);
 
 sub call {
     my( $self, $runtime, $pc, $context ) = @_;

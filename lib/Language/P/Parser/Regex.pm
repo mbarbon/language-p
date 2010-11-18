@@ -3,7 +3,7 @@ package Language::P::Parser::Regex;
 use strict;
 use warnings;
 
-use base qw(Class::Accessor::Fast);
+use parent qw(Language::P::Object);
 
 use Language::P::Constants qw(:all);
 use Language::P::Lexer qw(:all);

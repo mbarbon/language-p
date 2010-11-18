@@ -2,7 +2,7 @@ package Language::P::Toy::Value::Typeglob;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::Any);
+use parent qw(Language::P::Toy::Value::Any);
 
 __PACKAGE__->mk_ro_accessors( qw(body imported) );
 
@@ -182,7 +182,7 @@ package Language::P::Toy::Value::Typeglob::Body;
 
 use strict;
 use warnings;
-use base qw(Class::Accessor::Fast);
+use parent qw(Language::P::Object);
 
 __PACKAGE__->mk_ro_accessors( qw(scalar array hash io format subroutine name) );
 

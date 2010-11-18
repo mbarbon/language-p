@@ -2,7 +2,7 @@ package Language::P::Toy::Value::Array;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::Any);
+use parent qw(Language::P::Toy::Value::Any);
 
 __PACKAGE__->mk_ro_accessors( qw(array) );
 
@@ -87,7 +87,7 @@ sub push_value {
 sub push_list {
     my( $self, $runtime, $list ) = @_;
 
-    push @{$self->{array}}, @{$list->array};
+    push @{$self->{array}}, map $_->as_scalar( $runtime ), @{$list->array};
 
     return Language::P::Toy::Value::StringNumber->new
                ( $runtime, { integer => scalar @{$self->array} } );
@@ -269,7 +269,7 @@ package Language::P::Toy::Value::Array::Iterator;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::Any);
+use parent qw(Language::P::Toy::Value::Any);
 
 __PACKAGE__->mk_ro_accessors( qw(array index) );
 

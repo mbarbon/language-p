@@ -2,7 +2,7 @@ package Language::P::Parser;
 
 use strict;
 use warnings;
-use base qw(Class::Accessor::Fast);
+use parent qw(Language::P::Object);
 
 use Exporter 'import';
 
@@ -114,6 +114,8 @@ my %prec_assoc_bin =
     T_AMPERSANDEQUAL()  => [ 19, ASSOC_RIGHT, OP_BIT_AND_ASSIGN ],
     T_OREQUAL()         => [ 19, ASSOC_RIGHT, OP_BIT_OR_ASSIGN ],
     T_XOREQUAL()        => [ 19, ASSOC_RIGHT, OP_BIT_XOR_ASSIGN ],
+    T_SHIFT_LEFT_EQUAL()=> [ 19, ASSOC_RIGHT, OP_SHIFT_LEFT_ASSIGN ],
+    T_SHIFT_RIGHT_EQUAL()=>[ 19, ASSOC_RIGHT, OP_SHIFT_RIGHT_ASSIGN ],
     T_ANDANDEQUAL()     => [ 19, ASSOC_RIGHT, OP_LOG_AND_ASSIGN ],
     T_OROREQUAL()       => [ 19, ASSOC_RIGHT, OP_LOG_OR_ASSIGN ],
     T_COMMA()           => [ 20, ASSOC_LEFT ],
@@ -1359,7 +1361,7 @@ sub _parse_string_rest {
 
         if( $concat && @$parts == 2 ) {
             @$parts = Language::P::ParseTree::BinOp->new
-                          ( { function => OP_CONCATENATE,
+                          ( { op       => OP_CONCATENATE,
                               left     => $parts->[0],
                               right    => $parts->[1],
                               } );
@@ -1597,6 +1599,7 @@ sub _parse_term_terminal {
                              ( { string  => $first,
                                  flags   => 0,
                                  op      => OP_QL_M,
+                                 pos     => $first->pos,
                                  } );
             }
 
@@ -1717,6 +1720,7 @@ sub _parse_term_terminal_maybe_subscripts {
                         ( { string  => $term,
                             flags   => 0,
                             op      => OP_QL_M,
+                            pos     => $term->pos,
                             } );
         }
     }

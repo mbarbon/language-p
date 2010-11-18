@@ -117,7 +117,7 @@ package Language::P::Assembly::Instruction;
 
 use strict;
 use warnings;
-use base qw(Class::Accessor::Fast);
+use parent qw(Language::P::Object);
 
 __PACKAGE__->mk_ro_accessors( qw(label literal opcode opcode_n
                                  parameters attributes) );

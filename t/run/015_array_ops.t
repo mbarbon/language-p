@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..10\n";
+print "1..11\n";
 
 push @x, 1, 2;
 print $#x == 1 ? "ok 1\n" : "not ok 1\n";
@@ -15,3 +15,5 @@ print unshift( @x, 1, 2, 3 ) == 6 ? "ok 7\n" : "not ok 7\n";
 print $x[0] == 1 ? "ok 8\n" : "not ok 8\n";
 print shift @x == 1 ? "ok 9\n" : "not ok 9\n";
 print $#x == 4 ? "ok 10\n" : "not ok 10\n";
+
+print !!@x ? "ok\n" : "not ok\n";

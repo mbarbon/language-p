@@ -2,7 +2,7 @@ package Language::P::Toy::Value::List;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::Array);
+use parent qw(Language::P::Toy::Value::Array);
 
 __PACKAGE__->mk_ro_accessors( qw() );
 

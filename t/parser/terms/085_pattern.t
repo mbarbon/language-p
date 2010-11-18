@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use t::lib::TestParser tests => 14;
+use t::lib::TestParser tests => 15;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 /^test$/;
@@ -330,5 +330,54 @@ right: !parsetree:InterpolatedPattern
         context: CXT_SCALAR
         name: foo
         sigil: VALUE_SCALAR
+    context: CXT_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+m/a\Ua${foo}b\Eb/;
+EOP
+--- !parsetree:BinOp
+context: CXT_VOID
+left: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: _
+  sigil: VALUE_SCALAR
+op: OP_MATCH
+right: !parsetree:InterpolatedPattern
+  context: CXT_SCALAR
+  flags: 0
+  op: OP_QL_M
+  string: !parsetree:QuotedString
+    components:
+      - !parsetree:Constant
+        context: CXT_SCALAR
+        flags: CONST_STRING
+        value: a
+      - !parsetree:Overridable
+        arguments:
+          - !parsetree:BinOp
+            context: CXT_SCALAR
+            left: !parsetree:BinOp
+              context: CXT_SCALAR
+              left: !parsetree:Constant
+                context: CXT_SCALAR
+                flags: CONST_STRING
+                value: a
+              op: OP_CONCATENATE
+              right: !parsetree:Symbol
+                context: CXT_SCALAR
+                name: foo
+                sigil: VALUE_SCALAR
+            op: OP_CONCATENATE
+            right: !parsetree:Constant
+              context: CXT_SCALAR
+              flags: CONST_STRING
+              value: b
+        context: CXT_SCALAR
+        function: OP_UC
+      - !parsetree:Constant
+        context: CXT_SCALAR
+        flags: CONST_STRING
+        value: b
     context: CXT_SCALAR
 EOE

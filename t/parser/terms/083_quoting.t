@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 6;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 6;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 "x\Qfoo\Ey";

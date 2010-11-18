@@ -2,7 +2,7 @@ package Language::P::Toy::Value::Code;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::Any);
+use parent qw(Language::P::Toy::Value::Any);
 
 use Language::P::Constants qw(VALUE_SCALAR VALUE_ARRAY VALUE_HASH);
 

@@ -2,7 +2,7 @@ package Language::P::Toy::Value::SymbolTable;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::Hash);
+use parent qw(Language::P::Toy::Value::Hash);
 
 __PACKAGE__->mk_ro_accessors( qw(name) );
 

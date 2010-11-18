@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-use t::lib::TestParser tests => 9;
+use t::lib::TestParser tests => 10;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 +12
@@ -23,6 +23,18 @@ left: !parsetree:Constant
   context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 12
+op: OP_MINUS
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+-abc
+EOP
+--- !parsetree:UnOp
+context: CXT_VOID
+left: !parsetree:Constant
+  context: CXT_SCALAR
+  flags: CONST_STRING|STRING_BARE
+  value: abc
 op: OP_MINUS
 EOE
 

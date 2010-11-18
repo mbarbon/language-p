@@ -282,6 +282,11 @@ _make_binary_op( $_ ), _make_binary_op_assign( $_ ) foreach
       operator => '<<',
       new_type => 'integer',
       },
+    { name     => '_shift_right_default',
+      convert  => 'as_integer',
+      operator => '>>',
+      new_type => 'integer',
+      },
     { name     => '_bit_or_default',
       convert  => 'as_integer',
       operator => '|',
@@ -579,6 +584,27 @@ my %dispatch_shift_left =
              },
     );
 
+my %dispatch_shift_left_assign =
+  ( -1  => { -1  => \&_shift_left_default_assign,
+             },
+     10 => { -1  => \&_shift_left_overload_assign,
+             },
+    );
+
+my %dispatch_shift_right =
+  ( -1  => { -1  => \&_shift_right_default,
+             },
+     10 => { -1  => \&_shift_right_overload,
+             },
+    );
+
+my %dispatch_shift_right_assign =
+  ( -1  => { -1  => \&_shift_right_default_assign,
+             },
+     10 => { -1  => \&_shift_right_overload_assign,
+             },
+    );
+
 sub _dispatch {
     my( $table, $l, $r ) = @_;
     my $lt = $l->type;
@@ -722,6 +748,30 @@ sub o_shift_left {
     my $vl = $runtime->{_stack}[-2];
 
     return _dispatch( \%dispatch_shift_left, $vl, $vr )->( $op, $runtime, $pc );
+}
+
+sub o_shift_left_assign {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = $runtime->{_stack}[-1];
+    my $vl = $runtime->{_stack}[-2];
+
+    return _dispatch( \%dispatch_shift_left_assign, $vl, $vr )->( $op, $runtime, $pc );
+}
+
+sub o_shift_right {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = $runtime->{_stack}[-1];
+    my $vl = $runtime->{_stack}[-2];
+
+    return _dispatch( \%dispatch_shift_right, $vl, $vr )->( $op, $runtime, $pc );
+}
+
+sub o_shift_right_assign {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = $runtime->{_stack}[-1];
+    my $vl = $runtime->{_stack}[-2];
+
+    return _dispatch( \%dispatch_shift_right_assign, $vl, $vr )->( $op, $runtime, $pc );
 }
 
 sub o_push_element {
@@ -1228,7 +1278,7 @@ sub _make_compare {
 
     my $ret = $op->{new_type} eq 'int' ?
                   '$r' :
-                  'Language::P::Toy::Value::StringNumber->new( $runtime, { integer => $r } )';
+                  'Language::P::Toy::Value::Scalar->new_boolean( $runtime, $r )';
 
     eval sprintf <<'EOT',
 #line 1 %s
@@ -1321,6 +1371,11 @@ _make_compare( $_ ) foreach
       operator => '<=',
       new_type => 'scalar',
       },
+    { name     => 'o_compare_f_lt_scalar',
+      convert  => 'as_float',
+      operator => '<',
+      new_type => 'scalar',
+      },
     { name     => 'o_compare_f_eq_scalar',
       convert  => 'as_float',
       operator => '==',
@@ -1329,6 +1384,11 @@ _make_compare( $_ ) foreach
     { name     => 'o_compare_f_ne_scalar',
       convert  => 'as_float',
       operator => '!=',
+      new_type => 'scalar',
+      },
+    { name     => 'o_compare_f_ge_scalar',
+      convert  => 'as_float',
+      operator => '>=',
       new_type => 'scalar',
       },
     { name     => 'o_compare_f_gt_scalar',
@@ -1348,6 +1408,16 @@ _make_compare( $_ ) foreach
       new_type => 'int',
       },
 
+    { name     => 'o_compare_s_le_scalar',
+      convert  => 'as_string',
+      operator => 'le',
+      new_type => 'scalar',
+      },
+    { name     => 'o_compare_s_lt_scalar',
+      convert  => 'as_string',
+      operator => 'lt',
+      new_type => 'scalar',
+      },
     { name     => 'o_compare_s_eq_scalar',
       convert  => 'as_string',
       operator => 'eq',
@@ -1356,6 +1426,16 @@ _make_compare( $_ ) foreach
     { name     => 'o_compare_s_ne_scalar',
       convert  => 'as_string',
       operator => 'ne',
+      new_type => 'scalar',
+      },
+    { name     => 'o_compare_s_ge_scalar',
+      convert  => 'as_string',
+      operator => 'ge',
+      new_type => 'scalar',
+      },
+    { name     => 'o_compare_s_gt_scalar',
+      convert  => 'as_string',
+      operator => 'gt',
       new_type => 'scalar',
       },
     );
@@ -1380,11 +1460,7 @@ EOT
 }
 
 _make_unary( $_ ) foreach
-  ( { name       => 'o_negate',
-      type       => 'float',
-      expression => '-$v->as_float( $runtime )',
-      },
-    { name       => 'o_stringify',
+  ( { name       => 'o_stringify',
       type       => 'string',
       expression => '$v->as_string( $runtime )',
       },
@@ -1662,6 +1738,30 @@ sub o_uc {
 
     return $pc + 1;
 }
+
+sub o_negate {
+    my( $op, $runtime, $pc ) = @_;
+    my $scalar = pop @{$runtime->{_stack}};
+
+    if( $scalar->is_string( $runtime ) ) {
+        my $str = $scalar->as_string( $runtime );
+
+        if( $str =~ /^[a-zA-Z_]+$/ ) {
+            my $val = '-' . $str;
+            push @{$runtime->{_stack}},
+                 Language::P::Toy::Value::Scalar->new_string( $runtime, $val );
+
+            return $pc + 1;
+        }
+    }
+
+    my $val = - $scalar->as_float( $runtime );
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::Scalar->new_float( $runtime, $val );
+
+    return $pc + 1;
+}
+
 
 sub o_glob_slot_create {
     my( $op, $runtime, $pc ) = @_;

@@ -2,14 +2,14 @@ package Language::P::Intermediate::Serialize;
 
 use strict;
 use warnings;
-use base qw(Class::Accessor::Fast);
+use parent qw(Language::P::Object);
 
 use Language::P::Opcodes qw(:all);
 use Language::P::Intermediate::SerializeGenerated;
 
 sub serialize {
     my( $self, $tree, $file, $data_handle ) = @_;
-    open my $out, '>', $file or die "Unable to write '$file': $! (maybe set $ENV{P_BYTECODE_PATH} before running)";
+    open my $out, '>', $file or die "Unable to write '$file': $! (maybe set \$ENV{P_BYTECODE_PATH} before running)";
 
     $self->{sub_map} = {};
     $self->{file_map} = {};

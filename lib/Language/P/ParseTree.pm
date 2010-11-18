@@ -10,7 +10,7 @@ package Language::P::ParseTree::Node;
 
 use strict;
 use warnings;
-use base qw(Class::Accessor::Fast);
+use parent qw(Language::P::Object);
 
 use Scalar::Util; # weaken
 
@@ -92,7 +92,7 @@ package Language::P::ParseTree::LexicalState;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(changed package hints warnings);
 
@@ -104,7 +104,7 @@ package Language::P::ParseTree::Use;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(package version import is_no lexical_state);
 
@@ -116,7 +116,7 @@ package Language::P::ParseTree::Empty;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 sub can_implicit_return { 0 }
 sub is_empty { return !$_[0]->has_attribute( 'label' ) }
@@ -125,7 +125,7 @@ package Language::P::ParseTree::Constant;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(value flags);
 
@@ -140,7 +140,7 @@ package Language::P::ParseTree::QuotedString;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(components);
 
@@ -150,7 +150,7 @@ package Language::P::ParseTree::ReferenceConstructor;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(expression type);
 
@@ -160,7 +160,7 @@ package Language::P::ParseTree::FunctionCall;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(function arguments);
 
@@ -184,7 +184,7 @@ package Language::P::ParseTree::SpecialFunctionCall;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::FunctionCall);
+use parent -norequire, qw(Language::P::ParseTree::FunctionCall);
 
 our @FIELDS = qw(flags);
 
@@ -196,7 +196,7 @@ package Language::P::ParseTree::MethodCall;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(invocant method arguments indirect);
 
@@ -206,7 +206,7 @@ package Language::P::ParseTree::Identifier;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(name sigil);
 
@@ -226,7 +226,7 @@ package Language::P::ParseTree::Symbol;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Identifier);
+use parent -norequire, qw(Language::P::ParseTree::Identifier);
 
 sub symbol_name { return $_[0]->{symbol_name} }
 sub set_closed_over {}
@@ -236,7 +236,7 @@ package Language::P::ParseTree::LexicalSymbol;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Identifier);
+use parent -norequire, qw(Language::P::ParseTree::Identifier);
 
 our @FIELDS = qw(level);
 
@@ -249,7 +249,7 @@ package Language::P::ParseTree::LexicalDeclaration;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Identifier);
+use parent -norequire, qw(Language::P::ParseTree::Identifier);
 
 our @FIELDS = qw(flags);
 
@@ -265,7 +265,7 @@ package Language::P::ParseTree::Block;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(lines);
 
@@ -278,7 +278,7 @@ package Language::P::ParseTree::DoBlock;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Block);
+use parent -norequire, qw(Language::P::ParseTree::Block);
 
 sub is_compound { 0 }
 # the block is void, the value is produced by the statementd
@@ -288,7 +288,7 @@ package Language::P::ParseTree::EvalBlock;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Block);
+use parent -norequire, qw(Language::P::ParseTree::Block);
 
 sub is_compound { 0 }
 
@@ -296,7 +296,7 @@ package Language::P::ParseTree::BareBlock;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Block);
+use parent -norequire, qw(Language::P::ParseTree::Block);
 
 our @FIELDS = qw(continue);
 
@@ -308,7 +308,7 @@ package Language::P::ParseTree::Subroutine;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(lines prototype);
 
@@ -323,7 +323,7 @@ package Language::P::ParseTree::NamedSubroutine;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Subroutine);
+use parent -norequire, qw(Language::P::ParseTree::Subroutine);
 
 our @FIELDS = qw(name);
 
@@ -335,7 +335,7 @@ package Language::P::ParseTree::SubroutineDeclaration;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(name prototype);
 
@@ -348,7 +348,7 @@ package Language::P::ParseTree::AnonymousSubroutine;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Subroutine);
+use parent -norequire, qw(Language::P::ParseTree::Subroutine);
 
 sub name { undef }
 
@@ -356,7 +356,7 @@ package Language::P::ParseTree::BinOp;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(op left right);
 
@@ -372,7 +372,7 @@ package Language::P::ParseTree::UnOp;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(op left);
 
@@ -382,7 +382,7 @@ package Language::P::ParseTree::Parentheses;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::UnOp);
+use parent -norequire, qw(Language::P::ParseTree::UnOp);
 
 sub op { Language::P::ParseTree::OP_PARENTHESES }
 sub lvalue_context { Language::P::Constants::CXT_LIST }
@@ -391,7 +391,7 @@ package Language::P::ParseTree::Local;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::UnOp);
+use parent -norequire, qw(Language::P::ParseTree::UnOp);
 
 sub op { Language::P::ParseTree::OP_LOCAL }
 sub lvalue_context { $_[0]->left->lvalue_context }
@@ -400,7 +400,7 @@ package Language::P::ParseTree::Jump;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::UnOp);
+use parent -norequire, qw(Language::P::ParseTree::UnOp);
 
 sub always_void { 1 }
 
@@ -408,13 +408,13 @@ package Language::P::ParseTree::Dereference;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::UnOp);
+use parent -norequire, qw(Language::P::ParseTree::UnOp);
 
 package Language::P::ParseTree::List;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(expressions);
 
@@ -426,7 +426,7 @@ package Language::P::ParseTree::Slice;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(subscripted subscript type reference);
 
@@ -438,7 +438,7 @@ package Language::P::ParseTree::Subscript;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(subscripted subscript type reference);
 
@@ -448,7 +448,7 @@ package Language::P::ParseTree::Conditional;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(iftrues iffalse);
 
@@ -461,7 +461,7 @@ package Language::P::ParseTree::ConditionalBlock;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(condition block block_type);
 
@@ -474,7 +474,7 @@ package Language::P::ParseTree::ConditionalLoop;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::ConditionalBlock);
+use parent -norequire, qw(Language::P::ParseTree::ConditionalBlock);
 
 our @FIELDS = qw(continue);
 
@@ -489,7 +489,7 @@ package Language::P::ParseTree::For;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::ConditionalLoop);
+use parent -norequire, qw(Language::P::ParseTree::ConditionalLoop);
 
 our @FIELDS = qw(initializer step);
 
@@ -503,7 +503,7 @@ package Language::P::ParseTree::Foreach;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(expression block variable continue);
 
@@ -518,7 +518,7 @@ package Language::P::ParseTree::Ternary;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(condition iftrue iffalse);
 
@@ -540,7 +540,7 @@ package Language::P::ParseTree::Builtin;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::FunctionCall);
+use parent -norequire, qw(Language::P::ParseTree::FunctionCall);
 
 sub parsing_prototype { return $Language::P::Opcodes::PROTOTYPE{$_[0]->function} }
 sub runtime_context { return $Language::P::Opcodes::CONTEXT{$_[0]->function} }
@@ -552,7 +552,7 @@ package Language::P::ParseTree::BuiltinIndirect;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Builtin);
+use parent -norequire, qw(Language::P::ParseTree::Builtin);
 
 our @FIELDS = qw(indirect);
 
@@ -568,7 +568,7 @@ package Language::P::ParseTree::Overridable;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::FunctionCall);
+use parent -norequire, qw(Language::P::ParseTree::FunctionCall);
 
 sub parsing_prototype { return $Language::P::Opcodes::PROTOTYPE{$_[0]->function} }
 sub runtime_context { return $Language::P::Opcodes::CONTEXT{$_[0]->function} }
@@ -578,7 +578,7 @@ package Language::P::ParseTree::Glob;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Overridable);
+use parent -norequire, qw(Language::P::ParseTree::Overridable);
 
 sub function { Language::P::ParseTree::OP_GLOB }
 
@@ -586,7 +586,7 @@ package Language::P::ParseTree::InterpolatedPattern;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(op string flags);
 
@@ -598,7 +598,7 @@ package Language::P::ParseTree::Pattern;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(op components flags original);
 
@@ -610,7 +610,7 @@ package Language::P::ParseTree::Substitution;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(pattern replacement);
 
@@ -622,7 +622,7 @@ package Language::P::ParseTree::Transliteration;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(match replacement flags);
 
@@ -634,7 +634,7 @@ package Language::P::ParseTree::RXConstant;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(value insensitive);
 
@@ -644,7 +644,7 @@ package Language::P::ParseTree::RXGroup;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(components capture);
 
@@ -654,7 +654,7 @@ package Language::P::ParseTree::RXQuantifier;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(node min max greedy);
 
@@ -664,7 +664,7 @@ package Language::P::ParseTree::RXAssertion;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(type);
 
@@ -674,7 +674,7 @@ package Language::P::ParseTree::RXAssertionGroup;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(components type);
 
@@ -684,7 +684,7 @@ package Language::P::ParseTree::RXClass;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(elements insensitive);
 
@@ -694,7 +694,7 @@ package Language::P::ParseTree::RXSpecialClass;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(type);
 
@@ -704,7 +704,7 @@ package Language::P::ParseTree::RXPosixClass;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(type);
 
@@ -714,7 +714,7 @@ package Language::P::ParseTree::RXRange;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(start end);
 
@@ -724,7 +724,7 @@ package Language::P::ParseTree::RXAlternation;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(left right);
 
@@ -734,7 +734,7 @@ package Language::P::ParseTree::RXBackreference;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Node);
+use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(group);
 
