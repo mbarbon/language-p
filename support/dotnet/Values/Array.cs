@@ -12,7 +12,7 @@ namespace org.mbarbon.p.values
             array = new List<IP5Any>();
         }
 
-        public P5Array(Runtime runtime, IP5Any[] data)
+        public P5Array(Runtime runtime, params IP5Any[] data)
         {
             array = new List<IP5Any>(data);
         }
