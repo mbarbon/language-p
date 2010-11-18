@@ -415,8 +415,8 @@ sub _dump_path {
 
             return File::Spec->catfile( $prefix, $path );;
         }
-    } elsif( $prefix && $path =~ m{^lib/} ) {
-        return File::Spec->catfile( $prefix, substr $path, 4 );
+    } elsif( $prefix && $path =~ s{^lib/|^support/toy/lib/}{} ) {
+        return File::Spec->catfile( $prefix, $path );
     } else {
         return $path;
     }
