@@ -32,8 +32,16 @@ namespace org.mbarbon.p.values
             }
             finally
             {
+                StackFrame frame = null;
                 while (runtime.CallStack.Count > size)
-                    runtime.CallStack.Pop();
+                    frame = runtime.CallStack.Pop();
+
+                if (frame != null)
+                {
+                    runtime.Package = frame.Package;
+                    runtime.File = frame.File;
+                    runtime.Line = frame.Line;
+                }
             }
         }
 
