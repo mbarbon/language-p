@@ -266,7 +266,7 @@ namespace org.mbarbon.p.values
             universal = GetPackage(runtime, "UNIVERSAL", true);
 
             var isa = universal.GetStashGlob(runtime, "isa", true);
-            isa.Code = new P5NativeCode(new P5Code.Sub(WrapIsa));
+            isa.Code = new P5NativeCode("UNIVERSAL::isa", new P5Code.Sub(WrapIsa));
         }
 
         private static IP5Any WrapIsa(Runtime runtime, Opcode.ContextValues context,

@@ -321,7 +321,7 @@ namespace org.mbarbon.p.runtime
         FieldInfo AddSubInitialization()
         {
             var code_ctor = typeof(P5Code).GetConstructor(
-                new Type[] { typeof(P5Code.Sub), typeof(bool) });
+                new[] { typeof(string), typeof(P5Code.Sub), typeof(bool) });
             var get_method =
                 typeof(Type).GetMethod(
                     "GetMethod", new Type[] { typeof(string) });
@@ -349,6 +349,7 @@ namespace org.mbarbon.p.runtime
                 // new P5Code(System.Delegate.CreateDelegate(method, null)
                 Expression initcode =
                     Expression.New(code_ctor, new Expression[] {
+                            Expression.Constant(si.SubName ?? "ANONCODE"),
                             Expression.Call(
                                 create_delegate,
                                 Expression.Constant(typeof(P5Code.Sub)),
