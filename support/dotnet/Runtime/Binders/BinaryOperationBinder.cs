@@ -84,16 +84,32 @@ namespace org.mbarbon.p.runtime
             return null;
         }
 
+        private Expression CallOverload(DynamicMetaObject target, DynamicMetaObject arg, OverloadOperation op, Expression fallback)
+        {
+            return Expression.Coalesce(
+                Expression.Call(
+                    typeof(Builtins).GetMethod("CallOverload"),
+                    Expression.Constant(Runtime),
+                    Expression.Constant(op),
+                    CastScalar(target),
+                    CastScalar(arg)),
+                fallback);
+        }
+
         private DynamicMetaObject BindArithOp(DynamicMetaObject target, DynamicMetaObject arg, DynamicMetaObject errorSuggestion)
         {
             if (IsScalar(target) || IsScalar(arg))
             {
                 return new DynamicMetaObject(
-                    Expression.Call(
-                        typeof(Builtins).GetMethod("AddScalars"),
-                        Expression.Constant(Runtime),
-                        CastScalar(target),
-                        CastScalar(arg)),
+                    CallOverload(
+                        target,
+                        arg,
+                        OverloadOperation.ADD,
+                        Expression.Call(
+                            typeof(Builtins).GetMethod("AddScalars"),
+                            Expression.Constant(Runtime),
+                            CastScalar(target),
+                            CastScalar(arg))),
                     BindingRestrictions.GetExpressionRestriction(
                         Expression.Or(
                             Expression.TypeEqual(target.Expression, typeof(P5Scalar)),

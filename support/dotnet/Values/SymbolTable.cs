@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using StringSplitOptions = System.StringSplitOptions;
 using Opcode = org.mbarbon.p.runtime.Opcode;
 using Builtins = org.mbarbon.p.runtime.Builtins;
+using Overloads = org.mbarbon.p.runtime.Overloads;
 
 namespace org.mbarbon.p.values
 {
@@ -248,12 +249,26 @@ namespace org.mbarbon.p.values
             return false;
         }
 
+        public void SetOverloads(Overloads _overloads)
+        {
+            overloads = _overloads;
+        }
+
         public virtual bool IsMain {
             get { return false; }
         }
 
+        public bool HasOverloading {
+            get { return overloads != null; }
+        }
+
+        public Overloads Overloads {
+            get { return overloads; }
+        }
+
         protected readonly string[] separator = new string [] {"::"};
         protected string name;
+        protected Overloads overloads;
     }
 
     public class P5MainSymbolTable : P5SymbolTable
@@ -280,6 +295,12 @@ namespace org.mbarbon.p.values
 
             var isa = universal.GetStashGlob(runtime, "isa", true);
             isa.Code = new P5NativeCode("UNIVERSAL::isa", new P5Code.Sub(WrapIsa));
+
+            // Internals
+            var internals = GetPackage(runtime, "Internals", true);
+
+            var add_overload = internals.GetStashGlob(runtime, "add_overload", true);
+            add_overload.Code = new P5NativeCode("Internals::add_overload", new P5Code.Sub(WrapAddOverload));
         }
 
         private static IP5Any WrapIsa(Runtime runtime, Opcode.ContextValues context,
@@ -290,6 +311,18 @@ namespace org.mbarbon.p.values
             bool is_derived = Builtins.IsDerivedFrom(runtime, value, parent);
 
             return new P5Scalar(runtime, is_derived);
+        }
+
+        private static IP5Any WrapAddOverload(Runtime runtime, Opcode.ContextValues context,
+                                              P5ScratchPad pad, P5Array args)
+        {
+            var pack = args.GetItem(runtime, 0) as P5Scalar;
+            var opref = args.GetItem(runtime, 1) as P5Scalar;
+            var ops = opref.DereferenceArray(runtime);
+
+            Builtins.AddOverload(runtime, pack.AsString(runtime), ops);
+
+            return null;
         }
 
         public override bool IsMain

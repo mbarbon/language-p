@@ -476,6 +476,63 @@ namespace org.mbarbon.p.runtime
             }
         }
 
+        public static void AddOverload(Runtime runtime, string pack_name,
+                                       P5Array args)
+        {
+            var overloads = new Overloads();
+            var pack = runtime.SymbolTable.GetPackage(runtime, pack_name, true);
+
+            for (int i = 0; i < args.GetCount(runtime); i += 2)
+            {
+                string key = args.GetItem(runtime, i).AsString(runtime);
+                var value = args.GetItem(runtime, i + 1);
+
+                overloads.AddOperation(runtime, key, value);
+            }
+
+            pack.SetOverloads(overloads);
+        }
+
+        public static bool IsOverloaded(Runtime runtime, IP5Any value,
+                                        out Overloads overloads)
+        {
+            overloads = null;
+            var scalar = value as P5Scalar;
+
+            return scalar == null ? false : IsOverloaded(runtime, scalar,
+                                                         out overloads);
+        }
+
+        public static bool IsOverloaded(Runtime runtime, P5Scalar scalar,
+                                        out Overloads overloads)
+        {
+            overloads = null;
+
+            if (!scalar.IsReference(runtime))
+                return false;
+
+            var stash = scalar.Dereference(runtime).Blessed(runtime);
+
+            overloads = stash.Overloads;
+
+            return stash.HasOverloading;
+        }
+
+        public static P5Scalar CallOverload(Runtime runtime, OverloadOperation op,
+                                            P5Scalar left, P5Scalar right)
+        {
+            Overloads oleft, oright;
+
+            if (   !IsOverloaded(runtime, left, out oleft)
+                && !IsOverloaded(runtime, right, out oright))
+                return null;
+
+            Overloads overload = oleft ?? oright;
+
+            return overload.CallOperation(runtime, op, left, right,
+                                          overload == oright);
+        }
+
         public static P5Scalar AddScalars(Runtime runtime, P5Scalar left, P5Scalar right)
         {
             // TODO handle integer addition and integer -> float promotion
