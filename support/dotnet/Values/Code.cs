@@ -21,6 +21,12 @@ namespace org.mbarbon.p.values
             name = _name;
         }
 
+        public void Assign(Runtime runtime, P5Code other)
+        {
+            subref = other.subref;
+            scratchpad = other.scratchpad;
+        }
+
         private IP5Any UndefinedSub(Runtime runtime,
                                     Opcode.ContextValues context,
                                     P5ScratchPad pad, P5Array args)

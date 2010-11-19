@@ -442,7 +442,7 @@ namespace org.mbarbon.p.runtime
                             Expression.Field(
                                 InitRuntime,
                                 typeof(Runtime).GetField("SymbolTable")),
-                            typeof(P5SymbolTable).GetMethod("SetCode"),
+                            typeof(P5SymbolTable).GetMethod("DefineCode"),
                             InitRuntime,
                             Expression.Constant(si.SubName),
                             Expression.Field(null, si.CodeField));

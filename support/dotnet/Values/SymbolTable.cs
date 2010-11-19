@@ -114,6 +114,16 @@ namespace org.mbarbon.p.values
             glob.Code = code;
         }
 
+        public void DefineCode(Runtime runtime, string name, P5Code code)
+        {
+            P5Typeglob glob = GetGlob(runtime, name, true);
+
+            if (glob.Code == null)
+                glob.Code = code;
+            else
+                glob.Code.Assign(runtime, code);
+        }
+
         public P5SymbolTable GetPackage(Runtime runtime, string pack)
         {
             string[] packs = pack.Split(separator, StringSplitOptions.None);
