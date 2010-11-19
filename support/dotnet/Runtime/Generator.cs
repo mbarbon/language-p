@@ -2118,7 +2118,10 @@ namespace org.mbarbon.p.runtime
                 return Expression.Call(
                     typeof(Builtins).GetMethod("CompileRegex"),
                     Runtime,
-                    Generate(sub, re.Childs[0]),
+                    Expression.Call(
+                        Generate(sub, re.Childs[0]),
+                        typeof(IP5Any).GetMethod("AsScalar"),
+                        Runtime),
                     Expression.Constant(re.Flags));
             }
             case Opcode.OpNumber.OP_POS:
