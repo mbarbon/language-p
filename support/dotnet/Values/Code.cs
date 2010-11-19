@@ -37,6 +37,12 @@ namespace org.mbarbon.p.values
             }
         }
 
+        // P5MainCode and P5BeginCode subclasses?
+        public virtual IP5Any CallMain(Runtime runtime)
+        {
+            return subref(runtime, Opcode.ContextValues.VOID, scratchpad, null);
+        }
+
         public void NewScope(Runtime runtime)
         {
             if (scratchpad != null)

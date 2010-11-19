@@ -65,7 +65,7 @@ namespace org.mbarbon.p.runtime
 
         public IP5Any CallerNoArg(Opcode.ContextValues cxt)
         {
-            return Caller(false, 0, cxt);
+            return Caller(true, 0, cxt);
         }
 
         public IP5Any CallerWithArg(IP5Any level, Opcode.ContextValues cxt)
@@ -75,26 +75,33 @@ namespace org.mbarbon.p.runtime
 
         private IP5Any Caller(bool noarg, int level, Opcode.ContextValues cxt)
         {
-            StackFrame frame = null;
+            StackFrame frame;
 
-            if (level == 0)
+            if (level >= CallStack.Count)
+                frame = null;
+            else if (level == 0)
                 frame = CallStack.Peek();
-            else if (level > 0)
+            else
             {
+                frame = null;
+
                 foreach (var f in CallStack)
                 {
-                    if (level == 0)
-                    {
-                        frame = f;
-                        break;
-                    }
+                    frame = f;
 
+                    if (level == 0)
+                        break;
                     --level;
                 }
             }
 
             if (frame == null)
-                return new P5List(this);
+            {
+                if (cxt == Opcode.ContextValues.SCALAR)
+                    return new P5Scalar(this);
+                else
+                    return new P5List(this);
+            }
 
             if (cxt == Opcode.ContextValues.SCALAR)
                 return new P5Scalar(this, frame.Package);
@@ -110,6 +117,7 @@ namespace org.mbarbon.p.runtime
                     frame.Context == Opcode.ContextValues.VOID   ? new P5Scalar(this) :
                     frame.Context == Opcode.ContextValues.SCALAR ? new P5Scalar(this, "") :
                                                                    new P5Scalar(this, 1);
+
                 return new P5List(
                     this,
                     new P5Scalar(this, frame.Package),

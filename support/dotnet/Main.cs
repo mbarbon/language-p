@@ -17,7 +17,7 @@ namespace org.mbarbon.p
             try
             {
                 P5Code main = new Generator(runtime).Generate(null, cu);
-                main.Call(runtime, Opcode.ContextValues.VOID, null);
+                main.CallMain(runtime);
             }
             catch (System.Reflection.TargetInvocationException te)
             {
