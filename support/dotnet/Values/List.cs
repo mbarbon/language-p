@@ -42,6 +42,11 @@ namespace org.mbarbon.p.values
             return array.Count == 0 ? new P5Scalar(runtime) : array[array.Count - 1].AsScalar(runtime);
         }
 
+        public override bool IsDefined(Runtime runtime)
+        {
+            return AsScalar(runtime).IsDefined(runtime);
+        }
+
         public override IP5Any Assign(Runtime runtime, IP5Any other)
         {
             AssignArray(runtime, other);
