@@ -5,12 +5,30 @@ namespace org.mbarbon.p.values
 {
     public class P5Code : IP5Referrable
     {
+        public P5Code(string _name)
+        {
+            subref = new Sub(UndefinedSub);
+            scratchpad = null;
+            is_main = false;
+            name = _name;
+        }
+
         public P5Code(string _name, System.Delegate code, bool main)
         {
             subref = (Sub)code;
             scratchpad = null;
             is_main = main;
             name = _name;
+        }
+
+        private IP5Any UndefinedSub(Runtime runtime,
+                                    Opcode.ContextValues context,
+                                    P5ScratchPad pad, P5Array args)
+        {
+            var msg = string.Format("Undefined subroutine &{0:S} called",
+                                    Name);
+
+            throw new P5Exception(runtime, msg);
         }
 
         public virtual IP5Any Call(Runtime runtime, Opcode.ContextValues context,

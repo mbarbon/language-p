@@ -90,22 +90,22 @@ namespace org.mbarbon.p.values
 
         public P5Code GetCode(Runtime runtime, string name, bool create)
         {
-            P5Typeglob glob = GetGlob(runtime, name, create);
-            // TODO create a stub subroutine if !glob or !glob.Code
-            if (glob != null)
-                return glob.Code;
+            P5Typeglob glob = GetGlob(runtime, name, true);
+            P5Code code;
+            if ((code = glob.Code) == null && create)
+                code = glob.Code = new P5Code(name);
 
-            return null;
+            return code;
         }
 
         public P5Code GetStashCode(Runtime runtime, string name, bool create)
         {
-            P5Typeglob glob = GetStashGlob(runtime, name, create);
-            // TODO create a stub subroutine if !glob or !glob.Code
-            if (glob != null)
-                return glob.Code;
+            P5Typeglob glob = GetStashGlob(runtime, name, true);
+            P5Code code;
+            if ((code = glob.Code) == null && create)
+                code = glob.Code = new P5Code(name);
 
-            return null;
+            return code;
         }
 
         public void SetCode(Runtime runtime, string name, P5Code code)
