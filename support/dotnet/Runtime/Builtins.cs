@@ -475,5 +475,13 @@ namespace org.mbarbon.p.runtime
                     return new P5List(runtime);
             }
         }
+
+        public static P5Scalar AddScalars(Runtime runtime, P5Scalar left, P5Scalar right)
+        {
+            // TODO handle integer addition and integer -> float promotion
+            return new P5Scalar(
+                runtime,
+                left.AsFloat(runtime) + right.AsFloat(runtime));
+        }
     }
 }

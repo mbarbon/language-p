@@ -1463,19 +1463,7 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_NUM_GT:
                 return BinaryOperator(sub, op, ExpressionType.GreaterThan);
             case Opcode.OpNumber.OP_ADD:
-            {
-                Expression sum =
-                    Expression.Add(
-                        Expression.Call(
-                            Generate(sub, op.Childs[0]),
-                            typeof(IP5Any).GetMethod("AsFloat"), Runtime),
-                        Expression.Call(
-                            Generate(sub, op.Childs[1]),
-                            typeof(IP5Any).GetMethod("AsFloat"), Runtime));
-                return Expression.New(
-                    typeof(P5Scalar).GetConstructor(ProtoRuntimeDouble),
-                    new Expression[] { Runtime, sum });
-            }
+                return BinaryOperator(sub, op, ExpressionType.Add);
             case Opcode.OpNumber.OP_SUBTRACT:
             {
                 Expression sum =

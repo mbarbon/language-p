@@ -37,6 +37,8 @@ namespace org.mbarbon.p.runtime
         {
             if (Operation == ExpressionType.Or || Operation == ExpressionType.And)
                 return BindBitOp(target, arg, errorSuggestion);
+            if (Operation == ExpressionType.Add)
+                return BindArithOp(target, arg, errorSuggestion);
             if (Operation == ExpressionType.GreaterThan)
                 return BindRelOp(target, arg, errorSuggestion);
 
@@ -77,6 +79,46 @@ namespace org.mbarbon.p.runtime
                                     Expression.Constant(Runtime)))}),
                     BindingRestrictions.GetTypeRestriction(arg.Expression, arg.RuntimeType)
                     .Merge(BindingRestrictions.GetTypeRestriction(target.Expression, target.RuntimeType)));
+            }
+
+            return null;
+        }
+
+        private DynamicMetaObject BindArithOp(DynamicMetaObject target, DynamicMetaObject arg, DynamicMetaObject errorSuggestion)
+        {
+            if (IsScalar(target) || IsScalar(arg))
+            {
+                return new DynamicMetaObject(
+                    Expression.Call(
+                        typeof(Builtins).GetMethod("AddScalars"),
+                        Expression.Constant(Runtime),
+                        CastScalar(target),
+                        CastScalar(arg)),
+                    BindingRestrictions.GetExpressionRestriction(
+                        Expression.Or(
+                            Expression.TypeEqual(target.Expression, typeof(P5Scalar)),
+                            Expression.TypeEqual(arg.Expression, typeof(P5Scalar)))));
+            }
+            else if (IsAny(target) && IsAny(arg))
+            {
+                Expression sum =
+                    Expression.Add(
+                        Expression.Call(
+                            CastAny(target),
+                            typeof(IP5Any).GetMethod("AsInteger"),
+                            Expression.Constant(Runtime)),
+                        Expression.Call(
+                            CastAny(target),
+                            typeof(IP5Any).GetMethod("AsInteger"),
+                            Expression.Constant(Runtime)));
+
+                return new DynamicMetaObject(
+                    Expression.New(
+                        typeof(P5Scalar).GetConstructor(new[] { typeof(Runtime), typeof(int) }),
+                        Expression.Constant(Runtime),
+                        sum),
+                    BindingRestrictions.GetTypeRestriction(target.Expression, typeof(IP5Any))
+                    .Merge(BindingRestrictions.GetTypeRestriction(arg.Expression, typeof(IP5Any))));
             }
 
             return null;
