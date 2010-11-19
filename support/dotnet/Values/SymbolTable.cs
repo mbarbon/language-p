@@ -272,6 +272,9 @@ namespace org.mbarbon.p.values
             var dquote = GetStashGlob(runtime, "\"", true);
             dquote.Scalar = new P5Scalar(runtime, " ");
 
+            var version = GetStashGlob(runtime, "]", true);
+            version.Scalar = new P5Scalar(runtime, 5.008);
+
             // UNIVERSAL
             universal = GetPackage(runtime, "UNIVERSAL", true);
 
