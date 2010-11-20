@@ -137,7 +137,14 @@ namespace org.mbarbon.p.runtime
             return int.Parse(s);
         }
 
-        public static P5Scalar BitOr(Runtime runtime, P5Scalar a, P5Scalar b)
+        public static P5Scalar BitOrAssign(Runtime runtime,
+                                           P5Scalar a, P5Scalar b)
+        {
+            return BitOr(runtime, a, a, b);
+        }
+
+        public static P5Scalar BitOr(Runtime runtime, P5Scalar res,
+                                     P5Scalar a, P5Scalar b)
         {
             if (a.IsString(runtime) && b.IsString(runtime))
             {
@@ -159,16 +166,25 @@ namespace org.mbarbon.p.runtime
                         t[i] |= sa[i];
                 }
 
-                return new P5Scalar(runtime, t.ToString());
+                res.SetString(runtime, t.ToString());
             }
             else
             {
                 // TODO take into account signed/unsigned?
-                return new P5Scalar(runtime, a.AsInteger(runtime) | b.AsInteger(runtime));
+                res.SetInteger(runtime, a.AsInteger(runtime) | b.AsInteger(runtime));
             }
+
+            return res;
         }
 
-        public static P5Scalar BitAnd(Runtime runtime, P5Scalar a, P5Scalar b)
+        public static P5Scalar BitAndAssign(Runtime runtime,
+                                            P5Scalar a, P5Scalar b)
+        {
+            return BitAnd(runtime, a, a, b);
+        }
+
+        public static P5Scalar BitAnd(Runtime runtime, P5Scalar res,
+                                      P5Scalar a, P5Scalar b)
         {
             if (a.IsString(runtime) && b.IsString(runtime))
             {
@@ -190,13 +206,15 @@ namespace org.mbarbon.p.runtime
                         t[i] &= sa[i];
                 }
 
-                return new P5Scalar(runtime, t.ToString());
+                res.SetString(runtime, t.ToString());
             }
             else
             {
                 // TODO take into account signed/unsigned?
-                return new P5Scalar(runtime, a.AsInteger(runtime) & b.AsInteger(runtime));
+                res.SetInteger(runtime, a.AsInteger(runtime) & b.AsInteger(runtime));
             }
+
+            return res;
         }
 
         public static P5Scalar JoinList(Runtime runtime, P5Array array)

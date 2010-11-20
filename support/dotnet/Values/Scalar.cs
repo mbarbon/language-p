@@ -10,7 +10,7 @@ namespace org.mbarbon.p.values
         {
         }
 
-        protected P5Scalar(IP5ScalarBody b)
+        public P5Scalar(IP5ScalarBody b)
         {
             body = b;
         }
@@ -103,6 +103,16 @@ namespace org.mbarbon.p.values
 
             if (str_num != null)
                 str_num.SetString(runtime, value);
+            else
+                body = new P5StringNumber(runtime, value);
+        }
+
+        public void SetInteger(Runtime runtime, int value)
+        {
+            var str_num = body as P5StringNumber;
+
+            if (str_num != null)
+                str_num.SetInteger(runtime, value);
             else
                 body = new P5StringNumber(runtime, value);
         }

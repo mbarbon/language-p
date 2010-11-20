@@ -1458,8 +1458,12 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_BIT_OR:
                 return BinaryOperator(sub, op, ExpressionType.Or);
+            case Opcode.OpNumber.OP_BIT_OR_ASSIGN:
+                return BinaryOperator(sub, op, ExpressionType.OrAssign);
             case Opcode.OpNumber.OP_BIT_AND:
                 return BinaryOperator(sub, op, ExpressionType.And);
+            case Opcode.OpNumber.OP_BIT_AND_ASSIGN:
+                return BinaryOperator(sub, op, ExpressionType.AndAssign);
             case Opcode.OpNumber.OP_NUM_GT:
                 return BinaryOperator(sub, op, ExpressionType.GreaterThan);
             case Opcode.OpNumber.OP_ADD:

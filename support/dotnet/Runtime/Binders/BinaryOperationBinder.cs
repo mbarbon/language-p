@@ -35,48 +35,101 @@ namespace org.mbarbon.p.runtime
 
         public override DynamicMetaObject FallbackBinaryOperation(DynamicMetaObject target, DynamicMetaObject arg, DynamicMetaObject errorSuggestion)
         {
-            if (Operation == ExpressionType.Or || Operation == ExpressionType.And)
+            switch (Operation)
+            {
+            case ExpressionType.Or:
+            case ExpressionType.OrAssign:
+            case ExpressionType.And:
+            case ExpressionType.AndAssign:
                 return BindBitOp(target, arg, errorSuggestion);
-            if (Operation == ExpressionType.Add)
+            case ExpressionType.Add:
                 return BindArithOp(target, arg, errorSuggestion);
-            if (Operation == ExpressionType.GreaterThan)
+            case ExpressionType.GreaterThan:
                 return BindRelOp(target, arg, errorSuggestion);
-
-            return null;
+            default:
+                return null;
+            }
         }
 
         private DynamicMetaObject BindBitOp(DynamicMetaObject target, DynamicMetaObject arg, DynamicMetaObject errorSuggestion)
         {
-            string method_name = Operation == ExpressionType.Or ? "BitOr" : "BitAnd";
+            string method_name;
+            bool is_assign;
+
+            switch (Operation)
+            {
+            case ExpressionType.Or:
+                method_name = "BitOr";
+                is_assign = false;
+                break;
+            case ExpressionType.OrAssign:
+                method_name = "BitOrAssign";
+                is_assign = true;
+                break;
+            case ExpressionType.And:
+                method_name = "BitAnd";
+                is_assign = false;
+                break;
+            case ExpressionType.AndAssign:
+                method_name = "BitAndAssign";
+                is_assign = true;
+                break;
+            default:
+                throw new System.Exception("Unhandled operation value");
+            }
 
             if (IsScalar(target) && IsScalar(arg))
             {
-                return new DynamicMetaObject(
-                    Expression.Call(
+                Expression expression;
+
+                if (is_assign)
+                    expression = Expression.Call(
                         typeof(Builtins).GetMethod(method_name),
                         Expression.Constant(Runtime),
                         CastScalar(target),
-                        CastScalar(arg)),
+                        CastScalar(arg));
+                else
+                    expression = Expression.Call(
+                        typeof(Builtins).GetMethod(method_name),
+                        Expression.Constant(Runtime),
+                        Expression.New(
+                            typeof(P5Scalar).GetConstructor(new[] { typeof(IP5ScalarBody) }),
+                            Expression.Constant(null, typeof(IP5ScalarBody))),
+                        CastScalar(target),
+                        CastScalar(arg));
+
+                return new DynamicMetaObject(
+                    expression,
                     BindingRestrictions.GetTypeRestriction(arg.Expression, typeof(P5Scalar))
                     .Merge(BindingRestrictions.GetTypeRestriction(target.Expression, typeof(P5Scalar))));
             }
             else if (IsAny(target) && IsAny(arg))
             {
+                var value = Expression.MakeBinary(
+                    Operation,
+                    Expression.Call(
+                        CastAny(target),
+                        typeof(IP5Any).GetMethod("AsInteger"),
+                        Expression.Constant(Runtime)),
+                    Expression.Call(
+                        CastAny(arg),
+                        typeof(IP5Any).GetMethod("AsInteger"),
+                        Expression.Constant(Runtime)));
+                Expression expression;
+
+                if (is_assign)
+                    expression = Expression.Call(
+                        CastScalar(target),
+                        typeof(IP5Any).GetMethod("Assign"),
+                        value);
+                else
+                    expression = Expression.New(
+                        typeof(P5Scalar).GetConstructor(new[] {typeof(Runtime), typeof(int)}),
+                        Expression.Constant(Runtime),
+                        value);
+
                 return new DynamicMetaObject(
-                    Expression.New(
-                        typeof(P5Scalar).GetConstructor(new System.Type[] {typeof(Runtime), typeof(int)}),
-                        new Expression[] {
-                            Expression.Constant(Runtime),
-                            Expression.MakeBinary(
-                                Operation,
-                                Expression.Call(
-                                    CastAny(target),
-                                    typeof(IP5Any).GetMethod("AsInteger"),
-                                    Expression.Constant(Runtime)),
-                                Expression.Call(
-                                    CastAny(arg),
-                                    typeof(IP5Any).GetMethod("AsInteger"),
-                                    Expression.Constant(Runtime)))}),
+                    expression,
                     BindingRestrictions.GetTypeRestriction(arg.Expression, arg.RuntimeType)
                     .Merge(BindingRestrictions.GetTypeRestriction(target.Expression, target.RuntimeType)));
             }

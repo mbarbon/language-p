@@ -91,6 +91,14 @@ namespace org.mbarbon.p.values
             stringValue = value;
         }
 
+        public void SetInteger(Runtime runtime, int value)
+        {
+            pos = -1;
+            flags = HasInteger;
+            integerValue = value;
+            stringValue = null;
+        }
+
         public virtual int Length(Runtime runtime)
         {
             return AsString(runtime).Length;
