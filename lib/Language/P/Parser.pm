@@ -1359,7 +1359,7 @@ sub _parse_string_rest {
 
         if( $concat && @$parts == 2 ) {
             @$parts = Language::P::ParseTree::BinOp->new
-                          ( { function => OP_CONCATENATE,
+                          ( { op       => OP_CONCATENATE,
                               left     => $parts->[0],
                               right    => $parts->[1],
                               } );
