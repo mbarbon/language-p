@@ -255,15 +255,6 @@ namespace org.mbarbon.p.values
 
         public virtual void SetPos(Runtime runtime, int pos)
         {
-            int length = body.Length(runtime);
-
-            if (pos < 0 && -pos >= length)
-                pos = 0;
-            else if (pos < 0)
-                pos = length + pos;
-            else if (pos > length)
-                pos = length;
-
             body.SetPos(runtime, pos);
         }
 

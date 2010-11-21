@@ -19,10 +19,24 @@ namespace org.mbarbon.p.values
 
         public override void Set(Runtime runtime, IP5Any other)
         {
-            if (other.IsDefined(runtime))
-                Value.SetPos(runtime, other.AsInteger(runtime));
-            else
-                Value.UnsetPos(runtime);
+            if (!other.IsDefined(runtime))
+            {
+                Value.SetPos(runtime, -1);
+
+                return;
+            }
+
+            int pos = other.AsInteger(runtime);
+            int length = Value.Length(runtime);
+
+            if (pos < 0 && -pos >= length)
+                pos = 0;
+            else if (pos < 0)
+                pos = length + pos;
+            else if (pos > length)
+                pos = length;
+
+            Value.SetPos(runtime, pos);
         }
 
         public override P5Scalar Get(Runtime runtime)
