@@ -406,7 +406,7 @@ namespace org.mbarbon.p.runtime
             return new P5Range(runtime, start.AsInteger(runtime), end.AsInteger(runtime));
         }
 
-        public static Regex CompileRegex(Runtime runtime, P5Scalar value, int flags)
+        public static IP5Regex CompileRegex(Runtime runtime, P5Scalar value, int flags)
         {
             if (value.IsReference(runtime))
             {

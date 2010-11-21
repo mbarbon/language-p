@@ -1,5 +1,4 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
-using Regex = org.mbarbon.p.runtime.Regex;
 
 namespace org.mbarbon.p.values
 {
@@ -17,11 +16,11 @@ namespace org.mbarbon.p.values
 
         public virtual string AsString(Runtime runtime)
         {
-            var rx = referred as Regex;
+            var rx = referred as IP5Regex;
 
             // TODO use overloading
             if (rx != null)
-                return rx.Original;
+                return rx.GetOriginal();
 
             return "SOMETHING";
         }

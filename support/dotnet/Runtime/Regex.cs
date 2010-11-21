@@ -110,7 +110,7 @@ namespace org.mbarbon.p.runtime
     }
 
     [Serializable]
-    public class Regex : IP5Referrable
+    public class Regex : IP5Regex
     {
         [Serializable]
         public struct Op
@@ -665,7 +665,7 @@ namespace org.mbarbon.p.runtime
             value.Assign(runtime, new P5Scalar(runtime, str));
         }
 
-        public string Original { get { return original; } }
+        public string GetOriginal() { return original; }
 
         private Op[] Ops;
         private string[] Exact;

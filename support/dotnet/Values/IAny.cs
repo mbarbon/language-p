@@ -1,4 +1,6 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
+using Opcode = org.mbarbon.p.runtime.Opcode;
+using RxResult = org.mbarbon.p.runtime.RxResult;
 using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
@@ -51,5 +53,16 @@ namespace org.mbarbon.p.values
     public interface IP5Enumerable : IP5Value
     {
         IEnumerator<IP5Any> GetEnumerator(Runtime runtime);
+    }
+
+    public interface IP5Regex : IP5Referrable
+    {
+        IP5Any Match(Runtime runtime, IP5Any value, int flags,
+                     Opcode.ContextValues cxt, ref RxResult oldState);
+        IP5Any MatchGlobal(Runtime runtime, IP5Any value, int flags,
+                           Opcode.ContextValues cxt, ref RxResult oldState);
+        bool MatchString(Runtime runtime, string str, int pos,
+                         ref RxResult oldState);
+        string GetOriginal();
     }
 }

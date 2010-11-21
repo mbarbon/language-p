@@ -1,5 +1,4 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
-using Regex = org.mbarbon.p.runtime.Regex;
 using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
@@ -203,9 +202,9 @@ namespace org.mbarbon.p.values
         }
 
         // must be checked by the caller
-        public virtual Regex DereferenceRegex(Runtime runtime)
+        public virtual IP5Regex DereferenceRegex(Runtime runtime)
         {
-            return (body as P5Reference).Referred as Regex;
+            return (body as P5Reference).Referred as IP5Regex;
         }
 
         // must be checked by the caller

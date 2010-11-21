@@ -98,7 +98,7 @@ namespace org.mbarbon.p.runtime
         public void AddRegexInfo(Subroutine sub)
         {
             FieldInfo field = ClassBuilder.DefineField(
-                "regex_" + MethodIndex++.ToString(), typeof(Regex),
+                "regex_" + MethodIndex++.ToString(), typeof(IP5Regex),
                 FieldAttributes.Private|FieldAttributes.Static);
 
             Subroutines.Add(new SubInfo(null, sub, field));
@@ -148,7 +148,7 @@ namespace org.mbarbon.p.runtime
                         "Deserialize",
                         new Type[] { typeof(System.IO.Stream) }),
                     memStream),
-                typeof(Regex));
+                typeof(IP5Regex));
 
             Initializers.Add(
                 Expression.Assign(
@@ -2163,7 +2163,7 @@ namespace org.mbarbon.p.runtime
             {
                 RegexMatch rm = (RegexMatch)op;
                 bool global = (rm.Flags & Opcode.RX_GLOBAL) != 0;
-                var meth = typeof(Regex).GetMethod(global ? "MatchGlobal" : "Match");
+                var meth = typeof(IP5Regex).GetMethod(global ? "MatchGlobal" : "Match");
 
                 return
                     Expression.Call(
@@ -2226,7 +2226,7 @@ namespace org.mbarbon.p.runtime
                         Runtime));
             var match = Expression.Call(
                 Generate(sub, rm.Childs[1]),
-                typeof(Regex).GetMethod("MatchString"),
+                typeof(IP5Regex).GetMethod("MatchString"),
                 Runtime,
                 str,
                 pos,
@@ -2374,7 +2374,7 @@ namespace org.mbarbon.p.runtime
 
             var match = Expression.Call(
                 Generate(sub, rm.Childs[1]),
-                typeof(Regex).GetMethod("MatchString"),
+                typeof(IP5Regex).GetMethod("MatchString"),
                 Runtime,
                 str,
                 Expression.Constant(-1),
