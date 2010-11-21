@@ -87,7 +87,7 @@ sub push_value {
 sub push_list {
     my( $self, $runtime, $list ) = @_;
 
-    push @{$self->{array}}, @{$list->array};
+    push @{$self->{array}}, map $_->as_scalar( $runtime ), @{$list->array};
 
     return Language::P::Toy::Value::StringNumber->new
                ( $runtime, { integer => scalar @{$self->array} } );
