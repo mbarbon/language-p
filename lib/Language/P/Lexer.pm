@@ -505,11 +505,44 @@ sub lex_quote {
 
         my $to_return;
         my $pattern = $self->quote->{pattern};
+        my $interpolate = $self->quote->{interpolate};
         my $interpolated_pattern = $self->quote->{interpolated_pattern};
         my $substitution = $self->quote->{substitution};
 
         while( length $$buffer ) {
             my $c = substr $$buffer, 0, 1, '';
+
+            if( $c eq '\\' && ( $interpolated_pattern || $interpolate ) ) {
+                my $qc = substr $$buffer, 0, 1;
+
+                if(    $qc eq 'Q' || $qc eq 'E' || $qc eq 'l'
+                    || $qc eq 'u' || $qc eq 'L' || $qc eq 'U' ) {
+                    substr $$buffer, 0, 1, ''; # eat character
+
+                    if( $qc eq 'Q' ) {
+                        $to_return = [ $self->{pos}, T_QUOTE, OP_QUOTEMETA ];
+                    } elsif( $qc eq 'l' ) {
+                        $to_return = [ $self->{pos}, T_QUOTE, OP_LCFIRST ];
+                    } elsif( $qc eq 'u' ) {
+                        $to_return = [ $self->{pos}, T_QUOTE, OP_UCFIRST ];
+                    } elsif( $qc eq 'L' ) {
+                        $to_return = [ $self->{pos}, T_QUOTE, OP_LC ];
+                    } elsif( $qc eq 'U' ) {
+                        $to_return = [ $self->{pos}, T_QUOTE, OP_UC ];
+                    } elsif( $qc eq 'E' ) {
+                        $to_return = [ $self->{pos}, T_QUOTE, 0 ];
+                    }
+
+                    if( length $v ) {
+                        $self->unlex( $to_return );
+                        return [ $self->{pos}, T_STRING, $v, 1 ];
+                    } else {
+                        return $to_return;
+                    }
+                }
+
+                # fall-through if not a special quote
+            }
 
             if( $pattern || $interpolated_pattern ) {
                 if( $c eq '\\' ) {
@@ -532,6 +565,8 @@ sub lex_quote {
                         $to_return = [ $self->{pos}, T_PATTERN, $1,
                                        [ T_BACKREFERENCE, $1 ] ];
                     }
+
+                    # fall-through: handle normal string escapes below
                 } elsif(    $c eq '{'
                          && !$interpolated_pattern
                          && $$buffer =~ s/^([0-9]+)(?:(,)([0-9]+)?)?}(\?)?// ) {
@@ -598,28 +633,6 @@ sub lex_quote {
                             $v .= chr( oct '0x' . $1 );
                         } else {
                             $v .= "\0";
-                        }
-                    } elsif(    $qc eq 'Q' || $qc eq 'E' || $qc eq 'l'
-                             || $qc eq 'u' || $qc eq 'L' || $qc eq 'U' ) {
-                        if( $qc eq 'Q' ) {
-                            $to_return = [ $self->{pos}, T_QUOTE, OP_QUOTEMETA ];
-                        } elsif( $qc eq 'l' ) {
-                            $to_return = [ $self->{pos}, T_QUOTE, OP_LCFIRST ];
-                        } elsif( $qc eq 'u' ) {
-                            $to_return = [ $self->{pos}, T_QUOTE, OP_UCFIRST ];
-                        } elsif( $qc eq 'L' ) {
-                            $to_return = [ $self->{pos}, T_QUOTE, OP_LC ];
-                        } elsif( $qc eq 'U' ) {
-                            $to_return = [ $self->{pos}, T_QUOTE, OP_UC ];
-                        } elsif( $qc eq 'E' ) {
-                            $to_return = [ $self->{pos}, T_QUOTE, 0 ];
-                        }
-
-                        if( length $v ) {
-                            $self->unlex( $to_return );
-                            return [ $self->{pos}, T_STRING, $v, 1 ];
-                        } else {
-                            return $to_return;
                         }
                     } else {
                         die "Invalid escape '$qc'";
