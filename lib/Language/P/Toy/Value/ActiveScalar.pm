@@ -67,9 +67,9 @@ sub get_pos {
 }
 
 sub set_pos {
-    my( $self, $runtime, $pos ) = @_;
+    my( $self, $runtime, $pos, $pos_set ) = @_;
 
-    return $self->_get( $runtime )->set_pos( $runtime, $pos );
+    return $self->_get( $runtime )->set_pos( $runtime, $pos, $pos_set );
 }
 
 sub as_string {

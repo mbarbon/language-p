@@ -15,15 +15,23 @@ sub new {
 
 sub _get {
     my( $self, $runtime ) = @_;
+    my $pos = $self->value->get_pos( $runtime );
 
-    return Language::P::Toy::Value::Scalar->new_integer
-               ( $runtime, $self->value->get_pos( $runtime ) );
+    return Language::P::Toy::Value::Undef->new( $runtime ) if $pos && $pos == -1;
+    return Language::P::Toy::Value::Scalar->new_integer( $runtime, $pos );
 
 }
 
 sub _set {
     my( $self, $runtime, $value ) = @_;
     my $dest = $self->value;
+
+    if( !$value->is_defined( $runtime ) ) {
+        $dest->set_pos( $runtime, -1, 1 );
+
+        return;
+    }
+
     my $pos = $value->as_integer( $runtime );
     my $len = $self->value->get_length_int( $runtime );
 
@@ -35,7 +43,7 @@ sub _set {
         $pos = $len;
     }
 
-    $dest->set_pos( $runtime, $pos );
+    $dest->set_pos( $runtime, $pos, 1 );
 }
 
 1;

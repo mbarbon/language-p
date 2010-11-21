@@ -85,8 +85,8 @@ sub assign_iterator {
     }
 }
 
-sub set_pos { $_[0]->{pos} = $_[2] }
-sub get_pos { $_[0]->{pos} }
+sub set_pos { $_[0]->{pos} = $_[2]; $_[0]->{pos_set} = $_[3] }
+sub get_pos { $_[0]->{pos_set}, $_[0]->{pos} }
 
 sub localize {
     my( $self, $runtime ) = @_;

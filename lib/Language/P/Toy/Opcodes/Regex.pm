@@ -200,13 +200,13 @@ sub o_rx_match_global {
     my $pattern = pop @{$runtime->{_stack}};
     my $scalar = pop @{$runtime->{_stack}};
     my $cxt = _context( $op, $runtime );
-    my $pos = $scalar->get_pos;
+    my( $pos_set, $pos ) = $scalar->get_pos;
     my $string = $scalar->as_string( $runtime );
 
     my $match;
 
     if( $cxt == CXT_SCALAR || $cxt == CXT_VOID ) {
-        $match = $pattern->match( $runtime, $string, $pos );
+        $match = $pattern->match( $runtime, $string, $pos, $pos_set );
         if( $match->{matched} ) {
             my $state = $runtime->get_last_match;
             $runtime->set_last_match( $match );
@@ -263,9 +263,9 @@ sub o_rx_match_global {
     }
 
     if( $match->{matched} ) {
-        $scalar->set_pos( $runtime, $match->{match_end} );
+        $scalar->set_pos( $runtime, $match->{match_end}, 0 );
     } elsif( !( $op->{flags} & FLAG_RX_KEEP ) ) {
-        $scalar->set_pos( $runtime, undef );
+        $scalar->set_pos( $runtime, undef, 0 );
     }
 
     return $pc + 1;
