@@ -935,6 +935,31 @@ namespace org.mbarbon.p.runtime
                     exps);
         }
 
+        private Expression UnaryOperator(Subroutine sub, Opcode op, ExpressionType operation)
+        {
+            var delegateType = typeof(Func<CallSite, object, object>);
+            var siteType = typeof(CallSite<Func<CallSite, object, object>>);
+            var initExpr = Expression.Call(
+                siteType.GetMethod("Create"),
+                Expression.New(
+                    typeof(P5UnaryOperationBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
+                    Expression.Constant(operation),
+                    ModuleGenerator.InitRuntime));
+            var staticField = ModuleGenerator.AddField(initExpr, siteType);
+
+            var res =
+                Expression.Call(
+                    Expression.Field(
+                        Expression.Field(null, staticField),
+                        siteType.GetField("Target")
+                        ),
+                    delegateType.GetMethod("Invoke"),
+                    Expression.Field(null, staticField),
+                    Generate(sub, op.Childs[0]));
+
+            return Expression.Convert(res, typeof(IP5Any));
+        }
+
         private Expression BinaryOperator(Subroutine sub, Opcode op, Expression binder)
         {
             var delegateType = typeof(Func<CallSite, object, object, object>);
@@ -1456,6 +1481,8 @@ namespace org.mbarbon.p.runtime
                     typeof(P5Scalar).GetConstructor(ProtoRuntimeInt),
                     new Expression[] { Runtime, len_1 });
             }
+            case Opcode.OpNumber.OP_BIT_NOT:
+                return UnaryOperator(sub, op, ExpressionType.OnesComplement);
             case Opcode.OpNumber.OP_BIT_OR:
                 return BinaryOperator(sub, op, ExpressionType.Or);
             case Opcode.OpNumber.OP_BIT_OR_ASSIGN:

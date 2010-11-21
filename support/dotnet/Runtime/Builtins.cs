@@ -137,6 +137,25 @@ namespace org.mbarbon.p.runtime
             return int.Parse(s);
         }
 
+        public static P5Scalar BitNot(Runtime runtime, P5Scalar value)
+        {
+            if (value.IsString(runtime))
+            {
+                string svalue = value.AsString(runtime);
+                var t = new System.Text.StringBuilder(svalue);;
+
+                for (int i = 0; i < svalue.Length; ++i)
+                    t[i] = (char)(~t[i] & 0xff); // only ASCII for now
+
+                return new P5Scalar(runtime, t.ToString());
+            }
+            else
+            {
+                // TODO take into account signed/unsigned?
+                return new P5Scalar(runtime, ~value.AsInteger(runtime));
+            }
+        }
+
         public static P5Scalar BitOrAssign(Runtime runtime,
                                            P5Scalar a, P5Scalar b)
         {
