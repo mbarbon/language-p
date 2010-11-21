@@ -38,31 +38,58 @@ namespace org.mbarbon.p.runtime
             switch (Operation)
             {
             case ExpressionType.Not:
-                return BindBitNot(target, errorSuggestion);
+            case ExpressionType.Negate:
+            case ExpressionType.OnesComplement:
+                return BindOperation(target, errorSuggestion);
             default:
                 return null;
             }
         }
 
-        private DynamicMetaObject BindBitNot(DynamicMetaObject target, DynamicMetaObject errorSuggestion)
+        private DynamicMetaObject BindOperation(DynamicMetaObject target, DynamicMetaObject errorSuggestion)
         {
-            if (IsScalar(target))
+            string default_conversion;
+            System.Type default_result;
+            Expression scalar_expression = null;
+
+            switch (Operation)
+            {
+            case ExpressionType.OnesComplement:
+                default_conversion = "AsInteger";
+                default_result = typeof(int);
+                scalar_expression = Expression.Call(
+                    typeof(Builtins).GetMethod("BitNot"),
+                    Expression.Constant(Runtime),
+                    CastScalar(target));
+                break;
+            case ExpressionType.Negate:
+                default_conversion = "AsInteger";
+                default_result = typeof(int);
+                break;
+            case ExpressionType.Not:
+                default_conversion = "AsBoolean";
+                default_result = typeof(bool);
+                break;
+            default:
+                return null;
+            }
+
+            if (IsScalar(target) && scalar_expression != null)
                 return new DynamicMetaObject(
-                    Expression.Call(
-                        typeof(Builtins).GetMethod("BitNot"),
-                        Expression.Constant(Runtime),
-                        CastScalar(target)),
+                    scalar_expression,
                     BindingRestrictions.GetTypeRestriction(target.Expression, typeof(P5Scalar)));
             else if (IsAny(target))
                 return new DynamicMetaObject(
                     Expression.New(
-                        typeof(P5Scalar).GetConstructor(new[] { typeof(Runtime), typeof(int) }),
+                        typeof(P5Scalar).GetConstructor(new[] { typeof(Runtime), default_result }),
                         Expression.Constant(Runtime),
-                        Expression.OnesComplement(
+                        Expression.MakeUnary(
+                            Operation,
                             Expression.Call(
                                 CastAny(target),
-                                typeof(IP5Any).GetMethod("AsInteger"),
-                                Expression.Constant(Runtime)))),
+                                typeof(IP5Any).GetMethod(default_conversion),
+                                Expression.Constant(Runtime)),
+                            null)),
                     BindingRestrictions.GetTypeRestriction(target.Expression, typeof(P5Scalar)));
 
             return null;

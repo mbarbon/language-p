@@ -1416,27 +1416,9 @@ namespace org.mbarbon.p.runtime
                 return Expression.IfThen(cmp, jump);
             }
             case Opcode.OpNumber.OP_LOG_NOT:
-            {
-                return Expression.New(
-                    typeof(P5Scalar).GetConstructor(ProtoRuntimeBool),
-                    Runtime,
-                    Expression.Not(
-                        Expression.Call(
-                            Generate(sub, op.Childs[0]),
-                            typeof(IP5Any).GetMethod("AsBoolean"),
-                            Runtime)));
-            }
+                return UnaryOperator(sub, op, ExpressionType.Not);
             case Opcode.OpNumber.OP_MINUS:
-            {
-                return Expression.New(
-                    typeof(P5Scalar).GetConstructor(ProtoRuntimeInt),
-                    Runtime,
-                    Expression.Negate(
-                        Expression.Call(
-                            Generate(sub, op.Childs[0]),
-                            typeof(IP5Any).GetMethod("AsInteger"),
-                            Runtime)));
-            }
+                return UnaryOperator(sub, op, ExpressionType.Negate);
             case Opcode.OpNumber.OP_DEFINED:
             {
                 return
