@@ -57,6 +57,7 @@
     <Compile Include="Bytecode\BytecodeGenerated.cs" />
     <Compile Include="Runtime\Generator.cs" />
     <Compile Include="Runtime\Regex.cs" />
+    <Compile Include="Runtime\NetRegex.cs" />
     <Compile Include="Runtime\Binders\BinaryOperationBinder.cs" />
     <Compile Include="Runtime\Binders\ArrayAssignmentBinder.cs" />
     <Compile Include="Runtime\Binders\UnaryOperationBinder.cs" />
