@@ -251,8 +251,15 @@ namespace org.mbarbon.p.runtime
         public IP5Any Match(Runtime runtime, IP5Any value, int flags,
                             Opcode.ContextValues cxt, ref RxResult oldState)
         {
-            bool match = MatchString(runtime, value.AsString(runtime),
-                                     -1, ref oldState);
+            return Regex.MatchHelper(this, runtime, value, flags,
+                                     cxt, ref oldState);
+        }
+
+        public static IP5Any MatchHelper(IP5Regex regex, Runtime runtime, IP5Any value, int flags,
+                                   Opcode.ContextValues cxt, ref RxResult oldState)
+        {
+            bool match = regex.MatchString(runtime, value.AsString(runtime),
+                                           -1, ref oldState);
 
             if (cxt != Opcode.ContextValues.LIST)
             {
@@ -275,6 +282,13 @@ namespace org.mbarbon.p.runtime
         public IP5Any MatchGlobal(Runtime runtime, IP5Any value, int flags,
                                   Opcode.ContextValues cxt, ref RxResult oldState)
         {
+            return Regex.MatchGlobalHelper(this, runtime, value, flags,
+                                           cxt, ref oldState);
+        }
+
+        public static IP5Any MatchGlobalHelper(IP5Regex regex, Runtime runtime, IP5Any value, int flags,
+                                               Opcode.ContextValues cxt, ref RxResult oldState)
+        {
             var scalar = value as P5Scalar;
             int pos = value.GetPos(runtime);
             string str = value.AsString(runtime);
@@ -283,8 +297,8 @@ namespace org.mbarbon.p.runtime
 
             if (cxt != Opcode.ContextValues.LIST)
             {
-                match = MatchString(runtime, str,
-                                    pos, ref oldState);
+                match = regex.MatchString(runtime, str, pos,
+                                          ref oldState);
 
                 result = new P5Scalar(runtime, match);
 
@@ -302,8 +316,8 @@ namespace org.mbarbon.p.runtime
 
                 for (;;)
                 {
-                    match = MatchString(runtime, str,
-                                        pos, ref oldState);
+                    match = regex.MatchString(runtime, str,
+                                              pos, ref oldState);
                     if (match)
                     {
                         if (runtime.LastMatch.StringCaptures != null)
@@ -370,8 +384,8 @@ namespace org.mbarbon.p.runtime
             return char.IsLetterOrDigit(c) || c == '_';
         }
 
-        public bool MatchAt(Runtime runtime, string str, int pos,
-                            out RxResult res)
+        private bool MatchAt(Runtime runtime, string str, int pos,
+                             out RxResult res)
         {
             int len = str.Length;
 
