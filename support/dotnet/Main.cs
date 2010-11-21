@@ -14,6 +14,9 @@ namespace org.mbarbon.p
             var runtime = new Runtime();
             var cu = Serializer.ReadCompilationUnit(runtime, args[0]);
 
+            // TODO used for bootstrap, add a flag to choose it a runtime
+            runtime.NativeRegex = true;
+
             try
             {
                 P5Code main = new Generator(runtime).Generate(null, cu);
