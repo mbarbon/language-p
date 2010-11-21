@@ -143,5 +143,7 @@ namespace org.mbarbon.p.runtime
         public string File, Package;
         public int Line, Hints;
         public RxResult LastMatch;
+        // TODO add more generic runtime/generator options
+        public bool NativeRegex;
     }
 }

@@ -47,9 +47,10 @@ namespace org.mbarbon.p.runtime
             }
         }
 
-        public ModuleGenerator(TypeBuilder class_builder)
+        public ModuleGenerator(TypeBuilder class_builder, bool native_regex)
         {
             ClassBuilder = class_builder;
+            NativeRegex = native_regex;
             Initializers = new List<Expression>();
             Subroutines = new List<SubInfo>();
             CreatedPackages = new HashSet<string>();
@@ -121,7 +122,7 @@ namespace org.mbarbon.p.runtime
 
         public void AddRegex(int index, Subroutine sub)
         {
-            Regex regex = GenerateRegex(sub);
+            IP5Regex regex = NativeRegex ? GenerateNetRegex(sub) : GenerateRegex(sub);
             var stream = new MemoryStream();
             var formatter = new BinaryFormatter();
 
@@ -156,7 +157,12 @@ namespace org.mbarbon.p.runtime
                     init));
         }
 
-        public Regex GenerateRegex(Subroutine sub)
+        public IP5Regex GenerateNetRegex(Subroutine sub)
+        {
+            return new NetRegex(sub.OriginalRegex);
+        }
+
+        public IP5Regex GenerateRegex(Subroutine sub)
         {
             var quantifiers = new List<RxQuantifier>();
             var ops = new List<Regex.Op>();
@@ -466,6 +472,7 @@ namespace org.mbarbon.p.runtime
         }
 
         private TypeBuilder ClassBuilder;
+        private bool NativeRegex;
         private List<Expression> Initializers;
         private List<SubInfo> Subroutines;
         private int MethodIndex = 0;
@@ -2447,7 +2454,7 @@ namespace org.mbarbon.p.runtime
             //       file was loaded, in case multiple modules are
             //       compiled to the same file; works for now
             TypeBuilder perl_module = mod_builder.DefineType(file.Name, TypeAttributes.Public);
-            ModuleGenerator perl_mod_generator = new ModuleGenerator(perl_module);
+            ModuleGenerator perl_mod_generator = new ModuleGenerator(perl_module, Runtime.NativeRegex);
 
             for (int i = 0; i < cu.Subroutines.Length; ++i)
             {

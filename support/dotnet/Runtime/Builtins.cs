@@ -416,7 +416,10 @@ namespace org.mbarbon.p.runtime
                     return rx;
             }
 
-            throw new System.Exception("P5: Needs compiler to recompile string expression");
+            if (runtime.NativeRegex)
+                return new NetRegex(value.AsString(runtime));
+            else
+                throw new System.Exception("P5: Needs compiler to recompile string expression");
         }
 
         public static int Transliterate(Runtime runtime, P5Scalar scalar,
