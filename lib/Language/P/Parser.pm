@@ -1597,6 +1597,7 @@ sub _parse_term_terminal {
                              ( { string  => $first,
                                  flags   => 0,
                                  op      => OP_QL_M,
+                                 pos     => $first->pos,
                                  } );
             }
 
@@ -1717,6 +1718,7 @@ sub _parse_term_terminal_maybe_subscripts {
                         ( { string  => $term,
                             flags   => 0,
                             op      => OP_QL_M,
+                            pos     => $term->pos,
                             } );
         }
     }
