@@ -53,7 +53,14 @@ namespace org.mbarbon.p.values
 
         public virtual int GetPos(Runtime runtime)
         {
-            return 0;
+            return -1;
+        }
+
+        public virtual int GetPos(Runtime runtime, out bool pos_set)
+        {
+            pos_set = false;
+
+            return -1;
         }
 
         public virtual IP5Any Clone(Runtime runtime, int depth)

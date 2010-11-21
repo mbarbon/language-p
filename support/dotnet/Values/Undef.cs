@@ -59,7 +59,14 @@ namespace org.mbarbon.p.values
             return -1;
         }
 
-        public virtual void SetPos(Runtime runtime, int pos)
+        public virtual int GetPos(Runtime runtime, out bool pos_set)
+        {
+            pos_set = false;
+
+            return -1;
+        }
+
+        public virtual void SetPos(Runtime runtime, int pos, bool pos_set)
         {
             // ignored
         }

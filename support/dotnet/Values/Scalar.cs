@@ -248,14 +248,19 @@ namespace org.mbarbon.p.values
             return body.GetPos(runtime);
         }
 
-        public virtual void UnsetPos(Runtime runtime)
+        public virtual int GetPos(Runtime runtime, out bool pos_set)
         {
-            body.SetPos(runtime, -1);
+            return body.GetPos(runtime, out pos_set);
         }
 
-        public virtual void SetPos(Runtime runtime, int pos)
+        public virtual void UnsetPos(Runtime runtime)
         {
-            body.SetPos(runtime, pos);
+            body.SetPos(runtime, -1, false);
+        }
+
+        public virtual void SetPos(Runtime runtime, int pos, bool pos_set)
+        {
+            body.SetPos(runtime, pos, pos_set);
         }
 
         public virtual void Bless(Runtime runtime, P5SymbolTable stash)
@@ -337,7 +342,8 @@ namespace org.mbarbon.p.values
         bool IsFloat(Runtime runtime);
 
         int GetPos(Runtime runtime);
-        void SetPos(Runtime runtime, int pos);
+        int GetPos(Runtime runtime, out bool pos_set);
+        void SetPos(Runtime runtime, int pos, bool pos_set);
 
         P5Scalar ReferenceType(Runtime runtime);
 

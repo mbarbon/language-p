@@ -166,13 +166,22 @@ namespace org.mbarbon.p.values
             return pos;
         }
 
-        public virtual void SetPos(Runtime runtime, int p)
+        public virtual int GetPos(Runtime runtime, out bool _pos_set)
         {
-            pos = p;
+            _pos_set = pos_set;
+
+            return pos;
+        }
+
+        public virtual void SetPos(Runtime runtime, int _pos, bool _pos_set)
+        {
+            pos = _pos;
+            pos_set = _pos_set;
         }
 
         internal int flags;
         internal int pos = -1;
+        internal bool pos_set = false;
         internal string stringValue;
         internal int integerValue;
         internal double floatValue;

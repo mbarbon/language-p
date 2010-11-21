@@ -305,7 +305,7 @@ namespace org.mbarbon.p.runtime
                 if (scalar != null)
                 {
                     if (match)
-                        scalar.SetPos(runtime, runtime.LastMatch.End);
+                        scalar.SetPos(runtime, runtime.LastMatch.End, false);
                     else if ((flags & Opcode.RX_KEEP) == 0)
                         scalar.UnsetPos(runtime);
                 }
@@ -341,7 +341,7 @@ namespace org.mbarbon.p.runtime
                 if (scalar != null)
                 {
                     if ((flags & Opcode.RX_KEEP) != 0)
-                        scalar.SetPos(runtime, pos);
+                        scalar.SetPos(runtime, pos, false);
                     else
                         scalar.UnsetPos(runtime);
                 }

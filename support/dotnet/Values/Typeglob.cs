@@ -177,12 +177,21 @@ namespace org.mbarbon.p.values
             return pos;
         }
 
-        public virtual void SetPos(Runtime runtime, int p)
+        public virtual int GetPos(Runtime runtime, out bool _pos_set)
         {
-            pos = p;
+            _pos_set = pos_set;
+
+            return pos;
+        }
+
+        public virtual void SetPos(Runtime runtime, int _pos, bool _pos_set)
+        {
+            pos = _pos;
+            pos_set = _pos_set;
         }
 
         private int pos = -1;
+        private bool pos_set = false;
         private P5Scalar scalar;
         private P5Array array;
         private P5Hash hash;

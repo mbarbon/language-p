@@ -21,7 +21,7 @@ namespace org.mbarbon.p.values
         {
             if (!other.IsDefined(runtime))
             {
-                Value.SetPos(runtime, -1);
+                Value.SetPos(runtime, -1, true);
 
                 return;
             }
@@ -36,7 +36,7 @@ namespace org.mbarbon.p.values
             else if (pos > length)
                 pos = length;
 
-            Value.SetPos(runtime, pos);
+            Value.SetPos(runtime, pos, true);
         }
 
         public override P5Scalar Get(Runtime runtime)

@@ -27,6 +27,7 @@ namespace org.mbarbon.p.values
         bool IsDefined(Runtime runtime);
 
         int GetPos(Runtime runtime);
+        int GetPos(Runtime runtime, out bool _pos_set);
 
         IP5Any Assign(Runtime runtime, IP5Any other);
         IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> e);
