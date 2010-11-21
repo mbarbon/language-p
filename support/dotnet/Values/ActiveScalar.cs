@@ -4,6 +4,11 @@ namespace org.mbarbon.p.values
 {
     public class P5ActiveScalar : P5Scalar
     {
+        public override P5Scalar AsScalar(Runtime runtime)
+        {
+            return (body as P5ActiveScalarBody).Get(runtime);
+        }
+
         public override IP5Any Assign(Runtime runtime, IP5Any other)
         {
             (body as P5ActiveScalarBody).Set(runtime, other);

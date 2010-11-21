@@ -146,7 +146,8 @@ namespace org.mbarbon.p.values
 
         public virtual P5Scalar PushList(Runtime runtime, P5Array items)
         {
-            array.AddRange(items);
+            foreach (var item in items)
+                array.Add(item.AsScalar(runtime));
 
             return new P5Scalar(runtime, array.Count);
         }
