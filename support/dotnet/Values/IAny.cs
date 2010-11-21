@@ -62,7 +62,7 @@ namespace org.mbarbon.p.values
                      Opcode.ContextValues cxt, ref RxResult oldState);
         IP5Any MatchGlobal(Runtime runtime, IP5Any value, int flags,
                            Opcode.ContextValues cxt, ref RxResult oldState);
-        bool MatchString(Runtime runtime, string str, int pos,
+        bool MatchString(Runtime runtime, string str, int pos, bool allow_zero,
                          ref RxResult oldState);
         string GetOriginal();
     }

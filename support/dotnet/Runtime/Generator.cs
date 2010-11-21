@@ -2230,6 +2230,7 @@ namespace org.mbarbon.p.runtime
                 Runtime,
                 str,
                 pos,
+                Expression.Constant(false),
                 GetSavedRxState(rm.Index));
             var rxstate = Expression.Field(
                 Runtime,
@@ -2378,6 +2379,7 @@ namespace org.mbarbon.p.runtime
                 Runtime,
                 str,
                 Expression.Constant(-1),
+                Expression.Constant(false),
                 GetSavedRxState(rm.Index));
             var repl = Expression.Condition(
                 match,

@@ -259,7 +259,7 @@ namespace org.mbarbon.p.runtime
                                    Opcode.ContextValues cxt, ref RxResult oldState)
         {
             bool match = regex.MatchString(runtime, value.AsString(runtime),
-                                           -1, ref oldState);
+                                           -1, false, ref oldState);
 
             if (cxt != Opcode.ContextValues.LIST)
             {
@@ -290,14 +290,15 @@ namespace org.mbarbon.p.runtime
                                                Opcode.ContextValues cxt, ref RxResult oldState)
         {
             var scalar = value as P5Scalar;
-            int pos = value.GetPos(runtime);
+            bool pos_set;
+            int pos = value.GetPos(runtime, out pos_set);
             string str = value.AsString(runtime);
             bool match;
             IP5Any result;
 
             if (cxt != Opcode.ContextValues.LIST)
             {
-                match = regex.MatchString(runtime, str, pos,
+                match = regex.MatchString(runtime, str, pos, pos_set,
                                           ref oldState);
 
                 result = new P5Scalar(runtime, match);
@@ -317,7 +318,7 @@ namespace org.mbarbon.p.runtime
                 for (;;)
                 {
                     match = regex.MatchString(runtime, str,
-                                              pos, ref oldState);
+                                              pos, pos_set, ref oldState);
                     if (match)
                     {
                         if (runtime.LastMatch.StringCaptures != null)
@@ -352,7 +353,8 @@ namespace org.mbarbon.p.runtime
             return result;
         }
 
-        public bool MatchString(Runtime runtime, string str, int pos, ref RxResult oldState)
+        public bool MatchString(Runtime runtime, string str, int pos,
+                                bool allow_zero, ref RxResult oldState)
         {
             int st = pos >= 0 ? pos : 0;
 
@@ -363,7 +365,7 @@ namespace org.mbarbon.p.runtime
 
                 if (res.Matched)
                 {
-                    if (pos >= 0 && pos == res.End)
+                    if (pos >= 0 && pos == res.End && !allow_zero)
                     {
                         res.Matched = false;
                         continue;
