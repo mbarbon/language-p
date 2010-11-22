@@ -8,6 +8,9 @@ namespace org.mbarbon.p.runtime
     public enum OverloadOperation
     {
         ADD,
+        SUBTRACT,
+        MULTIPLY,
+        DIVIDE,
         MAX,
     }
 
@@ -26,6 +29,15 @@ namespace org.mbarbon.p.runtime
             {
             case "+":
                 AddOperation(runtime, OverloadOperation.ADD, value);
+                break;
+            case "-":
+                AddOperation(runtime, OverloadOperation.SUBTRACT, value);
+                break;
+            case "*":
+                AddOperation(runtime, OverloadOperation.MULTIPLY, value);
+                break;
+            case "/":
+                AddOperation(runtime, OverloadOperation.DIVIDE, value);
                 break;
             }
         }

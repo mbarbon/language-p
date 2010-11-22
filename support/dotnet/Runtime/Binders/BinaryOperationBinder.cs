@@ -43,6 +43,9 @@ namespace org.mbarbon.p.runtime
             case ExpressionType.AndAssign:
                 return BindBitOp(target, arg, errorSuggestion);
             case ExpressionType.Add:
+            case ExpressionType.Subtract:
+            case ExpressionType.Multiply:
+            case ExpressionType.Divide:
                 return BindArithOp(target, arg, errorSuggestion);
             case ExpressionType.GreaterThan:
                 return BindRelOp(target, arg, errorSuggestion);
@@ -153,13 +156,38 @@ namespace org.mbarbon.p.runtime
         {
             if (IsScalar(target) || IsScalar(arg))
             {
+                OverloadOperation op;
+                string op_method;
+
+                switch (Operation)
+                {
+                case ExpressionType.Add:
+                    op = OverloadOperation.ADD;
+                    op_method = "AddScalars";
+                    break;
+                case ExpressionType.Subtract:
+                    op = OverloadOperation.SUBTRACT;
+                    op_method = "SubtractScalars";
+                    break;
+                case ExpressionType.Multiply:
+                    op = OverloadOperation.MULTIPLY;
+                    op_method = "MultiplyScalars";
+                    break;
+                case ExpressionType.Divide:
+                    op = OverloadOperation.DIVIDE;
+                    op_method = "DivideScalars";
+                    break;
+                default:
+                    throw new System.Exception("Unhandled overloaded operation");
+                }
+
                 return new DynamicMetaObject(
                     CallOverload(
                         target,
                         arg,
-                        OverloadOperation.ADD,
+                        op,
                         Expression.Call(
-                            typeof(Builtins).GetMethod("AddScalars"),
+                            typeof(Builtins).GetMethod(op_method),
                             Expression.Constant(Runtime),
                             CastScalar(target),
                             CastScalar(arg))),
@@ -170,8 +198,10 @@ namespace org.mbarbon.p.runtime
             }
             else if (IsAny(target) && IsAny(arg))
             {
-                Expression sum =
-                    Expression.Add(
+                // TODO must handle double promotion (esp. for division)
+                Expression op =
+                    Expression.MakeBinary(
+                        Operation,
                         Expression.Call(
                             CastAny(target),
                             typeof(IP5Any).GetMethod("AsInteger"),
@@ -185,7 +215,7 @@ namespace org.mbarbon.p.runtime
                     Expression.New(
                         typeof(P5Scalar).GetConstructor(new[] { typeof(Runtime), typeof(int) }),
                         Expression.Constant(Runtime),
-                        sum),
+                        op),
                     BindingRestrictions.GetTypeRestriction(target.Expression, typeof(IP5Any))
                     .Merge(BindingRestrictions.GetTypeRestriction(arg.Expression, typeof(IP5Any))));
             }

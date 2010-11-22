@@ -580,5 +580,29 @@ namespace org.mbarbon.p.runtime
                 runtime,
                 left.AsFloat(runtime) + right.AsFloat(runtime));
         }
+
+        public static P5Scalar SubtractScalars(Runtime runtime, P5Scalar left, P5Scalar right)
+        {
+            // TODO handle integer addition and integer -> float promotion
+            return new P5Scalar(
+                runtime,
+                left.AsFloat(runtime) - right.AsFloat(runtime));
+        }
+
+        public static P5Scalar MultiplyScalars(Runtime runtime, P5Scalar left, P5Scalar right)
+        {
+            // TODO handle integer addition and integer -> float promotion
+            return new P5Scalar(
+                runtime,
+                left.AsFloat(runtime) * right.AsFloat(runtime));
+        }
+
+        public static P5Scalar DivideScalars(Runtime runtime, P5Scalar left, P5Scalar right)
+        {
+            // TODO handle integer addition and integer -> float promotion
+            return new P5Scalar(
+                runtime,
+                left.AsFloat(runtime) / right.AsFloat(runtime));
+        }
     }
 }

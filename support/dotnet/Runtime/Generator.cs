@@ -1485,47 +1485,11 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_ADD:
                 return BinaryOperator(sub, op, ExpressionType.Add);
             case Opcode.OpNumber.OP_SUBTRACT:
-            {
-                Expression sum =
-                    Expression.Subtract(
-                        Expression.Call(
-                            Generate(sub, op.Childs[0]),
-                            typeof(IP5Any).GetMethod("AsFloat"), Runtime),
-                        Expression.Call(
-                            Generate(sub, op.Childs[1]),
-                            typeof(IP5Any).GetMethod("AsFloat"), Runtime));
-                return Expression.New(
-                    typeof(P5Scalar).GetConstructor(ProtoRuntimeDouble),
-                    new Expression[] { Runtime, sum });
-            }
+                return BinaryOperator(sub, op, ExpressionType.Subtract);
             case Opcode.OpNumber.OP_MULTIPLY:
-            {
-                Expression sum =
-                    Expression.Multiply(
-                        Expression.Call(
-                            Generate(sub, op.Childs[0]),
-                            typeof(IP5Any).GetMethod("AsFloat"), Runtime),
-                        Expression.Call(
-                            Generate(sub, op.Childs[1]),
-                            typeof(IP5Any).GetMethod("AsFloat"), Runtime));
-                return Expression.New(
-                    typeof(P5Scalar).GetConstructor(ProtoRuntimeDouble),
-                    new Expression[] { Runtime, sum });
-            }
+                return BinaryOperator(sub, op, ExpressionType.Multiply);
             case Opcode.OpNumber.OP_DIVIDE:
-            {
-                Expression sum =
-                    Expression.Divide(
-                        Expression.Call(
-                            Generate(sub, op.Childs[0]),
-                            typeof(IP5Any).GetMethod("AsFloat"), Runtime),
-                        Expression.Call(
-                            Generate(sub, op.Childs[1]),
-                            typeof(IP5Any).GetMethod("AsFloat"), Runtime));
-                return Expression.New(
-                    typeof(P5Scalar).GetConstructor(ProtoRuntimeDouble),
-                    new Expression[] { Runtime, sum });
-            }
+                return BinaryOperator(sub, op, ExpressionType.Divide);
             case Opcode.OpNumber.OP_PREINC:
             {
                 return Expression.Call(
