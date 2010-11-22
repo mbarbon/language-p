@@ -480,6 +480,21 @@ namespace org.mbarbon.p.runtime
             return count;
         }
 
+        public static P5Scalar QuoteMeta(Runtime runtime, IP5Any value)
+        {
+            var t = new System.Text.StringBuilder();
+
+            foreach (char c in value.AsString(runtime))
+            {
+                if (!char.IsLetterOrDigit(c) && c != '_')
+                    t.Append('\\');
+
+                t.Append(c);
+            }
+
+            return new P5Scalar(runtime, t.ToString());
+        }
+
         public static bool IsDerivedFrom(Runtime runtime, P5Scalar value, IP5Any pack)
         {
             P5SymbolTable stash = value.BlessedReferenceStash(runtime);

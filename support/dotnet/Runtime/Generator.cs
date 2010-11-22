@@ -1594,6 +1594,23 @@ namespace org.mbarbon.p.runtime
                     typeof(P5Array).GetMethod("ShiftElement"),
                     Runtime);
             }
+            case Opcode.OpNumber.OP_QUOTEMETA:
+            {
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("QuoteMeta"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
+            }
+            case Opcode.OpNumber.OP_STRINGIFY:
+            {
+                return Expression.New(
+                    typeof(P5Scalar).GetConstructor(ProtoRuntimeString),
+                    Runtime,
+                    Expression.Call(
+                        Generate(sub, op.Childs[0]),
+                        typeof(IP5Any).GetMethod("AsString"),
+                        Runtime));
+            }
             case Opcode.OpNumber.OP_JOIN:
             {
                 return Expression.Call(
