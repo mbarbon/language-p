@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..14\n";
+print "1..17\n";
 
 %x = ( 'a', 1, 'b', 2, 'c', 3 );
 @x = keys %x;
@@ -28,3 +28,8 @@ while( my $k = each %x ) {
 
     $index = $index + 1;
 }
+
+print exists $x{b} ? "ok\n" : "not ok\n";
+$d = delete $x{b};
+print $d == 2 ? "ok\n" : "not ok\n";
+print exists $x{b} ? "not ok\n" : "ok\n";
