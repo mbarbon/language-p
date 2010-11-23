@@ -78,6 +78,22 @@ namespace org.mbarbon.p.values
             return new P5Scalar(runtime, hash.ContainsKey(k));
         }
 
+        public IP5Any Delete(Runtime runtime, IP5Any key)
+        {
+            string k = key.AsString(runtime);
+            IP5Any value;
+            bool has_value = hash.TryGetValue(k, out value);
+
+            if (has_value)
+            {
+                hash.Remove(k);
+
+                return value;
+            }
+            else
+                return new P5Scalar(runtime);
+        }
+
         public virtual P5Scalar AsScalar(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual int AsInteger(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual double AsFloat(Runtime runtime) { throw new System.NotImplementedException(); }

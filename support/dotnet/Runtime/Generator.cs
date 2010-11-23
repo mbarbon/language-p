@@ -1540,6 +1540,14 @@ namespace org.mbarbon.p.runtime
                     Generate(sub, op.Childs[0]),
                     Expression.Constant(ea.Create != 0));
             }
+            case Opcode.OpNumber.OP_DELETE_HASH:
+            {
+                return Expression.Call(
+                    Generate(sub, op.Childs[1]),
+                    typeof(P5Hash).GetMethod("Delete"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
+            }
             case Opcode.OpNumber.OP_EXISTS_ARRAY:
             {
                 return Expression.Call(
