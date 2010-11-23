@@ -71,6 +71,7 @@
     <Compile Include="Values\ActiveScalar.cs" />
     <Compile Include="Values\Pos.cs" />
     <Compile Include="Values\Range.cs" />
+    <Compile Include="Values\Vec.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

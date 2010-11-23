@@ -1776,6 +1776,15 @@ namespace org.mbarbon.p.runtime
 
                 return Expression.Block(typeof(void), exps);
             }
+            case Opcode.OpNumber.OP_VEC:
+            {
+                return Expression.New(
+                    typeof(P5Vec).GetConstructor(new[] { typeof(Runtime), typeof(IP5Any), typeof(IP5Any), typeof(IP5Any) }),
+                    Runtime,
+                    Generate(sub, op.Childs[0]),
+                    Generate(sub, op.Childs[1]),
+                    Generate(sub, op.Childs[2]));
+            }
             case Opcode.OpNumber.OP_BLESS:
             {
                 return

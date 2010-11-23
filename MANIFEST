@@ -92,6 +92,7 @@ support/dotnet/Values/StringNumber.cs
 support/dotnet/Values/SymbolTable.cs
 support/dotnet/Values/Typeglob.cs
 support/dotnet/Values/Undef.cs
+support/dotnet/Values/Vec.cs
 support/dotnet/dotnet.csproj
 support/dotnet/dotnet.sln
 support/parrot/runtime/p5array.pir
