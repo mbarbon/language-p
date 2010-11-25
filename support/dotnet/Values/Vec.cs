@@ -30,20 +30,21 @@ namespace org.mbarbon.p.values
         public override void Set(Runtime runtime, IP5Any other)
         {
             var str = value.AsString(runtime);
-            var bytes = System.Text.Encoding.UTF8.GetBytes(str);
             var intval = other.AsInteger(runtime);
 
             int byte_offset = (offset * bits) / 8;
             int bit_offset = (offset * bits) % 8;
             int mask = ((1 << bits) - 1);
-            int changed = (bytes[byte_offset] & ~(mask << bit_offset)) | ((intval & mask) << bit_offset);
 
-            bytes[byte_offset] = (byte)changed;
+            var t = new System.Text.StringBuilder(str.Length);
+            foreach (char c in str)
+                t.Append(c);
+            while (byte_offset >= t.Length)
+                t.Append((char)0);
 
-            var t = new System.Text.StringBuilder(bytes.Length);
+            int changed = (t[byte_offset] & ~(mask << bit_offset)) | ((intval & mask) << bit_offset);
 
-            foreach (byte b in bytes)
-                t.Append((char)b);
+            t[byte_offset] = (char)changed;
 
             value.SetString(runtime, t.ToString());
         }
@@ -56,7 +57,11 @@ namespace org.mbarbon.p.values
             int bit_offset = (offset * bits) % 8;
             int mask = ((1 << bits) - 1);
 
-            int intval = (str[byte_offset] >> bit_offset) & mask;
+            int intval;
+            if (byte_offset < str.Length)
+                intval = (str[byte_offset] >> bit_offset) & mask;
+            else
+                intval = 0;
 
             return new P5Scalar(runtime, intval);
         }
