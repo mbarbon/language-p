@@ -1484,12 +1484,20 @@ namespace org.mbarbon.p.runtime
                 return BinaryOperator(sub, op, ExpressionType.GreaterThan);
             case Opcode.OpNumber.OP_ADD:
                 return BinaryOperator(sub, op, ExpressionType.Add);
+            case Opcode.OpNumber.OP_ADD_ASSIGN:
+                return BinaryOperator(sub, op, ExpressionType.AddAssign);
             case Opcode.OpNumber.OP_SUBTRACT:
                 return BinaryOperator(sub, op, ExpressionType.Subtract);
+            case Opcode.OpNumber.OP_SUBTRACT_ASSIGN:
+                return BinaryOperator(sub, op, ExpressionType.SubtractAssign);
             case Opcode.OpNumber.OP_MULTIPLY:
                 return BinaryOperator(sub, op, ExpressionType.Multiply);
+            case Opcode.OpNumber.OP_MULTIPLY_ASSIGN:
+                return BinaryOperator(sub, op, ExpressionType.MultiplyAssign);
             case Opcode.OpNumber.OP_DIVIDE:
                 return BinaryOperator(sub, op, ExpressionType.Divide);
+            case Opcode.OpNumber.OP_DIVIDE_ASSIGN:
+                return BinaryOperator(sub, op, ExpressionType.DivideAssign);
             case Opcode.OpNumber.OP_PREINC:
             {
                 return Expression.Call(

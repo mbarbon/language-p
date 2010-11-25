@@ -99,6 +99,14 @@ namespace org.mbarbon.p.values
             stringValue = null;
         }
 
+        public void SetFloat(Runtime runtime, double value)
+        {
+            pos = -1;
+            flags = HasFloat;
+            floatValue = value;
+            stringValue = null;
+        }
+
         public virtual int Length(Runtime runtime)
         {
             return AsString(runtime).Length;

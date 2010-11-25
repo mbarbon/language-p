@@ -43,9 +43,13 @@ namespace org.mbarbon.p.runtime
             case ExpressionType.AndAssign:
                 return BindBitOp(target, arg, errorSuggestion);
             case ExpressionType.Add:
+            case ExpressionType.AddAssign:
             case ExpressionType.Subtract:
+            case ExpressionType.SubtractAssign:
             case ExpressionType.Multiply:
+            case ExpressionType.MultiplyAssign:
             case ExpressionType.Divide:
+            case ExpressionType.DivideAssign:
                 return BindArithOp(target, arg, errorSuggestion);
             case ExpressionType.GreaterThan:
                 return BindRelOp(target, arg, errorSuggestion);
@@ -154,43 +158,78 @@ namespace org.mbarbon.p.runtime
 
         private DynamicMetaObject BindArithOp(DynamicMetaObject target, DynamicMetaObject arg, DynamicMetaObject errorSuggestion)
         {
+            OverloadOperation ovl_op;
+            string op_method;
+            bool is_assign = false;
+
+            switch (Operation)
+            {
+            case ExpressionType.Add:
+                ovl_op = OverloadOperation.ADD;
+                op_method = "AddScalars";
+                break;
+            case ExpressionType.AddAssign:
+                ovl_op = OverloadOperation.ADD_ASSIGN;
+                op_method = "AddScalarsAssign";
+                is_assign = true;
+                break;
+            case ExpressionType.Subtract:
+                ovl_op = OverloadOperation.SUBTRACT;
+                op_method = "SubtractScalars";
+                break;
+            case ExpressionType.SubtractAssign:
+                ovl_op = OverloadOperation.SUBTRACT_ASSIGN;
+                op_method = "SubtractScalarsAssign";
+                is_assign = true;
+                break;
+            case ExpressionType.Multiply:
+                ovl_op = OverloadOperation.MULTIPLY;
+                op_method = "MultiplyScalars";
+                break;
+            case ExpressionType.MultiplyAssign:
+                ovl_op = OverloadOperation.MULTIPLY_ASSIGN;
+                op_method = "MultiplyScalarsAssign";
+                is_assign = true;
+                break;
+            case ExpressionType.Divide:
+                ovl_op = OverloadOperation.DIVIDE;
+                op_method = "DivideScalars";
+                break;
+            case ExpressionType.DivideAssign:
+                ovl_op = OverloadOperation.DIVIDE_ASSIGN;
+                op_method = "DivideScalarsAssign";
+                is_assign = true;
+                break;
+            default:
+                throw new System.Exception("Unhandled overloaded operation");
+            }
+
             if (IsScalar(target) || IsScalar(arg))
             {
-                OverloadOperation op;
-                string op_method;
+                Expression op;
 
-                switch (Operation)
-                {
-                case ExpressionType.Add:
-                    op = OverloadOperation.ADD;
-                    op_method = "AddScalars";
-                    break;
-                case ExpressionType.Subtract:
-                    op = OverloadOperation.SUBTRACT;
-                    op_method = "SubtractScalars";
-                    break;
-                case ExpressionType.Multiply:
-                    op = OverloadOperation.MULTIPLY;
-                    op_method = "MultiplyScalars";
-                    break;
-                case ExpressionType.Divide:
-                    op = OverloadOperation.DIVIDE;
-                    op_method = "DivideScalars";
-                    break;
-                default:
-                    throw new System.Exception("Unhandled overloaded operation");
-                }
+                if (is_assign)
+                    op = Expression.Call(
+                        typeof(Builtins).GetMethod(op_method),
+                        Expression.Constant(Runtime),
+                        CastScalar(target),
+                        CastScalar(arg));
+                else
+                    op = Expression.Call(
+                        typeof(Builtins).GetMethod(op_method),
+                        Expression.Constant(Runtime),
+                        Expression.New(
+                            typeof(P5Scalar).GetConstructor(new[] { typeof(IP5ScalarBody) }),
+                            Expression.Constant(null, typeof(IP5ScalarBody))),
+                        CastScalar(target),
+                        CastScalar(arg));
 
                 return new DynamicMetaObject(
                     CallOverload(
                         target,
                         arg,
-                        op,
-                        Expression.Call(
-                            typeof(Builtins).GetMethod(op_method),
-                            Expression.Constant(Runtime),
-                            CastScalar(target),
-                            CastScalar(arg))),
+                        ovl_op,
+                        op),
                     BindingRestrictions.GetExpressionRestriction(
                         Expression.Or(
                             Expression.TypeEqual(target.Expression, typeof(P5Scalar)),
@@ -198,6 +237,9 @@ namespace org.mbarbon.p.runtime
             }
             else if (IsAny(target) && IsAny(arg))
             {
+                if (is_assign)
+                    return null;
+
                 // TODO must handle double promotion (esp. for division)
                 Expression op =
                     Expression.MakeBinary(

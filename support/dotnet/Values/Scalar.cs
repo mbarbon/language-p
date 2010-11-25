@@ -116,6 +116,16 @@ namespace org.mbarbon.p.values
                 body = new P5StringNumber(runtime, value);
         }
 
+        public void SetFloat(Runtime runtime, double value)
+        {
+            var str_num = body as P5StringNumber;
+
+            if (str_num != null)
+                str_num.SetFloat(runtime, value);
+            else
+                body = new P5StringNumber(runtime, value);
+        }
+
         public virtual int Length(Runtime runtime)
         {
             return body.Length(runtime);

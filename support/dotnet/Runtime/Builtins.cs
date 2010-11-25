@@ -588,36 +588,55 @@ namespace org.mbarbon.p.runtime
                                           overload == oright);
         }
 
-        public static P5Scalar AddScalars(Runtime runtime, P5Scalar left, P5Scalar right)
+        public static P5Scalar AddScalarsAssign(Runtime runtime, P5Scalar left, P5Scalar right)
         {
-            // TODO handle integer addition and integer -> float promotion
-            return new P5Scalar(
-                runtime,
-                left.AsFloat(runtime) + right.AsFloat(runtime));
+            return AddScalars(runtime, left, left, right);
         }
 
-        public static P5Scalar SubtractScalars(Runtime runtime, P5Scalar left, P5Scalar right)
+        public static P5Scalar AddScalars(Runtime runtime, P5Scalar res, P5Scalar left, P5Scalar right)
         {
             // TODO handle integer addition and integer -> float promotion
-            return new P5Scalar(
-                runtime,
-                left.AsFloat(runtime) - right.AsFloat(runtime));
+            res.SetFloat(runtime, left.AsFloat(runtime) + right.AsFloat(runtime));
+            return res;
         }
 
-        public static P5Scalar MultiplyScalars(Runtime runtime, P5Scalar left, P5Scalar right)
+        public static P5Scalar SubtractScalarsAssign(Runtime runtime, P5Scalar left, P5Scalar right)
         {
-            // TODO handle integer addition and integer -> float promotion
-            return new P5Scalar(
-                runtime,
-                left.AsFloat(runtime) * right.AsFloat(runtime));
+            return SubtractScalars(runtime, left, left, right);
         }
 
-        public static P5Scalar DivideScalars(Runtime runtime, P5Scalar left, P5Scalar right)
+        public static P5Scalar SubtractScalars(Runtime runtime, P5Scalar res, P5Scalar left, P5Scalar right)
         {
             // TODO handle integer addition and integer -> float promotion
-            return new P5Scalar(
-                runtime,
-                left.AsFloat(runtime) / right.AsFloat(runtime));
+            res.SetFloat(runtime, left.AsFloat(runtime) - right.AsFloat(runtime));
+
+            return res;
+        }
+
+        public static P5Scalar MultiplyScalarsAssign(Runtime runtime, P5Scalar left, P5Scalar right)
+        {
+            return MultiplyScalars(runtime, left, left, right);
+        }
+
+        public static P5Scalar MultiplyScalars(Runtime runtime, P5Scalar res, P5Scalar left, P5Scalar right)
+        {
+            // TODO handle integer addition and integer -> float promotion
+            res.SetFloat(runtime, left.AsFloat(runtime) * right.AsFloat(runtime));
+
+            return res;
+        }
+
+        public static P5Scalar DivideScalarsAssign(Runtime runtime, P5Scalar left, P5Scalar right)
+        {
+            return DivideScalars(runtime, left, left, right);
+        }
+
+        public static P5Scalar DivideScalars(Runtime runtime, P5Scalar res, P5Scalar left, P5Scalar right)
+        {
+            // TODO handle integer addition and integer -> float promotion
+            res.SetFloat(runtime, left.AsFloat(runtime) / right.AsFloat(runtime));
+
+            return res;
         }
     }
 }
