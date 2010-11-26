@@ -15,6 +15,10 @@ namespace org.mbarbon.p.runtime
         MULTIPLY_ASSIGN,
         DIVIDE,
         DIVIDE_ASSIGN,
+        SHIFT_LEFT,
+        SHIFT_LEFT_ASSIGN,
+        SHIFT_RIGHT,
+        SHIFT_RIGHT_ASSIGN,
         MAX,
     }
 
@@ -54,6 +58,18 @@ namespace org.mbarbon.p.runtime
                 break;
             case "/=":
                 AddOperation(runtime, OverloadOperation.DIVIDE_ASSIGN, value);
+                break;
+            case "<<":
+                AddOperation(runtime, OverloadOperation.SHIFT_LEFT, value);
+                break;
+            case "<<=":
+                AddOperation(runtime, OverloadOperation.SHIFT_LEFT_ASSIGN, value);
+                break;
+            case ">>":
+                AddOperation(runtime, OverloadOperation.SHIFT_RIGHT, value);
+                break;
+            case ">>=":
+                AddOperation(runtime, OverloadOperation.SHIFT_RIGHT_ASSIGN, value);
                 break;
             }
         }

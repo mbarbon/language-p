@@ -638,5 +638,29 @@ namespace org.mbarbon.p.runtime
 
             return res;
         }
+
+        public static P5Scalar LeftShiftScalarsAssign(Runtime runtime, P5Scalar left, P5Scalar right)
+        {
+            return LeftShiftScalars(runtime, left, left, right);
+        }
+
+        public static P5Scalar LeftShiftScalars(Runtime runtime, P5Scalar res, P5Scalar left, P5Scalar right)
+        {
+            res.SetInteger(runtime, left.AsInteger(runtime) << right.AsInteger(runtime));
+
+            return res;
+        }
+
+        public static P5Scalar RightShiftScalarsAssign(Runtime runtime, P5Scalar left, P5Scalar right)
+        {
+            return RightShiftScalars(runtime, left, left, right);
+        }
+
+        public static P5Scalar RightShiftScalars(Runtime runtime, P5Scalar res, P5Scalar left, P5Scalar right)
+        {
+            res.SetInteger(runtime, left.AsInteger(runtime) >> right.AsInteger(runtime));
+
+            return res;
+        }
     }
 }

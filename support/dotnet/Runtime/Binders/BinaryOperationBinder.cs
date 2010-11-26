@@ -50,11 +50,15 @@ namespace org.mbarbon.p.runtime
             case ExpressionType.MultiplyAssign:
             case ExpressionType.Divide:
             case ExpressionType.DivideAssign:
+            case ExpressionType.LeftShift:
+            case ExpressionType.LeftShiftAssign:
+            case ExpressionType.RightShift:
+            case ExpressionType.RightShiftAssign:
                 return BindArithOp(target, arg, errorSuggestion);
             case ExpressionType.GreaterThan:
                 return BindRelOp(target, arg, errorSuggestion);
             default:
-                return null;
+                throw new System.Exception("Unhandled operation value");
             }
         }
 
@@ -198,6 +202,24 @@ namespace org.mbarbon.p.runtime
             case ExpressionType.DivideAssign:
                 ovl_op = OverloadOperation.DIVIDE_ASSIGN;
                 op_method = "DivideScalarsAssign";
+                is_assign = true;
+                break;
+            case ExpressionType.LeftShift:
+                ovl_op = OverloadOperation.SHIFT_LEFT;
+                op_method = "LeftShiftScalars";
+                break;
+            case ExpressionType.LeftShiftAssign:
+                ovl_op = OverloadOperation.SHIFT_LEFT_ASSIGN;
+                op_method = "LeftShiftScalarsAssign";
+                is_assign = true;
+                break;
+            case ExpressionType.RightShift:
+                ovl_op = OverloadOperation.SHIFT_RIGHT;
+                op_method = "RightShiftScalars";
+                break;
+            case ExpressionType.RightShiftAssign:
+                ovl_op = OverloadOperation.SHIFT_RIGHT_ASSIGN;
+                op_method = "RightShiftScalarsAssign";
                 is_assign = true;
                 break;
             default:

@@ -1498,6 +1498,14 @@ namespace org.mbarbon.p.runtime
                 return BinaryOperator(sub, op, ExpressionType.Divide);
             case Opcode.OpNumber.OP_DIVIDE_ASSIGN:
                 return BinaryOperator(sub, op, ExpressionType.DivideAssign);
+            case Opcode.OpNumber.OP_SHIFT_LEFT:
+                return BinaryOperator(sub, op, ExpressionType.LeftShift);
+            case Opcode.OpNumber.OP_SHIFT_LEFT_ASSIGN:
+                return BinaryOperator(sub, op, ExpressionType.LeftShiftAssign);
+            case Opcode.OpNumber.OP_SHIFT_RIGHT:
+                return BinaryOperator(sub, op, ExpressionType.RightShift);
+            case Opcode.OpNumber.OP_SHIFT_RIGHT_ASSIGN:
+                return BinaryOperator(sub, op, ExpressionType.RightShiftAssign);
             case Opcode.OpNumber.OP_PREINC:
             {
                 return Expression.Call(
