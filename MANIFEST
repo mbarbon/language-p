@@ -243,6 +243,7 @@ t/run/011_call.t
 t/run/015_array_ops.t
 t/run/015_defined.t
 t/run/015_hash_ops.t
+t/run/015_length.t
 t/run/015_pos.t
 t/run/015_quoting.t
 t/run/015_range.t
