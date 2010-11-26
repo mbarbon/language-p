@@ -282,6 +282,11 @@ _make_binary_op( $_ ), _make_binary_op_assign( $_ ) foreach
       operator => '<<',
       new_type => 'integer',
       },
+    { name     => '_shift_right_default',
+      convert  => 'as_integer',
+      operator => '>>',
+      new_type => 'integer',
+      },
     { name     => '_bit_or_default',
       convert  => 'as_integer',
       operator => '|',
@@ -579,6 +584,27 @@ my %dispatch_shift_left =
              },
     );
 
+my %dispatch_shift_left_assign =
+  ( -1  => { -1  => \&_shift_left_default_assign,
+             },
+     10 => { -1  => \&_shift_left_overload_assign,
+             },
+    );
+
+my %dispatch_shift_right =
+  ( -1  => { -1  => \&_shift_right_default,
+             },
+     10 => { -1  => \&_shift_right_overload,
+             },
+    );
+
+my %dispatch_shift_right_assign =
+  ( -1  => { -1  => \&_shift_right_default_assign,
+             },
+     10 => { -1  => \&_shift_right_overload_assign,
+             },
+    );
+
 sub _dispatch {
     my( $table, $l, $r ) = @_;
     my $lt = $l->type;
@@ -722,6 +748,30 @@ sub o_shift_left {
     my $vl = $runtime->{_stack}[-2];
 
     return _dispatch( \%dispatch_shift_left, $vl, $vr )->( $op, $runtime, $pc );
+}
+
+sub o_shift_left_assign {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = $runtime->{_stack}[-1];
+    my $vl = $runtime->{_stack}[-2];
+
+    return _dispatch( \%dispatch_shift_left_assign, $vl, $vr )->( $op, $runtime, $pc );
+}
+
+sub o_shift_right {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = $runtime->{_stack}[-1];
+    my $vl = $runtime->{_stack}[-2];
+
+    return _dispatch( \%dispatch_shift_right, $vl, $vr )->( $op, $runtime, $pc );
+}
+
+sub o_shift_right_assign {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = $runtime->{_stack}[-1];
+    my $vl = $runtime->{_stack}[-2];
+
+    return _dispatch( \%dispatch_shift_right_assign, $vl, $vr )->( $op, $runtime, $pc );
 }
 
 sub o_push_element {
