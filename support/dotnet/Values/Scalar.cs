@@ -131,6 +131,11 @@ namespace org.mbarbon.p.values
             return body.Length(runtime);
         }
 
+        public virtual int StringLength(Runtime runtime)
+        {
+            return body.Length(runtime);
+        }
+
         public virtual P5Scalar PreIncrement(Runtime runtime)
         {
             var sb = body as P5StringNumber;

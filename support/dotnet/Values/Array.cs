@@ -192,6 +192,11 @@ namespace org.mbarbon.p.values
         public virtual bool AsBoolean(Runtime runtime) { return array.Count != 0; }
         public virtual bool IsDefined(Runtime runtime) { return true; }
 
+        public virtual int StringLength(Runtime runtime)
+        {
+            return AsString(runtime).Length;
+        }
+
         public virtual P5Handle AsHandle(Runtime runtime)
         {
             throw new System.NotImplementedException("No AsHandle for P5Array");
