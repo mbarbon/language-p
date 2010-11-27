@@ -107,6 +107,20 @@ namespace org.mbarbon.p.runtime
                                          Opcode.ContextValues context,
                                          P5Scalar file)
         {
+            if (file.IsInteger(runtime) || file.IsFloat(runtime))
+            {
+                var value = file.AsFloat(runtime);
+                var version = runtime.SymbolTable.GetScalar(runtime, "]", false);
+                var version_f = version.AsFloat(runtime);
+
+                if (version_f >= value)
+                    return new P5Scalar(runtime, true);
+
+                var msg = string.Format("Perl {0:F} required--this is only {1:F} stopped.", value, version_f);
+
+                throw new P5Exception(runtime, msg);
+            }
+
             var file_s = file.AsString(runtime);
             var inc = runtime.SymbolTable.GetHash(runtime, "INC", true);
 
