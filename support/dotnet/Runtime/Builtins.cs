@@ -151,6 +151,32 @@ namespace org.mbarbon.p.runtime
             return int.Parse(s);
         }
 
+        public static P5Scalar Negate(Runtime runtime, P5Scalar value)
+        {
+            if (value.IsString(runtime))
+            {
+                string str = value.AsString(runtime);
+                bool word = true;
+
+                foreach (var c in str)
+                {
+                    if (!(c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')))
+                    {
+                        word = false;
+                        break;
+                    }
+                }
+
+                if (word)
+                    return new P5Scalar(runtime, "-" + str);
+            }
+
+            if (value.IsFloat(runtime))
+                return new P5Scalar(runtime, -value.AsFloat(runtime));
+
+            return new P5Scalar(runtime, -value.AsInteger(runtime));
+        }
+
         public static P5Scalar BitNot(Runtime runtime, P5Scalar value)
         {
             if (value.IsString(runtime))

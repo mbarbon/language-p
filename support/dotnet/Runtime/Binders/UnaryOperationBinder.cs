@@ -45,6 +45,10 @@ namespace org.mbarbon.p.runtime
             case ExpressionType.Negate:
                 default_conversion = "AsInteger";
                 default_result = typeof(int);
+                scalar_expression = Expression.Call(
+                    typeof(Builtins).GetMethod("Negate"),
+                    Expression.Constant(Runtime),
+                    Utils.CastScalar(target));
                 break;
             case ExpressionType.Not:
                 default_conversion = "AsBoolean";
