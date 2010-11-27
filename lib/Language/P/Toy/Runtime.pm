@@ -2,7 +2,7 @@ package Language::P::Toy::Runtime;
 
 use strict;
 use warnings;
-use parent qw(Class::Accessor::Fast);
+use parent qw(Language::P::Object);
 
 use Language::P::Toy::Value::MainSymbolTable;
 use Language::P::Constants qw(:all);

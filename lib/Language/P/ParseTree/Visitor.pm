@@ -2,7 +2,7 @@ package Language::P::ParseTree::Visitor;
 
 use strict;
 use warnings;
-use parent qw(Class::Accessor::Fast);
+use parent qw(Language::P::Object);
 
 sub new {
     my( $class, $args ) = @_;

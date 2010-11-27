@@ -2,7 +2,7 @@ package Language::P::Exception;
 
 use strict;
 use warnings;
-use parent qw(Class::Accessor::Fast);
+use parent qw(Language::P::Object);
 
 __PACKAGE__->mk_accessors( qw(position message) );
 

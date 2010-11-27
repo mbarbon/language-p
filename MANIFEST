@@ -22,6 +22,7 @@ lib/Language/P/Intermediate/Generator.pm
 lib/Language/P/Intermediate/Serialize.pm
 lib/Language/P/Intermediate/Transform.pm
 lib/Language/P/Lexer.pm
+lib/Language/P/Object.pm
 lib/Language/P/Parrot/BootstrapRuntime.pm
 lib/Language/P/Parrot/Generator.pm
 lib/Language/P/ParseTree.pm

@@ -182,7 +182,7 @@ package Language::P::Toy::Value::Typeglob::Body;
 
 use strict;
 use warnings;
-use parent qw(Class::Accessor::Fast);
+use parent qw(Language::P::Object);
 
 __PACKAGE__->mk_ro_accessors( qw(scalar array hash io format subroutine name) );
 

@@ -2,7 +2,7 @@ package Language::P::Intermediate::Code;
 
 use strict;
 use warnings;
-use parent qw(Class::Accessor::Fast);
+use parent qw(Language::P::Object);
 
 use Scalar::Util; # weaken
 

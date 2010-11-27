@@ -2,7 +2,7 @@ package Language::P::Parrot::Generator;
 
 use strict;
 use warnings;
-use parent qw(Class::Accessor::Fast);
+use parent qw(Language::P::Object);
 
 __PACKAGE__->mk_accessors( qw(file_name _intermediate _options _pending) );
 __PACKAGE__->mk_ro_accessors( qw(parrot _body _onload _body_segments

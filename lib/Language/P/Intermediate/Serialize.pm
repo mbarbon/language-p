@@ -2,7 +2,7 @@ package Language::P::Intermediate::Serialize;
 
 use strict;
 use warnings;
-use parent qw(Class::Accessor::Fast);
+use parent qw(Language::P::Object);
 
 use Language::P::Opcodes qw(:all);
 use Language::P::Intermediate::SerializeGenerated;

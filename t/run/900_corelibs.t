@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-BEGIN { print "1..13\n" }
+BEGIN { print "1..11\n" }
 BEGIN { unshift @INC, 'support/bytecode', 'lib' }
 
 use 5;
@@ -37,7 +37,3 @@ BEGIN { print "ok\n" }
 # use File::Find;
 # use File::Path;
 # use UNIVERSAL;
-use Class::Accessor;
-BEGIN { print "ok\n" }
-use Class::Accessor::Fast;
-BEGIN { print "ok\n" }
