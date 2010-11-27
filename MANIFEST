@@ -74,6 +74,7 @@ support/dotnet/Runtime/NetRegex.cs
 support/dotnet/Runtime/Overload.cs
 support/dotnet/Runtime/Regex.cs
 support/dotnet/Runtime/Runtime.cs
+support/dotnet/Runtime/Utils.cs
 support/dotnet/Values/ActiveScalar.cs
 support/dotnet/Values/Array.cs
 support/dotnet/Values/Capture.cs

@@ -13,26 +13,6 @@ namespace org.mbarbon.p.runtime
             Runtime = runtime;
         }
 
-        private static bool IsAny(DynamicMetaObject o)
-        {
-            return typeof(IP5Any).IsAssignableFrom(o.RuntimeType);
-        }
-
-        private static bool IsScalar(DynamicMetaObject o)
-        {
-            return typeof(P5Scalar).IsAssignableFrom(o.RuntimeType);
-        }
-
-        private Expression CastAny(DynamicMetaObject o)
-        {
-            return Expression.Convert(o.Expression, typeof(IP5Any));
-        }
-
-        private Expression CastScalar(DynamicMetaObject o)
-        {
-            return Expression.Convert(o.Expression, typeof(P5Scalar));
-        }
-
         public override DynamicMetaObject FallbackBinaryOperation(DynamicMetaObject target, DynamicMetaObject arg, DynamicMetaObject errorSuggestion)
         {
             switch (Operation)
@@ -89,7 +69,7 @@ namespace org.mbarbon.p.runtime
                 throw new System.Exception("Unhandled operation value");
             }
 
-            if (IsScalar(target) && IsScalar(arg))
+            if (Utils.IsScalar(target) && Utils.IsScalar(arg))
             {
                 Expression expression;
 
@@ -97,8 +77,8 @@ namespace org.mbarbon.p.runtime
                     expression = Expression.Call(
                         typeof(Builtins).GetMethod(method_name),
                         Expression.Constant(Runtime),
-                        CastScalar(target),
-                        CastScalar(arg));
+                        Utils.CastScalar(target),
+                        Utils.CastScalar(arg));
                 else
                     expression = Expression.Call(
                         typeof(Builtins).GetMethod(method_name),
@@ -106,31 +86,31 @@ namespace org.mbarbon.p.runtime
                         Expression.New(
                             typeof(P5Scalar).GetConstructor(new[] { typeof(IP5ScalarBody) }),
                             Expression.Constant(null, typeof(IP5ScalarBody))),
-                        CastScalar(target),
-                        CastScalar(arg));
+                        Utils.CastScalar(target),
+                        Utils.CastScalar(arg));
 
                 return new DynamicMetaObject(
                     expression,
                     BindingRestrictions.GetTypeRestriction(arg.Expression, typeof(P5Scalar))
                     .Merge(BindingRestrictions.GetTypeRestriction(target.Expression, typeof(P5Scalar))));
             }
-            else if (IsAny(target) && IsAny(arg))
+            else if (Utils.IsAny(target) && Utils.IsAny(arg))
             {
                 var value = Expression.MakeBinary(
                     Operation,
                     Expression.Call(
-                        CastAny(target),
+                        Utils.CastAny(target),
                         typeof(IP5Any).GetMethod("AsInteger"),
                         Expression.Constant(Runtime)),
                     Expression.Call(
-                        CastAny(arg),
+                        Utils.CastAny(arg),
                         typeof(IP5Any).GetMethod("AsInteger"),
                         Expression.Constant(Runtime)));
                 Expression expression;
 
                 if (is_assign)
                     expression = Expression.Call(
-                        CastScalar(target),
+                        Utils.CastScalar(target),
                         typeof(IP5Any).GetMethod("Assign"),
                         value);
                 else
@@ -155,8 +135,8 @@ namespace org.mbarbon.p.runtime
                     typeof(Builtins).GetMethod("CallOverload"),
                     Expression.Constant(Runtime),
                     Expression.Constant(op),
-                    CastScalar(target),
-                    CastScalar(arg)),
+                    Utils.CastScalar(target),
+                    Utils.CastScalar(arg)),
                 fallback);
         }
 
@@ -226,7 +206,7 @@ namespace org.mbarbon.p.runtime
                 throw new System.Exception("Unhandled overloaded operation");
             }
 
-            if (IsScalar(target) || IsScalar(arg))
+            if (Utils.IsScalar(target) || Utils.IsScalar(arg))
             {
                 Expression op;
 
@@ -234,8 +214,8 @@ namespace org.mbarbon.p.runtime
                     op = Expression.Call(
                         typeof(Builtins).GetMethod(op_method),
                         Expression.Constant(Runtime),
-                        CastScalar(target),
-                        CastScalar(arg));
+                        Utils.CastScalar(target),
+                        Utils.CastScalar(arg));
                 else
                     op = Expression.Call(
                         typeof(Builtins).GetMethod(op_method),
@@ -243,8 +223,8 @@ namespace org.mbarbon.p.runtime
                         Expression.New(
                             typeof(P5Scalar).GetConstructor(new[] { typeof(IP5ScalarBody) }),
                             Expression.Constant(null, typeof(IP5ScalarBody))),
-                        CastScalar(target),
-                        CastScalar(arg));
+                        Utils.CastScalar(target),
+                        Utils.CastScalar(arg));
 
                 return new DynamicMetaObject(
                     CallOverload(
@@ -257,7 +237,7 @@ namespace org.mbarbon.p.runtime
                             Expression.TypeEqual(target.Expression, typeof(P5Scalar)),
                             Expression.TypeEqual(arg.Expression, typeof(P5Scalar)))));
             }
-            else if (IsAny(target) && IsAny(arg))
+            else if (Utils.IsAny(target) && Utils.IsAny(arg))
             {
                 if (is_assign)
                     return null;
@@ -267,11 +247,11 @@ namespace org.mbarbon.p.runtime
                     Expression.MakeBinary(
                         Operation,
                         Expression.Call(
-                            CastAny(target),
+                            Utils.CastAny(target),
                             typeof(IP5Any).GetMethod("AsInteger"),
                             Expression.Constant(Runtime)),
                         Expression.Call(
-                            CastAny(target),
+                            Utils.CastAny(target),
                             typeof(IP5Any).GetMethod("AsInteger"),
                             Expression.Constant(Runtime)));
 
@@ -289,7 +269,7 @@ namespace org.mbarbon.p.runtime
 
         private DynamicMetaObject BindRelOp(DynamicMetaObject target, DynamicMetaObject arg, DynamicMetaObject errorSuggestion)
         {
-            if (IsAny(target) && IsAny(arg))
+            if (Utils.IsAny(target) && Utils.IsAny(arg))
             {
                 return new DynamicMetaObject(
                     Expression.New(
@@ -299,11 +279,11 @@ namespace org.mbarbon.p.runtime
                             Expression.MakeBinary(
                                 Operation,
                                 Expression.Call(
-                                    CastAny(target),
+                                    Utils.CastAny(target),
                                     typeof(IP5Any).GetMethod("AsFloat"),
                                     Expression.Constant(Runtime)),
                                 Expression.Call(
-                                    CastAny(arg),
+                                    Utils.CastAny(arg),
                                     typeof(IP5Any).GetMethod("AsFloat"),
                                     Expression.Constant(Runtime)))}),
                     BindingRestrictions.GetTypeRestriction(arg.Expression, arg.RuntimeType)

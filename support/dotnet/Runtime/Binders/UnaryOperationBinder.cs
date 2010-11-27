@@ -13,26 +13,6 @@ namespace org.mbarbon.p.runtime
             Runtime = runtime;
         }
 
-        private static bool IsAny(DynamicMetaObject o)
-        {
-            return typeof(IP5Any).IsAssignableFrom(o.RuntimeType);
-        }
-
-        private static bool IsScalar(DynamicMetaObject o)
-        {
-            return typeof(P5Scalar).IsAssignableFrom(o.RuntimeType);
-        }
-
-        private Expression CastAny(DynamicMetaObject o)
-        {
-            return Expression.Convert(o.Expression, typeof(IP5Any));
-        }
-
-        private Expression CastScalar(DynamicMetaObject o)
-        {
-            return Expression.Convert(o.Expression, typeof(P5Scalar));
-        }
-
         public override DynamicMetaObject FallbackUnaryOperation(DynamicMetaObject target, DynamicMetaObject errorSuggestion)
         {
             switch (Operation)
@@ -60,7 +40,7 @@ namespace org.mbarbon.p.runtime
                 scalar_expression = Expression.Call(
                     typeof(Builtins).GetMethod("BitNot"),
                     Expression.Constant(Runtime),
-                    CastScalar(target));
+                    Utils.CastScalar(target));
                 break;
             case ExpressionType.Negate:
                 default_conversion = "AsInteger";
@@ -74,11 +54,11 @@ namespace org.mbarbon.p.runtime
                 return null;
             }
 
-            if (IsScalar(target) && scalar_expression != null)
+            if (Utils.IsScalar(target) && scalar_expression != null)
                 return new DynamicMetaObject(
                     scalar_expression,
                     BindingRestrictions.GetTypeRestriction(target.Expression, typeof(P5Scalar)));
-            else if (IsAny(target))
+            else if (Utils.IsAny(target))
                 return new DynamicMetaObject(
                     Expression.New(
                         typeof(P5Scalar).GetConstructor(new[] { typeof(Runtime), default_result }),
@@ -86,7 +66,7 @@ namespace org.mbarbon.p.runtime
                         Expression.MakeUnary(
                             Operation,
                             Expression.Call(
-                                CastAny(target),
+                                Utils.CastAny(target),
                                 typeof(IP5Any).GetMethod(default_conversion),
                                 Expression.Constant(Runtime)),
                             null)),

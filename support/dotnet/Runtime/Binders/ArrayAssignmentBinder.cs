@@ -13,16 +13,6 @@ namespace org.mbarbon.p.runtime
             Context = cxt;
         }
 
-        private Expression CastAny(DynamicMetaObject o)
-        {
-            return Expression.Convert(o.Expression, typeof(IP5Any));
-        }
-
-        private Expression CastRuntime(DynamicMetaObject o)
-        {
-            return Expression.Convert(o.Expression, o.RuntimeType);
-        }
-
         public override DynamicMetaObject Bind(DynamicMetaObject target, DynamicMetaObject[] args)
         {
             DynamicMetaObject arg = args[0];
@@ -73,8 +63,8 @@ namespace org.mbarbon.p.runtime
                     typeof(IP5Any),
                     new ParameterExpression[] { lvalue, rvalue },
                     new Expression[] {
-                        Expression.Assign(lvalue, CastRuntime(target)),
-                        Expression.Assign(rvalue, CastRuntime(arg)),
+                        Expression.Assign(lvalue, Utils.CastRuntime(target)),
+                        Expression.Assign(rvalue, Utils.CastRuntime(arg)),
                         assignment,
                         result } ),
                 BindingRestrictions.GetTypeRestriction(arg.Expression, arg.RuntimeType)
@@ -89,7 +79,7 @@ namespace org.mbarbon.p.runtime
                 lvalue,
                 target.RuntimeType.GetMethod("AssignArray"),
                 Expression.Constant(Runtime),
-                CastAny(arg));
+                Utils.CastAny(arg));
             var result = Expression.Condition(
                 Expression.Equal(
                     ContextExpression(),
@@ -104,7 +94,7 @@ namespace org.mbarbon.p.runtime
                 typeof(IP5Any),
                 new ParameterExpression[] { assign_result, lvalue },
                 new Expression[] {
-                    Expression.Assign(lvalue, CastRuntime(target)),
+                    Expression.Assign(lvalue, Utils.CastRuntime(target)),
                     Expression.Assign(assign_result, assignment),
                     result } );
 
