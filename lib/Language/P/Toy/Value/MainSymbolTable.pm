@@ -2,7 +2,7 @@ package Language::P::Toy::Value::MainSymbolTable;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::SymbolTable);
+use parent qw(Language::P::Toy::Value::SymbolTable);
 
 use Config;
 

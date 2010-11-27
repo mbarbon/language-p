@@ -16,6 +16,7 @@ my $build = My::Build->new
           'Test::Differences' => '0.47',
           'TAP::Harness'      => '3.10',
           'perl'              => '5.8.3',
+          'parent'            => '0.223',
           },
     get_options          =>
         { parrot         =>

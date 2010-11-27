@@ -2,7 +2,7 @@ package Language::P::Parser;
 
 use strict;
 use warnings;
-use base qw(Class::Accessor::Fast);
+use parent qw(Class::Accessor::Fast);
 
 use Exporter 'import';
 

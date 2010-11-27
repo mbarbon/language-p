@@ -2,7 +2,7 @@ package Language::P::Intermediate::Generator;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Visitor);
+use parent qw(Language::P::ParseTree::Visitor);
 
 __PACKAGE__->mk_accessors( qw(_code_segments _current_basic_block _options
                               _label_count _temporary_count _current_block

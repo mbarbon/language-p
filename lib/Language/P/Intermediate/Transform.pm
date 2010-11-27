@@ -2,7 +2,7 @@ package Language::P::Intermediate::Transform;
 
 use strict;
 use warnings;
-use base qw(Class::Accessor::Fast);
+use parent qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_accessors( qw(_temporary_count _current_basic_block
                               _converting _queue _stack _converted

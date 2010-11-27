@@ -2,7 +2,7 @@ package Language::P::Toy::Value::Pos;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::ActiveScalar);
+use parent qw(Language::P::Toy::Value::ActiveScalar);
 
 __PACKAGE__->mk_ro_accessors( qw(value) );
 

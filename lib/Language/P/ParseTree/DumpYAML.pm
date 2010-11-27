@@ -2,7 +2,7 @@ package Language::P::ParseTree::DumpYAML;
 
 use strict;
 use warnings;
-use base qw(Language::P::ParseTree::Visitor);
+use parent qw(Language::P::ParseTree::Visitor);
 
 use YAML qw(Dump Bless);
 

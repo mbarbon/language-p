@@ -2,7 +2,7 @@ package Language::P::Toy::Value::ActiveScalar;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::Scalar);
+use parent qw(Language::P::Toy::Value::Scalar);
 
 sub type { 14 }
 
@@ -118,7 +118,7 @@ package Language::P::Toy::Value::ActiveScalarCallbacks;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::ActiveScalar);
+use parent qw(Language::P::Toy::Value::ActiveScalar);
 
 __PACKAGE__->mk_ro_accessors( qw(get_callback set_callback) );
 

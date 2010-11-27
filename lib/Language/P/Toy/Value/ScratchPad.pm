@@ -2,7 +2,7 @@ package Language::P::Toy::Value::ScratchPad;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::Any);
+use parent qw(Language::P::Toy::Value::Any);
 
 use Language::P::Constants qw(VALUE_SCALAR VALUE_ARRAY VALUE_HASH);
 use Language::P::Toy::Value::Undef;

@@ -2,7 +2,7 @@ package Language::P::Intermediate::BasicBlock;
 
 use strict;
 use warnings;
-use base qw(Class::Accessor::Fast);
+use parent qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_ro_accessors( qw(bytecode start_label lexical_state scope
                                  predecessors successors dead) );

@@ -2,7 +2,7 @@ package Language::P::Parser::Lexicals;
 
 use strict;
 use warnings;
-use base qw(Class::Accessor::Fast);
+use parent qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_ro_accessors( qw(outer names is_subroutine
                                  top_level) );

@@ -2,7 +2,7 @@ package Language::P::Toy::Value::Array;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::Any);
+use parent qw(Language::P::Toy::Value::Any);
 
 __PACKAGE__->mk_ro_accessors( qw(array) );
 
@@ -269,7 +269,7 @@ package Language::P::Toy::Value::Array::Iterator;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::Any);
+use parent qw(Language::P::Toy::Value::Any);
 
 __PACKAGE__->mk_ro_accessors( qw(array index) );
 

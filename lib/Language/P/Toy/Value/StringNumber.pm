@@ -2,7 +2,7 @@ package Language::P::Toy::Value::StringNumber;
 
 use strict;
 use warnings;
-use base qw(Language::P::Toy::Value::Scalar);
+use parent qw(Language::P::Toy::Value::Scalar);
 
 __PACKAGE__->mk_ro_accessors( qw(string integer float) );
 

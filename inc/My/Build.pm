@@ -2,7 +2,7 @@ package My::Build;
 
 use strict;
 use warnings;
-use base qw(Module::Build);
+use parent qw(Module::Build);
 
 use File::Basename;
 
