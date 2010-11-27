@@ -1822,7 +1822,7 @@ namespace org.mbarbon.p.runtime
                     Expression.Call(
                         typeof(Builtins).GetMethod("Bless"),
                         Runtime,
-                        Generate(sub, op.Childs[0]),
+                        Expression.Convert(Generate(sub, op.Childs[0]), typeof(P5Scalar)),
                         Generate(sub, op.Childs[1]));
             }
             case Opcode.OpNumber.OP_CALL_METHOD:
