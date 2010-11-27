@@ -61,6 +61,7 @@
     <Compile Include="Runtime\Binders\BinaryOperationBinder.cs" />
     <Compile Include="Runtime\Binders\ArrayAssignmentBinder.cs" />
     <Compile Include="Runtime\Binders\UnaryOperationBinder.cs" />
+    <Compile Include="Runtime\Binders\UnaryIncrementBinder.cs" />
     <Compile Include="Runtime\Utils.cs" />
     <Compile Include="Values\Handle.cs" />
     <Compile Include="Values\Code.cs" />

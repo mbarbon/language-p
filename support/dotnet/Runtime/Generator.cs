@@ -942,16 +942,13 @@ namespace org.mbarbon.p.runtime
                     exps);
         }
 
-        private Expression UnaryOperator(Subroutine sub, Opcode op, ExpressionType operation)
+        private Expression UnaryOperator(Subroutine sub, Opcode op, Expression binder)
         {
             var delegateType = typeof(Func<CallSite, object, object>);
             var siteType = typeof(CallSite<Func<CallSite, object, object>>);
             var initExpr = Expression.Call(
                 siteType.GetMethod("Create"),
-                Expression.New(
-                    typeof(P5UnaryOperationBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
-                    Expression.Constant(operation),
-                    ModuleGenerator.InitRuntime));
+                binder);
             var staticField = ModuleGenerator.AddField(initExpr, siteType);
 
             var res =
@@ -965,6 +962,26 @@ namespace org.mbarbon.p.runtime
                     Generate(sub, op.Childs[0]));
 
             return Expression.Convert(res, typeof(IP5Any));
+        }
+
+        private Expression UnaryOperator(Subroutine sub, Opcode op, ExpressionType operation)
+        {
+            return UnaryOperator(
+                sub, op,
+                Expression.New(
+                    typeof(P5UnaryOperationBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
+                    Expression.Constant(operation),
+                    ModuleGenerator.InitRuntime));
+        }
+
+        private Expression UnaryIncrement(Subroutine sub, Opcode op, ExpressionType operation)
+        {
+            return UnaryOperator(
+                sub, op,
+                Expression.New(
+                    typeof(P5UnaryIncrementBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
+                    Expression.Constant(operation),
+                    ModuleGenerator.InitRuntime));
         }
 
         private Expression BinaryOperator(Subroutine sub, Opcode op, Expression binder)
@@ -1507,33 +1524,13 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_SHIFT_RIGHT_ASSIGN:
                 return BinaryOperator(sub, op, ExpressionType.RightShiftAssign);
             case Opcode.OpNumber.OP_PREINC:
-            {
-                return Expression.Call(
-                    Generate(sub, op.Childs[0]),
-                    typeof(P5Scalar).GetMethod("PreIncrement"),
-                    Runtime);
-            }
+                return UnaryIncrement(sub, op, ExpressionType.PreIncrementAssign);
             case Opcode.OpNumber.OP_PREDEC:
-            {
-                return Expression.Call(
-                    Generate(sub, op.Childs[0]),
-                    typeof(P5Scalar).GetMethod("PreDecrement"),
-                    Runtime);
-            }
+                return UnaryIncrement(sub, op, ExpressionType.PreDecrementAssign);
             case Opcode.OpNumber.OP_POSTINC:
-            {
-                return Expression.Call(
-                    Generate(sub, op.Childs[0]),
-                    typeof(P5Scalar).GetMethod("PostIncrement"),
-                    Runtime);
-            }
+                return UnaryIncrement(sub, op, ExpressionType.PostIncrementAssign);
             case Opcode.OpNumber.OP_POSTDEC:
-            {
-                return Expression.Call(
-                    Generate(sub, op.Childs[0]),
-                    typeof(P5Scalar).GetMethod("PostDecrement"),
-                    Runtime);
-            }
+                return UnaryIncrement(sub, op, ExpressionType.PostDecrementAssign);
             case Opcode.OpNumber.OP_ARRAY_ELEMENT:
             {
                 var ea = (ElementAccess)op;
