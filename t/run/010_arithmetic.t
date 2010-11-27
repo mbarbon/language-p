@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..14\n";
+print "1..16\n";
 
 $x = 1 + 2 * 3 + 4;
 
@@ -56,3 +56,13 @@ $x = 8;
 $x /= 2;
 
 print $x == 4 ? "ok\n" : "not ok - $x\n";
+
+$x = 8;
+$z = -$x;
+
+print $z == -8 ? "ok\n" : "not ok - $x\n";
+
+$x = 'abc';
+$z = -$x;
+
+print $z eq '-abc' ? "ok\n" : "not ok - $x\n";

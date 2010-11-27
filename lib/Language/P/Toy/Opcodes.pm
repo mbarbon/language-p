@@ -1430,11 +1430,7 @@ EOT
 }
 
 _make_unary( $_ ) foreach
-  ( { name       => 'o_negate',
-      type       => 'float',
-      expression => '-$v->as_float( $runtime )',
-      },
-    { name       => 'o_stringify',
+  ( { name       => 'o_stringify',
       type       => 'string',
       expression => '$v->as_string( $runtime )',
       },
@@ -1711,6 +1707,30 @@ sub o_uc {
 
     return $pc + 1;
 }
+
+sub o_negate {
+    my( $op, $runtime, $pc ) = @_;
+    my $scalar = pop @{$runtime->{_stack}};
+
+    if( $scalar->is_string( $runtime ) ) {
+        my $str = $scalar->as_string( $runtime );
+
+        if( $str =~ /^[a-zA-Z_]+$/ ) {
+            my $val = '-' . $str;
+            push @{$runtime->{_stack}},
+                 Language::P::Toy::Value::Scalar->new_string( $runtime, $val );
+
+            return $pc + 1;
+        }
+    }
+
+    my $val = - $scalar->as_float( $runtime );
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::Scalar->new_float( $runtime, $val );
+
+    return $pc + 1;
+}
+
 
 sub o_glob_slot_create {
     my( $op, $runtime, $pc ) = @_;
