@@ -161,7 +161,7 @@ namespace org.mbarbon.p.values
 
         public virtual P5Typeglob DereferenceGlob(Runtime runtime)
         {
-            throw new System.InvalidOperationException("Not a reference");
+            return Builtins.SymbolicReferenceGlob(runtime, this, true);
         }
 
         public virtual P5Code DereferenceSubroutine(Runtime runtime)
