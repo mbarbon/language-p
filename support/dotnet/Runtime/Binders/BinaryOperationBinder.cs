@@ -35,8 +35,6 @@ namespace org.mbarbon.p.runtime
             case ExpressionType.RightShift:
             case ExpressionType.RightShiftAssign:
                 return BindArithOp(target, arg, errorSuggestion);
-            case ExpressionType.GreaterThan:
-                return BindRelOp(target, arg, errorSuggestion);
             default:
                 throw new System.Exception("Unhandled operation value");
             }
@@ -259,31 +257,6 @@ namespace org.mbarbon.p.runtime
                         Expression.Constant(Runtime),
                         op),
                     Utils.RestrictToAny(target, arg));
-            }
-
-            return null;
-        }
-
-        private DynamicMetaObject BindRelOp(DynamicMetaObject target, DynamicMetaObject arg, DynamicMetaObject errorSuggestion)
-        {
-            if (Utils.IsAny(target) && Utils.IsAny(arg))
-            {
-                return new DynamicMetaObject(
-                    Expression.New(
-                        typeof(P5Scalar).GetConstructor(new System.Type[] {typeof(Runtime), typeof(bool)}),
-                        new Expression[] {
-                            Expression.Constant(Runtime),
-                            Expression.MakeBinary(
-                                Operation,
-                                Expression.Call(
-                                    Utils.CastAny(target),
-                                    typeof(IP5Any).GetMethod("AsFloat"),
-                                    Expression.Constant(Runtime)),
-                                Expression.Call(
-                                    Utils.CastAny(arg),
-                                    typeof(IP5Any).GetMethod("AsFloat"),
-                                    Expression.Constant(Runtime)))}),
-                    Utils.RestrictToRuntimeType(arg, target));
             }
 
             return null;

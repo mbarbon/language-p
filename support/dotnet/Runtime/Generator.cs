@@ -1017,6 +1017,26 @@ namespace org.mbarbon.p.runtime
                     ModuleGenerator.InitRuntime));
         }
 
+        private Expression NumericRelOperator(Subroutine sub, Opcode op, ExpressionType operation)
+        {
+            return BinaryOperator(
+                sub, op,
+                Expression.New(
+                    typeof(P5NumericCompareBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
+                    Expression.Constant(operation),
+                    ModuleGenerator.InitRuntime));
+        }
+
+        private Expression StringRelOperator(Subroutine sub, Opcode op, ExpressionType operation)
+        {
+            return BinaryOperator(
+                sub, op,
+                Expression.New(
+                    typeof(P5StringCompareBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
+                    Expression.Constant(operation),
+                    ModuleGenerator.InitRuntime));
+        }
+
         public Expression Generate(Subroutine sub, Opcode op)
         {
             switch(op.Number)
@@ -1504,8 +1524,30 @@ namespace org.mbarbon.p.runtime
                 return BinaryOperator(sub, op, ExpressionType.And);
             case Opcode.OpNumber.OP_BIT_AND_ASSIGN:
                 return BinaryOperator(sub, op, ExpressionType.AndAssign);
+            case Opcode.OpNumber.OP_NUM_LE:
+                return NumericRelOperator(sub, op, ExpressionType.LessThanOrEqual);
+            case Opcode.OpNumber.OP_NUM_LT:
+                return NumericRelOperator(sub, op, ExpressionType.LessThan);
+            case Opcode.OpNumber.OP_NUM_EQ:
+                return NumericRelOperator(sub, op, ExpressionType.Equal);
+            case Opcode.OpNumber.OP_NUM_NE:
+                return NumericRelOperator(sub, op, ExpressionType.NotEqual);
+            case Opcode.OpNumber.OP_NUM_GE:
+                return NumericRelOperator(sub, op, ExpressionType.GreaterThanOrEqual);
             case Opcode.OpNumber.OP_NUM_GT:
-                return BinaryOperator(sub, op, ExpressionType.GreaterThan);
+                return NumericRelOperator(sub, op, ExpressionType.GreaterThan);
+            case Opcode.OpNumber.OP_STR_LE:
+                return StringRelOperator(sub, op, ExpressionType.LessThanOrEqual);
+            case Opcode.OpNumber.OP_STR_LT:
+                return StringRelOperator(sub, op, ExpressionType.LessThan);
+            case Opcode.OpNumber.OP_STR_EQ:
+                return StringRelOperator(sub, op, ExpressionType.Equal);
+            case Opcode.OpNumber.OP_STR_NE:
+                return StringRelOperator(sub, op, ExpressionType.NotEqual);
+            case Opcode.OpNumber.OP_STR_GE:
+                return StringRelOperator(sub, op, ExpressionType.GreaterThanOrEqual);
+            case Opcode.OpNumber.OP_STR_GT:
+                return StringRelOperator(sub, op, ExpressionType.GreaterThan);
             case Opcode.OpNumber.OP_ADD:
                 return BinaryOperator(sub, op, ExpressionType.Add);
             case Opcode.OpNumber.OP_ADD_ASSIGN:
