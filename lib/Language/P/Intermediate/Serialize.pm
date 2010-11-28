@@ -9,7 +9,7 @@ use Language::P::Intermediate::SerializeGenerated;
 
 sub serialize {
     my( $self, $tree, $file, $data_handle ) = @_;
-    open my $out, '>', $file or die "Unable to write '$file': $! (maybe set $ENV{P_BYTECODE_PATH} before running)";
+    open my $out, '>', $file or die "Unable to write '$file': $! (maybe set \$ENV{P_BYTECODE_PATH} before running)";
 
     $self->{sub_map} = {};
     $self->{file_map} = {};
