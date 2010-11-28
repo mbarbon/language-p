@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..16\n";
+print "1..17\n";
 
 $rs = \$s;
 $ra = \@a;
@@ -49,5 +49,9 @@ $ahe = {};
 print $#$aae == -1 ? "ok 15\n" : "not ok 15\n";
 
 # symbolic references
+@aae = ( 1, 2, 3 );
+
 $string = 'aae';
-print $#$string == -1 ? "ok 16\n" : "not ok 15\n";
+print $#$string == 2 ? "ok\n" : "not ok\n";
+
+print $#{*$string} == 2 ? "ok\n" : "not ok\n";
