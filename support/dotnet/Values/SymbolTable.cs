@@ -168,7 +168,7 @@ namespace org.mbarbon.p.values
 
             int last = packs.Length + (skip_last ? -1 : 0);
             int first = 0;
-            if (IsMain && last > 0 && packs[0] == "main")
+            if (IsMain && last > 0 && (packs[0] == "main" || packs[0] == ""))
                 first = 1;
             for (int i = first; i < last; ++i)
             {
