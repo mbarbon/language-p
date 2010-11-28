@@ -1278,7 +1278,7 @@ sub _make_compare {
 
     my $ret = $op->{new_type} eq 'int' ?
                   '$r' :
-                  'Language::P::Toy::Value::StringNumber->new( $runtime, { integer => $r } )';
+                  'Language::P::Toy::Value::Scalar->new_boolean( $runtime, $r )';
 
     eval sprintf <<'EOT',
 #line 1 %s
@@ -1371,6 +1371,11 @@ _make_compare( $_ ) foreach
       operator => '<=',
       new_type => 'scalar',
       },
+    { name     => 'o_compare_f_lt_scalar',
+      convert  => 'as_float',
+      operator => '<',
+      new_type => 'scalar',
+      },
     { name     => 'o_compare_f_eq_scalar',
       convert  => 'as_float',
       operator => '==',
@@ -1379,6 +1384,11 @@ _make_compare( $_ ) foreach
     { name     => 'o_compare_f_ne_scalar',
       convert  => 'as_float',
       operator => '!=',
+      new_type => 'scalar',
+      },
+    { name     => 'o_compare_f_ge_scalar',
+      convert  => 'as_float',
+      operator => '>=',
       new_type => 'scalar',
       },
     { name     => 'o_compare_f_gt_scalar',
@@ -1398,6 +1408,16 @@ _make_compare( $_ ) foreach
       new_type => 'int',
       },
 
+    { name     => 'o_compare_s_le_scalar',
+      convert  => 'as_string',
+      operator => 'le',
+      new_type => 'scalar',
+      },
+    { name     => 'o_compare_s_lt_scalar',
+      convert  => 'as_string',
+      operator => 'lt',
+      new_type => 'scalar',
+      },
     { name     => 'o_compare_s_eq_scalar',
       convert  => 'as_string',
       operator => 'eq',
@@ -1406,6 +1426,16 @@ _make_compare( $_ ) foreach
     { name     => 'o_compare_s_ne_scalar',
       convert  => 'as_string',
       operator => 'ne',
+      new_type => 'scalar',
+      },
+    { name     => 'o_compare_s_ge_scalar',
+      convert  => 'as_string',
+      operator => 'ge',
+      new_type => 'scalar',
+      },
+    { name     => 'o_compare_s_gt_scalar',
+      convert  => 'as_string',
+      operator => 'gt',
       new_type => 'scalar',
       },
     );
