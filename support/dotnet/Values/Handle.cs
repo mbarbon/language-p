@@ -25,6 +25,13 @@ namespace org.mbarbon.p.values
             return 1;
         }
 
+        public int Write(Runtime runtime, string value)
+        {
+            Output.Write(value);
+
+            return 1;
+        }
+
         public bool Readline(Runtime runtime, out P5Scalar result)
         {
             // TODO rewrite and optimize

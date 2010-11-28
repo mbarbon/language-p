@@ -296,6 +296,26 @@ namespace org.mbarbon.p.runtime
             return new P5Scalar(runtime, res.ToString());
         }
 
+        public static IP5Any Warn(Runtime runtime, P5Array args)
+        {
+            // TODO handle empty argument list when $@ is set and when it is not
+
+            var message = new System.Text.StringBuilder();
+
+            for (var it = args.GetEnumerator(runtime); it.MoveNext(); )
+                message.Append(it.Current.AsString(runtime));
+
+            if (message.Length > 0 && message[message.Length - 1] != '\n')
+                message.Append(string.Format(" at {0:S} line {1:D}.\n",
+                                             runtime.File, runtime.Line));
+
+            var stderr = runtime.SymbolTable.GetGlob(runtime, "STDERR", true);
+
+            stderr.Handle.Write(runtime, message.ToString());
+
+            return new P5Scalar(runtime, 1);
+        }
+
         public static P5Exception Die(Runtime runtime, P5Array args)
         {
             int argc = args.GetCount(runtime);
@@ -342,6 +362,12 @@ namespace org.mbarbon.p.runtime
             var glob = runtime.SymbolTable.GetGlob(runtime, name, create);
 
             return glob;
+        }
+
+        public static P5Typeglob SymbolicReferenceGlob(Runtime runtime, IP5ScalarBody any, bool create)
+        {
+            string name = any.AsString(runtime);
+            return SymbolicReference(runtime, name, create);
         }
 
         public static P5Scalar SymbolicReferenceScalar(Runtime runtime, IP5ScalarBody any, bool create)

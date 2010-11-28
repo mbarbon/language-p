@@ -1260,6 +1260,13 @@ namespace org.mbarbon.p.runtime
                     // thinking that this is a "normal" expression
                     Expression.Constant(null, typeof(IP5Any)));
             }
+            case Opcode.OpNumber.OP_WARN:
+            {
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("Warn"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
+            }
             case Opcode.OpNumber.OP_DO_FILE:
             {
                 return
