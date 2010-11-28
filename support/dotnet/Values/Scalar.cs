@@ -48,7 +48,7 @@ namespace org.mbarbon.p.values
             return this;
         }
 
-        public virtual IP5Any ConcatAssign(Runtime runtime, IP5Any other)
+        public P5Scalar ConcatAssign(Runtime runtime, IP5Any other)
         {
             P5StringNumber sn = body as P5StringNumber;
             if (sn == null)

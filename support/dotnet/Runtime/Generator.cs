@@ -1469,7 +1469,7 @@ namespace org.mbarbon.p.runtime
                     Expression.Convert(
                         Generate(sub, op.Childs[0]),
                         typeof(P5Scalar)),
-                    typeof(IP5Any).GetMethod("ConcatAssign"),
+                    typeof(P5Scalar).GetMethod("ConcatAssign"),
                     Runtime,
                     Generate(sub, op.Childs[1]));
             }

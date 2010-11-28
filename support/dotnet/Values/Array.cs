@@ -259,11 +259,6 @@ namespace org.mbarbon.p.values
             return this;
         }
 
-        public virtual IP5Any ConcatAssign(Runtime runtime, IP5Any other)
-        {
-            throw new System.InvalidOperationException();
-        }
-
         public virtual IP5Any Clone(Runtime runtime, int depth)
         {
             P5Array clone = new P5Array(runtime);

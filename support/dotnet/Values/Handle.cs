@@ -79,11 +79,6 @@ namespace org.mbarbon.p.values
             throw new System.NotImplementedException();
         }
 
-        public virtual IP5Any ConcatAssign(Runtime runtime, IP5Any other)
-        {
-            throw new System.InvalidOperationException();
-        }
-
         public virtual IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> iter)
         {
             return Assign(runtime, iter.MoveNext() ? iter.Current : new P5Scalar(runtime));
