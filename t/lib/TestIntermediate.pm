@@ -7,6 +7,7 @@ use t::lib::TestParser;
 use Language::P::Intermediate::Generator;
 use Language::P::Intermediate::Transform;
 use Language::P::Opcodes;
+use Language::P::Constants qw(:all);
 
 use Exporter 'import';
 our @EXPORT_OK = qw(generate_main basic_blocks blocks_as_string
@@ -76,6 +77,9 @@ sub generate_and_diff {
     my $blocks = generate_main( $code );
     my $asm_string = blocks_as_string( $blocks );
 
+    $assembly =~ s{([= ])((?:NUM|CXT|FLAG|CONST|STRING|VALUE|OP|DECLARATION|PROTO|CHANGED|RX_CLASS|RX_GROUP|RX_POSIX|RX_ASSERTION)_[A-Z_\|]+)}
+                  {$1 . ( eval $2 or die $@ )}eg;
+
     require Test::Differences;
 
     local $Test::Builder::Level = $Test::Builder::Level + 1;
@@ -87,6 +91,9 @@ sub generate_tree_and_diff {
     my $blocks = generate_main_tree( $code );
     my $asm_string = blocks_as_string( $blocks );
 
+    $assembly =~ s{([= ])((?:NUM|CXT|FLAG|CONST|STRING|VALUE|OP|DECLARATION|PROTO|CHANGED|RX_CLASS|RX_GROUP|RX_POSIX|RX_ASSERTION)_[A-Z_\|]+)}
+                  {$1 . ( eval $2 or die $@ )}eg;
+
     require Test::Differences;
 
     local $Test::Builder::Level = $Test::Builder::Level + 1;
@@ -97,6 +104,9 @@ sub generate_ssa_and_diff {
     my( $code, $assembly ) = @_;
     my $blocks = generate_main_ssa( $code );
     my $asm_string = blocks_as_string( $blocks );
+
+    $assembly =~ s{([= ])((?:NUM|CXT|FLAG|CONST|STRING|VALUE|OP|DECLARATION|PROTO|CHANGED|RX_CLASS|RX_GROUP|RX_POSIX|RX_ASSERTION)_[A-Z_\|]+)}
+                  {$1 . ( eval $2 or die $@ )}eg;
 
     require Test::Differences;
 
