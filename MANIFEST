@@ -284,6 +284,8 @@ t/run/500_isa.t
 t/run/700_overload.t
 t/run/705_vec.t
 t/run/900_corelibs.t
+t/run/920_constant.t
+t/run/923_exporter.t
 t/run/files/Bar.pm
 t/run/files/Foo.pm
 t/run/files/Moo.pm
