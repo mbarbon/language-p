@@ -18,6 +18,11 @@ namespace org.mbarbon.p.runtime
             return new P5Scalar(runtime, 1);
         }
 
+        public static void TracePosition(string file, int line)
+        {
+            System.Console.WriteLine(string.Format("{0:S}:{1:D}", file, line));
+        }
+
         public static P5Scalar Bless(Runtime runtime, P5Scalar reference, IP5Any pack)
         {
             var pack_str = pack.AsString(runtime);

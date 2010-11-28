@@ -845,6 +845,13 @@ namespace org.mbarbon.p.runtime
                 Expression.Assign(
                     Expression.Field(Runtime, "Line"),
                     Expression.Constant(op.Position.Line)));
+/*
+            expressions.Add(
+                Expression.Call(
+                    typeof(Builtins).GetMethod("TracePosition"),
+                    Expression.Constant(op.Position.File),
+                    Expression.Constant(op.Position.Line)));
+*/
         }
 
         public void Generate(Subroutine sub, BasicBlock bb,
