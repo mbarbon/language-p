@@ -642,33 +642,51 @@ namespace org.mbarbon.p.runtime
             return RxStates[index];
         }
 
-        private ParameterExpression GetLexical(int index, Opcode.Sigil slot)
+        private Expression GetLexical(int index, Opcode.Sigil slot)
         {
             while (Lexicals.Count <= index)
                 Lexicals.Add(null);
+
+            var type = TypeForSlot(slot);
             if (Lexicals[index] == null)
-                Lexicals[index] =
-                    Expression.Variable(TypeForSlot(slot));
+                Lexicals[index] = Expression.Variable(type);
 
             return Lexicals[index];
         }
 
-        private Expression GetLexicalPad(LexicalInfo info)
+        private Expression GetLexicalValue(int index, Opcode.Sigil slot)
         {
-            return GetLexicalPad(info, false);
+            var lex = GetLexical(index, slot);
+            var type = TypeForSlot(slot);
+
+            return Expression.Condition(
+                Expression.NotEqual(
+                    lex,
+                    Expression.Constant(null, type)),
+                lex,
+                Expression.Assign(
+                    lex,
+                    Expression.New(
+                        type.GetConstructor(ProtoRuntime),
+                        Runtime)));
         }
 
-        private Expression GetLexicalPad(LexicalInfo info, bool writable)
+        private Expression GetLexicalPadValue(LexicalInfo info)
         {
-            var item =
-                Expression.MakeIndex(
-                    Pad, Pad.Type.GetProperty("Item"),
-                    new Expression[] { Expression.Constant(info.Index) });
+            return Expression.Convert(
+                Expression.Call(
+                    Pad,
+                    typeof(P5ScratchPad).GetMethod(MethodForSlot(info.Slot)),
+                    Runtime,
+                    Expression.Constant(info.Index)),
+                TypeForSlot(info.Slot));
+        }
 
-            if (writable)
-                return item;
-            else
-                return Expression.Convert(item, TypeForSlot(info.Slot));
+        private Expression GetLexicalPad(LexicalInfo info)
+        {
+            return Expression.MakeIndex(
+                Pad, Pad.Type.GetProperty("Item"),
+                new Expression[] { Expression.Constant(info.Index) });
         }
 
         private Dictionary<int, bool> GeneratedScopes;
@@ -796,24 +814,6 @@ namespace org.mbarbon.p.runtime
                 if ((sub.Scopes[i].Flags & Scope.SCOPE_VALUE) != 0)
                     GenerateScope(sub, sub.Scopes[i]);
             GenerateScope(sub, sub.Scopes[0]);
-
-            // remove the dummy entry for @_ if present
-            if (Lexicals.Count > 0 && Lexicals[0] == null)
-                Lexicals.RemoveAt(0);
-            if (Lexicals.Count != 0)
-            {
-                List<Expression> init_exps = new List<Expression>();
-                foreach (var lex in Lexicals)
-                {
-                    init_exps.Add(
-                        Expression.Assign(
-                            lex,
-                            Expression.New(
-                                lex.Type.GetConstructor(ProtoRuntime),
-                                Runtime)));
-                }
-                Blocks.Insert(0, Expression.Block(typeof(void), init_exps));
-            }
 
             var vars = new List<ParameterExpression>();
             AddVars(vars, Variables);
@@ -1810,7 +1810,7 @@ namespace org.mbarbon.p.runtime
             {
                 Lexical lx = (Lexical)op;
 
-                return lx.LexicalIndex == 0 && !IsMain ? Arguments : GetLexical(lx.LexicalIndex, lx.Slot);
+                return lx.LexicalIndex == 0 && !IsMain ? Arguments : GetLexicalValue(lx.LexicalIndex, lx.Slot);
             }
             case Opcode.OpNumber.OP_LEXICAL_CLEAR:
             {
@@ -1832,19 +1832,19 @@ namespace org.mbarbon.p.runtime
             {
                 Lexical lx = (Lexical)op;
 
-                return GetLexicalPad(lx.LexicalInfo);
+                return GetLexicalPadValue(lx.LexicalInfo);
             }
             case Opcode.OpNumber.OP_LEXICAL_PAD_CLEAR:
             {
                 Lexical lx = (Lexical)op;
-                Expression lexvar = GetLexicalPad(lx.LexicalInfo, true);
+                Expression lexvar = GetLexicalPad(lx.LexicalInfo);
 
                 return Expression.Assign(lexvar, Expression.Constant(null, lexvar.Type));
             }
             case Opcode.OpNumber.OP_LEXICAL_PAD_SET:
             {
                 Lexical lx = (Lexical)op;
-                Expression lexvar = GetLexicalPad(lx.LexicalInfo, true);
+                Expression lexvar = GetLexicalPad(lx.LexicalInfo);
 
                 return Expression.Assign(
                     lexvar,
@@ -1853,7 +1853,7 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_LOCALIZE_LEXICAL_PAD:
             {
                 LocalLexical lx = (LocalLexical)op;
-                Expression lexvar = GetLexicalPad(lx.LexicalInfo, true);
+                Expression lexvar = GetLexicalPad(lx.LexicalInfo);
                 var saved = GetTemporary(lx.Index, typeof(IP5Any));
 
                 return Expression.Assign(saved, lexvar);
@@ -1862,7 +1862,7 @@ namespace org.mbarbon.p.runtime
             {
                 var exps = new List<Expression>();
                 LocalLexical lx = (LocalLexical)op;
-                Expression lexvar = GetLexicalPad(lx.LexicalInfo, true);
+                Expression lexvar = GetLexicalPad(lx.LexicalInfo);
                 var saved = GetTemporary(lx.Index, typeof(IP5Any));
 
                 exps.Add(

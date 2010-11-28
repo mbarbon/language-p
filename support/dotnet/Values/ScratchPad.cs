@@ -87,6 +87,21 @@ namespace org.mbarbon.p.values
             return closure;
         }
 
+        public IP5Any GetScalar(Runtime runtime, int index)
+        {
+            return this[index] != null ? this[index] : this[index] = new P5Scalar(runtime);
+        }
+
+        public IP5Any GetArray(Runtime runtime, int index)
+        {
+            return this[index] != null ? this[index] : this[index] = new P5Array(runtime);
+        }
+
+        public IP5Any GetHash(Runtime runtime, int index)
+        {
+            return this[index] != null ? this[index] : this[index] = new P5Hash(runtime);
+        }
+
         private List<LexicalInfo> Lexicals;
     }
 }
