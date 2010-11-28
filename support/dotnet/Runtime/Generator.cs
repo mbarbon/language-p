@@ -1426,10 +1426,20 @@ namespace org.mbarbon.p.runtime
                 return GenerateJump(sub, op, "AsString",
                                     ExpressionType.Equal);
             }
+            case Opcode.OpNumber.OP_JUMP_IF_S_NE:
+            {
+                return GenerateJump(sub, op, "AsString",
+                                    ExpressionType.NotEqual);
+            }
             case Opcode.OpNumber.OP_JUMP_IF_F_EQ:
             {
                 return GenerateJump(sub, op, "AsFloat",
                                     ExpressionType.Equal);
+            }
+            case Opcode.OpNumber.OP_JUMP_IF_F_NE:
+            {
+                return GenerateJump(sub, op, "AsFloat",
+                                    ExpressionType.NotEqual);
             }
             case Opcode.OpNumber.OP_JUMP_IF_F_GE:
             {
