@@ -166,7 +166,7 @@ namespace org.mbarbon.p.values
 
         public virtual P5Code DereferenceSubroutine(Runtime runtime)
         {
-            throw new System.InvalidOperationException("Not a reference");
+            return Builtins.SymbolicReferenceCode(runtime, this, true);
         }
 
         public virtual int GetPos(Runtime runtime)
