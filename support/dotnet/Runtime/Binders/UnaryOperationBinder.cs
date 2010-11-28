@@ -74,7 +74,7 @@ namespace org.mbarbon.p.runtime
                                 typeof(IP5Any).GetMethod(default_conversion),
                                 Expression.Constant(Runtime)),
                             null)),
-                    Utils.RestrictToScalar(target));
+                    Utils.RestrictToRuntimeType(target));
 
             return null;
         }

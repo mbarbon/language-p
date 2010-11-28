@@ -38,6 +38,11 @@ namespace org.mbarbon.p.runtime
                 .Merge(BindingRestrictions.GetTypeRestriction(b.Expression, b.RuntimeType));
         }
 
+        public static BindingRestrictions RestrictToRuntimeType(DynamicMetaObject a)
+        {
+            return BindingRestrictions.GetTypeRestriction(a.Expression, a.RuntimeType);
+        }
+
         public static BindingRestrictions RestrictToScalar(DynamicMetaObject a, DynamicMetaObject b)
         {
             return BindingRestrictions.GetTypeRestriction(a.Expression, typeof(P5Scalar))
