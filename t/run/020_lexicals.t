@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..8\n";
+print "1..12\n";
 
 print !defined( get() ) ? "ok 1\n" : "not ok 1\n";
 
@@ -36,3 +36,19 @@ sub test {
 }
 
 test( a => 7, b => 8 );
+
+foreach ( 1, 2 ) {
+    my $x = 1;
+
+    print "ok\n";
+}
+
+sub test2 {
+    foreach ( 1, 2 ) {
+        my $x = 1;
+
+        print "ok\n";
+    }
+}
+
+test2();
