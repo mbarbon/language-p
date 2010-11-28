@@ -61,7 +61,7 @@ namespace org.mbarbon.p.runtime
             if (Utils.IsScalar(target) && scalar_expression != null)
                 return new DynamicMetaObject(
                     scalar_expression,
-                    BindingRestrictions.GetTypeRestriction(target.Expression, typeof(P5Scalar)));
+                    Utils.RestrictToScalar(target));
             else if (Utils.IsAny(target))
                 return new DynamicMetaObject(
                     Expression.New(
@@ -74,7 +74,7 @@ namespace org.mbarbon.p.runtime
                                 typeof(IP5Any).GetMethod(default_conversion),
                                 Expression.Constant(Runtime)),
                             null)),
-                    BindingRestrictions.GetTypeRestriction(target.Expression, typeof(P5Scalar)));
+                    Utils.RestrictToScalar(target));
 
             return null;
         }

@@ -41,7 +41,7 @@ namespace org.mbarbon.p.runtime
                         Utils.CastScalar(target),
                         typeof(P5Scalar).GetMethod(method),
                         Expression.Constant(runtime)),
-                    BindingRestrictions.GetTypeRestriction(target.Expression, typeof(P5Scalar)));
+                    Utils.RestrictToScalar(target));
             }
 
             return null;

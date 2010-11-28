@@ -31,5 +31,28 @@ namespace org.mbarbon.p.runtime
         {
             return Expression.Convert(o.Expression, o.RuntimeType);
         }
+
+        public static BindingRestrictions RestrictToRuntimeType(DynamicMetaObject a, DynamicMetaObject b)
+        {
+            return BindingRestrictions.GetTypeRestriction(a.Expression, a.RuntimeType)
+                .Merge(BindingRestrictions.GetTypeRestriction(b.Expression, b.RuntimeType));
+        }
+
+        public static BindingRestrictions RestrictToScalar(DynamicMetaObject a, DynamicMetaObject b)
+        {
+            return BindingRestrictions.GetTypeRestriction(a.Expression, typeof(P5Scalar))
+                .Merge(BindingRestrictions.GetTypeRestriction(b.Expression, typeof(P5Scalar)));
+        }
+
+        public static BindingRestrictions RestrictToScalar(DynamicMetaObject a)
+        {
+            return BindingRestrictions.GetTypeRestriction(a.Expression, typeof(P5Scalar));
+        }
+
+        public static BindingRestrictions RestrictToAny(DynamicMetaObject a, DynamicMetaObject b)
+        {
+            return BindingRestrictions.GetTypeRestriction(a.Expression, typeof(IP5Any))
+                .Merge(BindingRestrictions.GetTypeRestriction(b.Expression, typeof(IP5Any)));
+        }
     }
 }

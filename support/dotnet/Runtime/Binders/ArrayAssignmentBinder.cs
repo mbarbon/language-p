@@ -67,8 +67,7 @@ namespace org.mbarbon.p.runtime
                         Expression.Assign(rvalue, Utils.CastRuntime(arg)),
                         assignment,
                         result } ),
-                BindingRestrictions.GetTypeRestriction(arg.Expression, arg.RuntimeType)
-                .Merge(BindingRestrictions.GetTypeRestriction(target.Expression, target.RuntimeType)));
+                Utils.RestrictToRuntimeType(arg, target));
         }
 
         private DynamicMetaObject BindFallback(DynamicMetaObject target, DynamicMetaObject arg)
@@ -100,8 +99,7 @@ namespace org.mbarbon.p.runtime
 
             return new DynamicMetaObject(
                 expression,
-                BindingRestrictions.GetTypeRestriction(arg.Expression, arg.RuntimeType)
-                .Merge(BindingRestrictions.GetTypeRestriction(target.Expression, target.RuntimeType)));
+                Utils.RestrictToRuntimeType(arg, target));
         }
 
         private Runtime Runtime;

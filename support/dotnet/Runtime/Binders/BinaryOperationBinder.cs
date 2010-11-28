@@ -91,8 +91,7 @@ namespace org.mbarbon.p.runtime
 
                 return new DynamicMetaObject(
                     expression,
-                    BindingRestrictions.GetTypeRestriction(arg.Expression, typeof(P5Scalar))
-                    .Merge(BindingRestrictions.GetTypeRestriction(target.Expression, typeof(P5Scalar))));
+                    Utils.RestrictToScalar(arg, target));
             }
             else if (Utils.IsAny(target) && Utils.IsAny(arg))
             {
@@ -121,8 +120,7 @@ namespace org.mbarbon.p.runtime
 
                 return new DynamicMetaObject(
                     expression,
-                    BindingRestrictions.GetTypeRestriction(arg.Expression, arg.RuntimeType)
-                    .Merge(BindingRestrictions.GetTypeRestriction(target.Expression, target.RuntimeType)));
+                    Utils.RestrictToRuntimeType(arg, target));
             }
 
             return null;
@@ -260,8 +258,7 @@ namespace org.mbarbon.p.runtime
                         typeof(P5Scalar).GetConstructor(new[] { typeof(Runtime), typeof(int) }),
                         Expression.Constant(Runtime),
                         op),
-                    BindingRestrictions.GetTypeRestriction(target.Expression, typeof(IP5Any))
-                    .Merge(BindingRestrictions.GetTypeRestriction(arg.Expression, typeof(IP5Any))));
+                    Utils.RestrictToAny(target, arg));
             }
 
             return null;
@@ -286,8 +283,7 @@ namespace org.mbarbon.p.runtime
                                     Utils.CastAny(arg),
                                     typeof(IP5Any).GetMethod("AsFloat"),
                                     Expression.Constant(Runtime)))}),
-                    BindingRestrictions.GetTypeRestriction(arg.Expression, arg.RuntimeType)
-                    .Merge(BindingRestrictions.GetTypeRestriction(target.Expression, target.RuntimeType)));
+                    Utils.RestrictToRuntimeType(arg, target));
             }
 
             return null;
