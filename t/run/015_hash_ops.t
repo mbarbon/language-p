@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..17\n";
+print "1..18\n";
 
 %x = ( 'a', 1, 'b', 2, 'c', 3 );
 @x = keys %x;
@@ -33,3 +33,5 @@ print exists $x{b} ? "ok\n" : "not ok\n";
 $d = delete $x{b};
 print $d == 2 ? "ok\n" : "not ok\n";
 print exists $x{b} ? "not ok\n" : "ok\n";
+
+print !!%x ? "ok\n" : "not ok\n";
