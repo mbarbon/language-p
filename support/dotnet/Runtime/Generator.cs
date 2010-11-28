@@ -324,7 +324,7 @@ namespace org.mbarbon.p.runtime
             constants_init.CompileToMethod(helper);
         }
 
-        FieldInfo AddSubInitialization()
+        FieldInfo AddSubInitialization(bool anonymous, FieldInfo main)
         {
             var code_ctor = typeof(P5Code).GetConstructor(
                 new[] { typeof(string), typeof(P5Code.Sub), typeof(bool) });
@@ -345,11 +345,11 @@ namespace org.mbarbon.p.runtime
                 typeof(Type).GetMethod(
                     "GetType", new Type[] { typeof(string) });
 
-
-            FieldInfo main = null;
             foreach (SubInfo si in Subroutines)
             {
                 if (si.Subroutine.IsRegex)
+                    continue;
+                if (anonymous != (si.SubName == null))
                     continue;
 
                 // new P5Code(System.Delegate.CreateDelegate(method, null)
@@ -461,7 +461,11 @@ namespace org.mbarbon.p.runtime
 
         public P5Code CompleteGeneration(Runtime runtime)
         {
-            FieldInfo main = AddSubInitialization();
+            // force generation of anonymous subroutine templates before all
+            // other subroutines
+            FieldInfo main = AddSubInitialization(true, null);
+            AddSubInitialization(false, main);
+
             AddInitMethod(main);
 
             Type mod = ClassBuilder.CreateType();
