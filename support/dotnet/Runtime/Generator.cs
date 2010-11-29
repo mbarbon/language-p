@@ -546,11 +546,6 @@ namespace org.mbarbon.p.runtime
             return Variables[index];
         }
 
-        private ParameterExpression GetVariable(int index)
-        {
-            return GetVariable(index, typeof(IP5Any));
-        }
-
         private Type TypeForSlot(Opcode.Sigil slot)
         {
             return slot == Opcode.Sigil.SCALAR   ? typeof(P5Scalar) :
@@ -558,6 +553,8 @@ namespace org.mbarbon.p.runtime
                    slot == Opcode.Sigil.HASH     ? typeof(P5Hash) :
                    slot == Opcode.Sigil.ITERATOR ? typeof(IEnumerator<IP5Any>) :
                    slot == Opcode.Sigil.GLOB     ? typeof(P5Typeglob) :
+                   slot == Opcode.Sigil.SUB      ? typeof(P5Code) :
+                   slot == Opcode.Sigil.HANDLE   ? typeof(P5Handle) :
                                                    typeof(void);
         }
 
@@ -1399,18 +1396,17 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_GET:
             {
-                return GetVariable(((GetSet)op).Index);
+                GetSet gs = (GetSet)op;
+
+                return GetVariable(gs.Index, TypeForSlot(gs.Slot));
             }
             case Opcode.OpNumber.OP_SET:
             {
+                GetSet gs = (GetSet)op;
                 var e = Generate(sub, op.Childs[0]);
 
-                // temporary workaround for the fact that not all
-                // variables can be of type IP5Any, will need to add
-                // type information to get/set opcodes, as it is done
-                // for temporaries
                 return Expression.Assign(
-                    GetVariable(((GetSet)op).Index, e.Type),
+                    GetVariable(gs.Index, TypeForSlot(gs.Slot)),
                     e);
             }
             case Opcode.OpNumber.OP_JUMP:

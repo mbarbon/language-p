@@ -312,6 +312,7 @@ namespace org.mbarbon.p.runtime
     public class GetSet : Opcode
     {
         public int Index;
+        public Opcode.Sigil Slot;
     }
 
     public class Jump : Opcode
