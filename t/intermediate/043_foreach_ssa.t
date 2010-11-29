@@ -15,11 +15,11 @@ L1:
   localize_glob_slot index=2, name="y", slot=1
   jump to=L2
 L2:
-  set index=1 (iterator_next (temporary index=0, slot=9))
-  jump_if_null to=L5 (get index=1)
+  set index=1, slot=VALUE_SCALAR (iterator_next (temporary index=0, slot=9))
+  jump_if_null to=L5 (get index=1, slot=VALUE_SCALAR)
   jump to=L3
 L3:
-  glob_slot_set slot=1 (temporary index=1, slot=5), (get index=1)
+  glob_slot_set slot=1 (temporary index=1, slot=5), (get index=1, slot=VALUE_SCALAR)
   jump to=L7
 L5:
   jump to=L6
@@ -44,11 +44,11 @@ L1:
   temporary_set index=0, slot=9 (iterator (make_list context=8 (make_list context=8 (constant_integer value=1), (constant_integer value=2))))
   jump to=L2
 L2:
-  set index=1 (iterator_next (temporary index=0, slot=9))
-  jump_if_null to=L5 (get index=1)
+  set index=1, slot=VALUE_SCALAR (iterator_next (temporary index=0, slot=9))
+  jump_if_null to=L5 (get index=1, slot=VALUE_SCALAR)
   jump to=L3
 L3:
-  lexical_set index=0 (get index=1)
+  lexical_set index=0 (get index=1, slot=VALUE_SCALAR)
   jump to=L7
 L5:
   jump to=L6
@@ -70,11 +70,11 @@ L1:
   lexical_pad index=0, slot=1
   jump to=L7
 L2:
-  set index=1 (iterator_next (temporary index=0, slot=9))
-  jump_if_null to=L5 (get index=1)
+  set index=1, slot=VALUE_SCALAR (iterator_next (temporary index=0, slot=9))
+  jump_if_null to=L5 (get index=1, slot=VALUE_SCALAR)
   jump to=L3
 L3:
-  lexical_pad_set index=0 (get index=1)
+  lexical_pad_set index=0 (get index=1, slot=VALUE_SCALAR)
   jump to=L8
 L5:
   jump to=L6

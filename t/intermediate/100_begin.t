@@ -38,14 +38,14 @@ L2:
 L1:
   lexical_state_set index=1
   require_file context=2 (constant_string value="Foo.pm")
-  set index=1 (find_method method="import" (constant_string value="Foo"))
-  set index=2 (make_array context=8 (constant_string value="Foo"), (constant_integer value=1), (constant_integer value=2))
-  jump_if_null to=L2 (get index=1)
+  set index=1, slot=VALUE_SUB (find_method method="import" (constant_string value="Foo"))
+  set index=2, slot=VALUE_ARRAY (make_array context=8 (constant_string value="Foo"), (constant_integer value=1), (constant_integer value=2))
+  jump_if_null to=L2 (get index=1, slot=VALUE_SUB)
   jump to=L3
 L2:
   jump to=L4
 L3:
-  call context=2 (get index=2), (get index=1)
+  call context=2 (get index=2, slot=VALUE_ARRAY), (get index=1, slot=VALUE_SUB)
   jump to=L4
 L4:
   end

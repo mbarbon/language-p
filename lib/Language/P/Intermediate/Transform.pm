@@ -8,6 +8,7 @@ __PACKAGE__->mk_accessors( qw(_temporary_count _current_basic_block
                               _converting _queue _stack _converted
                               _converted_segments _bytecode _phi) );
 
+use Language::P::Constants qw(:all);
 use Language::P::Opcodes qw(:all);
 use Language::P::Assembly qw(:all);
 
@@ -54,6 +55,87 @@ sub new {
     return $self;
 }
 
+# determine the slot type for the result value of an opcode
+sub _slot_type {
+    my( $op ) = @_;
+    my $opn = $op->{opcode_n};
+
+    if(    $opn == OP_GLOB_SLOT
+        || $opn == OP_GLOBAL
+        || $opn == OP_TEMPORARY
+        || $opn == OP_GET ) {
+        my $slot = $op->{attributes}{slot};
+        die "Undefined slot for $opn" unless $slot;
+
+        # for now, make no difference between scalars and globs
+        return VALUE_SCALAR if $slot == VALUE_GLOB;
+        # stashes really are just hashes
+        return VALUE_HASH if $slot == VALUE_STASH;
+
+        return $slot;
+    }
+    if(    $opn == OP_DEREFERENCE_ARRAY
+        || $opn == OP_MAKE_ARRAY
+        || $opn == OP_MAKE_LIST
+        || $opn == OP_VIVIFY_ARRAY ) {
+        # for now, make no difference between lists and arrays
+        return VALUE_ARRAY;
+    }
+    if(    $opn == OP_DEREFERENCE_HASH
+        || $opn == OP_VIVIFY_HASH ) {
+        return VALUE_HASH;
+    }
+    if(    $opn == OP_CONSTANT_SUB
+        || $opn == OP_DEREFERENCE_SUB
+        || $opn == OP_FIND_METHOD ) {
+        return VALUE_SUB;
+    }
+    if( $opn == OP_PHI ) {
+        my $params = $op->{parameters};
+        my $slot = $params->[2];
+        die "Undefined slot for OP_PHI" unless $slot;
+
+        # unify the values coming from the different basic blocks
+        for( my $i = 5; $i <= $#$params; $i += 3 ) {
+            $slot = _unify_slot_types( $slot, $params->[$i] );
+        }
+
+        return $slot;
+    }
+
+    # these are never transmitted across blocks (not unless codegen changes)
+    if(    $opn == OP_CONSTANT_REGEX
+        || $opn == OP_ITERATOR ) {
+        die "Should not happen";
+    }
+
+    # defaul to a scalar value
+    return VALUE_SCALAR;
+}
+
+# determine the common supertype of two slot types
+sub _unify_slot_types {
+    my( $a, $b ) = @_;
+
+    ( $a, $b ) = ( $b, $a ) if $b == VALUE_SCALAR;
+
+    if( $a == VALUE_SCALAR ) {
+        if(    $b == VALUE_SCALAR
+            || $b == VALUE_ARRAY
+            || $b == VALUE_HASH ) {
+            return VALUE_SCALAR;
+        }
+
+        die "Unable to unify";
+    }
+
+    if( $a != $b ) {
+        die "Unable to unify";
+    }
+
+    return $a;
+}
+
 sub _add_bytecode {
     my( $self, @bytecode ) = @_;
 
@@ -63,6 +145,7 @@ sub _add_bytecode {
 sub _opcode_set {
     my $op = opcode_np( OP_SET, $_[1]->{pos}, $_[1] );
     $op->{attributes}{index} = $_[0];
+    $op->{attributes}{slot} = $_[2] || _slot_type( $_[1] );
 
     return $op;
 }
@@ -196,13 +279,16 @@ sub to_ssa {
     # will create some useless set/get pairs, but it is good enough for now
     foreach my $phi ( @{$self->_phi} ) {
         next if $phi->{opcode_n} == OP_GET;
-        my $t = $phi->{parameters}[1];
-        if( !grep $phi->{parameters}[$_] != $t,
-            grep  $_ & 1,
-                  1 .. $#{$phi->{parameters}} ) {
+        my $index = $phi->{parameters}[1];
+        my $slot = $phi->{parameters}[2];
+        my $same = 1;
+        for( my $i = 4; $same && $i < @{$phi->{parameters}}; $i += 3 ) {
+            $same &&= $phi->{parameters}[$i] == $index;
+        }
+        if( $same ) {
             # morph the PHI opcode into a GET
             $phi->{opcode_n} = OP_GET;
-            $phi->{attributes} = { index => $t };
+            $phi->{attributes} = { index => $index, slot => $slot };
             $phi->{parameters} = undef;
         }
     }
@@ -231,9 +317,11 @@ sub _ssa_to_tree {
                     || $op->{opcode_n} != OP_SET
                     || $op->{parameters}[0]->{opcode_n} != OP_PHI;
 
-            my %block_variable = @{$op->{parameters}[0]->{parameters}};
+            my $parameters = $op->{parameters}[0]->{parameters};
+            my $result_slot = _slot_type( $op->{parameters}[0] );
 
-            while( my( $label, $variable ) = each %block_variable ) {
+            for( my $i = 0; $i < @$parameters; $i += 3 ) {
+                my( $label, $variable, $slot ) = @{$parameters}[ $i, $i + 1, $i + 2];
                 my( $block_from ) = grep $_ eq $label,
                                          @{$ssa->basic_blocks};
                 my $op_from_off = $#{$block_from->bytecode};
@@ -254,7 +342,10 @@ sub _ssa_to_tree {
                 # add SET nodes to rename the variables
                 splice @{$block_from->bytecode}, $op_from_off, 0,
                        _opcode_set( $op->{attributes}{index},
-                                    opcode_npm( OP_GET, $op->{pos}, index => $variable ) )
+                                    opcode_npm( OP_GET, $op->{pos},
+                                                index => $variable,
+                                                slot  => $slot ),
+                                    $result_slot )
                     if $op->{attributes}{index} != $variable;
             }
 
@@ -275,8 +366,11 @@ sub _get_stack {
     foreach my $value ( @values ) {
         next if $value->{opcode_n} != OP_PHI && !$force_get;
         my $name = _local_name( $self );
-        _add_bytecode $self, _opcode_set( $name, $value );
-        $value = opcode_npm( OP_GET, $value->{pos}, index => $name );
+        my $slot = _slot_type( $value );
+        _add_bytecode $self, _opcode_set( $name, $value, $slot );
+        $value = opcode_npm( OP_GET, $value->{pos},
+                             index => $name,
+                             slot  => $slot );
     }
 
     return @values;
@@ -308,7 +402,9 @@ sub _jump_to {
                 $converted->{in_stack} = [ map opcode_n( OP_PHI ), @$stack ];
                 push @{$self->_phi}, @{$converted->{in_stack}};
             } else {
-                $converted->{in_stack} = [ map opcode_nm( OP_GET, index => $_ ),
+                $converted->{in_stack} = [ map opcode_nm( OP_GET,
+                                                          index => $_->[0],
+                                                          slot  => $_->[1] ),
                                                @$out_names ];
             }
         }
@@ -320,7 +416,7 @@ sub _jump_to {
                 die "Node with multiple predecessors has no phi ($i)"
                     unless $converted->{in_stack}[$i]->{opcode_n} == OP_PHI;
                 push @{$converted->{in_stack}[$i]{parameters}},
-                     $self->_current_basic_block, $out;
+                     $self->_current_basic_block, $out->[0], $out->[1];
                 ++$i;
             }
         }
@@ -359,21 +455,27 @@ sub _emit_out_stack {
     for( my $j = 0; $j < $i; ++$j ) {
         my $op = $stack->[$j];
         if( $op->{opcode_n} == OP_GET ) {
-            push @out_names, $op->{attributes}{index};
+            push @out_names, [ $op->{attributes}{index}, $op->{attributes}{slot} ];
         } else {
-            push @out_names, _local_name( $self );
-            _add_bytecode $self, _opcode_set( $out_names[-1], $op );
+            my $index = _local_name( $self );
+            my $slot = _slot_type( $op );
+            push @out_names, [ $index, $slot ];
+            _add_bytecode $self, _opcode_set( $index, $op, $slot );
         }
     }
     for( my $j = $i; $i < @$stack; ++$i, ++$j ) {
         my $op = $stack->[$i];
         if( $op->{opcode_n} == OP_GET ) {
-            $out_names[$j] = $op->{attributes}{index};
+            $out_names[$j] = [ $op->{attributes}{index}, _slot_type( $op ) ];
             $out_stack[$i] = $op;
         } else {
-            $out_names[$j] = _local_name( $self );
-            $out_stack[$i] = opcode_npm( OP_GET, $op->{pos}, index => $out_names[$j] );
-            _add_bytecode $self, _opcode_set( $out_names[$j], $op );
+            my $index = _local_name( $self );
+            my $slot = _slot_type( $op );
+            $out_names[$j] = [ $index, $slot ];
+            $out_stack[$i] = opcode_npm( OP_GET, $op->{pos},
+                                         index => $index,
+                                         slot  => $slot );
+            _add_bytecode $self, _opcode_set( $index, $op, $slot );
         }
     }
     @$stack = @out_stack;

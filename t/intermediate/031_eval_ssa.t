@@ -13,15 +13,15 @@ EOP
 L1:
   undef (global context=4, name="@", slot=1)
   constant_integer value=1
-  set index=1 (constant_integer value=2)
+  set index=1, slot=VALUE_SCALAR (constant_integer value=2)
   undef (global context=4, name="@", slot=1)
   jump to=L3
 L2:
-  set index=2 (constant_undef)
+  set index=2, slot=VALUE_SCALAR (constant_undef)
   jump to=L3
 L3:
-  set index=3 (phi L1, 1, L2, 2)
-  assign context=2 (global context=20, name="x", slot=1), (get index=3)
+  set index=3, slot=VALUE_SCALAR (phi L1, 1, VALUE_SCALAR, L2, 2, VALUE_SCALAR)
+  assign context=2 (global context=20, name="x", slot=1), (get index=3, slot=VALUE_SCALAR)
   jump to=L4
 L4:
   end

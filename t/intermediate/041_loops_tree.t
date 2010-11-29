@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 2;
-
-use lib qw(t/lib);
-use TestIntermediate qw(:all);
+use t::lib::TestIntermediate tests => 2;
 
 generate_tree_and_diff( <<'EOP', <<'EOI' );
 for( $i = 0; $i < 10; $i = $i + 1 ) {
@@ -41,11 +37,11 @@ L1:
   localize_glob_slot index=2, name="i", slot=1
   jump to=L2
 L2:
-  set index=1 (iterator_next (temporary index=0, slot=9))
-  jump_if_null to=L5 (get index=1)
+  set index=1, slot=VALUE_SCALAR (iterator_next (temporary index=0, slot=VALUE_ITERATOR))
+  jump_if_null to=L5 (get index=1, slot=VALUE_SCALAR)
   jump to=L3
 L3:
-  glob_slot_set slot=1 (temporary index=1, slot=5), (get index=1)
+  glob_slot_set slot=1 (temporary index=1, slot=5), (get index=1, slot=VALUE_SCALAR)
   jump to=L7
 L5:
   jump to=L6

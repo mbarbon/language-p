@@ -15,20 +15,20 @@ L1:
 # is_scalar
 L1:
   lexical_state_set index=1
-  set index=1 (global context=4, name="STDOUT", slot=7)
+  set index=1, slot=VALUE_HANDLE (global context=4, name="STDOUT", slot=VALUE_HANDLE)
   jump_if_true to=L5 (defined context=4 (want context=4))
   jump to=L7
 L2:
-  set index=5 (phi L3, 2, L4, 4)
-  set index=6 (phi L3, 1, L4, 3)
-  print context=2 (get index=6), (make_array context=8 (get index=5))
+  set index=5, slot=VALUE_SCALAR (phi L3, 2, VALUE_SCALAR, L4, 4, VALUE_SCALAR)
+  set index=6, slot=VALUE_HANDLE (phi L3, 1, VALUE_HANDLE, L4, 3, VALUE_HANDLE)
+  print context=2 (get index=6, slot=VALUE_HANDLE), (make_array context=8 (get index=5, slot=VALUE_SCALAR))
   return context=1 (make_list context=8)
 L3:
-  set index=2 (constant_string value="ok\x0a")
+  set index=2, slot=VALUE_SCALAR (constant_string value="ok\x0a")
   jump to=L2
 L4:
-  set index=3 (get index=1)
-  set index=4 (constant_string value="not ok\x0a")
+  set index=3, slot=VALUE_HANDLE (get index=1, slot=VALUE_HANDLE)
+  set index=4, slot=VALUE_SCALAR (constant_string value="not ok\x0a")
   jump to=L2
 L5:
   jump_if_true to=L3 (not context=4 (want context=4))
@@ -84,7 +84,7 @@ sub { xx( 123 ) if $_[0] }
 EOP
 # main
 L1:
-  set index=1 (make_closure (constant_sub value=anoncode))
+  set index=1, slot=VALUE_SCALAR (make_closure (constant_sub value=anoncode))
   jump to=L2
 L2:
   end
@@ -128,8 +128,8 @@ $x && do { $y }
 EOP
 # main
 L1:
-  set index=1 (global context=4, name="x", slot=1)
-  jump_if_true to=L2 (get index=1)
+  set index=1, slot=VALUE_SCALAR (global context=4, name="x", slot=VALUE_SCALAR)
+  jump_if_true to=L2 (get index=1, slot=VALUE_SCALAR)
   jump to=L4
 L2:
   jump to=L5
@@ -170,7 +170,7 @@ L1:
 # x
 L1:
   lexical_state_set index=1
-  set index=1 (global context=1, name="x", slot=1)
+  set index=1, slot=VALUE_SCALAR (global context=1, name="x", slot=VALUE_SCALAR)
   return context=1 (make_list context=8)
 EOI
 

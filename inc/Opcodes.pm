@@ -449,7 +449,7 @@ ft_rwritable        u       same                 1   1  context=i1
 ft_setgid           u       same                 1   1  context=i1
 ft_setuid           u       same                 1   1  context=i1
 ft_sticky           u       same                 1   1  context=i1
-get                 0       same                 0   1  index=i
+get                 0       same                 0   1  index=i,slot=i_sigil
 glob                0       same                 1   1  context=i1
 glob_element        0       same                 2   1  context=i1
 glob_slot           0       same                 1   1  slot=i_sigil
@@ -572,7 +572,7 @@ rmdir               u       same                 1   1  context=i1
 rx_split            v       same                -1   1  context=i1,arg_count=i1
 rx_split_skipspaces v       same                -1   1  context=i1,arg_count=i1
 scalar              u       same                 1   1  context=i1
-set                 0       same                 1   0  index=i
+set                 0       same                 1   0  index=i,slot=i_sigil
 shift_left          0       same                 2   1  context=i1
 shift_left_assign   0       same                 2   1  context=i1
 shift_right         0       same                 2   1  context=i1
