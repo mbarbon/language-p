@@ -639,16 +639,19 @@ namespace org.mbarbon.p.runtime
             return RxStates[index];
         }
 
-        private Expression GetLexical(int index, Opcode.Sigil slot)
+        private Expression GetLexical(int index, Type type)
         {
             while (Lexicals.Count <= index)
                 Lexicals.Add(null);
-
-            var type = TypeForSlot(slot);
             if (Lexicals[index] == null)
                 Lexicals[index] = Expression.Variable(type);
 
             return Lexicals[index];
+        }
+
+        private Expression GetLexical(int index, Opcode.Sigil slot)
+        {
+            return GetLexical(index, TypeForSlot(slot));
         }
 
         private Expression GetLexicalValue(int index, Opcode.Sigil slot)
@@ -1860,6 +1863,33 @@ namespace org.mbarbon.p.runtime
                 LocalLexical lx = (LocalLexical)op;
                 Expression lexvar = GetLexicalPad(lx.LexicalInfo);
                 var saved = GetTemporary(lx.Index, typeof(IP5Any));
+
+                exps.Add(
+                    Expression.IfThen(
+                        Expression.NotEqual(
+                            saved,
+                            Expression.Constant(null, saved.Type)),
+                        Expression.Assign(lexvar, saved)));
+                exps.Add(Expression.Assign(
+                             saved,
+                             Expression.Constant(null, saved.Type)));
+
+                return Expression.Block(typeof(void), exps);
+            }
+            case Opcode.OpNumber.OP_LOCALIZE_LEXICAL:
+            {
+                LocalLexical lx = (LocalLexical)op;
+                Expression lexvar = GetLexical(lx.LexicalIndex, TypeForSlot(lx.Slot));
+                var saved = GetTemporary(lx.Index, TypeForSlot(lx.Slot));
+
+                return Expression.Assign(saved, lexvar);
+            }
+            case Opcode.OpNumber.OP_RESTORE_LEXICAL:
+            {
+                var exps = new List<Expression>();
+                LocalLexical lx = (LocalLexical)op;
+                Expression lexvar = GetLexical(lx.LexicalIndex, TypeForSlot(lx.Slot));
+                var saved = GetTemporary(lx.Index, TypeForSlot(lx.Slot));
 
                 exps.Add(
                     Expression.IfThen(
