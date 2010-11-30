@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..12\n";
+print "1..16\n";
 
 print !defined( get() ) ? "ok 1\n" : "not ok 1\n";
 
@@ -52,3 +52,19 @@ sub test2 {
 }
 
 test2();
+
+my $x = 14;
+for $x ( 13 ) {
+    print "ok $x\n";
+}
+print "ok $x\n";
+
+sub test3 {
+    my $x = 16;
+    for $x ( 15 ) {
+        print "ok $x\n";
+    }
+    print "ok $x\n";
+}
+
+test3();
