@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use t::lib::TestParser tests => 34;
+use t::lib::TestParser tests => 36;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 "";
@@ -500,4 +500,40 @@ EOP
 context: CXT_VOID
 flags: CONST_STRING
 value: ' @!'
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+"$foo{aa}";
+EOP
+--- !parsetree:QuotedString
+components:
+  - !parsetree:Subscript
+    context: CXT_SCALAR
+    reference: 0
+    subscript: !parsetree:Constant
+      context: CXT_SCALAR
+      flags: CONST_STRING|STRING_BARE
+      value: aa
+    subscripted: !parsetree:Symbol
+      context: CXT_LIST
+      name: foo
+      sigil: VALUE_HASH
+    type: VALUE_HASH
+context: CXT_VOID
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+"${foo}{aa}";
+EOP
+--- !parsetree:QuotedString
+components:
+  - !parsetree:Symbol
+    context: CXT_SCALAR
+    name: foo
+    sigil: VALUE_SCALAR
+  - !parsetree:Constant
+    context: CXT_SCALAR
+    flags: CONST_STRING
+    value: '{aa}'
+context: CXT_VOID
 EOE

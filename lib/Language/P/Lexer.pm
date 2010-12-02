@@ -796,6 +796,10 @@ sub lex_identifier {
 
         if( $$_ =~ s/^}//x ) {
             $id = [ $self->{pos}, T_ID, $maybe_id, T_ID ];
+            if( $self->{brackets} == 0 && $self->quote ) {
+                $self->unlex( $self->lex_quote );
+                return $id;
+            }
         } elsif( $$_ =~ /^\[|^\{/ ) {
             ++$self->{brackets};
             push @{$self->{pending_brackets}}, $self->{brackets};
