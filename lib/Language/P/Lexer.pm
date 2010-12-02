@@ -346,29 +346,23 @@ sub _character_class_insanity {
     my( $self ) = @_;
     my $buffer = $self->buffer;
 
-    if( $$buffer =~ /^\]|^\^/ ) {
-        return 1;
-    }
-
-    my( $t ) = $$buffer =~ /^(.*\])/;
-    my $w = 2;
-    my( $un_char, $last_un_char, @seen ) = ( 255 );
-
+    # this corresponds to the point in intuit_more marked by the
+    #         /* this is terrifying, and it works */
+    # comment; the original code is easier to write in C than in Perl;
+    # the code below works for some simple casese
+    my( $t ) = $$buffer =~ /^(.*)\]/;
     return 1 if !defined $t;
 
-    if( $t =~ /^\$/ ) {
-        $w -= 3;
-    } elsif( $t =~ /^[0-9][0-9]\]/ ) {
-        $w -= 10
-    } elsif( $t =~ /^[0-9]\]/ ) {
-        $w -= 100;
-    } elsif( $t =~ /^\$\w+/ ) {
-        # HACK, not in original
-        $w -= 100;
-    }
+    my $w = 2;
 
-    for(;;) {
-        last;
+    if( $t =~ /^[0-9]+$/ ) {
+        $w -= 30
+    } else {
+        $w -= 9 if $t =~ /^-[\d\$]/;
+        $w += 97 if $t =~ /^\W+$/;
+        $w += 8 if $t =~ /\W{3,}$/;
+        $w -= 7 if $t =~ /\$\w+/;
+        $w += 9 if $t =~ /[aA0]-[zZ9]/;
     }
 
     return $w >= 0 ? 1 : 0;
@@ -400,7 +394,7 @@ sub _quoted_code_lookahead {
             ++$self->{brackets};
             $self->unlex( [ $self->{pos}, T_OPSQ, '[' ] );
         } else {
-            if( _character_class_insanity( $self ) ) {
+            if( $$buffer =~ /^\]|^\^/ || _character_class_insanity( $self ) ) {
                 $$buffer = '[' . $$buffer;
                 my $token = $self->lex_quote;
                 $self->unlex( $token );
