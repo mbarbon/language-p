@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..5\n";
+print "1..6\n";
 
 sub tail_sum {
     my( $n, $a ) = @_;
@@ -25,3 +25,17 @@ sub tail_local {
 }
 
 tail_local;
+
+sub tail_called {
+    my $caller = ( caller( 1 ) )[3];
+
+    return sub { $caller };
+}
+
+sub tail_caller {
+    goto &{tail_called()};
+}
+
+$caller = tail_caller();
+
+print $caller eq 'main::tail_caller' ? "ok\n" : "not ok - $caller\n";
