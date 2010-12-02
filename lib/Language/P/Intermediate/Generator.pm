@@ -395,6 +395,11 @@ sub _generate_bytecode {
     $self->push_block( 0, undef, undef );
     $self->push_block( $block_flags, $pos_s, $pos_e );
 
+    if( !$is_sub && !$is_eval ) {
+        _add_bytecode $self,
+            opcode_nm( OP_LEXICAL_STATE_SET,  index => 0 );
+    }
+
     # clear $@ when entering eval scope
     if( $is_eval ) {
         _add_bytecode $self,

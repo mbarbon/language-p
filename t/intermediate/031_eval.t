@@ -10,6 +10,7 @@ eval "1";
 EOP
 # main
 L1:
+  lexical_state_set index=0
   constant_string value="1"
   eval context=2, globals={}, hints=0, lexicals={}, package="main", warnings=undef
   pop
@@ -33,36 +34,39 @@ eval {
 EOP
 # main
 L1:
+  lexical_state_set index=0
+  jump to=L2
+L2:
   global context=4, name="@", slot=1
   undef
   constant_integer value=1
   global context=4, name="@", slot=1
   undef
-  jump to=L3
-L2:
-  constant_undef
-  jump to=L3
+  jump to=L4
 L3:
+  constant_undef
+  jump to=L4
+L4:
   global context=20, name="x", slot=1
   swap
   assign context=2
   pop
-  jump to=L4
-L4:
+  jump to=L5
+L5:
   lexical_state_save index=0
   global context=4, name="@", slot=1
   undef
-  jump to=L5
-L5:
+  jump to=L6
+L6:
   lexical_state_set index=1
   constant_integer value=1
   pop
   lexical_state_restore index=0
   global context=4, name="@", slot=1
   undef
-  jump to=L7
-L6:
-  jump to=L7
+  jump to=L8
 L7:
+  jump to=L8
+L8:
   end
 EOI

@@ -11,6 +11,9 @@ sub is_scalar {
 EOP
 # main
 L1:
+  lexical_state_set index=0
+  jump to=L2
+L2:
   end
 # is_scalar
 L1:
@@ -53,6 +56,7 @@ generate_ssa_and_diff( <<'EOP', <<'EOI' );
 EOP
 # main
 L1:
+  lexical_state_set index=0
   constant_integer value=1
   jump to=L5
 L10:
@@ -84,6 +88,7 @@ sub { xx( 123 ) if $_[0] }
 EOP
 # main
 L1:
+  lexical_state_set index=0
   set index=1, slot=VALUE_SCALAR (make_closure (constant_sub value=anoncode))
   jump to=L2
 L2:
@@ -110,6 +115,7 @@ while( 1 ) {
 EOP
 # main
 L1:
+  lexical_state_set index=0
   jump to=L2
 L2:
   jump_if_true to=L3 (constant_integer value=1)
@@ -128,6 +134,7 @@ $x && do { $y }
 EOP
 # main
 L1:
+  lexical_state_set index=0
   set index=1, slot=VALUE_SCALAR (global context=4, name="x", slot=VALUE_SCALAR)
   jump_if_true to=L2 (get index=1, slot=VALUE_SCALAR)
   jump to=L4
@@ -147,6 +154,7 @@ $x ? do { $y } : $z
 EOP
 # main
 L1:
+  lexical_state_set index=0
   jump_if_true to=L3 (global context=4, name="x", slot=1)
   jump to=L4
 L2:
@@ -166,6 +174,9 @@ sub x {
 EOP
 # main
 L1:
+  lexical_state_set index=0
+  jump to=L2
+L2:
   end
 # x
 L1:
@@ -181,6 +192,7 @@ while( my( $k, $v ) = each %x ) {
 EOP
 # main
 L1:
+  lexical_state_set index=0
   jump to=L2
 L2:
   jump_if_true to=L3 (assign context=4 (make_list context=24 (lexical_pad index=0, slot=1), (lexical_pad index=1, slot=1)), (each context=8 (global context=8, name="x", slot=3)))

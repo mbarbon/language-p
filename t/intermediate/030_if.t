@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 5;
-
-use lib qw(t/lib);
-use TestIntermediate qw(:all);
+use t::lib::TestIntermediate tests => 5;
 
 generate_and_diff( <<'EOP', <<'EOI' );
 0;
@@ -15,6 +11,7 @@ unless( $a < 2 ) {
 EOP
 # main
 L1:
+  lexical_state_set index=0
   constant_integer value=0
   pop
   jump to=L3
@@ -45,6 +42,7 @@ if( $a < 11 ) {
 EOP
 # main
 L1:
+  lexical_state_set index=0
   constant_integer value=0
   pop
   jump to=L3
@@ -85,6 +83,7 @@ if( $a - 1 ) {
 EOP
 # main
 L1:
+  lexical_state_set index=0
   constant_integer value=0
   pop
   jump to=L3
@@ -116,6 +115,7 @@ if( $a && $b ) {
 EOP
 # main
 L1:
+  lexical_state_set index=0
   constant_integer value=0
   pop
   jump to=L3
@@ -148,22 +148,23 @@ if( $y eq '' ) {
 EOP
 # main
 L1:
-  jump to=L2
-L10:
+  lexical_state_set index=0
   jump to=L3
 L11:
-  jump to=L3
-L2:
+  jump to=L4
+L12:
+  jump to=L4
+L3:
   global context=4, name="y", slot=1
   constant_string value=""
-  jump_if_s_eq false=L10, true=L6
-L3:
+  jump_if_s_eq false=L11, true=L7
+L4:
   end
-L6:
+L7:
   global context=4, name="z", slot=1
-  jump_if_true false=L8, true=L11
-L8:
+  jump_if_true false=L9, true=L12
+L9:
   constant_integer value=3
   pop
-  jump to=L3
+  jump to=L4
 EOI

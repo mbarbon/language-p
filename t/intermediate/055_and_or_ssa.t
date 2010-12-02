@@ -8,6 +8,7 @@ $x = $a && $b;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   set index=1, slot=VALUE_SCALAR (global context=4, name="a", slot=1)
   jump_if_true to=L2 (get index=1, slot=VALUE_SCALAR)
   jump to=L6
@@ -29,6 +30,7 @@ $a &&= $b;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   set index=1, slot=VALUE_SCALAR (global context=4, name="a", slot=1)
   jump_if_true to=L2 (get index=1, slot=VALUE_SCALAR)
   jump to=L4
@@ -46,6 +48,7 @@ $x = $a || $b;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   set index=1, slot=VALUE_SCALAR (global context=4, name="a", slot=1)
   jump_if_true to=L6 (get index=1, slot=VALUE_SCALAR)
   jump to=L2
@@ -67,6 +70,7 @@ $a ||= $b;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   set index=1, slot=VALUE_SCALAR (global context=4, name="a", slot=1)
   jump_if_true to=L4 (get index=1, slot=VALUE_SCALAR)
   jump to=L2
@@ -84,6 +88,7 @@ $x = $a && $b && $c;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   set index=1, slot=VALUE_SCALAR (global context=4, name="a", slot=1)
   jump_if_true to=L2 (get index=1, slot=VALUE_SCALAR)
   jump to=L9
@@ -114,6 +119,7 @@ $a && $b && $c;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   set index=1, slot=VALUE_SCALAR (global context=4, name="a", slot=1)
   jump_if_true to=L2 (get index=1, slot=VALUE_SCALAR)
   jump to=L8
@@ -140,6 +146,7 @@ $x = $a || $b || $c;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   set index=1, slot=VALUE_SCALAR (global context=4, name="a", slot=1)
   jump_if_true to=L9 (get index=1, slot=VALUE_SCALAR)
   jump to=L2
@@ -170,6 +177,7 @@ print $a || $b;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   set index=1, slot=VALUE_SCALAR (global context=4, name="a", slot=VALUE_SCALAR)
   set index=2, slot=VALUE_HANDLE (global context=4, name="STDOUT", slot=VALUE_HANDLE)
   jump_if_true to=L6 (get index=1, slot=VALUE_SCALAR)

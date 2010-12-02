@@ -8,6 +8,7 @@ generate_and_diff( <<'EOP', <<'EOI' );
 EOP
 # main
 L1:
+  lexical_state_set index=0
   make_list context=8, count=0
   temporary_set index=0, slot=2
   global context=8, name="y", slot=2
@@ -53,6 +54,7 @@ generate_and_diff( <<'EOP', <<'EOI' );
 EOP
 # main
 L1:
+  lexical_state_set index=0
   make_list context=8, count=0
   temporary_set index=0, slot=2
   global context=8, name="y", slot=2

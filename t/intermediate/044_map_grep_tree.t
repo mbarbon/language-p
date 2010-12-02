@@ -8,6 +8,7 @@ generate_tree_and_diff( <<'EOP', <<'EOI' );
 EOP
 # main
 L1:
+  lexical_state_set index=0
   temporary_set index=0, slot=2 (make_list context=8)
   temporary_set index=1, slot=9 (iterator (make_list context=8 (make_list context=8 (global context=8, name="y", slot=2))))
   temporary_set index=2, slot=5 (global context=4, name="_", slot=5)
@@ -56,6 +57,7 @@ generate_tree_and_diff( <<'EOP', <<'EOI' );
 EOP
 # main
 L1:
+  lexical_state_set index=0
   temporary_set index=0, slot=2 (make_list context=8)
   temporary_set index=1, slot=9 (iterator (make_list context=8 (make_list context=8 (global context=8, name="x", slot=2))))
   temporary_set index=2, slot=5 (global context=4, name="_", slot=5)

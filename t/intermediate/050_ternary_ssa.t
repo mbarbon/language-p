@@ -8,6 +8,7 @@ $x = $a > 2 ? $b : $c + 3;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   jump_if_f_gt to=L3 (global context=4, name="a", slot=1), (constant_integer value=2)
   jump to=L4
 L2:
@@ -30,6 +31,7 @@ $x = $a > 2 ? $b :
 EOP
 # main
 L1:
+  lexical_state_set index=0
   jump_if_f_gt to=L3 (global context=4, name="a", slot=1), (constant_integer value=2)
   jump to=L4
 L2:
@@ -57,6 +59,7 @@ print $a > 2 ? $b : $c;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   set index=1, slot=VALUE_HANDLE (global context=4, name="STDOUT", slot=7)
   jump_if_f_gt to=L3 (global context=4, name="a", slot=1), (constant_integer value=2)
   jump to=L4

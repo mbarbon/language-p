@@ -10,6 +10,7 @@ while( $a ) {
 EOP
 # main
 L1:
+  lexical_state_set index=0
   jump to=L2
 L2:
   jump_if_true to=L3 (global context=4, name="a", slot=1)
@@ -26,6 +27,7 @@ generate_tree_and_diff( <<'EOP', <<'EOI' );
 EOP
 # main
 L1:
+  lexical_state_set index=0
   jump to=L2
 L10:
   jump to=L5
@@ -53,6 +55,7 @@ while( $a ) {
 EOP
 # main
 L1:
+  lexical_state_set index=0
   jump to=L2
 L2:
   jump_if_true to=L3 (global context=4, name="a", slot=1)

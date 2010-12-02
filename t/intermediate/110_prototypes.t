@@ -1,17 +1,14 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 3;
-
-use lib qw(t/lib);
-use TestIntermediate qw(:all);
+use t::lib::TestIntermediate tests => 3;
 
 generate_and_diff( <<'EOP', <<'EOI' );
 push @foo, 1, 2;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   global context=8, name="foo", slot=2
   constant_integer value=1
   constant_integer value=2
@@ -28,6 +25,7 @@ pop @foo;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   global context=8, name="foo", slot=2
   array_pop context=2
   pop
@@ -43,6 +41,7 @@ mypush @foo, 1, 2;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   global context=8, name="foo", slot=2
   reference
   constant_integer value=1

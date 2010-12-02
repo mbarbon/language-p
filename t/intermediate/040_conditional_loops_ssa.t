@@ -8,6 +8,7 @@ generate_tree_and_diff( <<'EOP', <<'EOI' );
 EOP
 # main
 L1:
+  lexical_state_set index=0
   jump to=L2
 L10:
   jump to=L5

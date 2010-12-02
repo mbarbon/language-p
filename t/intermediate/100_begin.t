@@ -12,6 +12,7 @@ BEGIN {
 EOP
 # main
 L1:
+  lexical_state_set index=0
   constant_integer value=1
   constant_integer value=2
   jump to=L2
@@ -30,6 +31,7 @@ use Foo (1, 2);
 EOP
 # main
 L1:
+  lexical_state_set index=0
   constant_integer value=1
   jump to=L2
 L2:
@@ -56,6 +58,9 @@ use 5;
 EOP
 # main
 L1:
+  lexical_state_set index=0
+  jump to=L2
+L2:
   end
 # BEGIN
 L1:
@@ -86,6 +91,9 @@ use 5;
 EOP
 # main
 L1:
+  lexical_state_set index=0
+  jump to=L2
+L2:
   end
 # BEGIN
 L1:
