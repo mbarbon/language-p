@@ -136,6 +136,18 @@ namespace org.mbarbon.p.values
             return body.Length(runtime);
         }
 
+        public P5Scalar Repeat(Runtime runtime, IP5Any c)
+        {
+            int count = c.AsInteger(runtime);
+            string val = AsString(runtime);
+            var str = new System.Text.StringBuilder();
+
+            for (int i = 0; i < count; ++i)
+                str.Append(val);
+
+            return new P5Scalar(runtime, str.ToString());
+        }
+
         public virtual P5Scalar PreIncrement(Runtime runtime)
         {
             var sb = body as P5StringNumber;

@@ -399,6 +399,17 @@ namespace org.mbarbon.p.values
             return pmethod.Call(runtime, context, this);
         }
 
+        public P5List Repeat(Runtime runtime, IP5Any c)
+        {
+            int count = c.AsInteger(runtime);
+            var list = new List<IP5Any>();
+
+            for (int i = 0; i < count; ++i)
+                list.AddRange(array);
+
+            return new P5List(runtime, list);
+        }
+
         private P5SymbolTable blessed;
         protected List<IP5Any> array;
     }

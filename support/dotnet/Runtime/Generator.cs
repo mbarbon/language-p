@@ -1604,6 +1604,21 @@ namespace org.mbarbon.p.runtime
                 return UnaryIncrement(sub, op, ExpressionType.PostIncrementAssign);
             case Opcode.OpNumber.OP_POSTDEC:
                 return UnaryIncrement(sub, op, ExpressionType.PostDecrementAssign);
+            case Opcode.OpNumber.OP_REPEAT_ARRAY:
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(P5Array).GetMethod("Repeat"),
+                    Runtime,
+                    Generate(sub, op.Childs[1]));
+            case Opcode.OpNumber.OP_REPEAT_SCALAR:
+                return Expression.Call(
+                    Expression.Call(
+                        Generate(sub, op.Childs[0]),
+                        typeof(IP5Any).GetMethod("AsScalar"),
+                        Runtime),
+                    typeof(P5Scalar).GetMethod("Repeat"),
+                    Runtime,
+                    Generate(sub, op.Childs[1]));
             case Opcode.OpNumber.OP_ARRAY_ELEMENT:
             {
                 var ea = (ElementAccess)op;
