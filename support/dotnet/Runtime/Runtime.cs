@@ -117,13 +117,15 @@ namespace org.mbarbon.p.runtime
                     frame.Context == Opcode.ContextValues.VOID   ? new P5Scalar(this) :
                     frame.Context == Opcode.ContextValues.SCALAR ? new P5Scalar(this, "") :
                                                                    new P5Scalar(this, 1);
+                var subname = frame.Code != null ?
+                    new P5Scalar(this, frame.Code.Name) : new P5Scalar(this);
 
                 return new P5List(
                     this,
                     new P5Scalar(this, frame.Package),
                     new P5Scalar(this, frame.File),
                     new P5Scalar(this, frame.Line),
-                    new P5Scalar(this), // sub
+                    subname,
                     new P5Scalar(this), // hasargs
                     callcxt, // context
                     new P5Scalar(this), // evaltext
