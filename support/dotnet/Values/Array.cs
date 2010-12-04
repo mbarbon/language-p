@@ -410,6 +410,19 @@ namespace org.mbarbon.p.values
             return new P5List(runtime, list);
         }
 
+        public P5List Sort(Runtime runtime)
+        {
+            var list = new List<IP5Any>(array);
+
+            list.Sort(delegate(IP5Any a, IP5Any b)
+                      {
+                          return string.Compare(a.AsString(runtime),
+                                                b.AsString(runtime));
+                      });
+
+            return new P5List(runtime, list);
+        }
+
         private P5SymbolTable blessed;
         protected List<IP5Any> array;
     }

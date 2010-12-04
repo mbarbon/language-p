@@ -1619,6 +1619,11 @@ namespace org.mbarbon.p.runtime
                     typeof(P5Scalar).GetMethod("Repeat"),
                     Runtime,
                     Generate(sub, op.Childs[1]));
+            case Opcode.OpNumber.OP_SORT:
+                return Expression.Call(
+                    Generate(sub, op.Childs[0]),
+                    typeof(P5Array).GetMethod("Sort"),
+                    Runtime);
             case Opcode.OpNumber.OP_ARRAY_ELEMENT:
             {
                 var ea = (ElementAccess)op;
