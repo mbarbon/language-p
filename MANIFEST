@@ -260,6 +260,7 @@ t/run/021_qr.t
 t/run/021_regexp.t
 t/run/021_regexp_i.t
 t/run/021_regexp_zw.t
+t/run/021_sort_default.t
 t/run/021_substitution.t
 t/run/021_transliteration.t
 t/run/025_begin.t
