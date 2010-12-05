@@ -11,6 +11,10 @@ namespace org.mbarbon.p
     {
         public static void Main(string[] args)
         {
+            // use the invariant locale as the default
+            System.Threading.Thread.CurrentThread.CurrentCulture =
+               System.Globalization.CultureInfo.InvariantCulture;
+
             var runtime = new Runtime();
             var cu = Serializer.ReadCompilationUnit(runtime, args[0]);
 
