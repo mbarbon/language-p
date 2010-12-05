@@ -253,6 +253,12 @@ sub as_boolean_int {
     return $self->get_count( $runtime ) ? 1 : 0;
 }
 
+sub is_defined {
+    my( $self, $runtime ) = @_;
+
+    return scalar @{$self->{array}} ? 1 : 0;
+}
+
 sub as_string {
     my( $self, $runtime ) = @_;
 

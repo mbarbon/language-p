@@ -40,6 +40,12 @@ sub as_boolean_int {
     return %{$self->{hash}} ? 1 : 0;
 }
 
+sub is_defined {
+    my( $self, $runtime ) = @_;
+
+    return scalar %{$self->{hash}} ? 1 : 0;
+}
+
 sub localize {
     my( $self, $runtime ) = @_;
 
