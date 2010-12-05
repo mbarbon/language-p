@@ -48,6 +48,7 @@
     <Compile Include="Values\Array.cs" />
     <Compile Include="Values\IAny.cs" />
     <Compile Include="Runtime\Builtins.cs" />
+    <Compile Include="Runtime\Builtins\Sprintf.cs" />
     <Compile Include="Runtime\Overload.cs" />
     <Compile Include="Values\List.cs" />
     <Compile Include="Values\Typeglob.cs" />

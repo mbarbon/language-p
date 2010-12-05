@@ -73,6 +73,7 @@ support/dotnet/Runtime/Binders/StringCompareBinder.cs
 support/dotnet/Runtime/Binders/UnaryIncrementBinder.cs
 support/dotnet/Runtime/Binders/UnaryOperationBinder.cs
 support/dotnet/Runtime/Builtins.cs
+support/dotnet/Runtime/Builtins/Sprintf.cs
 support/dotnet/Runtime/Generator.cs
 support/dotnet/Runtime/NetRegex.cs
 support/dotnet/Runtime/Overload.cs

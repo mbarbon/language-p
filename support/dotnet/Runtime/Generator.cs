@@ -1301,6 +1301,13 @@ namespace org.mbarbon.p.runtime
                     Runtime,
                     Generate(sub, op.Childs[0]));
             }
+            case Opcode.OpNumber.OP_SPRINTF:
+            {
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("Sprintf"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
+            }
             case Opcode.OpNumber.OP_DO_FILE:
             {
                 return

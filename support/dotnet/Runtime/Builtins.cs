@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace org.mbarbon.p.runtime
 {
-    public class Builtins
+    public partial class Builtins
     {
         public static P5Scalar Print(Runtime runtime, P5Handle handle, P5Array args)
         {
