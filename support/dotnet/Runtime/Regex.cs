@@ -110,7 +110,7 @@ namespace org.mbarbon.p.runtime
     }
 
     [Serializable]
-    public class Regex : IP5Regex
+    public class P5Regex : IP5Regex
     {
         [Serializable]
         public struct Op
@@ -131,9 +131,9 @@ namespace org.mbarbon.p.runtime
             public int Index;
         }
 
-        public Regex(Op[] ops, int[] targets, string[] exact,
-                     RxQuantifier[] quantifiers, RxClass[] classes,
-                     int captures, int saved, string orig)
+        public P5Regex(Op[] ops, int[] targets, string[] exact,
+                       RxQuantifier[] quantifiers, RxClass[] classes,
+                       int captures, int saved, string orig)
         {
             Ops = ops;
             Targets = targets;
@@ -251,8 +251,8 @@ namespace org.mbarbon.p.runtime
         public IP5Any Match(Runtime runtime, IP5Any value, int flags,
                             Opcode.ContextValues cxt, ref RxResult oldState)
         {
-            return Regex.MatchHelper(this, runtime, value, flags,
-                                     cxt, ref oldState);
+            return P5Regex.MatchHelper(this, runtime, value, flags,
+                                       cxt, ref oldState);
         }
 
         public static IP5Any MatchHelper(IP5Regex regex, Runtime runtime, IP5Any value, int flags,
@@ -282,8 +282,8 @@ namespace org.mbarbon.p.runtime
         public IP5Any MatchGlobal(Runtime runtime, IP5Any value, int flags,
                                   Opcode.ContextValues cxt, ref RxResult oldState)
         {
-            return Regex.MatchGlobalHelper(this, runtime, value, flags,
-                                           cxt, ref oldState);
+            return P5Regex.MatchGlobalHelper(this, runtime, value, flags,
+                                             cxt, ref oldState);
         }
 
         public static IP5Any MatchGlobalHelper(IP5Regex regex, Runtime runtime, IP5Any value, int flags,

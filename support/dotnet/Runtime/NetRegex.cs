@@ -30,15 +30,15 @@ namespace org.mbarbon.p.runtime
         public IP5Any Match(Runtime runtime, IP5Any value, int flags,
                             Opcode.ContextValues cxt, ref RxResult oldState)
         {
-            return Regex.MatchHelper(this, runtime, value, flags,
-                                     cxt, ref oldState);
+            return P5Regex.MatchHelper(this, runtime, value, flags,
+                                       cxt, ref oldState);
         }
 
         public IP5Any MatchGlobal(Runtime runtime, IP5Any value, int flags,
                                   Opcode.ContextValues cxt, ref RxResult oldState)
         {
-            return Regex.MatchGlobalHelper(this, runtime, value, flags,
-                                           cxt, ref oldState);
+            return P5Regex.MatchGlobalHelper(this, runtime, value, flags,
+                                             cxt, ref oldState);
         }
 
         public bool MatchString(Runtime runtime, string str, int pos,

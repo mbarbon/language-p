@@ -165,7 +165,7 @@ namespace org.mbarbon.p.runtime
         public IP5Regex GenerateRegex(Subroutine sub)
         {
             var quantifiers = new List<RxQuantifier>();
-            var ops = new List<Regex.Op>();
+            var ops = new List<P5Regex.Op>();
             var targets = new List<int>();
             var exact = new List<string>();
             var classes = new List<RxClass>();
@@ -186,13 +186,13 @@ namespace org.mbarbon.p.runtime
                     case Opcode.OpNumber.OP_RX_BEGINNING:
                     case Opcode.OpNumber.OP_RX_END_OR_NEWLINE:
                     case Opcode.OpNumber.OP_RX_START_MATCH:
-                        ops.Add(new Regex.Op(op.Number));
+                        ops.Add(new P5Regex.Op(op.Number));
                         break;
                     case Opcode.OpNumber.OP_RX_ACCEPT:
                     {
                         var ac = (RegexAccept)op;
 
-                        ops.Add(new Regex.Op(ac.Number, ac.Groups));
+                        ops.Add(new P5Regex.Op(ac.Number, ac.Groups));
                         break;
                     }
                     case Opcode.OpNumber.OP_RX_EXACT:
@@ -200,7 +200,7 @@ namespace org.mbarbon.p.runtime
                     {
                         var ex = (RegexExact)op;
 
-                        ops.Add(new Regex.Op(ex.Number, exact.Count));
+                        ops.Add(new P5Regex.Op(ex.Number, exact.Count));
                         exact.Add(ex.String);
                         break;
                     }
@@ -209,7 +209,7 @@ namespace org.mbarbon.p.runtime
                     {
                         var st = (RegexState)op;
 
-                        ops.Add(new Regex.Op(st.Number, st.Index));
+                        ops.Add(new P5Regex.Op(st.Number, st.Index));
                         ++saved;
                         break;
                     }
@@ -221,7 +221,7 @@ namespace org.mbarbon.p.runtime
                         if ((cl.Flags & 1) != 0)
                             ex = ex.ToLower() + ex.ToUpper();
 
-                        ops.Add(new Regex.Op(cl.Number, classes.Count));
+                        ops.Add(new P5Regex.Op(cl.Number, classes.Count));
                         classes.Add(new RxClass(ex, cl.Flags & ~1));
                         break;
                     }
@@ -229,28 +229,28 @@ namespace org.mbarbon.p.runtime
                     {
                         var gr = (RegexStartGroup)op;
 
-                        ops.Add(new Regex.Op(gr.Number, gr.To));
+                        ops.Add(new P5Regex.Op(gr.Number, gr.To));
                         break;
                     }
                     case Opcode.OpNumber.OP_RX_TRY:
                     {
                         var tr = (RegexTry)op;
 
-                        ops.Add(new Regex.Op(tr.Number, tr.To));
+                        ops.Add(new P5Regex.Op(tr.Number, tr.To));
                         break;
                     }
                     case Opcode.OpNumber.OP_RX_BACKTRACK:
                     {
                         var tr = (RegexBacktrack)op;
 
-                        ops.Add(new Regex.Op(tr.Number, tr.To));
+                        ops.Add(new P5Regex.Op(tr.Number, tr.To));
                         break;
                     }
                     case Opcode.OpNumber.OP_RX_QUANTIFIER:
                     {
                         var qu = (RegexQuantifier)op;
 
-                        ops.Add(new Regex.Op(qu.Number, quantifiers.Count));
+                        ops.Add(new P5Regex.Op(qu.Number, quantifiers.Count));
                         quantifiers.Add(
                             new RxQuantifier(qu.Min, qu.Max, qu.Greedy != 0,
                                              qu.To, qu.Group, qu.SubgroupsStart,
@@ -265,7 +265,7 @@ namespace org.mbarbon.p.runtime
                     {
                         var ca = (RegexCapture)op;
 
-                        ops.Add(new Regex.Op(ca.Number, ca.Group));
+                        ops.Add(new P5Regex.Op(ca.Number, ca.Group));
                         if (captures <= ca.Group)
                             captures = ca.Group + 1;
 
@@ -275,7 +275,7 @@ namespace org.mbarbon.p.runtime
                     {
                         var ju = (Jump)op;
 
-                        ops.Add(new Regex.Op(ju.Number, ju.To));
+                        ops.Add(new P5Regex.Op(ju.Number, ju.To));
                         break;
                     }
                     default:
@@ -284,10 +284,10 @@ namespace org.mbarbon.p.runtime
                 }
             }
 
-            return new Regex(ops.ToArray(), targets.ToArray(),
-                             exact.ToArray(), quantifiers.ToArray(),
-                             classes.ToArray(), captures, saved,
-                             sub.OriginalRegex);
+            return new P5Regex(ops.ToArray(), targets.ToArray(),
+                               exact.ToArray(), quantifiers.ToArray(),
+                               classes.ToArray(), captures, saved,
+                               sub.OriginalRegex);
         }
 
         public void AddMethod(int index, Subroutine sub)
@@ -2434,7 +2434,7 @@ namespace org.mbarbon.p.runtime
             // replace substrings
             body.Add(
                 Expression.Call(
-                    typeof(Regex).GetMethod("ReplaceSubstrings"),
+                    typeof(P5Regex).GetMethod("ReplaceSubstrings"),
                     Runtime,
                     scalar,
                     str,
