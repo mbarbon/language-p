@@ -166,7 +166,10 @@ sub o_sprintf {
 
     for( my $i = 1; $i < $args->get_count( $runtime ); ++$i ) {
         my $value = $args->get_item( $runtime, $i )->as_scalar( $runtime );
-        push @values, Scalar::Util::dualvar( $value->as_float( $runtime ),
+        my $number = $value->is_float( $runtime )   ? $value->as_float( $runtime ) :
+                     $value->is_integer( $runtime ) ? $value->as_integer( $runtime ) :
+                                                      0;
+        push @values, Scalar::Util::dualvar( $number,
                                              $value->as_string( $runtime ) );
     }
 
