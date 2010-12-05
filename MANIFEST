@@ -269,6 +269,7 @@ t/run/035_local_element.t
 t/run/037_do_block.t
 t/run/038_goto.t
 t/run/039_loop_control.t
+t/run/045_ord.t
 t/run/045_sprintf.t
 t/run/070_objects.t
 t/run/080_recursion.t
