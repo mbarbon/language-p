@@ -1115,18 +1115,21 @@ namespace org.mbarbon.p.runtime
                 var st = typeof(Runtime).GetField("SymbolTable");
                 MethodInfo method;
                 string name;
+                bool create;
 
                 if (gop.Slot == Opcode.Sigil.STASH)
                 {
                     method = typeof(P5SymbolTable).GetMethod("GetPackage", ProtoRuntimeStringBool);
                     name = gop.Name.Substring(0, gop.Name.Length - 2);
+                    create = (gop.Context & (int)Opcode.ContextValues.NOCREATE) == 0;
                 }
                 else
                 {
                     method = typeof(P5SymbolTable).GetMethod(MethodForSlot(gop.Slot));
                     name = gop.Name;
+                    create = true;
                 }
-                bool create = (gop.Context & (int)Opcode.ContextValues.NOCREATE) == 0;
+
                 var global =
                     Expression.Call(
                         Expression.Field(Runtime, st),
