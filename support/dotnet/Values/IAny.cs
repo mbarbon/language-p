@@ -24,7 +24,6 @@ namespace org.mbarbon.p.values
         int AsInteger(Runtime runtime);
         double AsFloat(Runtime runtime);
         bool AsBoolean(Runtime runtime);
-        bool IsDefined(Runtime runtime);
         int StringLength(Runtime runtime);
 
         int GetPos(Runtime runtime);

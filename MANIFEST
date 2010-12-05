@@ -67,6 +67,7 @@ support/dotnet/Bytecode/Bytecode.cs
 support/dotnet/Main.cs
 support/dotnet/Runtime/Binders/ArrayAssignmentBinder.cs
 support/dotnet/Runtime/Binders/BinaryOperationBinder.cs
+support/dotnet/Runtime/Binders/DefinedBinder.cs
 support/dotnet/Runtime/Binders/NumericCompareBinder.cs
 support/dotnet/Runtime/Binders/StringCompareBinder.cs
 support/dotnet/Runtime/Binders/UnaryIncrementBinder.cs

@@ -13,6 +13,11 @@ namespace org.mbarbon.p.values
             name = _name;
         }
 
+        public bool IsDefined(Runtime runtime)
+        {
+            return subref != (Sub)UndefinedSub;
+        }
+
         public P5Code(string _name, System.Delegate code, bool main)
         {
             subref = (Sub)code;

@@ -51,7 +51,6 @@ namespace org.mbarbon.p.values
         public virtual int AsInteger(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual double AsFloat(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual bool AsBoolean(Runtime runtime) { return true; }
-        public virtual bool IsDefined(Runtime runtime) { return true; }
         public virtual int StringLength(Runtime runtime) { throw new System.NotImplementedException(); }
 
         public virtual P5Handle AsHandle(Runtime runtime)

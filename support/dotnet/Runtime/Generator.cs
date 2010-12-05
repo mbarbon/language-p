@@ -1491,15 +1491,11 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_MINUS:
                 return UnaryOperator(sub, op, ExpressionType.Negate);
             case Opcode.OpNumber.OP_DEFINED:
-            {
-                return
+                return UnaryOperator(
+                    sub, op,
                     Expression.New(
-                        typeof(P5Scalar).GetConstructor(ProtoRuntimeBool),
-                        Runtime,
-                        Expression.Call(Generate(sub, op.Childs[0]),
-                                        typeof(IP5Any).GetMethod("IsDefined"),
-                                        Runtime));
-            }
+                        typeof(P5DefinedBinder).GetConstructor(new[] { typeof(Runtime) }),
+                        ModuleGenerator.InitRuntime));
             case Opcode.OpNumber.OP_CONCATENATE:
             {
                 Expression s1 =

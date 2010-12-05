@@ -64,6 +64,7 @@
     <Compile Include="Runtime\Binders\UnaryIncrementBinder.cs" />
     <Compile Include="Runtime\Binders\NumericCompareBinder.cs" />
     <Compile Include="Runtime\Binders\StringCompareBinder.cs" />
+    <Compile Include="Runtime\Binders\DefinedBinder.cs" />
     <Compile Include="Runtime\Utils.cs" />
     <Compile Include="Values\Handle.cs" />
     <Compile Include="Values\Code.cs" />
