@@ -1833,6 +1833,39 @@ sub _parse_lexical {
     return _process_declaration( $self, $term, $keyword, $force_closed );
 }
 
+sub _check_my_declaration {
+    my( $self, $sym ) = @_;
+    my $name = $sym->name;
+
+    if( $name =~ /::/ ) {
+        _parse_error( $self, $sym->pos,
+                      sprintf '"my" variable %s%s can\'t be in a package',
+                      _sigil_symbol( $sym->sigil ), $name );
+    }
+
+    return if $name =~ /^[a-zA-Z0-9]/ && $name !~ /::/;
+
+    if( ord( $name ) < 32 ) {
+        $name = '^' . chr( ord( $name ) + 64 ) . substr $name, 1;
+    }
+
+    _parse_error( $self, $sym->pos,
+                  sprintf 'Can\'t use global %s%s in "my"',
+                  _sigil_symbol( $sym->sigil ), $name );
+}
+
+sub _check_our_declaration {
+    my( $self, $sym ) = @_;
+
+    my $name = $sym->name;
+
+    if( $name =~ /::/ ) {
+        _parse_error( $self, $sym->pos,
+                      sprintf 'No package name allowed for variable %s%s in "our"',
+                      _sigil_symbol( $sym->sigil ), $name );
+    }
+}
+
 # takes a my $foo or my( $foo, $bar ) declaration, turns each ::Symbol
 # node into either a fully-qualified symbol (our) or a lexical
 # declaration (my)
@@ -1848,6 +1881,8 @@ sub _process_declaration {
     } elsif( $decl->isa( 'Language::P::ParseTree::Symbol' ) ) {
         my $sym;
         if( $keyword == OP_OUR ) {
+            _check_our_declaration( $self, $decl );
+
             $sym = Language::P::ParseTree::Symbol->new
                        ( { name        => _qualify( $self, $decl->name, T_ID ),
                            sigil       => $decl->sigil,
@@ -1855,6 +1890,8 @@ sub _process_declaration {
                            pos         => $decl->pos,
                            } );
         } else {
+            _check_my_declaration( $self, $decl );
+
             $sym = Language::P::ParseTree::LexicalDeclaration->new
                        ( { name    => $decl->name,
                            sigil   => $decl->sigil,
