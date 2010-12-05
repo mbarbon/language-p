@@ -1,17 +1,29 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 5;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 6;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 []
 EOP
 --- !parsetree:ReferenceConstructor
-expression: ~
+expression: !parsetree:List
+  context: CXT_LIST
+  expressions: []
+type: VALUE_ARRAY
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+[1]
+EOP
+--- !parsetree:ReferenceConstructor
+expression: !parsetree:List
+  context: CXT_LIST
+  expressions:
+    - !parsetree:Constant
+      context: CXT_LIST
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 1
 type: VALUE_ARRAY
 EOE
 
@@ -44,7 +56,9 @@ parse_and_diff_yaml( <<'EOP', <<'EOE' );
 {}
 EOP
 --- !parsetree:ReferenceConstructor
-expression: ~
+expression: !parsetree:List
+  context: CXT_LIST
+  expressions: []
 type: VALUE_HASH
 EOE
 

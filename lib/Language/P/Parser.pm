@@ -1680,7 +1680,7 @@ sub _parse_term_terminal {
         my $expr = _parse_bracketed_expr( $self, T_OPBRK, 1, 1 );
 
         return Language::P::ParseTree::ReferenceConstructor->new
-                   ( { expression => $expr,
+                   ( { expression => _make_list( $self, $expr, $token->[O_POS] ),
                        type       => VALUE_HASH,
                        pos        => $token->[O_POS],
                        } );
@@ -1688,7 +1688,7 @@ sub _parse_term_terminal {
         my $expr = _parse_bracketed_expr( $self, T_OPSQ, 1, 1 );
 
         return Language::P::ParseTree::ReferenceConstructor->new
-                   ( { expression => $expr,
+                   ( { expression => _make_list( $self, $expr, $token->[O_POS] ),
                        type       => VALUE_ARRAY,
                        pos        => $token->[O_POS],
                        } );

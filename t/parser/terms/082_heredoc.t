@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 9;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 9;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 print <<EOT
@@ -166,10 +162,13 @@ arguments:
         left: !parsetree:Block
           lines:
             - !parsetree:ReferenceConstructor
-              expression: !parsetree:Constant
+              expression: !parsetree:List
                 context: CXT_LIST
-                flags: CONST_STRING
-                value: "aaa\n"
+                expressions:
+                  - !parsetree:Constant
+                    context: CXT_LIST
+                    flags: CONST_STRING
+                    value: "aaa\n"
               type: VALUE_ARRAY
         op: OP_DEREFERENCE_ARRAY
       - !parsetree:Constant
@@ -200,10 +199,13 @@ arguments:
         left: !parsetree:Block
           lines:
             - !parsetree:ReferenceConstructor
-              expression: !parsetree:Constant
+              expression: !parsetree:List
                 context: CXT_LIST
-                flags: CONST_STRING
-                value: "aaa\n"
+                expressions:
+                  - !parsetree:Constant
+                    context: CXT_LIST
+                    flags: CONST_STRING
+                    value: "aaa\n"
               type: VALUE_ARRAY
         op: OP_DEREFERENCE_ARRAY
       - !parsetree:Constant
