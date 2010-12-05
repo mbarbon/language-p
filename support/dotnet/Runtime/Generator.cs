@@ -1503,6 +1503,11 @@ namespace org.mbarbon.p.runtime
                     Expression.New(
                         typeof(P5DefinedBinder).GetConstructor(new[] { typeof(Runtime) }),
                         ModuleGenerator.InitRuntime));
+            case Opcode.OpNumber.OP_ORD:
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("Ord"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
             case Opcode.OpNumber.OP_CONCATENATE:
             {
                 Expression s1 =

@@ -615,6 +615,13 @@ namespace org.mbarbon.p.runtime
             }
         }
 
+        public static P5Scalar Ord(Runtime runtime, IP5Any value)
+        {
+            var s = value.AsString(runtime);
+
+            return new P5Scalar(runtime, s.Length > 0 ? (int)s[0] : 0);
+        }
+
         public static void AddOverload(Runtime runtime, string pack_name,
                                        P5Array args)
         {
