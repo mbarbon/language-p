@@ -1411,11 +1411,11 @@ namespace org.mbarbon.p.runtime
                             ModuleGenerator.InitRuntime,
                             Expression.Constant((Opcode.ContextValues)op.Context)));
                 else
-                    return Expression.Call(
-                        le,
-                        typeof(IP5Any).GetMethod("Assign"),
-                        Runtime,
-                        Generate(sub, op.Childs[1]));
+                    return BinaryOperator<P5Scalar>(
+                        sub, op,
+                        Expression.New(
+                            typeof(P5ScalarAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime) }),
+                            ModuleGenerator.InitRuntime));
             }
             case Opcode.OpNumber.OP_GET:
             {

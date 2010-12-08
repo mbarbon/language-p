@@ -31,7 +31,7 @@ namespace org.mbarbon.p.values
                 body = new P5Undef(runtime);
         }
 
-        public virtual IP5Any Assign(Runtime runtime, IP5Any other)
+        public virtual P5Scalar Assign(Runtime runtime, IP5Any other)
         {
             body = other.AsScalar(runtime).body.CloneBody(runtime);
 

@@ -678,7 +678,7 @@ namespace org.mbarbon.p.runtime
 
             }
 
-            value.Assign(runtime, new P5Scalar(runtime, str));
+            value.SetString(runtime, str);
         }
 
         public string GetOriginal() { return original; }

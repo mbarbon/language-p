@@ -123,13 +123,6 @@ namespace org.mbarbon.p.values
             return -1;
         }
 
-        public virtual IP5Any Assign(Runtime runtime, IP5Any other)
-        {
-            AssignArray(runtime, other);
-
-            return this;
-        }
-
         public virtual int AssignArray(Runtime runtime, IP5Any other)
         {
             // FIXME multiple dispatch

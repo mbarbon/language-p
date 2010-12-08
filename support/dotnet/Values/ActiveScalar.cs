@@ -9,7 +9,7 @@ namespace org.mbarbon.p.values
             return (body as P5ActiveScalarBody).Get(runtime);
         }
 
-        public override IP5Any Assign(Runtime runtime, IP5Any other)
+        public override P5Scalar Assign(Runtime runtime, IP5Any other)
         {
             (body as P5ActiveScalarBody).Set(runtime, other);
 

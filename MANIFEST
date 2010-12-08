@@ -69,6 +69,7 @@ support/dotnet/Runtime/Binders/ArrayAssignmentBinder.cs
 support/dotnet/Runtime/Binders/BinaryOperationBinder.cs
 support/dotnet/Runtime/Binders/DefinedBinder.cs
 support/dotnet/Runtime/Binders/NumericCompareBinder.cs
+support/dotnet/Runtime/Binders/ScalarAssignmentBinder.cs
 support/dotnet/Runtime/Binders/StringCompareBinder.cs
 support/dotnet/Runtime/Binders/UnaryIncrementBinder.cs
 support/dotnet/Runtime/Binders/UnaryOperationBinder.cs

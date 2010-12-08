@@ -44,7 +44,7 @@ namespace org.mbarbon.p.values
             return Handle;
         }
 
-        public override IP5Any Assign(Runtime runtime, IP5Any other)
+        public override P5Scalar Assign(Runtime runtime, IP5Any other)
         {
             var ob = other.AsScalar(runtime).Body;
             var obr = ob as P5Reference;

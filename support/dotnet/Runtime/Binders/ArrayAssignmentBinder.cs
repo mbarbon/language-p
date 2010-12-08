@@ -39,7 +39,7 @@ namespace org.mbarbon.p.runtime
             var rvalue = Expression.Parameter(arg.RuntimeType);
             var assignment = Expression.Call(
                 lvalue,
-                typeof(IP5Any).GetMethod("AssignIterator"),
+                target.RuntimeType.GetMethod("AssignIterator"),
                 Expression.Constant(Runtime),
                 Expression.Call(
                     rvalue,

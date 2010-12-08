@@ -49,7 +49,7 @@ namespace org.mbarbon.p.runtime
             CallStack = new Stack<StackFrame>();
 
             // set up INC
-            SymbolTable.GetArray(this, "INC", true).Assign(
+            SymbolTable.GetArray(this, "INC", true).Push(
                 this, new P5Scalar(this, "."));
         }
 

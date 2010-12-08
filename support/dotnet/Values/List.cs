@@ -47,13 +47,6 @@ namespace org.mbarbon.p.values
             return AsScalar(runtime).IsDefined(runtime);
         }
 
-        public override IP5Any Assign(Runtime runtime, IP5Any other)
-        {
-            AssignArray(runtime, other);
-
-            return this;
-        }
-
         public override int AssignArray(Runtime runtime, IP5Any other)
         {
             // FIXME multiple dispatch
