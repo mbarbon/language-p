@@ -1246,16 +1246,19 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_PRINT:
             {
-                return
-                    Expression.Call(
-                        typeof(Builtins).GetMethod("Print"),
-                        Runtime,
-                        Expression.Convert(
-                            Generate(sub, op.Childs[0]),
-                            typeof(P5Handle)),
-                        Expression.Convert(
-                            Generate(sub, op.Childs[1]),
-                            typeof(P5Array)));
+                Expression handle = Generate(sub, op.Childs[0]);
+
+                if (handle.Type != typeof(P5Handle))
+                    handle = Expression.Call(
+                        handle,
+                        typeof(IP5Any).GetMethod("AsHandle"),
+                        Runtime);
+
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("Print"),
+                    Runtime,
+                    handle,
+                    Generate(sub, op.Childs[1]));
             }
             case Opcode.OpNumber.OP_READLINE:
             {
