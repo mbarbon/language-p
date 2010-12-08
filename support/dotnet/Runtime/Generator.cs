@@ -995,10 +995,10 @@ namespace org.mbarbon.p.runtime
                     ModuleGenerator.InitRuntime));
         }
 
-        private Expression BinaryOperator(Subroutine sub, Opcode op, Expression binder)
+        private Expression BinaryOperator<Result>(Subroutine sub, Opcode op, Expression binder)
         {
-            var delegateType = typeof(Func<CallSite, object, object, object>);
-            var siteType = typeof(CallSite<Func<CallSite, object, object, object>>);
+            var delegateType = typeof(Func<CallSite, object, object, Result>);
+            var siteType = typeof(CallSite<Func<CallSite, object, object, Result>>);
             var initExpr = Expression.Call(
                 siteType.GetMethod("Create"),
                 binder);
@@ -1015,12 +1015,15 @@ namespace org.mbarbon.p.runtime
                     Generate(sub, op.Childs[0]),
                     Generate(sub, op.Childs[1]));
 
-            return Expression.Convert(res, typeof(IP5Any));
+            if (res.Type == typeof(object))
+                return Expression.Convert(res, typeof(IP5Any));
+            else
+                return res;
         }
 
         private Expression BinaryOperator(Subroutine sub, Opcode op, ExpressionType operation)
         {
-            return BinaryOperator(
+            return BinaryOperator<object>(
                 sub, op,
                 Expression.New(
                     typeof(P5BinaryOperationBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
@@ -1030,7 +1033,7 @@ namespace org.mbarbon.p.runtime
 
         private Expression NumericRelOperator(Subroutine sub, Opcode op, ExpressionType operation)
         {
-            return BinaryOperator(
+            return BinaryOperator<object>(
                 sub, op,
                 Expression.New(
                     typeof(P5NumericCompareBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
@@ -1040,7 +1043,7 @@ namespace org.mbarbon.p.runtime
 
         private Expression StringRelOperator(Subroutine sub, Opcode op, ExpressionType operation)
         {
-            return BinaryOperator(
+            return BinaryOperator<object>(
                 sub, op,
                 Expression.New(
                     typeof(P5StringCompareBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
@@ -1401,7 +1404,7 @@ namespace org.mbarbon.p.runtime
 
                 if (   typeof(P5Array).IsAssignableFrom(le.Type)
                     || typeof(P5Hash).IsAssignableFrom(le.Type))
-                    return BinaryOperator(
+                    return BinaryOperator<object>(
                         sub, op,
                         Expression.New(
                             typeof(P5ArrayAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime), typeof(Opcode.ContextValues) }),
