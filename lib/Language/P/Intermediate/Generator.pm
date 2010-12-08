@@ -143,16 +143,19 @@ sub create_main {
 
 sub create_eval_context {
     my( $self, $indices, $lexicals ) = @_;
-    my $lex = {};
+    my( $lex, $lex_idx, $pad_idx ) = ( {}, [], [] );
     my $cxt = Language::P::Intermediate::Code->new
                   ( { type     => CODE_MAIN,
                       name     => undef,
                       outer    => undef,
-                      lexicals => { map => $lex },
+                      lexicals => { map     => $lex,
+                                    lex_idx => $lex_idx,
+                                    pad_idx => $pad_idx,
+                                    },
                       } );
     while( my( $name, $index ) = each %$indices ) {
         my $lexical = $lexicals->names->{$name};
-        $lex->{$lexical} =
+        $lex->{$lexical} = $pad_idx->[$index] =
           { index       => $index,
             outer_index => -1,
             name        => $lexical->name,
@@ -1241,7 +1244,13 @@ sub _allocate_lexical {
         $lex_info->{index} = $code->lexicals->{max_stack}++;
     }
 
-    return  $lex_info;
+    if( $lex_info->{in_pad} ) {
+        $code->lexicals->{pad_idx}[$lex_info->{index}] = $lex_info;
+    } else {
+        $code->lexicals->{lex_idx}[$lex_info->{index}] = $lex_info;
+    }
+
+    return $lex_info;
 }
 
 sub _do_lexical_access {

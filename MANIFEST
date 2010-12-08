@@ -77,6 +77,8 @@ support/toy/lib/Scalar/Util.pm
 support/toy/lib/overload.pm
 t/intermediate/002_base.t
 t/intermediate/002_base_tree.t
+t/intermediate/005_lexicals_ssa.t
+t/intermediate/005_lexicals_tree.t
 t/intermediate/011_call.t
 t/intermediate/011_call_tree.t
 t/intermediate/030_if.t
