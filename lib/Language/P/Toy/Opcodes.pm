@@ -1483,6 +1483,14 @@ _make_unary( $_ ) foreach
       type       => 'integer',
       expression => '$v->as_integer( $runtime )',
       },
+    { name       => 'o_uc',
+      type       => 'string',
+      expression => 'uc $v->as_string( $runtime )',
+      },
+    { name       => 'o_lc',
+      type       => 'string',
+      expression => 'lc $v->as_string( $runtime )',
+      },
     );
 
 sub _make_boolean_unary {
@@ -1726,17 +1734,6 @@ sub o_oct {
 
     push @{$runtime->{_stack}},
          Language::P::Toy::Value::Scalar->new_integer( $runtime, $int );
-
-    return $pc + 1;
-}
-
-sub o_uc {
-    my( $op, $runtime, $pc ) = @_;
-    my $scalar = pop @{$runtime->{_stack}};
-    my $str = uc $scalar->as_string( $runtime );
-
-    push @{$runtime->{_stack}},
-         Language::P::Toy::Value::Scalar->new_string( $runtime, $str );
 
     return $pc + 1;
 }
