@@ -1638,6 +1638,12 @@ namespace org.mbarbon.p.runtime
                 return UnaryIncrement(sub, op, ExpressionType.PostIncrementAssign);
             case Opcode.OpNumber.OP_POSTDEC:
                 return UnaryIncrement(sub, op, ExpressionType.PostDecrementAssign);
+            case Opcode.OpNumber.OP_REVERSE:
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("Reverse"),
+                    Runtime,
+                    OpContext(op),
+                    Generate(sub, op.Childs[0]));
             case Opcode.OpNumber.OP_REPEAT_ARRAY:
                 return Expression.Call(
                     Generate(sub, op.Childs[0]),
