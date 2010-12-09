@@ -1514,6 +1514,16 @@ namespace org.mbarbon.p.runtime
                     typeof(Builtins).GetMethod("Ord"),
                     Runtime,
                     Generate(sub, op.Childs[0]));
+            case Opcode.OpNumber.OP_UC:
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("Uppercase"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
+            case Opcode.OpNumber.OP_LC:
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("Lowercase"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
             case Opcode.OpNumber.OP_CONCATENATE:
             {
                 Expression s1 =

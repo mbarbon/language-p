@@ -622,6 +622,20 @@ namespace org.mbarbon.p.runtime
             return new P5Scalar(runtime, s.Length > 0 ? (int)s[0] : 0);
         }
 
+        public static P5Scalar Uppercase(Runtime runtime, IP5Any value)
+        {
+            var s = value.AsString(runtime).ToUpper();
+
+            return new P5Scalar(runtime, s);
+        }
+
+        public static P5Scalar Lowercase(Runtime runtime, IP5Any value)
+        {
+            var s = value.AsString(runtime).ToLower();
+
+            return new P5Scalar(runtime, s);
+        }
+
         public static void AddOverload(Runtime runtime, string pack_name,
                                        P5Array args)
         {
