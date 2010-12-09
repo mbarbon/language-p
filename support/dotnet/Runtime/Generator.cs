@@ -1514,6 +1514,11 @@ namespace org.mbarbon.p.runtime
                     typeof(Builtins).GetMethod("Ord"),
                     Runtime,
                     Generate(sub, op.Childs[0]));
+            case Opcode.OpNumber.OP_CHR:
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("Chr"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
             case Opcode.OpNumber.OP_UC:
                 return Expression.Call(
                     typeof(Builtins).GetMethod("Uppercase"),
