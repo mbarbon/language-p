@@ -542,6 +542,8 @@ namespace org.mbarbon.p.runtime
                 Variables.Add(null);
             if (Variables[index] == null)
                 Variables[index] = Expression.Variable(type);
+            else if(Variables[index].Type != type)
+                throw new System.Exception("Inconsistent types");
 
             return Variables[index];
         }
