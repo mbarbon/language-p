@@ -1531,6 +1531,25 @@ namespace org.mbarbon.p.runtime
                     typeof(Builtins).GetMethod("Lowercase"),
                     Runtime,
                     Generate(sub, op.Childs[0]));
+            case Opcode.OpNumber.OP_INDEX:
+            {
+                Expression start;
+
+                if (op.Childs.Length == 3)
+                    start = Expression.Call(
+                        Generate(sub, op.Childs[2]),
+                        typeof(IP5Any).GetMethod("AsInteger"),
+                        Runtime);
+                else
+                    start = Expression.Constant(0);
+
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("Index"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]),
+                    Generate(sub, op.Childs[1]),
+                    start);
+            }
             case Opcode.OpNumber.OP_CONCATENATE:
             {
                 Expression s1 =

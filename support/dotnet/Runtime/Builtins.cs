@@ -672,6 +672,20 @@ namespace org.mbarbon.p.runtime
             return new P5Scalar(runtime, s);
         }
 
+        public static P5Scalar Index(Runtime runtime, IP5Any value,
+                                     IP5Any substr, int start)
+        {
+            var str = value.AsString(runtime);
+            var sub = substr.AsString(runtime);
+
+            if (start < 0)
+                start = 0;
+            if (start > str.Length)
+                start = str.Length;
+
+            return new P5Scalar(runtime, str.IndexOf(sub, start));
+        }
+
         public static void AddOverload(Runtime runtime, string pack_name,
                                        P5Array args)
         {
