@@ -79,6 +79,7 @@
     <Compile Include="Values\Pos.cs" />
     <Compile Include="Values\Range.cs" />
     <Compile Include="Values\Vec.cs" />
+    <Compile Include="Values\Substr.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

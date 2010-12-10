@@ -62,20 +62,80 @@ namespace org.mbarbon.p.values
             return this;
         }
 
-        public P5Scalar SpliceSubstring(Runtime runtime, int start, int length,
-                                        IP5Any replace)
+        private P5StringNumber ForceString(Runtime runtime)
         {
             P5StringNumber sn = body as P5StringNumber;
             if (sn == null)
                 body = sn = new P5StringNumber(runtime, body.AsString(runtime));
-            else
+            else if (sn.stringValue == null)
+            {
+                sn.stringValue = sn.AsString(runtime);
                 sn.flags = P5StringNumber.HasString;
+            }
+
+            return sn;
+        }
+
+        private void AdjustOffsets(string value, ref int offset, ref int length)
+        {
+            if (offset < 0)
+                offset = value.Length + offset;
+            if (length < 0)
+                length = (value.Length + length) - offset;
+        }
+
+        private void AdjustOffsets(string value, ref int offset)
+        {
+            if (offset < 0)
+                offset = value.Length + offset;
+        }
+
+        public P5Scalar SpliceSubstring(Runtime runtime, int start, int length,
+                                        IP5Any replace)
+        {
+            var sn = ForceString(runtime);
+
+            AdjustOffsets(sn.stringValue, ref start, ref length);
 
             // TODO handle the various corner cases for start/end
+            var part = new P5Scalar(runtime, sn.stringValue.Substring(start, length));
             sn.stringValue = sn.stringValue.Substring(0, start)
                 + replace.AsString(runtime) + sn.stringValue.Substring(start + length);
 
-            return this;
+            return part;
+        }
+
+        public P5Scalar SpliceSubstring(Runtime runtime, int start,
+                                        IP5Any replace)
+        {
+            var sn = ForceString(runtime);
+
+            AdjustOffsets(sn.stringValue, ref start);
+
+            // TODO handle the various corner cases for start/end
+            var part = new P5Scalar(runtime, sn.stringValue.Substring(start, sn.stringValue.Length - start));
+            sn.stringValue = sn.stringValue.Substring(0, start)
+                + replace.AsString(runtime);
+
+            return part;
+        }
+
+        public P5Scalar Substring(Runtime runtime, int start, int length)
+        {
+            var str = AsString(runtime);
+
+            AdjustOffsets(str, ref start, ref length);
+
+            return new P5Scalar(runtime, str.Substring(start, length));
+        }
+
+        public P5Scalar Substring(Runtime runtime, int start)
+        {
+            var str = AsString(runtime);
+
+            AdjustOffsets(str, ref start);
+
+            return new P5Scalar(runtime, str.Substring(start, str.Length - start));
         }
 
         public virtual P5Scalar AsScalar(Runtime runtime) { return this; }

@@ -1976,6 +1976,39 @@ namespace org.mbarbon.p.runtime
                     Generate(sub, op.Childs[1]),
                     Generate(sub, op.Childs[2]));
             }
+            case Opcode.OpNumber.OP_SUBSTR:
+            {
+                Expression value = Generate(sub, op.Childs[0]);
+                Expression offset = Expression.Call(
+                    Generate(sub, op.Childs[1]),
+                    typeof(IP5Any).GetMethod("AsInteger"),
+                    Runtime);
+                Expression length = null;
+
+                if (op.Childs.Length >= 3)
+                    length = Expression.Call(
+                        Generate(sub, op.Childs[2]),
+                        typeof(IP5Any).GetMethod("AsInteger"),
+                        Runtime);
+
+                if (op.Childs.Length == 4)
+                    return Expression.Call(
+                        value,
+                        typeof(P5Scalar).GetMethod("SpliceSubstring", new[] { typeof(Runtime), typeof(int), typeof(int), typeof(IP5Any) }),
+                        Runtime,
+                        offset, length,
+                        Generate(sub, op.Childs[3]));
+                else if (op.Childs.Length == 3)
+                    return Expression.New(
+                        typeof(P5Substr).GetConstructor(new[] { typeof(Runtime), typeof(IP5Any), typeof(int), typeof(int) }),
+                        Runtime, value, offset, length);
+                else if (op.Childs.Length == 2)
+                    return Expression.New(
+                        typeof(P5Substr).GetConstructor(new[] { typeof(Runtime), typeof(IP5Any), typeof(int) }),
+                        Runtime, value, offset);
+
+                throw new System.Exception(); // can't happen
+            }
             case Opcode.OpNumber.OP_BLESS:
             {
                 return
@@ -2530,7 +2563,7 @@ namespace org.mbarbon.p.runtime
             replace_list.Add(
                 Expression.Call(
                     scalar,
-                    typeof(P5Scalar).GetMethod("SpliceSubstring"),
+                    typeof(P5Scalar).GetMethod("SpliceSubstring", new[] { typeof(Runtime), typeof(int), typeof(int), typeof(IP5Any) }),
                     Runtime,
                     Expression.Field(
                         rxstate,
