@@ -272,6 +272,7 @@ t/run/037_do_block.t
 t/run/038_goto.t
 t/run/039_loop_control.t
 t/run/045_chr.t
+t/run/045_index.t
 t/run/045_ord.t
 t/run/045_reverse.t
 t/run/045_sprintf.t
