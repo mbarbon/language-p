@@ -62,9 +62,8 @@ namespace org.mbarbon.p.values
             return this;
         }
 
-        public virtual IP5Any SpliceSubstring(Runtime runtime,
-                                              int start, int end,
-                                              IP5Any replace)
+        public P5Scalar SpliceSubstring(Runtime runtime, int start, int length,
+                                        IP5Any replace)
         {
             P5StringNumber sn = body as P5StringNumber;
             if (sn == null)
@@ -74,7 +73,7 @@ namespace org.mbarbon.p.values
 
             // TODO handle the various corner cases for start/end
             sn.stringValue = sn.stringValue.Substring(0, start)
-                + replace.AsString(runtime) + sn.stringValue.Substring(end);
+                + replace.AsString(runtime) + sn.stringValue.Substring(start + length);
 
             return this;
         }

@@ -2535,9 +2535,13 @@ namespace org.mbarbon.p.runtime
                     Expression.Field(
                         rxstate,
                         typeof(RxResult).GetField("Start")),
-                    Expression.Field(
-                        rxstate,
-                        typeof(RxResult).GetField("End")),
+                    Expression.Subtract(
+                        Expression.Field(
+                            rxstate,
+                            typeof(RxResult).GetField("End")),
+                        Expression.Field(
+                            rxstate,
+                            typeof(RxResult).GetField("Start"))),
                     replace));
 
             // return true at end of replacement
