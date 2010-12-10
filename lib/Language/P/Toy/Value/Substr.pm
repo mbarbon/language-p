@@ -29,7 +29,7 @@ sub _get {
 sub _set {
     my( $self, $runtime, $value ) = @_;
     my $str = $self->value->as_string( $runtime );
-    substr $str, $self->offset, $self->length, $value->as_integer( $runtime );
+    substr $str, $self->offset, $self->length, $value->as_string( $runtime );
     my $new = Language::P::Toy::Value::Scalar->new_string( $runtime, $str );
 
     $self->value->assign( $runtime, $new );
