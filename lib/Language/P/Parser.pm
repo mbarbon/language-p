@@ -1575,37 +1575,41 @@ sub _parse_term_terminal {
         } elsif( $token->[O_ID_TYPE] == KEY_RX_SPLIT ) {
             my $call = _parse_listop( $self, $token );
 
-            my $first;
+            my $pat;
             if( !$call->arguments ) {
                 $call->{arguments} = [];
-                $first = Language::P::ParseTree::Constant->new
-                             ( { flags => CONST_STRING,
-                                 value => ' ',
-                                 pos   => $token->[O_POS],
-                                 } );
             } else {
-                $first = $call->arguments->[0];
+                $pat = $call->arguments->[0];
             }
 
-            if( $first->isa( 'Language::P::ParseTree::Constant' ) ) {
-                my $v1 = my $v2 = $first->value;
-                my $token = [ $first->pos, T_PATTERN,
+            if(    !$pat
+                || (    $pat->isa( 'Language::P::ParseTree::Constant' )
+                     && $pat->value eq ' ' ) ) {
+                $call->{function} = OP_RX_SPLIT_SKIPSPACES;
+                $pat = undef;
+                shift @{$call->arguments};
+            } elsif( $pat->isa( 'Language::P::ParseTree::Constant' ) ) {
+                my $v1 = $pat->value;
+                my $token = [ $pat->pos, T_PATTERN,
                               OP_QL_M, 0, \$v1, undef, 0, 0 ];
-                $first = _parse_match( $self, $token );
-
-                $call->{function} = OP_RX_SPLIT_SKIPSPACES if $v2 eq ' ';
-            } elsif( !$first->isa( 'Language::P::ParseTree::Pattern' ) ) {
-                $first = Language::P::ParseTree::InterpolatedPattern->new
-                             ( { string  => $first,
+                $pat = _parse_match( $self, $token );
+            } elsif( !$pat->isa( 'Language::P::ParseTree::Pattern' ) ) {
+                $pat = Language::P::ParseTree::InterpolatedPattern->new
+                             ( { string  => $pat,
                                  flags   => 0,
                                  op      => OP_QL_M,
-                                 pos     => $first->pos,
+                                 pos     => $pat->pos,
                                  } );
             }
 
-            $call->arguments->[0] = $first;
+            if( $pat ) {
+                $call->arguments->[0] = $pat;
 
-            if( @{$call->arguments} == 1 ) {
+                if( @{$call->arguments} == 1 ) {
+                    push @{$call->arguments},
+                         _find_symbol( $self, undef, VALUE_SCALAR, '_', T_FQ_ID );
+                }
+            } elsif( @{$call->arguments} == 0 ) {
                 push @{$call->arguments},
                      _find_symbol( $self, undef, VALUE_SCALAR, '_', T_FQ_ID );
             }
