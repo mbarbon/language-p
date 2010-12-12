@@ -6,6 +6,27 @@ namespace org.mbarbon.p.runtime
 {
     public partial class Builtins
     {
+        public static P5Scalar Unlink(Runtime runtime, P5Array files)
+        {
+            int count = 0;
+
+            foreach (var file in files)
+            {
+                try
+                {
+                    System.IO.File.Delete(file.AsString(runtime));
+
+                    count += 1;
+                }
+                catch (System.IO.IOException)
+                {
+                    // ignored
+                }
+            }
+
+            return new P5Scalar(runtime, count);
+        }
+
         public static P5Scalar IsFile(Runtime runtime, IP5Any path)
         {
             var str = path.AsString(runtime);
