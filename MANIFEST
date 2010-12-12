@@ -293,6 +293,7 @@ t/run/123_caller.t
 t/run/125_tail_call.t
 t/run/200_sub_name.t
 t/run/250_ft_isfile.t
+t/run/255_open_file.t
 t/run/500_isa.t
 t/run/700_overload.t
 t/run/705_vec.t
