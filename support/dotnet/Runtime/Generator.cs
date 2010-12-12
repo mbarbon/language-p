@@ -2411,6 +2411,11 @@ namespace org.mbarbon.p.runtime
                 else
                     return GenerateSubstitution(sub, rm);
             }
+            case Opcode.OpNumber.OP_RX_SPLIT_SKIPSPACES:
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("SplitSpaces"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
             case Opcode.OpNumber.OP_TRANSLITERATE:
             {
                 RegexTransliterate rt = (RegexTransliterate)op;

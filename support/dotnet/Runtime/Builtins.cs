@@ -169,6 +169,28 @@ namespace org.mbarbon.p.runtime
             return new P5Scalar(runtime, res.ToString());
         }
 
+        public static P5List SplitSpaces(Runtime runtime, IP5Any value)
+        {
+            var str = value.AsString(runtime);
+            var res = new P5List(runtime);
+            int start = 0, curr = 0;
+
+            for ( ; curr < str.Length; )
+            {
+                for ( ; curr < str.Length && char.IsWhiteSpace(str[curr]); ++curr)
+                    ;
+                start = curr;
+                if (start == str.Length)
+                    break;
+                for ( ; curr < str.Length && !char.IsWhiteSpace(str[curr]); ++curr)
+                    ;
+
+                res.Push(runtime, new P5Scalar(runtime, str.Substring(start, curr - start)));
+            }
+
+            return res;
+        }
+
         public static IP5Any Warn(Runtime runtime, P5Array args)
         {
             // TODO handle empty argument list when $@ is set and when it is not
