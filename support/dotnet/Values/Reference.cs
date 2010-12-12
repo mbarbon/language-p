@@ -118,6 +118,16 @@ namespace org.mbarbon.p.values
                 throw new System.Exception("Not a CODE reference");
         }
 
+        public virtual P5Handle DereferenceHandle(Runtime runtime)
+        {
+            P5Handle val = referred as P5Handle;
+
+            if (val != null)
+                return val;
+            else
+                throw new System.Exception("Not a HANDLE reference");
+        }
+
         public virtual int GetPos(Runtime runtime)
         {
             return pos;

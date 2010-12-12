@@ -39,11 +39,6 @@ namespace org.mbarbon.p.values
             set { globBody.Code = value; }
         }
 
-        public override P5Handle AsHandle(Runtime runtime)
-        {
-            return Handle;
-        }
-
         public override P5Scalar Assign(Runtime runtime, IP5Any other)
         {
             var ob = other.AsScalar(runtime).Body;
@@ -170,6 +165,11 @@ namespace org.mbarbon.p.values
         public virtual P5Code DereferenceSubroutine(Runtime runtime)
         {
             return code;
+        }
+
+        public virtual P5Handle DereferenceHandle(Runtime runtime)
+        {
+            return handle;
         }
 
         public virtual int GetPos(Runtime runtime)

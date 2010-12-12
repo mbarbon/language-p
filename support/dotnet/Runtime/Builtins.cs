@@ -304,6 +304,17 @@ namespace org.mbarbon.p.runtime
             return glob.Code = new P5Code(name);
         }
 
+        public static P5Handle SymbolicReferenceHandle(Runtime runtime, IP5ScalarBody any, bool create)
+        {
+            string name = any.AsString(runtime);
+            var glob = SymbolicReference(runtime, name, create);
+
+            if (glob == null)
+                return null;
+
+            return glob.Handle;
+        }
+
         public static P5Hash SymbolicReferenceHash(Runtime runtime, IP5ScalarBody any, bool create)
         {
             string name = any.AsString(runtime);

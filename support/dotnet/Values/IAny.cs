@@ -19,7 +19,6 @@ namespace org.mbarbon.p.values
     public interface IP5Any : IP5Referrable
     {
         P5Scalar AsScalar(Runtime runtime);
-        P5Handle AsHandle(Runtime runtime);
         string AsString(Runtime runtime);
         int AsInteger(Runtime runtime);
         double AsFloat(Runtime runtime);
@@ -41,6 +40,7 @@ namespace org.mbarbon.p.values
         P5Hash DereferenceHash(Runtime runtime);
         P5Typeglob DereferenceGlob(Runtime runtime);
         P5Code DereferenceSubroutine(Runtime runtime);
+        P5Handle DereferenceHandle(Runtime runtime);
 
         P5Scalar VivifyScalar(Runtime runtime);
         P5Array VivifyArray(Runtime runtime);

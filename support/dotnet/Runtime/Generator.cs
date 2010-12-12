@@ -1256,7 +1256,7 @@ namespace org.mbarbon.p.runtime
                 if (handle.Type != typeof(P5Handle))
                     handle = Expression.Call(
                         handle,
-                        typeof(IP5Any).GetMethod("AsHandle"),
+                        typeof(IP5Any).GetMethod("DereferenceHandle"),
                         Runtime);
 
                 return Expression.Call(
@@ -1273,7 +1273,7 @@ namespace org.mbarbon.p.runtime
                         Runtime,
                         Expression.Call(
                             Generate(sub, op.Childs[0]),
-                            typeof(IP5Any).GetMethod("AsHandle"),
+                            typeof(IP5Any).GetMethod("DereferenceHandle"),
                             Runtime),
                         OpContext(op));
             }

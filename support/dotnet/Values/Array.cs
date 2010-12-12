@@ -197,9 +197,9 @@ namespace org.mbarbon.p.values
             return AsString(runtime).Length;
         }
 
-        public virtual P5Handle AsHandle(Runtime runtime)
+        public virtual P5Handle DereferenceHandle(Runtime runtime)
         {
-            throw new System.NotImplementedException("No AsHandle for P5Array");
+            throw new System.NotImplementedException("No DereferenceHandle for P5Array");
         }
 
         public virtual int GetPos(Runtime runtime)

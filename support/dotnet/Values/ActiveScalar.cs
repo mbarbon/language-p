@@ -94,6 +94,11 @@ namespace org.mbarbon.p.values
             return Get(runtime).DereferenceSubroutine(runtime);
         }
 
+        public virtual P5Handle DereferenceHandle(Runtime runtime)
+        {
+            return Get(runtime).DereferenceHandle(runtime);
+        }
+
         public virtual int GetPos(Runtime runtime)
         {
             return Get(runtime).GetPos(runtime);

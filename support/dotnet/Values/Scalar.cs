@@ -150,11 +150,6 @@ namespace org.mbarbon.p.values
         public virtual bool IsFloat(Runtime runtime) { return body.IsFloat(runtime); }
         public virtual bool IsReference(Runtime runtime) { return body as P5Reference != null; }
 
-        public virtual P5Handle AsHandle(Runtime runtime)
-        {
-            throw new System.NotImplementedException("No AsHandle for P5Scalar");
-        }
-
         public void SetString(Runtime runtime, string value)
         {
             var str_num = body as P5StringNumber;
@@ -285,6 +280,11 @@ namespace org.mbarbon.p.values
         public virtual P5Code DereferenceSubroutine(Runtime runtime)
         {
             return body.DereferenceSubroutine(runtime);
+        }
+
+        public virtual P5Handle DereferenceHandle(Runtime runtime)
+        {
+            return body.DereferenceHandle(runtime);
         }
 
         // must be checked by the caller
@@ -438,5 +438,6 @@ namespace org.mbarbon.p.values
         P5Hash DereferenceHash(Runtime runtime);
         P5Typeglob DereferenceGlob(Runtime runtime);
         P5Code DereferenceSubroutine(Runtime runtime);
+        P5Handle DereferenceHandle(Runtime runtime);
     }
 }

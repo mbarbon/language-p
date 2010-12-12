@@ -169,6 +169,11 @@ namespace org.mbarbon.p.values
             return Builtins.SymbolicReferenceCode(runtime, this, true);
         }
 
+        public virtual P5Handle DereferenceHandle(Runtime runtime)
+        {
+            return Builtins.SymbolicReferenceHandle(runtime, this, true);
+        }
+
         public virtual int GetPos(Runtime runtime)
         {
             return pos;
