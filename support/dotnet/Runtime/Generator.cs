@@ -2423,6 +2423,11 @@ namespace org.mbarbon.p.runtime
                             Expression.Constant(rt.Replacement),
                             Expression.Constant(rt.Flags)));
             }
+            case Opcode.OpNumber.OP_FT_ISFILE:
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("IsFile"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
             default:
                 throw new System.Exception(string.Format("Unhandled opcode {0:S} in generation", op.Number.ToString()));
             }

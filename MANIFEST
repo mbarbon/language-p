@@ -75,6 +75,7 @@ support/dotnet/Runtime/Binders/UnaryIncrementBinder.cs
 support/dotnet/Runtime/Binders/UnaryOperationBinder.cs
 support/dotnet/Runtime/Builtins.cs
 support/dotnet/Runtime/Builtins/BitOps.cs
+support/dotnet/Runtime/Builtins/FileSystem.cs
 support/dotnet/Runtime/Builtins/IO.cs
 support/dotnet/Runtime/Builtins/Sprintf.cs
 support/dotnet/Runtime/Generator.cs
