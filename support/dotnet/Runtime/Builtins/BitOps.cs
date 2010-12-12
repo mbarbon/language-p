@@ -63,6 +63,46 @@ namespace org.mbarbon.p.runtime
             return res;
         }
 
+        public static P5Scalar BitXorAssign(Runtime runtime,
+                                            P5Scalar a, P5Scalar b)
+        {
+            return BitXor(runtime, a, a, b);
+        }
+
+        public static P5Scalar BitXor(Runtime runtime, P5Scalar res,
+                                      P5Scalar a, P5Scalar b)
+        {
+            if (a.IsString(runtime) && b.IsString(runtime))
+            {
+                string sa = a.AsString(runtime), sb = b.AsString(runtime);
+                System.Text.StringBuilder t;
+
+                if (sa.Length > sb.Length)
+                {
+                    t = new System.Text.StringBuilder(sa);
+
+                    for (int i = 0; i < sb.Length; ++i)
+                        t[i] ^= sb[i];
+                }
+                else
+                {
+                    t = new System.Text.StringBuilder(sb);
+
+                    for (int i = 0; i < sa.Length; ++i)
+                        t[i] ^= sa[i];
+                }
+
+                res.SetString(runtime, t.ToString());
+            }
+            else
+            {
+                // TODO take into account signed/unsigned?
+                res.SetInteger(runtime, a.AsInteger(runtime) ^ b.AsInteger(runtime));
+            }
+
+            return res;
+        }
+
         public static P5Scalar BitAndAssign(Runtime runtime,
                                             P5Scalar a, P5Scalar b)
         {

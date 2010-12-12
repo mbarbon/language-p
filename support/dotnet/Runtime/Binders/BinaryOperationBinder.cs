@@ -19,6 +19,8 @@ namespace org.mbarbon.p.runtime
             {
             case ExpressionType.Or:
             case ExpressionType.OrAssign:
+            case ExpressionType.ExclusiveOr:
+            case ExpressionType.ExclusiveOrAssign:
             case ExpressionType.And:
             case ExpressionType.AndAssign:
                 return BindBitOp(target, arg, errorSuggestion);
@@ -53,6 +55,14 @@ namespace org.mbarbon.p.runtime
                 break;
             case ExpressionType.OrAssign:
                 method_name = "BitOrAssign";
+                is_assign = true;
+                break;
+            case ExpressionType.ExclusiveOr:
+                method_name = "BitXor";
+                is_assign = false;
+                break;
+            case ExpressionType.ExclusiveOrAssign:
+                method_name = "BitXorAssign";
                 is_assign = true;
                 break;
             case ExpressionType.And:

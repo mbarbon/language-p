@@ -1601,6 +1601,10 @@ namespace org.mbarbon.p.runtime
                 return BinaryOperator(sub, op, ExpressionType.And);
             case Opcode.OpNumber.OP_BIT_AND_ASSIGN:
                 return BinaryOperator(sub, op, ExpressionType.AndAssign);
+            case Opcode.OpNumber.OP_BIT_XOR:
+                return BinaryOperator(sub, op, ExpressionType.ExclusiveOr);
+            case Opcode.OpNumber.OP_BIT_XOR_ASSIGN:
+                return BinaryOperator(sub, op, ExpressionType.ExclusiveOrAssign);
             case Opcode.OpNumber.OP_NUM_LE:
                 return NumericRelOperator(sub, op, ExpressionType.LessThanOrEqual);
             case Opcode.OpNumber.OP_NUM_LT:
