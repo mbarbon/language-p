@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 2;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 3;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 our $foo;
@@ -53,4 +49,13 @@ right: !parsetree:Constant
   context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+our $foo::bar;
+EOP
+--- !p:Exception
+file: '<string>'
+line: 1
+message: No package name allowed for variable $foo::bar in "our"
 EOE

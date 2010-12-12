@@ -8,6 +8,7 @@ $x = $a && $b;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   global context=4, name="a", slot=1
   dup
   jump_if_true false=L6, true=L2
@@ -32,6 +33,7 @@ $x = $a || $b;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   global context=4, name="a", slot=1
   dup
   jump_if_true false=L2, true=L6
@@ -56,6 +58,7 @@ $a && $b && $c;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   global context=4, name="a", slot=1
   dup
   jump_if_true false=L8, true=L2
@@ -85,6 +88,7 @@ $x = $a && $b && $c;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   global context=4, name="a", slot=1
   dup
   jump_if_true false=L9, true=L2
@@ -118,6 +122,7 @@ $x = $a || $b || $c;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   global context=4, name="a", slot=1
   dup
   jump_if_true false=L2, true=L9
@@ -151,6 +156,7 @@ $x &&= $a;
 EOP
 # main
 L1:
+  lexical_state_set index=0
   global context=4, name="x", slot=1
   dup
   jump_if_true false=L4, true=L2

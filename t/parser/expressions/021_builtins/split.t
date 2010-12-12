@@ -70,14 +70,6 @@ split
 EOP
 --- !parsetree:Builtin
 arguments:
-  - !parsetree:Pattern
-    components:
-      - !parsetree:RXConstant
-        insensitive: 0
-        value: ' '
-    flags: 0
-    op: OP_QL_M
-    original: '(?-xism: )'
   - !parsetree:Symbol
     context: CXT_SCALAR
     name: _

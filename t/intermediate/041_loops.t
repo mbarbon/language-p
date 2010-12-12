@@ -10,12 +10,8 @@ for( $i = 0; $i < 10; $i = $i + 1 ) {
 EOP
 # main
 L1:
-  constant_integer value=0
-  global context=20, name="i", slot=1
-  swap
-  assign context=2
-  pop
-  jump to=L2
+  lexical_state_set index=0
+  jump to=L6
 L2:
   global context=4, name="i", slot=1
   constant_integer value=10
@@ -38,6 +34,13 @@ L4:
   jump to=L2
 L5:
   end
+L6:
+  constant_integer value=0
+  global context=20, name="i", slot=1
+  swap
+  assign context=2
+  pop
+  jump to=L2
 EOI
 
 generate_and_diff( <<'EOP', <<'EOI' );
@@ -47,6 +50,7 @@ for(;;) {
 EOP
 # main
 L1:
+  lexical_state_set index=0
   jump to=L3
 L3:
   global context=4, name="STDOUT", slot=7
@@ -64,12 +68,8 @@ for( $i = 0; ; $i = $i + 1 ) {
 EOP
 # main
 L1:
-  constant_integer value=0
-  global context=20, name="i", slot=1
-  swap
-  assign context=2
-  pop
-  jump to=L3
+  lexical_state_set index=0
+  jump to=L6
 L3:
   global context=4, name="STDOUT", slot=7
   global context=4, name="i", slot=1
@@ -86,6 +86,13 @@ L4:
   assign context=2
   pop
   jump to=L3
+L6:
+  constant_integer value=0
+  global context=20, name="i", slot=1
+  swap
+  assign context=2
+  pop
+  jump to=L3
 EOI
 
 generate_and_diff( <<'EOP', <<'EOI' );
@@ -95,12 +102,8 @@ for( $i = 0; $i < 10; $i = $i + 1 ) {
 EOP
 # main
 L1:
-  constant_integer value=0
-  global context=20, name="i", slot=1
-  swap
-  assign context=2
-  pop
-  jump to=L2
+  lexical_state_set index=0
+  jump to=L6
 L2:
   global context=4, name="i", slot=1
   constant_integer value=10
@@ -123,4 +126,11 @@ L4:
   jump to=L2
 L5:
   end
+L6:
+  constant_integer value=0
+  global context=20, name="i", slot=1
+  swap
+  assign context=2
+  pop
+  jump to=L2
 EOI

@@ -10,6 +10,7 @@ while( $a ) {
 EOP
 # main
 L1:
+  lexical_state_set index=0
   jump to=L2
 L2:
   global context=4, name="a", slot=1
@@ -27,6 +28,7 @@ generate_and_diff( <<'EOP', <<'EOI' );
 EOP
 # main
 L1:
+  lexical_state_set index=0
   jump to=L2
 L10:
   jump to=L5
@@ -55,6 +57,7 @@ until( $a ) {
 EOP
 # main
 L1:
+  lexical_state_set index=0
   jump to=L2
 L2:
   global context=4, name="a", slot=1
@@ -72,6 +75,7 @@ generate_and_diff( <<'EOP', <<'EOI' );
 EOP
 # main
 L1:
+  lexical_state_set index=0
   jump to=L2
 L10:
   jump to=L5

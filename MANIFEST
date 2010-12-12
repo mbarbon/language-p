@@ -115,6 +115,8 @@ support/toy/lib/Scalar/Util.pm
 support/toy/lib/overload.pm
 t/intermediate/002_base.t
 t/intermediate/002_base_tree.t
+t/intermediate/005_lexicals_ssa.t
+t/intermediate/005_lexicals_tree.t
 t/intermediate/011_call.t
 t/intermediate/011_call_tree.t
 t/intermediate/030_if.t
@@ -279,6 +281,7 @@ t/run/010_arithmetic.t
 t/run/010_bitshift.t
 t/run/010_bitwise.t
 t/run/010_compare_value.t
+t/run/010_repeat.t
 t/run/011_call.t
 t/run/015_array_ops.t
 t/run/015_defined.t
@@ -297,6 +300,8 @@ t/run/021_qr.t
 t/run/021_regexp.t
 t/run/021_regexp_i.t
 t/run/021_regexp_zw.t
+t/run/021_sort_default.t
+t/run/021_split_space.t
 t/run/021_substitution.t
 t/run/021_transliteration.t
 t/run/025_begin.t
@@ -305,6 +310,14 @@ t/run/035_local_element.t
 t/run/037_do_block.t
 t/run/038_goto.t
 t/run/039_loop_control.t
+t/run/045_chr.t
+t/run/045_index.t
+t/run/045_octhex.t
+t/run/045_ord.t
+t/run/045_reverse.t
+t/run/045_sprintf.t
+t/run/045_substr.t
+t/run/045_uclc.t
 t/run/070_objects.t
 t/run/080_recursion.t
 t/run/081_context.t
@@ -318,6 +331,8 @@ t/run/121_eval_block.t
 t/run/123_caller.t
 t/run/125_tail_call.t
 t/run/200_sub_name.t
+t/run/250_ft_isfile.t
+t/run/255_open_file.t
 t/run/500_isa.t
 t/run/700_overload.t
 t/run/705_vec.t

@@ -166,7 +166,10 @@ sub o_sprintf {
 
     for( my $i = 1; $i < $args->get_count( $runtime ); ++$i ) {
         my $value = $args->get_item( $runtime, $i )->as_scalar( $runtime );
-        push @values, Scalar::Util::dualvar( $value->as_float( $runtime ),
+        my $number = $value->is_float( $runtime )   ? $value->as_float( $runtime ) :
+                     $value->is_integer( $runtime ) ? $value->as_integer( $runtime ) :
+                                                      0;
+        push @values, Scalar::Util::dualvar( $number,
                                              $value->as_string( $runtime ) );
     }
 
@@ -1480,6 +1483,14 @@ _make_unary( $_ ) foreach
       type       => 'integer',
       expression => '$v->as_integer( $runtime )',
       },
+    { name       => 'o_uc',
+      type       => 'string',
+      expression => 'uc $v->as_string( $runtime )',
+      },
+    { name       => 'o_lc',
+      type       => 'string',
+      expression => 'lc $v->as_string( $runtime )',
+      },
     );
 
 sub _make_boolean_unary {
@@ -1728,13 +1739,13 @@ sub o_oct {
     return $pc + 1;
 }
 
-sub o_uc {
+sub o_hex {
     my( $op, $runtime, $pc ) = @_;
     my $scalar = pop @{$runtime->{_stack}};
-    my $str = uc $scalar->as_string( $runtime );
+    my $int = hex $scalar->as_string( $runtime );
 
     push @{$runtime->{_stack}},
-         Language::P::Toy::Value::Scalar->new_string( $runtime, $str );
+         Language::P::Toy::Value::Scalar->new_integer( $runtime, $int );
 
     return $pc + 1;
 }
@@ -1949,9 +1960,15 @@ sub _make_bool_ft {
 sub %s {
     my( $op, $runtime, $pc ) = @_;
     my $file = pop @{$runtime->{_stack}};
+    my $res = -%s( $file->as_string( $runtime ) );
 
-    push @{$runtime->{_stack}}, Language::P::Toy::Value::Scalar
-                                    ->new_boolean( $runtime, -%s( $file->as_string( $runtime ) ) );
+    if( defined $res ) {
+        push @{$runtime->{_stack}}, Language::P::Toy::Value::Scalar
+                                        ->new_boolean( $runtime, $res );
+    } else {
+        push @{$runtime->{_stack}}, Language::P::Toy::Value::Undef
+                                        ->new( $runtime );
+    }
 
     return $pc + 1;
 }

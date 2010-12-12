@@ -1575,37 +1575,41 @@ sub _parse_term_terminal {
         } elsif( $token->[O_ID_TYPE] == KEY_RX_SPLIT ) {
             my $call = _parse_listop( $self, $token );
 
-            my $first;
+            my $pat;
             if( !$call->arguments ) {
                 $call->{arguments} = [];
-                $first = Language::P::ParseTree::Constant->new
-                             ( { flags => CONST_STRING,
-                                 value => ' ',
-                                 pos   => $token->[O_POS],
-                                 } );
             } else {
-                $first = $call->arguments->[0];
+                $pat = $call->arguments->[0];
             }
 
-            if( $first->isa( 'Language::P::ParseTree::Constant' ) ) {
-                my $v1 = my $v2 = $first->value;
-                my $token = [ $first->pos, T_PATTERN,
+            if(    !$pat
+                || (    $pat->isa( 'Language::P::ParseTree::Constant' )
+                     && $pat->value eq ' ' ) ) {
+                $call->{function} = OP_RX_SPLIT_SKIPSPACES;
+                $pat = undef;
+                shift @{$call->arguments};
+            } elsif( $pat->isa( 'Language::P::ParseTree::Constant' ) ) {
+                my $v1 = $pat->value;
+                my $token = [ $pat->pos, T_PATTERN,
                               OP_QL_M, 0, \$v1, undef, 0, 0 ];
-                $first = _parse_match( $self, $token );
-
-                $call->{function} = OP_RX_SPLIT_SKIPSPACES if $v2 eq ' ';
-            } elsif( !$first->isa( 'Language::P::ParseTree::Pattern' ) ) {
-                $first = Language::P::ParseTree::InterpolatedPattern->new
-                             ( { string  => $first,
+                $pat = _parse_match( $self, $token );
+            } elsif( !$pat->isa( 'Language::P::ParseTree::Pattern' ) ) {
+                $pat = Language::P::ParseTree::InterpolatedPattern->new
+                             ( { string  => $pat,
                                  flags   => 0,
                                  op      => OP_QL_M,
-                                 pos     => $first->pos,
+                                 pos     => $pat->pos,
                                  } );
             }
 
-            $call->arguments->[0] = $first;
+            if( $pat ) {
+                $call->arguments->[0] = $pat;
 
-            if( @{$call->arguments} == 1 ) {
+                if( @{$call->arguments} == 1 ) {
+                    push @{$call->arguments},
+                         _find_symbol( $self, undef, VALUE_SCALAR, '_', T_FQ_ID );
+                }
+            } elsif( @{$call->arguments} == 0 ) {
                 push @{$call->arguments},
                      _find_symbol( $self, undef, VALUE_SCALAR, '_', T_FQ_ID );
             }
@@ -1680,7 +1684,7 @@ sub _parse_term_terminal {
         my $expr = _parse_bracketed_expr( $self, T_OPBRK, 1, 1 );
 
         return Language::P::ParseTree::ReferenceConstructor->new
-                   ( { expression => $expr,
+                   ( { expression => _make_list( $self, $expr, $token->[O_POS] ),
                        type       => VALUE_HASH,
                        pos        => $token->[O_POS],
                        } );
@@ -1688,7 +1692,7 @@ sub _parse_term_terminal {
         my $expr = _parse_bracketed_expr( $self, T_OPSQ, 1, 1 );
 
         return Language::P::ParseTree::ReferenceConstructor->new
-                   ( { expression => $expr,
+                   ( { expression => _make_list( $self, $expr, $token->[O_POS] ),
                        type       => VALUE_ARRAY,
                        pos        => $token->[O_POS],
                        } );
@@ -1833,6 +1837,39 @@ sub _parse_lexical {
     return _process_declaration( $self, $term, $keyword, $force_closed );
 }
 
+sub _check_my_declaration {
+    my( $self, $sym ) = @_;
+    my $name = $sym->name;
+
+    if( $name =~ /::/ ) {
+        _parse_error( $self, $sym->pos,
+                      sprintf '"my" variable %s%s can\'t be in a package',
+                      _sigil_symbol( $sym->sigil ), $name );
+    }
+
+    return if $name =~ /^[a-zA-Z0-9]/ && $name !~ /::/;
+
+    if( ord( $name ) < 32 ) {
+        $name = '^' . chr( ord( $name ) + 64 ) . substr $name, 1;
+    }
+
+    _parse_error( $self, $sym->pos,
+                  sprintf 'Can\'t use global %s%s in "my"',
+                  _sigil_symbol( $sym->sigil ), $name );
+}
+
+sub _check_our_declaration {
+    my( $self, $sym ) = @_;
+
+    my $name = $sym->name;
+
+    if( $name =~ /::/ ) {
+        _parse_error( $self, $sym->pos,
+                      sprintf 'No package name allowed for variable %s%s in "our"',
+                      _sigil_symbol( $sym->sigil ), $name );
+    }
+}
+
 # takes a my $foo or my( $foo, $bar ) declaration, turns each ::Symbol
 # node into either a fully-qualified symbol (our) or a lexical
 # declaration (my)
@@ -1848,6 +1885,8 @@ sub _process_declaration {
     } elsif( $decl->isa( 'Language::P::ParseTree::Symbol' ) ) {
         my $sym;
         if( $keyword == OP_OUR ) {
+            _check_our_declaration( $self, $decl );
+
             $sym = Language::P::ParseTree::Symbol->new
                        ( { name        => _qualify( $self, $decl->name, T_ID ),
                            sigil       => $decl->sigil,
@@ -1855,6 +1894,8 @@ sub _process_declaration {
                            pos         => $decl->pos,
                            } );
         } else {
+            _check_my_declaration( $self, $decl );
+
             $sym = Language::P::ParseTree::LexicalDeclaration->new
                        ( { name    => $decl->name,
                            sigil   => $decl->sigil,

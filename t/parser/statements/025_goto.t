@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-use t::lib::TestParser tests => 12;
+use t::lib::TestParser tests => 14;
 use Test::More import => [ qw(is) ];
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -35,6 +35,46 @@ arguments:
       context: CXT_SCALAR
       name: foo
       sigil: VALUE_SUB
+    op: OP_REFERENCE
+context: CXT_VOID
+function: OP_DYNAMIC_GOTO
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+goto &{foo};
+EOP
+--- !parsetree:Builtin
+arguments:
+  - !parsetree:UnOp
+    context: CXT_SCALAR
+    left: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: foo
+      sigil: VALUE_SUB
+    op: OP_REFERENCE
+context: CXT_VOID
+function: OP_DYNAMIC_GOTO
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+goto &{foo()};
+EOP
+--- !parsetree:Builtin
+arguments:
+  - !parsetree:UnOp
+    context: CXT_SCALAR
+    left: !parsetree:Dereference
+      context: CXT_SCALAR
+      left: !parsetree:Block
+        lines:
+          - !parsetree:FunctionCall
+            arguments: ~
+            context: CXT_SCALAR
+            function: !parsetree:Symbol
+              context: CXT_SCALAR
+              name: foo
+              sigil: VALUE_SUB
+      op: OP_DEREFERENCE_SUB
     op: OP_REFERENCE
 context: CXT_VOID
 function: OP_DYNAMIC_GOTO

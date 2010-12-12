@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 8;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 11;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 my $foo;
@@ -173,4 +169,31 @@ context: CXT_VOID
 level: 0
 name: x
 sigil: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+my ${^FOO};
+EOP
+--- !p:Exception
+file: '<string>'
+line: 1
+message: Can't use global $^FOO in "my"
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+my $&;
+EOP
+--- !p:Exception
+file: '<string>'
+line: 1
+message: Can't use global $& in "my"
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+my $foo::bar;
+EOP
+--- !p:Exception
+file: '<string>'
+line: 1
+message: "\"my\" variable $foo::bar can't be in a package"
 EOE

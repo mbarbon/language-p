@@ -151,8 +151,12 @@ sub o_rx_split {
 
 sub o_rx_split_skipspaces {
     my( $op, $runtime, $pc ) = @_;
+    my $value = pop @{$runtime->{_stack}};
+    my @parts = map Language::P::Toy::Value::Scalar->new_string( $runtime, $_ ),
+                    split ' ', $value->as_string( $runtime );
 
-    die 'Unimplemented';
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::List->new( $runtime, { array => \@parts } );
 
     return $pc + 1;
 }

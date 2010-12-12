@@ -1,17 +1,14 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 3;
-
-use lib qw(t/lib);
-use TestIntermediate qw(:all);
+use t::lib::TestIntermediate tests => 3;
 
 generate_and_diff( <<'EOP', <<'EOI' );
 $x = $a + 2
 EOP
 # main
 L1:
+  lexical_state_set index=0
   global context=4, name="a", slot=1
   constant_integer value=2
   add context=4
@@ -29,6 +26,7 @@ print !$a
 EOP
 # main
 L1:
+  lexical_state_set index=0
   global context=4, name="STDOUT", slot=7
   global context=4, name="a", slot=1
   not context=8
@@ -45,6 +43,7 @@ $x = "$a\n";
 EOP
 # main
 L1:
+  lexical_state_set index=0
   fresh_string value=""
   global context=4, name="a", slot=1
   concat_assign context=4

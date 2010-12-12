@@ -1,13 +1,10 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 18;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 19;
 
 parse_ok( 'lib', 'Language::P' );
+parse_ok( 'lib', 'Language::P::Object' );
 parse_ok( 'lib', 'Language::P::Assembly' );
 parse_ok( 'lib', 'Language::P::Constants' );
 parse_ok( 'lib', 'Language::P::Exception' );

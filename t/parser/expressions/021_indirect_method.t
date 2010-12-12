@@ -1,11 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use warnings;
-use Test::More tests => 19;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 19;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 foo Foo()
@@ -341,10 +337,13 @@ EOP
 --- !parsetree:MethodCall
 arguments:
   - !parsetree:ReferenceConstructor
-    expression: !parsetree:Constant
+    expression: !parsetree:List
       context: CXT_LIST
-      flags: CONST_NUMBER|NUM_INTEGER
-      value: 1
+      expressions:
+        - !parsetree:Constant
+          context: CXT_LIST
+          flags: CONST_NUMBER|NUM_INTEGER
+          value: 1
     type: VALUE_HASH
 context: CXT_VOID
 indirect: 0
@@ -361,10 +360,13 @@ EOP
 --- !parsetree:MethodCall
 arguments:
   - !parsetree:ReferenceConstructor
-    expression: !parsetree:Constant
+    expression: !parsetree:List
       context: CXT_LIST
-      flags: CONST_NUMBER|NUM_INTEGER
-      value: 1
+      expressions:
+        - !parsetree:Constant
+          context: CXT_LIST
+          flags: CONST_NUMBER|NUM_INTEGER
+          value: 1
     type: VALUE_ARRAY
 context: CXT_VOID
 indirect: 0
@@ -383,10 +385,13 @@ arguments:
   - !parsetree:Parentheses
     context: CXT_LIST
     left: !parsetree:ReferenceConstructor
-      expression: !parsetree:Constant
+      expression: !parsetree:List
         context: CXT_LIST
-        flags: CONST_NUMBER|NUM_INTEGER
-        value: 1
+        expressions:
+          - !parsetree:Constant
+            context: CXT_LIST
+            flags: CONST_NUMBER|NUM_INTEGER
+            value: 1
       type: VALUE_HASH
     op: OP_PARENTHESES
 context: CXT_VOID
