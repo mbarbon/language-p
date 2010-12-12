@@ -2437,6 +2437,11 @@ namespace org.mbarbon.p.runtime
                     typeof(Builtins).GetMethod("Unlink"),
                     Runtime,
                     Generate(sub, op.Childs[0]));
+            case Opcode.OpNumber.OP_OPEN:
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("Open"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
             case Opcode.OpNumber.OP_CLOSE:
                 return Expression.Call(
                     typeof(Builtins).GetMethod("Close"),

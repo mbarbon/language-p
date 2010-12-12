@@ -180,6 +180,22 @@ namespace org.mbarbon.p.values
                 body = new P5StringNumber(runtime, value);
         }
 
+        public void SetHandle(Runtime runtime, P5Handle handle)
+        {
+            var reference = body as P5Reference;
+
+            if (reference != null)
+            {
+                reference.Referred = handle;
+                return;
+            }
+
+            if (IsDefined(runtime))
+                throw new System.NotImplementedException("No SetHandle for defined scalars");
+
+            body = new P5Reference(runtime, handle);
+        }
+
         public virtual int Length(Runtime runtime)
         {
             return body.Length(runtime);

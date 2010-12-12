@@ -148,10 +148,8 @@ namespace org.mbarbon.p.values
 
         internal IP5Referrable Referred
         {
-            get
-            {
-                return referred;
-            }
+            get { return referred; }
+            set { referred = value; }
         }
 
         private int pos = -1;
