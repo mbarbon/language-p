@@ -7,17 +7,6 @@ namespace org.mbarbon.p.runtime
 {
     public partial class Builtins
     {
-        public static P5Scalar Print(Runtime runtime, P5Handle handle, P5Array args)
-        {
-            // wrong but works well enough for now
-            for (int i = 0, m = args.GetCount(runtime); i < m; ++i)
-            {
-                handle.Write(runtime, args.GetItem(runtime, i), 0, -1);
-            }
-
-            return new P5Scalar(runtime, 1);
-        }
-
         public static void TracePosition(string file, int line)
         {
             System.Console.WriteLine(string.Format("{0:S}:{1:D}", file, line));
@@ -39,28 +28,6 @@ namespace org.mbarbon.p.runtime
                 return new P5Scalar(runtime);
 
             return new P5Scalar(runtime, cxt == Opcode.ContextValues.LIST);
-        }
-
-        public static IP5Any Readline(Runtime runtime, P5Handle handle,
-                                      Opcode.ContextValues cxt)
-        {
-            if (cxt == Opcode.ContextValues.LIST)
-            {
-                P5Scalar line;
-                var lines = new List<IP5Any>();
-
-                while (handle.Readline(runtime, out line))
-                    lines.Add(line);
-
-                return new P5List(runtime, lines);
-            }
-            else
-            {
-                P5Scalar line;
-                handle.Readline(runtime, out line);
-
-                return line;
-            }
         }
 
         internal static string SearchFile(Runtime runtime, string file)
@@ -180,105 +147,6 @@ namespace org.mbarbon.p.runtime
                 return new P5Scalar(runtime, -value.AsFloat(runtime));
 
             return new P5Scalar(runtime, -value.AsInteger(runtime));
-        }
-
-        public static P5Scalar BitNot(Runtime runtime, P5Scalar value)
-        {
-            if (value.IsString(runtime))
-            {
-                string svalue = value.AsString(runtime);
-                var t = new System.Text.StringBuilder(svalue);;
-
-                for (int i = 0; i < svalue.Length; ++i)
-                    t[i] = (char)(~t[i] & 0xff); // only ASCII for now
-
-                return new P5Scalar(runtime, t.ToString());
-            }
-            else
-            {
-                // TODO take into account signed/unsigned?
-                return new P5Scalar(runtime, ~value.AsInteger(runtime));
-            }
-        }
-
-        public static P5Scalar BitOrAssign(Runtime runtime,
-                                           P5Scalar a, P5Scalar b)
-        {
-            return BitOr(runtime, a, a, b);
-        }
-
-        public static P5Scalar BitOr(Runtime runtime, P5Scalar res,
-                                     P5Scalar a, P5Scalar b)
-        {
-            if (a.IsString(runtime) && b.IsString(runtime))
-            {
-                string sa = a.AsString(runtime), sb = b.AsString(runtime);
-                System.Text.StringBuilder t;
-
-                if (sa.Length > sb.Length)
-                {
-                    t = new System.Text.StringBuilder(sa);
-
-                    for (int i = 0; i < sb.Length; ++i)
-                        t[i] |= sb[i];
-                }
-                else
-                {
-                    t = new System.Text.StringBuilder(sb);
-
-                    for (int i = 0; i < sa.Length; ++i)
-                        t[i] |= sa[i];
-                }
-
-                res.SetString(runtime, t.ToString());
-            }
-            else
-            {
-                // TODO take into account signed/unsigned?
-                res.SetInteger(runtime, a.AsInteger(runtime) | b.AsInteger(runtime));
-            }
-
-            return res;
-        }
-
-        public static P5Scalar BitAndAssign(Runtime runtime,
-                                            P5Scalar a, P5Scalar b)
-        {
-            return BitAnd(runtime, a, a, b);
-        }
-
-        public static P5Scalar BitAnd(Runtime runtime, P5Scalar res,
-                                      P5Scalar a, P5Scalar b)
-        {
-            if (a.IsString(runtime) && b.IsString(runtime))
-            {
-                string sa = a.AsString(runtime), sb = b.AsString(runtime);
-                System.Text.StringBuilder t;
-
-                if (sa.Length > sb.Length)
-                {
-                    t = new System.Text.StringBuilder(sa);
-
-                    for (int i = 0; i < sb.Length; ++i)
-                        t[i] &= sb[i];
-                }
-                else
-                {
-                    t = new System.Text.StringBuilder(sb);
-
-                    for (int i = 0; i < sa.Length; ++i)
-                        t[i] &= sa[i];
-                }
-
-                res.SetString(runtime, t.ToString());
-            }
-            else
-            {
-                // TODO take into account signed/unsigned?
-                res.SetInteger(runtime, a.AsInteger(runtime) & b.AsInteger(runtime));
-            }
-
-            return res;
         }
 
         public static P5Scalar JoinList(Runtime runtime, P5Array array)
