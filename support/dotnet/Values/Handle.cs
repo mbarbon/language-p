@@ -40,6 +40,33 @@ namespace org.mbarbon.p.values
             return line != null;
         }
 
+        public bool Close(Runtime runtime)
+        {
+            bool ok = true;
+
+            if (input != null)
+                try
+                {
+                    input.Close();
+                }
+                catch (IOException)
+                {
+                    ok = false;
+                }
+
+            if (output != null)
+                try
+                {
+                    output.Close();
+                }
+                catch (IOException)
+                {
+                    ok = false;
+                }
+
+            return ok;
+        }
+
         public virtual P5Scalar ReferenceType(Runtime runtime)
         {
             return new P5Scalar(runtime);

@@ -38,5 +38,13 @@ namespace org.mbarbon.p.runtime
                 return line;
             }
         }
+
+        public static P5Scalar Close(Runtime runtime, P5Scalar arg)
+        {
+            var handle = arg.DereferenceHandle(runtime);
+            bool res = handle.Close(runtime);
+
+            return new P5Scalar(runtime, res);
+        }
     }
 }
