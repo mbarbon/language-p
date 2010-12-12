@@ -1,27 +1,28 @@
 using org.mbarbon.p.runtime;
 using System.Collections.Generic;
+using System.IO;
 
 namespace org.mbarbon.p.values
 {
     public class P5Handle : IP5Referrable
     {
-        public P5Handle(Runtime runtime, System.IO.TextReader input, System.IO.TextWriter output)
+        public P5Handle(Runtime _runtime, TextReader _input, TextWriter _output)
         {
-            Input = input;
-            Output = output;
+            input = _input;
+            output = _output;
         }
 
         public int Write(Runtime runtime, IP5Any scalar, int offset, int length)
         {
             // TODO use offset/length
-            Output.Write(scalar.AsString(runtime));
+            output.Write(scalar.AsString(runtime));
 
             return 1;
         }
 
         public int Write(Runtime runtime, string value)
         {
-            Output.Write(value);
+            output.Write(value);
 
             return 1;
         }
@@ -29,7 +30,7 @@ namespace org.mbarbon.p.values
         public bool Readline(Runtime runtime, out P5Scalar result)
         {
             // TODO rewrite and optimize
-            var line = Input.ReadLine();
+            var line = input.ReadLine();
 
             if (line == null)
                 result = new P5Scalar(runtime);
@@ -59,7 +60,7 @@ namespace org.mbarbon.p.values
             return null;
         }
 
-        private System.IO.TextReader Input;
-        private System.IO.TextWriter Output;
+        private TextReader input;
+        private TextWriter output;
     }
 }
