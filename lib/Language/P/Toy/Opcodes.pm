@@ -1738,6 +1738,17 @@ sub o_oct {
     return $pc + 1;
 }
 
+sub o_hex {
+    my( $op, $runtime, $pc ) = @_;
+    my $scalar = pop @{$runtime->{_stack}};
+    my $int = hex $scalar->as_string( $runtime );
+
+    push @{$runtime->{_stack}},
+         Language::P::Toy::Value::Scalar->new_integer( $runtime, $int );
+
+    return $pc + 1;
+}
+
 sub o_negate {
     my( $op, $runtime, $pc ) = @_;
     my $scalar = pop @{$runtime->{_stack}};
