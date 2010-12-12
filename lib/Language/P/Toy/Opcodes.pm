@@ -1948,9 +1948,15 @@ sub _make_bool_ft {
 sub %s {
     my( $op, $runtime, $pc ) = @_;
     my $file = pop @{$runtime->{_stack}};
+    my $res = -%s( $file->as_string( $runtime ) );
 
-    push @{$runtime->{_stack}}, Language::P::Toy::Value::Scalar
-                                    ->new_boolean( $runtime, -%s( $file->as_string( $runtime ) ) );
+    if( defined $res ) {
+        push @{$runtime->{_stack}}, Language::P::Toy::Value::Scalar
+                                        ->new_boolean( $runtime, $res );
+    } else {
+        push @{$runtime->{_stack}}, Language::P::Toy::Value::Undef
+                                        ->new( $runtime );
+    }
 
     return $pc + 1;
 }
