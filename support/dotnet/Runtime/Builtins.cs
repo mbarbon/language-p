@@ -112,6 +112,50 @@ namespace org.mbarbon.p.runtime
             return ret;
         }
 
+        public static int ParseOctal(string s, int start)
+        {
+            int end;
+
+            for (end = start; end < s.Length; ++end)
+                if (!(s[end] >= '0' && s[end] <= '7'))
+                    break;
+
+            if (start == end)
+                return 0;
+
+            return System.Convert.ToInt32(s.Substring(start, end - start), 8);
+        }
+
+        public static int ParseHexadecimal(string s, int start)
+        {
+            int end;
+
+            for (end = start; end < s.Length; ++end)
+                if (!(   (s[end] >= '0' && s[end] <= '9')
+                      || (s[end] >= 'a' && s[end] <= 'f')
+                      || (s[end] >= 'A' && s[end] <= 'F')))
+                    break;
+
+            if (start == end)
+                return 0;
+
+            return System.Convert.ToInt32(s.Substring(start, end - start), 16);
+        }
+
+        public static int ParseBinary(string s, int start)
+        {
+            int end;
+
+            for (end = start; end < s.Length; ++end)
+                if (s[end] != '0' && s[end] != '1')
+                    break;
+
+            if (start == end)
+                return 0;
+
+            return System.Convert.ToInt32(s.Substring(start, end - start), 2);
+        }
+
         public static int ParseInteger(string s)
         {
             if (s.Length == 0)
@@ -121,6 +165,34 @@ namespace org.mbarbon.p.runtime
 
             // TODO this does not work for " 123", "-1_234", "12abc"
             return int.Parse(s);
+        }
+
+        public static int ParseBaseInteger(string s, int start, int num_base)
+        {
+            int rem = s.Length - start;
+
+            if (rem > 2)
+            {
+                if (s[start] == '0' && s[start + 1] == 'x')
+                {
+                    num_base = 16;
+                    start += 2;
+                }
+                else if (s[start] == '0' && s[start + 1] == 'b')
+                {
+                    num_base = 2;
+                    start += 2;
+                }
+            }
+
+            if (num_base == 2)
+                return ParseBinary(s, start);
+            else if (num_base == 8)
+                return ParseOctal(s, start);
+            else if (num_base == 16)
+                return ParseHexadecimal(s, start);
+
+            return 0; // can't happen
         }
 
         public static P5Scalar Negate(Runtime runtime, P5Scalar value)
@@ -543,6 +615,27 @@ namespace org.mbarbon.p.runtime
             System.Array.Reverse(value);
 
             return new P5Scalar(runtime, new string(value));
+        }
+
+        public static P5Scalar Oct(Runtime runtime, P5Scalar value)
+        {
+            var str = value.AsString(runtime);
+            int start;
+
+            for (start = 0; start < str.Length; ++start)
+                if (!char.IsWhiteSpace(str[start]))
+                    break;
+
+            // TODO warn about invalid octal digit
+            return new P5Scalar(runtime, ParseBaseInteger(str, start, 8));
+        }
+
+        public static P5Scalar Hex(Runtime runtime, P5Scalar value)
+        {
+            var str = value.AsString(runtime);
+
+            // TODO warn about invalid hexadecimal digits
+            return new P5Scalar(runtime, ParseBaseInteger(str, 0, 16));
         }
 
         public static P5Scalar Ord(Runtime runtime, IP5Any value)

@@ -1531,6 +1531,16 @@ namespace org.mbarbon.p.runtime
                     typeof(Builtins).GetMethod("Lowercase"),
                     Runtime,
                     Generate(sub, op.Childs[0]));
+            case Opcode.OpNumber.OP_OCT:
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("Oct"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
+            case Opcode.OpNumber.OP_HEX:
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("Hex"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
             case Opcode.OpNumber.OP_INDEX:
             {
                 Expression start;
