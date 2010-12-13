@@ -277,6 +277,7 @@ t/run/045_index.t
 t/run/045_octhex.t
 t/run/045_ord.t
 t/run/045_reverse.t
+t/run/045_splice.t
 t/run/045_sprintf.t
 t/run/045_substr.t
 t/run/045_uclc.t
