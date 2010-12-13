@@ -1834,6 +1834,40 @@ namespace org.mbarbon.p.runtime
                     Expression.Property(iter, "Current"),
                     Expression.Constant(null, typeof(IP5Any)));
             }
+            case Opcode.OpNumber.OP_SPLICE:
+            {
+                var args = new List<Expression>();
+
+                args.Add(Runtime);
+                args.Add(Generate(sub, op.Childs[0]));
+
+                if (op.Childs.Length > 1)
+                    args.Add(Generate(sub, op.Childs[1]));
+                else
+                    args.Add(Expression.Constant(null, typeof(IP5Any)));
+
+                if (op.Childs.Length > 2)
+                    args.Add(Generate(sub, op.Childs[2]));
+                else
+                    args.Add(Expression.Constant(null, typeof(IP5Any)));
+
+                if (op.Childs.Length > 3)
+                {
+                    var list = new List<Expression>();
+
+                    for (int i = 3; i < op.Childs.Length; ++i)
+                        list.Add(Generate(sub, op.Childs[i]));
+
+                    args.Add(Expression.NewArrayInit(typeof(IP5Any), list));
+                }
+
+                if (op.Childs.Length <= 3)
+                    return Expression.Call(
+                        typeof(Builtins).GetMethod("ArraySplice"), args);
+                else
+                    return Expression.Call(
+                        typeof(Builtins).GetMethod("ArrayReplace"), args);
+            }
             case Opcode.OpNumber.OP_ARRAY_SLICE:
             {
                 var ea = (ElementAccess)op;

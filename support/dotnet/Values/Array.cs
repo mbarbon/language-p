@@ -412,6 +412,46 @@ namespace org.mbarbon.p.values
             return new P5List(runtime, list);
         }
 
+        public P5List Splice(Runtime runtime, int start, int length)
+        {
+            var res = array.GetRange(start, length);
+
+            array.RemoveRange(start, length);
+
+            return new P5List(runtime, res);
+        }
+
+        public P5List Replace(Runtime runtime, int start, int length, IP5Any[] values)
+        {
+            var spliced = new List<IP5Any>();
+
+            foreach (var i in values)
+            {
+                var a = i as P5Array;
+                var h = i as P5Hash;
+                IEnumerator<IP5Any> enumerator = null;
+
+                if (h != null)
+                    enumerator = ((P5Hash)h.Clone(runtime, 1)).GetEnumerator(runtime);
+                else if (a != null)
+                    enumerator = ((P5Array)a.Clone(runtime, 1)).GetEnumerator(runtime);
+
+                if (enumerator != null)
+                    while (enumerator.MoveNext())
+                        spliced.Add(enumerator.Current);
+                else
+                    spliced.Add(i.Clone(runtime, 0));
+            }
+
+            var res = array.GetRange(start, length);
+
+            // TODO optimize
+            array.RemoveRange(start, length);
+            array.InsertRange(start, spliced);
+
+            return new P5List(runtime, res);
+        }
+
         public P5List Sort(Runtime runtime)
         {
             var list = new List<IP5Any>(array);

@@ -617,6 +617,44 @@ namespace org.mbarbon.p.runtime
             return new P5Scalar(runtime, new string(value));
         }
 
+        public static IP5Any ArraySplice(Runtime runtime, P5Array array,
+                                         IP5Any offset, IP5Any count)
+        {
+            int start, length, max = array.GetCount(runtime);
+
+            if (offset == null)
+                start = 0;
+            else
+                start = offset.AsInteger(runtime);
+            if (start < 0)
+                start = max + start;
+
+            if (count == null)
+                length = max - start;
+            else
+                length = count.AsInteger(runtime);
+            if (length < 0)
+                length = max + length - start;
+
+            return array.Splice(runtime, start, length);
+        }
+
+        public static IP5Any ArrayReplace(Runtime runtime, P5Array array,
+                                          IP5Any offset, IP5Any count,
+                                          params IP5Any[] values)
+        {
+            int start = offset.AsInteger(runtime);
+            int length = count.AsInteger(runtime);
+            int max = array.GetCount(runtime);
+
+            if (start < 0)
+                start = max + start;
+            if (length < 0)
+                length = max + length - start;
+
+            return array.Replace(runtime, start, length, values);
+        }
+
         public static P5Scalar Oct(Runtime runtime, P5Scalar value)
         {
             var str = value.AsString(runtime);
