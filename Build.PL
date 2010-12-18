@@ -21,9 +21,6 @@ my $build = My::Build->new
         { perl5          =>
               { type     => '=s',
                 },
-          parrot         =>
-              { type     => '=s',
-                },
           },
     );
 $build->create_build_script;

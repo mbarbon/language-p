@@ -8,7 +8,6 @@ bin/p
 inc/Keywords.pm
 inc/My/Build.pm
 inc/Opcodes.pm
-inc/p_parrot
 lib/Language/P.pm
 lib/Language/P/Assembly.pm
 lib/Language/P/Constants.pm
@@ -23,8 +22,6 @@ lib/Language/P/Intermediate/Serialize.pm
 lib/Language/P/Intermediate/Transform.pm
 lib/Language/P/Lexer.pm
 lib/Language/P/Object.pm
-lib/Language/P/Parrot/BootstrapRuntime.pm
-lib/Language/P/Parrot/Generator.pm
 lib/Language/P/ParseTree.pm
 lib/Language/P/ParseTree/DumpYAML.pm
 lib/Language/P/ParseTree/PropagateContext.pm
@@ -61,18 +58,6 @@ lib/Language/P/Toy/Value/Typeglob.pm
 lib/Language/P/Toy/Value/Undef.pm
 lib/Language/P/Toy/Value/Vec.pm
 support/.gitignore
-support/parrot/runtime/p5array.pir
-support/parrot/runtime/p5float.pir
-support/parrot/runtime/p5glob.pir
-support/parrot/runtime/p5hash.pir
-support/parrot/runtime/p5integer.pir
-support/parrot/runtime/p5list.pir
-support/parrot/runtime/p5macros.pir
-support/parrot/runtime/p5print.pir
-support/parrot/runtime/p5runtime.pir
-support/parrot/runtime/p5scalar.pir
-support/parrot/runtime/p5string.pir
-support/parrot/runtime/p5undef.pir
 support/toy/lib/Scalar/Util.pm
 support/toy/lib/overload.pm
 t/intermediate/002_base.t

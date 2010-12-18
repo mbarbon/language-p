@@ -11,43 +11,6 @@ use File::Path qw();
 
 =cut
 
-sub _compile_pir_pbc {
-    my( $self, $parrot, $pir_file, $deps ) = @_;
-    ( my $pbc_file = $pir_file ) =~ s/\.pir$/.pbc/;
-
-    return if $self->up_to_date( [ $pir_file, @$deps, $parrot ],
-                                 [ $pbc_file ] );
-    $self->do_system( $parrot, '--output-pbc', '-o', $pbc_file, $pir_file );
-    $self->add_to_cleanup( $pbc_file );
-}
-
-=head2 code_parrot
-
-Build Parrot runtime support code under F<support/parrot> and create
-the F<p_parrot> script under F<bin>.
-
-=cut
-
-sub ACTION_code_parrot {
-    my( $self ) = @_;
-    my $parrot_path = $self->args( 'parrot' );
-
-    if( !$self->up_to_date( [ 'inc/p_parrot' ], [ 'bin/p_parrot' ] ) ) {
-        require File::Slurp; File::Slurp->import( qw(read_file write_file) );
-
-        $self->log_info( "Creating 'bin/p_parrot'" );
-        write_file( 'bin/p_parrot',
-                    map { s/%PARROT%/$parrot_path/eg; $_ }
-                        read_file( 'inc/p_parrot' ) );
-        chmod 0755, 'bin/p_parrot';
-        $self->add_to_cleanup( 'bin/p_parrot' );
-    }
-    foreach my $pir_file ( 'support/parrot/runtime/p5runtime.pir' ) {
-        _compile_pir_pbc( $self, $parrot_path, $pir_file,
-                          [ glob 'support/parrot/runtime/*.pir' ] );
-    }
-}
-
 =head2 code_perl5
 
 Creates symlinks for perl5 core tests.
@@ -78,7 +41,7 @@ sub ACTION_code_perl5 {
 
 =head2 code
 
-Calls the defult C<code> action, C<code_parrot> if appropriate, and
+Calls the defult C<code> action, C<code_dlr> if appropriate, and
 builds F<lib/Language/P/Opcodes.pm> and F<lib/Language/P/Keywords.pm>
 from the files under F<inc>.
 
@@ -110,7 +73,6 @@ sub ACTION_code {
         $self->add_to_cleanup( 'lib/Language/P/Intermediate/SerializeGenerated.pm' );
     }
 
-    $self->depends_on( 'code_parrot' ) if $self->args( 'parrot' );
     $self->depends_on( 'code_perl5' ) if $self->args( 'perl5' );
 
     $self->SUPER::ACTION_code;
@@ -186,9 +148,6 @@ my %test_tags =
     'perl5'      => [ [ 'bin/p', _all_subdirs( 't/perl5' ) ] ],
     'run'        => [ [ 'bin/p', _all_subdirs( 't/run' ) ] ],
     'all'        => [ 'parser', 'intermediate', 'runtime', 'run', 'perl5' ],
-    'parrot'     => [ 'parser', 'intermediate', 'parrot_run', 'parrot_perl5' ],
-    'parrot_run' => [ [ 'bin/p_parrot', _all_subdirs( 't/run' ) ] ],
-    'parrot_perl5'=>[ [ 'bin/p_parrot', _all_subdirs( 't/perl5' ) ] ],
     );
 
 =head2 test_parser
@@ -211,19 +170,6 @@ Runs the tests under F<t/run> using F<bin/p>.
 
 Runs the tests under F<t/perl5> using F<bin/p>.
 
-=head2 test_parrot
-
-Runs F<t/parser> and F<t/intermediate> tests, then the F<t/run> and
-F<t/perl5> tests using F<bin/p_parrot>.
-
-=head2 test_parrot_run
-
-Runs the tests under F<t/run> using F<bin/p_parrot>.
-
-=head2 test_parrot_perl5
-
-Runs the tests under F<t/perl5> using F<bin/p_parrot>.
-
 =cut
 
 sub ACTION_test_parser;
@@ -231,9 +177,6 @@ sub ACTION_test_intermediate;
 sub ACTION_test_runtime;
 sub ACTION_test_run;
 sub ACTION_test_perl5;
-sub ACTION_test_parrot;
-sub ACTION_test_parrot_run;
-sub ACTION_test_parrot_perl5;
 
 sub _expand_tags {
     my( $self, $tag ) = @_;

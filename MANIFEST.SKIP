@@ -1,14 +1,10 @@
 # Avoid build files
 ^lib/Language/P/Keywords.pm$
 ^lib/Language/P/Opcodes.pm$
-^bin/p_parrot$
-^t/.*/.*\.pbc$
 ^t/.*/.*\.ir$
-^t/.*/.*\.pir$
 ^t/.*/.*\.pt$
 ^t/harness$
 .pb$
-^support/parrot/runtime/.*\.pbc$
 ^lib/Language/P/Intermediate/SerializeGenerated\.pm$
 ^MYMETA.yml$
 ^foo$
