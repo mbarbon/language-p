@@ -77,6 +77,7 @@ support/dotnet/Runtime/Builtins/FileSystem.cs
 support/dotnet/Runtime/Builtins/IO.cs
 support/dotnet/Runtime/Builtins/Sprintf.cs
 support/dotnet/Runtime/Generator.cs
+support/dotnet/Runtime/NetGlue.cs
 support/dotnet/Runtime/NetRegex.cs
 support/dotnet/Runtime/Overload.cs
 support/dotnet/Runtime/Regex.cs
@@ -91,6 +92,7 @@ support/dotnet/Values/Handle.cs
 support/dotnet/Values/Hash.cs
 support/dotnet/Values/IAny.cs
 support/dotnet/Values/List.cs
+support/dotnet/Values/NetWrapper.cs
 support/dotnet/Values/Pos.cs
 support/dotnet/Values/Range.cs
 support/dotnet/Values/Reference.cs
@@ -350,6 +352,7 @@ t/run/files/Foo.pm
 t/run/files/Moo.pm
 t/run/files/foo.pl
 t/run/files/my_strict.pm
+t/run/net/001_base.t
 t/run/parser/021_interpolated_regexp.t
 t/run/parser/110_eval.t
 t/run/parser/120_stack_unwind.t

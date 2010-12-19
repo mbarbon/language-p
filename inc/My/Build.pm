@@ -183,7 +183,7 @@ my %test_tags =
     'runtime'    => [ [ undef,   _all_subdirs( 't/runtime' ) ] ],
     'intermediate' => [ [ undef, _all_subdirs( 't/intermediate' ) ] ],
     'perl5'      => [ [ 'bin/p', _all_subdirs( 't/perl5' ) ] ],
-    'run_np'     => [ [ 'bin/p', 't/run' ] ],
+    'run_np'     => [ [ 'bin/p', 't/run', 't/run/net' ] ],
     'run'        => [ [ 'bin/p', _all_subdirs( 't/run' ) ] ],
     'all'        => [ 'parser', 'intermediate', 'runtime', 'run', 'perl5' ],
     );

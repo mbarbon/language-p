@@ -4,6 +4,7 @@ using StringSplitOptions = System.StringSplitOptions;
 using Opcode = org.mbarbon.p.runtime.Opcode;
 using Builtins = org.mbarbon.p.runtime.Builtins;
 using Overloads = org.mbarbon.p.runtime.Overloads;
+using Glue = org.mbarbon.p.runtime.NetGlue;
 
 namespace org.mbarbon.p.values
 {
@@ -301,6 +302,24 @@ namespace org.mbarbon.p.values
 
             var add_overload = internals.GetStashGlob(runtime, "add_overload", true);
             add_overload.Code = new P5NativeCode("Internals::add_overload", new P5Code.Sub(WrapAddOverload));
+
+            // Internals::Net
+            var internals_net = GetPackage(runtime, "Internals::Net", true);
+
+            var get_class = internals_net.GetStashGlob(runtime, "get_class", true);
+            get_class.Code = new P5NativeCode("Internals::Net::get_class", new P5Code.Sub(WrapGetClass));
+
+            var create = internals_net.GetStashGlob(runtime, "create", true);
+            create.Code = new P5NativeCode("Internals::Net::create", new P5Code.Sub(WrapCreate));
+
+            var call_method = internals_net.GetStashGlob(runtime, "call_method", true);
+            call_method.Code = new P5NativeCode("Internals::Net::call_mehtod", new P5Code.Sub(WrapCallMethod));
+
+            var get_property = internals_net.GetStashGlob(runtime, "get_property", true);
+            get_property.Code = new P5NativeCode("Internals::Net::get_property", new P5Code.Sub(WrapGetProperty));
+
+            var set_property = internals_net.GetStashGlob(runtime, "set_property", true);
+            set_property.Code = new P5NativeCode("Internals::Net::set_property", new P5Code.Sub(WrapSetProperty));
         }
 
         private static IP5Any WrapIsa(Runtime runtime, Opcode.ContextValues context,
@@ -323,6 +342,62 @@ namespace org.mbarbon.p.values
             Builtins.AddOverload(runtime, pack.AsString(runtime), ops);
 
             return null;
+        }
+
+        private static IP5Any WrapGetClass(Runtime runtime, Opcode.ContextValues context,
+                                           P5ScratchPad pad, P5Array args)
+        {
+            var name = args.GetItem(runtime, 0);
+
+            return Glue.GetClass(runtime, name.AsString(runtime));
+        }
+
+        private static IP5Any WrapCreate(Runtime runtime, Opcode.ContextValues context,
+                                         P5ScratchPad pad, P5Array args)
+        {
+            var cls = args.GetItem(runtime, 0) as P5Scalar;
+            int count = args.GetCount(runtime);
+            var arg = new P5Scalar[count - 1];
+
+            for (int i = 1; i < count; ++i)
+                arg[i - 1] = args.GetItem(runtime, i) as P5Scalar;
+
+            return Glue.CallConstructor(runtime, cls, arg);
+        }
+
+        private static IP5Any WrapCallMethod(Runtime runtime, Opcode.ContextValues context,
+                                             P5ScratchPad pad, P5Array args)
+        {
+            var obj = args.GetItem(runtime, 0) as P5Scalar;
+            var name = args.GetItem(runtime, 1).AsString(runtime);
+            int count = args.GetCount(runtime);
+            var arg = new P5Scalar[count - 2];
+
+            for (int i = 2; i < count; ++i)
+                arg[i - 2] = args.GetItem(runtime, i) as P5Scalar;
+
+            return Glue.CallMethod(runtime, obj, name, arg);
+        }
+
+        private static IP5Any WrapGetProperty(Runtime runtime, Opcode.ContextValues context,
+                                              P5ScratchPad pad, P5Array args)
+        {
+            var obj = args.GetItem(runtime, 0) as P5Scalar;
+            var name = args.GetItem(runtime, 1);
+
+            return Glue.GetProperty(runtime, obj, name.AsString(runtime));
+        }
+
+        private static IP5Any WrapSetProperty(Runtime runtime, Opcode.ContextValues context,
+                                              P5ScratchPad pad, P5Array args)
+        {
+            var obj = args.GetItem(runtime, 0) as P5Scalar;
+            var name = args.GetItem(runtime, 1);
+            var value = args.GetItem(runtime, 2);
+
+            Glue.SetProperty(runtime, obj, name.AsString(runtime), value);
+
+            return new P5Scalar(runtime);
         }
 
         public override bool IsMain

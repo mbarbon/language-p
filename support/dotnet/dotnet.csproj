@@ -52,6 +52,7 @@
     <Compile Include="Runtime\Builtins\Sprintf.cs" />
     <Compile Include="Runtime\Builtins\BitOps.cs" />
     <Compile Include="Runtime\Builtins\IO.cs" />
+    <Compile Include="Runtime\NetGlue.cs" />
     <Compile Include="Runtime\Overload.cs" />
     <Compile Include="Values\List.cs" />
     <Compile Include="Values\Typeglob.cs" />
@@ -83,6 +84,7 @@
     <Compile Include="Values\Range.cs" />
     <Compile Include="Values\Vec.cs" />
     <Compile Include="Values\Substr.cs" />
+    <Compile Include="Values\NetWrapper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
