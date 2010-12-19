@@ -1,6 +1,8 @@
 #!/usr/bin/perl -w
 
-print "1..9\n";
+print "1..10\n";
+
+sub z { }
 
 print defined( undef ) ? "not ok 1\n" : "ok 1\n";
 print defined( 1 )     ? "ok 2\n" : "not ok 2\n";
@@ -17,3 +19,5 @@ print defined( $a_empty ) ? "ok 6\n"     : "not ok 6\n";
 print defined( @x ) ? "not ok\n" : "ok\n";
 print defined( %x ) ? "not ok\n" : "ok\n";
 print defined( &x ) ? "not ok\n" : "ok\n";
+
+print defined( &z ) ? "ok\n" : "not ok\n";
