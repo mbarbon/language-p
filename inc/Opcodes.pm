@@ -216,7 +216,10 @@ EOT
     }
 
     while( my( $op, $key ) = each %op_key_map ) {
-        next if $op eq 'OP_RETURN' || $op eq 'OP_DEFINED';
+        next if    $op eq 'OP_DO_FILE'
+                || $op eq 'OP_RETURN'
+                || $op eq 'OP_DYNAMIC_GOTO'
+                || $op eq 'OP_DEFINED';
         my $attr = $attrs{$key} or die "Unknown builtin '$key'";
         my @cxt;
         foreach my $a ( @{$attr->[5]} ) {
