@@ -114,6 +114,7 @@ t/lib/TestRegex.pm
 t/parser/001_load.t
 t/parser/002_parent.t
 t/parser/003_position.t
+t/parser/context/130_no_lvalue.t
 t/parser/expressions/002_method_call.t
 t/parser/expressions/003_pre_post_inc_dec.t
 t/parser/expressions/005_unary.t

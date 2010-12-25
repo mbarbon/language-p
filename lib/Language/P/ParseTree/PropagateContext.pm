@@ -21,7 +21,7 @@ my %dispatch =
     'Language::P::ParseTree::Jump'                   => '_jump',
     'Language::P::ParseTree::BinOp'                  => '_binary_op',
     'Language::P::ParseTree::Symbol'                 => '_symbol',
-    'Language::P::ParseTree::Constant'               => '_set_context',
+    'Language::P::ParseTree::Constant'               => '_set_context_nolvalue',
     'Language::P::ParseTree::LexicalDeclaration'     => '_symbol',
     'Language::P::ParseTree::LexicalSymbol'          => '_symbol',
     'Language::P::ParseTree::List'                   => '_list',
@@ -69,6 +69,19 @@ sub _noisy_noop {
 
 sub _set_context {
     my( $self, $tree, $cxt ) = @_;
+
+    $tree->set_attribute( 'context', $cxt );
+}
+
+sub _set_context_nolvalue {
+    my( $self, $tree, $cxt ) = @_;
+
+    if( $cxt & CXT_LVALUE ) {
+        throw Language::P::Parser::Exception
+            ( message  => "Can't modify constant",
+              position => $tree->pos,
+              );
+    }
 
     $tree->set_attribute( 'context', $cxt );
 }
@@ -158,13 +171,24 @@ sub _expression_block {
 
 sub _function_call {
     my( $self, $tree, $cxt ) = @_;
+    my $arg_cxts = $tree->runtime_context || [ CXT_LIST ];
+
+    if( $cxt & CXT_LVALUE && !ref $tree->function ) {
+        if( $tree->function != OP_UNDEF ) {
+            my $op_name = $NUMBER_TO_NAME{$tree->function};
+
+            throw Language::P::Parser::Exception
+                ( message  => "Can't modify $op_name",
+                  position => $tree->pos,
+                  );
+        }
+    }
 
     if( !ref $tree->function && $tree->function == OP_RETURN ) {
         $tree->set_attribute( 'context', CXT_CALLER );
     } else {
         $tree->set_attribute( 'context', $cxt );
     }
-    my $arg_cxts = $tree->runtime_context || [ CXT_LIST ];
     $self->visit( $tree->function, CXT_SCALAR ) if ref $tree->function;
 
     if( $tree->arguments ) {
