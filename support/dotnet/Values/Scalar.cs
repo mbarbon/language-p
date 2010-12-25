@@ -1,4 +1,5 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
+using Opcode = org.mbarbon.p.runtime.Opcode;
 using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
@@ -343,6 +344,17 @@ namespace org.mbarbon.p.values
                 body = new P5Reference(runtime, new P5Hash(runtime));
 
             return body.DereferenceHash(runtime);
+        }
+
+        public IP5Any CallMethod(Runtime runtime, Opcode.ContextValues context,
+                                 string method, P5Array args)
+        {
+            var pmethod = FindMethod(runtime, method);
+
+            if (pmethod == null)
+                throw new System.Exception("Can't find method " + method);
+
+            return pmethod.Call(runtime, context, args);
         }
 
         public virtual int GetPos(Runtime runtime)

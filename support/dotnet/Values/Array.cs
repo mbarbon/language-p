@@ -364,13 +364,9 @@ namespace org.mbarbon.p.values
         public IP5Any CallMethod(Runtime runtime, Opcode.ContextValues context,
                                  string method)
         {
-            var invocant = array[0];
-            var pmethod = invocant.FindMethod(runtime, method);
+            var invocant = array[0] as P5Scalar;
 
-            if (pmethod == null)
-                throw new System.Exception("Can't find method " + method);
-
-            return pmethod.Call(runtime, context, this);
+            return invocant.CallMethod(runtime, context, method, this);
         }
 
         public IP5Any CallMethodIndirect(Runtime runtime, Opcode.ContextValues context,
@@ -378,18 +374,10 @@ namespace org.mbarbon.p.values
         {
             var pmethod = method.IsReference(runtime) ? method.Dereference(runtime) as P5Code : null;
 
-            if (pmethod == null)
-            {
-                string method_name = method.AsString(runtime);
-                var invocant = array[0];
+            if (pmethod != null)
+                return pmethod.Call(runtime, context, this);
 
-                pmethod = invocant.FindMethod(runtime, method_name);
-
-                if (pmethod == null)
-                    throw new System.Exception("Can't find method " + method_name);
-            }
-
-            return pmethod.Call(runtime, context, this);
+            return CallMethod(runtime, context, method.AsString(runtime));
         }
 
         public P5List Repeat(Runtime runtime, IP5Any c)
