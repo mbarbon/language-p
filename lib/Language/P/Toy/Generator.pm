@@ -526,7 +526,7 @@ sub _stop {
 
 sub _dot_dot {
     my( $self, $bytecode, $op ) = @_;
-    die "Can only generate ranges for now" if $op->{attributes}{context} != CXT_LIST;
+    die "Can only generate ranges for now" if $op->context != CXT_LIST;
 
     push @$bytecode, o( 'range' );
 }
@@ -534,29 +534,29 @@ sub _dot_dot {
 sub _global {
     my( $self, $bytecode, $op ) = @_;
 
-    if( $op->{attributes}{slot} == VALUE_GLOB ) {
+    if( $op->slot == VALUE_GLOB ) {
         push @$bytecode,
              o( 'glob',
                 pos    => $op->{pos},
-                name   => $op->{attributes}{name},
-                create => !($op->{attributes}{context} & CXT_NOCREATE) );
+                name   => $op->name,
+                create => !($op->context & CXT_NOCREATE) );
         return;
-    } elsif( $op->{attributes}{slot} == VALUE_STASH ) {
+    } elsif( $op->slot == VALUE_STASH ) {
         push @$bytecode,
              o( 'stash',
                 pos    => $op->{pos},
-                name   => substr( $op->{attributes}{name}, 0, -2 ),
-                create => !($op->{attributes}{context} & CXT_NOCREATE) );
+                name   => substr( $op->name, 0, -2 ),
+                create => !($op->context & CXT_NOCREATE) );
         return;
     }
 
-    my $slot = $sigil_to_slot{$op->{attributes}{slot}};
-    die $op->{attributes}{slot} unless $slot;
+    my $slot = $sigil_to_slot{$op->slot};
+    die $op->slot unless $slot;
 
     push @$bytecode,
          o( 'glob',
             pos    => $op->{pos},
-            name   => $op->{attributes}{name},
+            name   => $op->name,
             create => 1 ),
          o( 'glob_slot_create',
             pos    => $op->{pos},
@@ -569,14 +569,14 @@ sub _dereference {
     push @$bytecode,
          o( $NUMBER_TO_NAME{$op->{opcode_n}},
             pos    => $op->{pos},
-            create => !($op->{attributes}{context} & CXT_NOCREATE) );
+            create => !($op->context & CXT_NOCREATE) );
 }
 
 sub _const_string {
     my( $self, $bytecode, $op ) = @_;
 
     my $v = Language::P::Toy::Value::Scalar->new_string
-                ( $self->runtime, $op->{attributes}{value} );
+                ( $self->runtime, $op->value );
     push @$bytecode,
          o( 'constant', value => $v );
 }
@@ -585,14 +585,14 @@ sub _fresh_string {
     my( $self, $bytecode, $op ) = @_;
 
     push @$bytecode,
-         o( 'fresh_string', value => $op->{attributes}{value} );
+         o( 'fresh_string', value => $op->value );
 }
 
 sub _const_integer {
     my( $self, $bytecode, $op ) = @_;
 
     my $v = Language::P::Toy::Value::StringNumber->new
-                ( $self->runtime, { integer => $op->{attributes}{value} + 0 } );
+                ( $self->runtime, { integer => $op->value + 0 } );
     push @$bytecode,
          o( 'constant', value => $v );
 }
@@ -601,7 +601,7 @@ sub _const_float {
     my( $self, $bytecode, $op ) = @_;
 
     my $v = Language::P::Toy::Value::StringNumber->new
-                ( $self->runtime, { float => $op->{attributes}{value} + 0.0 } );
+                ( $self->runtime, { float => $op->value + 0.0 } );
     push @$bytecode,
          o( 'constant', value => $v );
 }
@@ -617,14 +617,14 @@ sub _const_undef {
 sub _const_codelike {
     my( $self, $bytecode, $op ) = @_;
 
-    my $sub = $self->_generated->{$op->{attributes}{value}};
+    my $sub = $self->_generated->{$op->value};
     push @$bytecode,
          o( 'constant', value => $sub );
 }
 
 sub _lexical_state_set {
     my( $self, $bytecode, $op ) = @_;
-    my $state = $self->_segment->lexical_states->[$op->{attributes}{index}];
+    my $state = $self->_segment->lexical_states->[$op->index];
 
     push @$bytecode,
          o( 'lexical_state_set',
@@ -636,7 +636,7 @@ sub _lexical_state_set {
 
 sub _lexical_state_save {
     my( $self, $bytecode, $op ) = @_;
-    my $state_id = $op->{attributes}{index};
+    my $state_id = $op->index;
 
     push @$bytecode,
          o( 'lexical_state_save',
@@ -645,7 +645,7 @@ sub _lexical_state_save {
 
 sub _lexical_state_restore {
     my( $self, $bytecode, $op ) = @_;
-    my $state_id = $op->{attributes}{index};
+    my $state_id = $op->index;
 
     push @$bytecode,
          o( 'lexical_state_restore',
@@ -665,21 +665,21 @@ sub _temporary {
     my( $self, $bytecode, $op ) = @_;
 
     push @$bytecode,
-         o( 'lexical', index => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ) );
+         o( 'lexical', index => _temporary_index( $self, IDX_TEMPORARY, $op->index ) );
 }
 
 sub _temporary_set {
     my( $self, $bytecode, $op ) = @_;
 
     push @$bytecode,
-         o( 'lexical_set', index => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ) );
+         o( 'lexical_set', index => _temporary_index( $self, IDX_TEMPORARY, $op->index ) );
 }
 
 sub _temporary_clear {
     my( $self, $bytecode, $op ) = @_;
 
     push @$bytecode,
-         o( 'lexical_clear', index => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ) );
+         o( 'lexical_clear', index => _temporary_index( $self, IDX_TEMPORARY, $op->index ) );
 }
 
 sub _map_index {
@@ -687,7 +687,7 @@ sub _map_index {
 
     push @$bytecode,
          o( $NUMBER_TO_NAME{$op->{opcode_n}},
-            index => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ),
+            index => _temporary_index( $self, IDX_TEMPORARY, $op->index ),
             );
 }
 
@@ -696,9 +696,9 @@ sub _map_slot_index {
 
     push @$bytecode,
          o( $NUMBER_TO_NAME{$op->{opcode_n}},
-            name  => $op->{attributes}{name},
-            slot  => $sigil_to_slot{$op->{attributes}{slot}},
-            index => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ),
+            name  => $op->name,
+            slot  => $sigil_to_slot{$op->slot},
+            index => _temporary_index( $self, IDX_TEMPORARY, $op->index ),
             );
 }
 
@@ -707,8 +707,8 @@ sub _map_lexical_index {
 
     push @$bytecode,
          o( $NUMBER_TO_NAME{$op->{opcode_n}},
-            index   => _temporary_index( $self, IDX_TEMPORARY, $op->{attributes}{index} ),
-            lexical => $op->{attributes}{lexical},
+            index   => _temporary_index( $self, IDX_TEMPORARY, $op->index ),
+            lexical => $op->lexical,
             );
 }
 
@@ -717,7 +717,7 @@ sub _direct_jump {
 
     push @$bytecode,
          o( $NUMBER_TO_NAME{$op->{opcode_n}} );
-    push @{$self->_block_map->{$op->{attributes}{to}}}, $bytecode->[-1];
+    push @{$self->_block_map->{$op->to}}, $bytecode->[-1];
 }
 
 sub _cond_jump_simple {
@@ -726,15 +726,15 @@ sub _cond_jump_simple {
     push @$bytecode,
          o( $NUMBER_TO_NAME{$op->{opcode_n}}, pos => $op->{pos} ),
          o( 'jump' );
-    push @{$self->_block_map->{$op->{attributes}{true}}}, $bytecode->[-2];
-    push @{$self->_block_map->{$op->{attributes}{false}}}, $bytecode->[-1];
+    push @{$self->_block_map->{$op->true}}, $bytecode->[-2];
+    push @{$self->_block_map->{$op->false}}, $bytecode->[-1];
 }
 
 sub _match {
     my( $self, $bytecode, $op ) = @_;
     my %params = $op->{attributes} ? %{$op->{attributes}} : ();
     $params{pos} = $op->{pos} if $op->{pos};
-    $params{index} = _temporary_index( $self, IDX_REGEX, $op->{attributes}{index} );
+    $params{index} = _temporary_index( $self, IDX_REGEX, $op->index );
 
     push @$bytecode,
          o( ( $params{flags} & FLAG_RX_GLOBAL ) ? 'rx_match_global' :
@@ -746,12 +746,12 @@ sub _replace {
     my %params = %{$op->{attributes}};
     delete $params{to};
     $params{pos} = $op->{pos} if $op->{pos};
-    $params{index} = _temporary_index( $self, IDX_REGEX, $op->{attributes}{index} );
+    $params{index} = _temporary_index( $self, IDX_REGEX, $op->index );
 
     push @$bytecode,
          o( ( $params{flags} & FLAG_RX_GLOBAL ) ? 'rx_replace_global' :
                                                   'rx_replace', %params );
-    push @{$self->_block_map->{$op->{attributes}{to}}}, $bytecode->[-1];
+    push @{$self->_block_map->{$op->to}}, $bytecode->[-1];
 }
 
 sub _rx_quantifier {
@@ -762,15 +762,15 @@ sub _rx_quantifier {
     push @$bytecode,
          o( 'rx_quantifier', %params ),
          o( 'jump' );
-    push @{$self->_block_map->{$op->{attributes}{true}}}, $bytecode->[-2];
-    push @{$self->_block_map->{$op->{attributes}{false}}}, $bytecode->[-1];
+    push @{$self->_block_map->{$op->true}}, $bytecode->[-2];
+    push @{$self->_block_map->{$op->false}}, $bytecode->[-1];
 }
 
 sub _rx_state_restore {
     my( $self, $bytecode, $op ) = @_;
 
     push @$bytecode,
-         o( 'rx_state_restore', index => _temporary_index( $self, IDX_REGEX, $op->{attributes}{index} ) );
+         o( 'rx_state_restore', index => _temporary_index( $self, IDX_REGEX, $op->index ) );
 }
 
 # quick and dirty, and adequate for the Toy runtime
@@ -799,22 +799,22 @@ my %element_map =
 
 sub _rx_class {
     my( $self, $bytecode, $op ) = @_;
-    my $elements = $op->{attributes}{elements};
+    my $elements = $op->elements;
 
     # ranges
-    my $r = $op->{attributes}{ranges};
+    my $r = $op->ranges;
     for( my $i = 0; $i < length $r; $i += 2 ) {
         $elements .= join '', substr( $r, $i, 1 ) .. substr( $r, $i + 1, 1 );
     }
 
     # case-insensitivity
-    if( $op->{attributes}{flags} & 1 ) {
+    if( $op->flags & 1 ) {
         $elements = lc $elements . uc $elements;
     }
 
     my @special;
     for( my $i = 1; $i < 31; ++$i ) {
-        my $v = $op->{attributes}{flags} & ( 1 << $i );
+        my $v = $op->flags & ( 1 << $i );
         next unless $v;
         die $v unless exists $element_map{$v};
         my $c = $element_map{$v};
