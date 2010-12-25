@@ -6,6 +6,7 @@
 ^t/.*/.*\.ir$
 ^t/.*/.*\.pir$
 ^t/.*/.*\.pt$
+^t/harness$
 .pb$
 ^support/parrot/runtime/.*\.pbc$
 ^lib/Language/P/Intermediate/SerializeGenerated\.pm$

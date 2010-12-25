@@ -4,7 +4,8 @@ use strict;
 use warnings;
 use parent qw(Module::Build);
 
-use File::Basename;
+use File::Basename qw();
+use File::Path qw();
 
 =head1 ACTIONS
 
@@ -47,6 +48,34 @@ sub ACTION_code_parrot {
     }
 }
 
+=head2 code_perl5
+
+Creates symlinks for perl5 core tests.
+
+=cut
+
+sub _symlink {
+    my( $src, $targ ) = @_;
+
+    File::Path::mkpath( $targ ) unless -d $targ;
+    symlink( $src,
+             File::Spec->catfile( $targ, File::Basename::basename( $src ) ) );
+}
+
+sub ACTION_code_perl5 {
+    my( $self ) = @_;
+    my $perl5_path = File::Spec->rel2abs( $self->args( 'perl5' ) );
+
+    if( !-e 't/perl5/t' || !-e 't/harness' ) {
+        symlink( File::Spec->catfile( $perl5_path, 't/harness' ), 't/harness' );
+        for my $f ( glob( File::Spec->catdir( $perl5_path, 't/base/*.t' ) ) ) {
+            _symlink( $f, 't/perl5/t/base' );
+        }
+
+        $self->add_to_cleanup( 't/perl5/t', 't/harness' );
+    }
+}
+
 =head2 code
 
 Calls the defult C<code> action, C<code_parrot> if appropriate, and
@@ -82,6 +111,7 @@ sub ACTION_code {
     }
 
     $self->depends_on( 'code_parrot' ) if $self->args( 'parrot' );
+    $self->depends_on( 'code_perl5' ) if $self->args( 'perl5' );
 
     $self->SUPER::ACTION_code;
 }

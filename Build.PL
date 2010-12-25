@@ -18,7 +18,10 @@ my $build = My::Build->new
           'parent'            => '0.221',
           },
     get_options          =>
-        { parrot         =>
+        { perl5          =>
+              { type     => '=s',
+                },
+          parrot         =>
               { type     => '=s',
                 },
           },
