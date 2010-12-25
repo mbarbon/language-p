@@ -117,6 +117,7 @@ t/parser/003_position.t
 t/parser/context/130_no_lvalue.t
 t/parser/expressions/002_method_call.t
 t/parser/expressions/003_pre_post_inc_dec.t
+t/parser/expressions/004_power.t
 t/parser/expressions/005_unary.t
 t/parser/expressions/007_repeat.t
 t/parser/expressions/009_shift.t
