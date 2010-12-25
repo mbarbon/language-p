@@ -1,10 +1,6 @@
 Parsing:
-- 5.10 syntax
-- context handling
-  - splice/substr/lvalue subroutines
-  - non-lvaluable expressions
-- filetest
-  - after filetest, foo and _ are not barewords
+- 5.10/5.12 syntax
+- check that right side of mixed-assign is a scalar
 - stash access through hash syntax
 - glob access through hash syntax
 - global variables/symbols (STDOUT, punctuation)
@@ -13,11 +9,8 @@ Parsing:
 - formats
 - indirect method calls
   - find more corner cases
-- test all unary/binary operator
-- handling of parse errors with recovery
 - lexical pragmas/hints
   - strictures
-    - variables declared with Exporter/vars
   - warnings
 - proper lexing of ${  id # comment\n } vs. ${ id # comment \n expr }
 - more tests for ${foo[.......} crazy cases
@@ -26,8 +19,6 @@ Parsing:
 - CORE::builtin to always call builtin
 - special treatment for glob()
 - simplify detection of <foo> vs. <foo >, avoid constructing a lexer
-- => auto-quoting
-  - => quoting of -foo => 1
 - quoted strings
   - \x{af}, when lexing quoted strings
   - Unicode handling
@@ -38,10 +29,11 @@ Parsing:
     - \p{}, \P{}, \X
   - magic variables
   - (?...) syntax and grouping
+    - (?# - comment
+    - (?{ - code
+    - (??{ - code
+    - (?( - condition
   - empty pattern
-  - flags
-  - context-dependent bexaviour
-  - always a pattern after =~/!~
 - vstrings and versions in 'use' and 'no'
 
 IR:
@@ -50,7 +42,7 @@ IR:
 - check that do BLOCK does not count as loop for loop-control
 - add code generation for do {} while, do {} until 
 - uniform representation for n-ary opcodes (pipe, chdir, ...)
-  taking into account variable argument count
+  take into account variable argument count
 
 Runtime:
 - coerce values according to prototype (esp. \[...])
