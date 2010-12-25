@@ -1114,6 +1114,11 @@ sub lex {
     # quote and quote-like operators
     $$_ =~ s/^(q|qq|qx|qw|m|qr|s|tr|y)(?=\W)//x and
         return _prepare_sublex( $self, $1, undef );
+    # 'x=' operator special case
+    $$_ =~ /^x=/ && $expect == X_OPERATOR and do {
+        $$_ =~ s/^..//;
+        return [ $self->{pos}, T_SSTAREQUAL, 'x=' ];
+    };
     # 'x' operator special case
     $$_ =~ /^x[0-9]/ && $expect == X_OPERATOR and do {
         $$_ =~ s/^.//;

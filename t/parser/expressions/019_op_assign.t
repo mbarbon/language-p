@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-use t::lib::TestParser tests => 14;
+use t::lib::TestParser tests => 15;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 $a **= $b
@@ -60,6 +60,22 @@ left: !parsetree:Symbol
   name: a
   sigil: VALUE_SCALAR
 op: OP_MODULUS_ASSIGN
+right: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: b
+  sigil: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+$a x= $b
+EOP
+--- !parsetree:BinOp
+context: CXT_VOID
+left: !parsetree:Symbol
+  context: CXT_SCALAR|CXT_LVALUE
+  name: a
+  sigil: VALUE_SCALAR
+op: OP_REPEAT_ASSIGN
 right: !parsetree:Symbol
   context: CXT_SCALAR
   name: b
