@@ -249,7 +249,22 @@ sub _binary_op {
                                          $cxt & CXT_CALLER ? CXT_CALLER :
                                                              CXT_SCALAR,
                                          $cxt ) );
-    } elsif( $tree->op == OP_ASSIGN ) {
+    } elsif(    $tree->op == OP_ASSIGN
+             || $tree->op == OP_ADD_ASSIGN
+             || $tree->op == OP_BIT_AND_ASSIGN
+             || $tree->op == OP_BIT_OR_ASSIGN
+             || $tree->op == OP_BIT_XOR_ASSIGN
+             || $tree->op == OP_CONCATENATE_ASSIGN
+             || $tree->op == OP_DIVIDE_ASSIGN
+             || $tree->op == OP_LOG_AND_ASSIGN
+             || $tree->op == OP_LOG_OR_ASSIGN
+             || $tree->op == OP_MODULUS_ASSIGN
+             || $tree->op == OP_MULTIPLY_ASSIGN
+             || $tree->op == OP_POWER_ASSIGN
+             || $tree->op == OP_REPEAT_ASSIGN
+             || $tree->op == OP_SHIFT_LEFT_ASSIGN
+             || $tree->op == OP_SHIFT_RIGHT_ASSIGN
+             || $tree->op == OP_SUBTRACT_ASSIGN ) {
         my $left_cxt = $tree->left->lvalue_context;
 
         $self->visit( $tree->left, $left_cxt|CXT_LVALUE );

@@ -157,6 +157,7 @@ t/parser/expressions/013_bitand.t
 t/parser/expressions/015_logand.t
 t/parser/expressions/018_ternary.t
 t/parser/expressions/019_assignment.t
+t/parser/expressions/019_op_assign.t
 t/parser/expressions/020_fat_arrow.t
 t/parser/expressions/020_sequence.t
 t/parser/expressions/021_builtins/binmode.t

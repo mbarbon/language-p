@@ -157,7 +157,7 @@ EOP
 # main
 L1:
   lexical_state_set index=0
-  global context=4, name="x", slot=1
+  global context=20, name="x", slot=1
   dup
   jump_if_true false=L4, true=L2
 L2:
