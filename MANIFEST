@@ -119,7 +119,9 @@ t/parser/expressions/002_method_call.t
 t/parser/expressions/003_pre_post_inc_dec.t
 t/parser/expressions/004_power.t
 t/parser/expressions/005_unary.t
+t/parser/expressions/007_multiply.t
 t/parser/expressions/007_repeat.t
+t/parser/expressions/008_arithmetic.t
 t/parser/expressions/009_shift.t
 t/parser/expressions/010_do.t
 t/parser/expressions/010_eval.t
@@ -156,8 +158,11 @@ t/parser/expressions/010_named_unary/values.t
 t/parser/expressions/010_require.t
 t/parser/expressions/011_relational.t
 t/parser/expressions/012_comparison.t
+t/parser/expressions/012_equality.t
 t/parser/expressions/013_bitand.t
+t/parser/expressions/014_bitor.t
 t/parser/expressions/015_logand.t
+t/parser/expressions/016_logor.t
 t/parser/expressions/017_range.t
 t/parser/expressions/018_ternary.t
 t/parser/expressions/019_assignment.t
@@ -191,6 +196,8 @@ t/parser/expressions/021_indirect_method.t
 t/parser/expressions/021_list_op.t
 t/parser/expressions/021_map.t
 t/parser/expressions/021_sort.t
+t/parser/expressions/022_not_low.t
+t/parser/expressions/023_and_low.t
 t/parser/expressions/024_or_low.t
 t/parser/loops/001_block.t
 t/parser/regex/002_base.t

@@ -1,6 +1,5 @@
 #!/usr/bin/perl -w
 
-use strict;
 use t::lib::TestParser tests => 2;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
@@ -12,7 +11,7 @@ left: !parsetree:Symbol
   context: CXT_SCALAR
   name: x
   sigil: VALUE_ARRAY
-op: 146
+op: OP_LOG_AND
 right: !parsetree:Symbol
   context: CXT_VOID
   name: y
@@ -28,7 +27,7 @@ left: !parsetree:Symbol
   context: CXT_SCALAR
   name: x
   sigil: VALUE_ARRAY
-op: 146
+op: OP_LOG_AND
 right: !parsetree:DoBlock
   context: CXT_VOID
   lines:
