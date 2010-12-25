@@ -184,6 +184,8 @@ sub _function_call {
                 $arg_cxts = [ CXT_SCALAR|CXT_LVALUE, CXT_SCALAR,
                               CXT_SCALAR, CXT_SCALAR ];
             }
+        } elsif( $tree->function == OP_VEC ) {
+            $arg_cxts = [ CXT_SCALAR|CXT_LVALUE, CXT_SCALAR, CXT_SCALAR ];
         } elsif( $tree->function != OP_UNDEF ) {
             my $op_name = $NUMBER_TO_NAME{$tree->function};
 
