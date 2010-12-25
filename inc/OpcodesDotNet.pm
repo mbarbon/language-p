@@ -8,81 +8,6 @@ our @EXPORT = qw(write_dotnet_deserializer);
 
 use Opcodes;
 
-my %dotnet_classes =
-  ( 'OP_FRESH_STRING'      => 'ConstantString',
-    'OP_CONSTANT_STRING'   => 'ConstantString',
-    'OP_CONSTANT_INTEGER'  => 'ConstantInt',
-    'OP_CONSTANT_SUB'      => 'ConstantSub',
-    'OP_CONSTANT_REGEX'    => 'ConstantSub',
-    'OP_CONSTANT_FLOAT'    => 'ConstantFloat',
-    'OP_GLOBAL'            => 'Global',
-    'OP_GLOB_SLOT'         => 'GlobSlot',
-    'OP_GLOB_SLOT_SET'     => 'GlobSlot',
-    'OP_LOCALIZE_ARRAY_ELEMENT' => 'LocalElement',
-    'OP_LOCALIZE_GLOB_SLOT'=> 'LocalGlobSlot',
-    'OP_LOCALIZE_HASH_ELEMENT' => 'LocalElement',
-    'OP_LOCALIZE_LEXICAL'  => 'LocalLexical',
-    'OP_LOCALIZE_LEXICAL_PAD'=> 'LocalLexical',
-    'OP_RESTORE_ARRAY_ELEMENT' => 'LocalElement',
-    'OP_RESTORE_GLOB_SLOT' => 'LocalGlobSlot',
-    'OP_RESTORE_HASH_ELEMENT' => 'LocalElement',
-    'OP_RESTORE_LEXICAL'   => 'LocalLexical',
-    'OP_RESTORE_LEXICAL_PAD' => 'LocalLexical',
-    'OP_GET'               => 'GetSet',
-    'OP_SET'               => 'GetSet',
-    'OP_JUMP'              => 'Jump',
-    'OP_JUMP_IF_FALSE'     => 'Jump',
-    'OP_JUMP_IF_F_EQ'      => 'Jump',
-    'OP_JUMP_IF_F_GE'      => 'Jump',
-    'OP_JUMP_IF_F_GT'      => 'Jump',
-    'OP_JUMP_IF_F_LE'      => 'Jump',
-    'OP_JUMP_IF_F_LT'      => 'Jump',
-    'OP_JUMP_IF_F_NE'      => 'Jump',
-    'OP_JUMP_IF_NULL'      => 'Jump',
-    'OP_JUMP_IF_S_EQ'      => 'Jump',
-    'OP_JUMP_IF_S_GE'      => 'Jump',
-    'OP_JUMP_IF_S_GT'      => 'Jump',
-    'OP_JUMP_IF_S_LE'      => 'Jump',
-    'OP_JUMP_IF_S_LT'      => 'Jump',
-    'OP_JUMP_IF_S_NE'      => 'Jump',
-    'OP_JUMP_IF_TRUE'      => 'Jump',
-    'OP_LEXICAL_PAD'       => 'Lexical',
-    'OP_LEXICAL'           => 'Lexical',
-    'OP_LEXICAL_PAD_SET'   => 'Lexical',
-    'OP_LEXICAL_SET'       => 'Lexical',
-    'OP_LEXICAL_PAD_CLEAR' => 'Lexical',
-    'OP_LEXICAL_CLEAR'     => 'Lexical',
-    'OP_LEXICAL_STATE_SAVE' => 'LexState',
-    'OP_LEXICAL_STATE_RESTORE' => 'LexState',
-    'OP_LEXICAL_STATE_SET' => 'LexState',
-    'OP_TEMPORARY'         => 'Temporary',
-    'OP_TEMPORARY_SET'     => 'Temporary',
-    'OP_TEMPORARY_CLEAR'   => 'Temporary',
-    'OP_ARRAY_ELEMENT'     => 'ElementAccess',
-    'OP_ARRAY_SLICE'       => 'ElementAccess',
-    'OP_HASH_ELEMENT'      => 'ElementAccess',
-    'OP_HASH_SLICE'        => 'ElementAccess',
-    'OP_CALL_METHOD'       => 'CallMethod',
-    'OP_FIND_METHOD'       => 'CallMethod',
-    'OP_EVAL_REGEX'        => 'RegexEval',
-    'OP_RX_EXACT'          => 'RegexExact',
-    'OP_RX_EXACT_I'        => 'RegexExact',
-    'OP_RX_ACCEPT'         => 'RegexAccept',
-    'OP_RX_BACKTRACK'      => 'RegexBacktrack',
-    'OP_RX_START_GROUP'    => 'RegexStartGroup',
-    'OP_RX_QUANTIFIER'     => 'RegexQuantifier',
-    'OP_RX_STATE_RESTORE'  => 'RegexState',
-    'OP_RX_SAVE_POS'       => 'RegexState',
-    'OP_RX_RESTORE_POS'    => 'RegexState',
-    'OP_MATCH'             => 'RegexMatch',
-    'OP_REPLACE'           => 'RegexMatch',
-    'OP_TRANSLITERATE'     => 'RegexTransliterate',
-    'OP_RX_TRY'            => 'RegexTry',
-    'OP_RX_CAPTURE_START'  => 'RegexCapture',
-    'OP_RX_CAPTURE_END'    => 'RegexCapture',
-    'OP_RX_CLASS'          => 'RegexClass',
-    );
-
 sub write_dotnet_deserializer {
     my( $file ) = @ARGV;
 
@@ -111,14 +36,13 @@ namespace org.mbarbon.p.runtime
 EOT
 
     OPCODES: while( my( $k, $v ) = each %op ) {
-        my $class = $dotnet_classes{$k};
-        my $attrs = $v->[3][0];
-
+        my( $attrs, $class ) = ( $v->[3][0], $v->[5] );
         next unless @$attrs;
+
         if( !$class ) {
-            for( my $i = 0; $i < @$attrs; $i += 2)
-            {
-                if( $attrs->[$i] ne 'context' && $attrs->[$i] ne 'arg_count' ) {
+            for( my $i = 0; $i < @$attrs; $i += 2) {
+                if(    $attrs->[$i] ne 'context'
+                    && $attrs->[$i] ne 'arg_count' ) {
                     print $out sprintf <<'EOT', $k, $class, $class;
             case Opcode.OpNumber.%s:
                 throw new System.Exception(string.Format("Unhandled opcode {0:S} in deserialization", num.ToString()));

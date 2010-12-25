@@ -2447,7 +2447,7 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_REPLACE:
             {
-                RegexMatch rm = (RegexMatch)op;
+                RegexReplace rm = (RegexReplace)op;
                 bool global = (rm.Flags & Opcode.RX_GLOBAL) != 0;
 
                 if (global)
@@ -2501,7 +2501,7 @@ namespace org.mbarbon.p.runtime
             }
         }
 
-        private Expression GenerateGlobalSubstitution(Subroutine sub, RegexMatch rm)
+        private Expression GenerateGlobalSubstitution(Subroutine sub, RegexReplace rm)
         {
             var scalar = Expression.Variable(typeof(P5Scalar));
             var init_scalar =
@@ -2626,7 +2626,7 @@ namespace org.mbarbon.p.runtime
             return Expression.Block(typeof(IP5Any), vars, body);
         }
 
-        private Expression GenerateSubstitution(Subroutine sub, RegexMatch rm)
+        private Expression GenerateSubstitution(Subroutine sub, RegexReplace rm)
         {
             var scalar = Expression.Variable(typeof(P5Scalar));
             var str = Expression.Variable(typeof(string));

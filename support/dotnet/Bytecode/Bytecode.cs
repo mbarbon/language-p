@@ -421,7 +421,11 @@ namespace org.mbarbon.p.runtime
     {
         public int Index;
         public int Flags;
-        public int To; // for replace only
+    }
+
+    public class RegexReplace : RegexMatch
+    {
+        public int To;
     }
 
     public class RegexEval : Opcode
