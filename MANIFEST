@@ -157,6 +157,7 @@ t/parser/expressions/010_require.t
 t/parser/expressions/011_relational.t
 t/parser/expressions/013_bitand.t
 t/parser/expressions/015_logand.t
+t/parser/expressions/017_range.t
 t/parser/expressions/018_ternary.t
 t/parser/expressions/019_assignment.t
 t/parser/expressions/019_op_assign.t
