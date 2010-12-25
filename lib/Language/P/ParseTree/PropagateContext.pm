@@ -174,13 +174,28 @@ sub _function_call {
     my $arg_cxts = $tree->runtime_context || [ CXT_LIST ];
 
     if( $cxt & CXT_LVALUE && !ref $tree->function ) {
-        if( $tree->function != OP_UNDEF ) {
+        if( $tree->function == OP_SUBSTR ) {
+            if( @{$tree->arguments} == 4 ) {
+                throw Language::P::Parser::Exception
+                    ( message  => "Can't modify substr",
+                      position => $tree->pos,
+                      );
+            } else {
+                $arg_cxts = [ CXT_SCALAR|CXT_LVALUE, CXT_SCALAR,
+                              CXT_SCALAR, CXT_SCALAR ];
+            }
+        } elsif( $tree->function != OP_UNDEF ) {
             my $op_name = $NUMBER_TO_NAME{$tree->function};
 
             throw Language::P::Parser::Exception
                 ( message  => "Can't modify $op_name",
                   position => $tree->pos,
                   );
+        }
+    } elsif( !ref $tree->function ) {
+        if( $tree->function == OP_SUBSTR && @{$tree->arguments} == 4 ) {
+            $arg_cxts = [ CXT_SCALAR|CXT_LVALUE, CXT_SCALAR,
+                          CXT_SCALAR, CXT_SCALAR ];
         }
     }
 

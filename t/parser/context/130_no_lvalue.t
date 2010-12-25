@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-use t::lib::TestParser tests => 7;
+use t::lib::TestParser tests => 8;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 1 = 1
@@ -80,4 +80,13 @@ right: !parsetree:Constant
   context: CXT_LIST
   flags: CONST_NUMBER|NUM_INTEGER
   value: 1
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+substr( $x, 0, 1, 2 ) = 1
+EOP
+--- !p:Exception
+file: '<string>'
+line: 1
+message: Can't modify substr
 EOE
