@@ -102,7 +102,7 @@ __LINE__
  =pod
 =pod
 =cut
- =
+ +
 __LINE__;
 =tail
 
@@ -111,10 +111,10 @@ EOP
 --- !parsetree:BinOp
 context: CXT_VOID
 left: !parsetree:Constant
-  context: CXT_SCALAR|CXT_LVALUE
+  context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER
   value: 2
-op: OP_ASSIGN
+op: OP_ADD
 right: !parsetree:Constant
   context: CXT_SCALAR
   flags: CONST_NUMBER|NUM_INTEGER

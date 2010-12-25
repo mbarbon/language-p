@@ -48,11 +48,11 @@ sub _change_successor {
     # patch jump target to $to
     my $jump = $self->bytecode->[-1];
     if( $jump->{opcode_n} == OP_JUMP ) {
-        $jump->{attributes}->{to} = $to;
-    } elsif( $jump->{attributes}->{true} == $from ) {
-        $jump->{attributes}->{true} = $to;
-    } elsif( $jump->{attributes}->{false} == $from ) {
-        $jump->{attributes}->{false} = $to;
+        $jump->set_to( $to );
+    } elsif( $jump->true == $from ) {
+        $jump->set_true( $to );
+    } elsif( $jump->false == $from ) {
+        $jump->set_false( $to );
     } else {
         die "Could not backpatch jump target";
     }

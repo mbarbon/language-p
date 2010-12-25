@@ -15,10 +15,10 @@ my $build = My::Build->new
           'Test::Differences' => '0.47',
           'TAP::Harness'      => '3.10',
           'perl'              => '5.8.3',
-          'parent'            => '0.223',
+          'parent'            => '0.221',
           },
     get_options          =>
-        { parrot         =>
+        { perl5          =>
               { type     => '=s',
                 },
           dlr            =>

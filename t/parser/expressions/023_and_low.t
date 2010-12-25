@@ -3,7 +3,7 @@
 use t::lib::TestParser tests => 2;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
-print 1, 2 or die;
+print 1, 2 and die;
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
@@ -20,7 +20,7 @@ left: !parsetree:BuiltinIndirect
   context: CXT_SCALAR
   function: OP_PRINT
   indirect: ~
-op: OP_LOG_OR
+op: OP_LOG_AND
 right: !parsetree:Overridable
   arguments: ~
   context: CXT_VOID
@@ -28,7 +28,7 @@ right: !parsetree:Overridable
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
-1, 2, 3 or die
+1, 2, 3 and die
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
@@ -47,7 +47,7 @@ left: !parsetree:List
       context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 3
-op: OP_LOG_OR
+op: OP_LOG_AND
 right: !parsetree:Overridable
   arguments: ~
   context: CXT_VOID

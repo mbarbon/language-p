@@ -2049,7 +2049,17 @@ sub o_splice {
 
     my @res;
     if( $count >= 4 ) {
-        @res = splice @{$arr->array}, $offset_int, $length_int, @values;
+        my @list;
+
+        foreach my $value ( @values ) {
+            if( $value->isa( 'Language::P::Toy::Value::Array' ) ) {
+                push @list, @{$value->clone( $runtime, 1 )->array};
+            } else {
+                push @list, $value->clone( $runtime, 1 );
+            }
+        }
+
+        @res = splice @{$arr->array}, $offset_int, $length_int, @list;
     } else {
         @res = splice @{$arr->array}, $offset_int, $length_int;
     }

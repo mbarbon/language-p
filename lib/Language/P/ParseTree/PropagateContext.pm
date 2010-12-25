@@ -21,7 +21,7 @@ my %dispatch =
     'Language::P::ParseTree::Jump'                   => '_jump',
     'Language::P::ParseTree::BinOp'                  => '_binary_op',
     'Language::P::ParseTree::Symbol'                 => '_symbol',
-    'Language::P::ParseTree::Constant'               => '_set_context',
+    'Language::P::ParseTree::Constant'               => '_set_context_nolvalue',
     'Language::P::ParseTree::LexicalDeclaration'     => '_symbol',
     'Language::P::ParseTree::LexicalSymbol'          => '_symbol',
     'Language::P::ParseTree::List'                   => '_list',
@@ -69,6 +69,19 @@ sub _noisy_noop {
 
 sub _set_context {
     my( $self, $tree, $cxt ) = @_;
+
+    $tree->set_attribute( 'context', $cxt );
+}
+
+sub _set_context_nolvalue {
+    my( $self, $tree, $cxt ) = @_;
+
+    if( $cxt & CXT_LVALUE ) {
+        throw Language::P::Parser::Exception
+            ( message  => "Can't modify constant",
+              position => $tree->pos,
+              );
+    }
 
     $tree->set_attribute( 'context', $cxt );
 }
@@ -158,13 +171,43 @@ sub _expression_block {
 
 sub _function_call {
     my( $self, $tree, $cxt ) = @_;
+    my $arg_cxts = $tree->runtime_context || [ CXT_LIST ];
+
+    if( $cxt & CXT_LVALUE && !ref $tree->function ) {
+        if( $tree->function == OP_SUBSTR ) {
+            if( @{$tree->arguments} == 4 ) {
+                throw Language::P::Parser::Exception
+                    ( message  => "Can't modify substr",
+                      position => $tree->pos,
+                      );
+            } else {
+                $arg_cxts = [ CXT_SCALAR|CXT_LVALUE, CXT_SCALAR,
+                              CXT_SCALAR, CXT_SCALAR ];
+            }
+        } elsif( $tree->function == OP_VEC ) {
+            $arg_cxts = [ CXT_SCALAR|CXT_LVALUE, CXT_SCALAR, CXT_SCALAR ];
+        } elsif( $tree->function == OP_POS ) {
+            $arg_cxts = [ CXT_SCALAR|CXT_LVALUE ];
+        } elsif( $tree->function != OP_UNDEF ) {
+            my $op_name = $NUMBER_TO_NAME{$tree->function};
+
+            throw Language::P::Parser::Exception
+                ( message  => "Can't modify $op_name",
+                  position => $tree->pos,
+                  );
+        }
+    } elsif( !ref $tree->function ) {
+        if( $tree->function == OP_SUBSTR && @{$tree->arguments} == 4 ) {
+            $arg_cxts = [ CXT_SCALAR|CXT_LVALUE, CXT_SCALAR,
+                          CXT_SCALAR, CXT_SCALAR ];
+        }
+    }
 
     if( !ref $tree->function && $tree->function == OP_RETURN ) {
         $tree->set_attribute( 'context', CXT_CALLER );
     } else {
         $tree->set_attribute( 'context', $cxt );
     }
-    my $arg_cxts = $tree->runtime_context || [ CXT_LIST ];
     $self->visit( $tree->function, CXT_SCALAR ) if ref $tree->function;
 
     if( $tree->arguments ) {
@@ -249,7 +292,22 @@ sub _binary_op {
                                          $cxt & CXT_CALLER ? CXT_CALLER :
                                                              CXT_SCALAR,
                                          $cxt ) );
-    } elsif( $tree->op == OP_ASSIGN ) {
+    } elsif(    $tree->op == OP_ASSIGN
+             || $tree->op == OP_ADD_ASSIGN
+             || $tree->op == OP_BIT_AND_ASSIGN
+             || $tree->op == OP_BIT_OR_ASSIGN
+             || $tree->op == OP_BIT_XOR_ASSIGN
+             || $tree->op == OP_CONCATENATE_ASSIGN
+             || $tree->op == OP_DIVIDE_ASSIGN
+             || $tree->op == OP_LOG_AND_ASSIGN
+             || $tree->op == OP_LOG_OR_ASSIGN
+             || $tree->op == OP_MODULUS_ASSIGN
+             || $tree->op == OP_MULTIPLY_ASSIGN
+             || $tree->op == OP_POWER_ASSIGN
+             || $tree->op == OP_REPEAT_ASSIGN
+             || $tree->op == OP_SHIFT_LEFT_ASSIGN
+             || $tree->op == OP_SHIFT_RIGHT_ASSIGN
+             || $tree->op == OP_SUBTRACT_ASSIGN ) {
         my $left_cxt = $tree->left->lvalue_context;
 
         $self->visit( $tree->left, $left_cxt|CXT_LVALUE );

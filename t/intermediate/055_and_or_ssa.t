@@ -31,7 +31,7 @@ EOP
 # main
 L1:
   lexical_state_set index=0
-  set index=1, slot=VALUE_SCALAR (global context=4, name="a", slot=1)
+  set index=1, slot=VALUE_SCALAR (global context=20, name="a", slot=1)
   jump_if_true to=L2 (get index=1, slot=VALUE_SCALAR)
   jump to=L4
 L2:
@@ -71,7 +71,7 @@ EOP
 # main
 L1:
   lexical_state_set index=0
-  set index=1, slot=VALUE_SCALAR (global context=4, name="a", slot=1)
+  set index=1, slot=VALUE_SCALAR (global context=20, name="a", slot=1)
   jump_if_true to=L4 (get index=1, slot=VALUE_SCALAR)
   jump to=L2
 L2:

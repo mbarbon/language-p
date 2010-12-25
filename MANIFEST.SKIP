@@ -1,19 +1,18 @@
 # Avoid build files
 ^lib/Language/P/Keywords.pm$
 ^lib/Language/P/Opcodes.pm$
-^bin/p_parrot$
-^t/.*/.*\.pbc$
+^lib/Language/P/Toy/Assembly.pm$
 ^t/.*/.*\.ir$
-^t/.*/.*\.pir$
 ^t/.*/.*\.pt$
+^t/harness$
 .pb$
-^support/parrot/runtime/.*\.pbc$
 ^support/dotnet/bin/
 ^support/dotnet/Bytecode/BytecodeGenerated\.cs$
 ^support/dotnet/dotnet.pidb$
 ^support/dotnet/dotnet.userprefs$
 ^lib/Language/P/Intermediate/SerializeGenerated\.pm$
 ^MYMETA.yml$
+^foo$
 
 # Avoid version control files.
 \bRCS\b

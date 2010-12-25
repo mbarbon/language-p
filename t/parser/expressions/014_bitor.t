@@ -3,36 +3,33 @@
 use t::lib::TestParser tests => 2;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
-@x && @y
+$a | $b
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
-  name: x
-  sigil: VALUE_ARRAY
-op: OP_LOG_AND
+  name: a
+  sigil: VALUE_SCALAR
+op: OP_BIT_OR
 right: !parsetree:Symbol
-  context: CXT_VOID
-  name: y
-  sigil: VALUE_ARRAY
+  context: CXT_SCALAR
+  name: b
+  sigil: VALUE_SCALAR
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
-@x && do { @y }
+$a ^ $b
 EOP
 --- !parsetree:BinOp
 context: CXT_VOID
 left: !parsetree:Symbol
   context: CXT_SCALAR
-  name: x
-  sigil: VALUE_ARRAY
-op: OP_LOG_AND
-right: !parsetree:DoBlock
-  context: CXT_VOID
-  lines:
-    - !parsetree:Symbol
-      context: CXT_VOID
-      name: y
-      sigil: VALUE_ARRAY
+  name: a
+  sigil: VALUE_SCALAR
+op: OP_BIT_XOR
+right: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: b
+  sigil: VALUE_SCALAR
 EOE

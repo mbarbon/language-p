@@ -64,7 +64,7 @@ sub _slot_type {
         || $opn == OP_GLOBAL
         || $opn == OP_TEMPORARY
         || $opn == OP_GET ) {
-        my $slot = $op->{attributes}{slot};
+        my $slot = $op->slot;
         die "Undefined slot for $opn" unless $slot;
 
         # for now, make no difference between scalars and globs
@@ -76,7 +76,7 @@ sub _slot_type {
     }
     if(    $opn == OP_LEXICAL
         || $opn == OP_LEXICAL_PAD ) {
-        my $index = $op->{attributes}{index};
+        my $index = $op->index;
         my $slot;
 
         if( $opn == OP_LEXICAL ) {
@@ -111,7 +111,7 @@ sub _slot_type {
         return VALUE_SUB;
     }
     if( $opn == OP_PHI ) {
-        my $params = $op->{parameters};
+        my $params = $op->parameters;
         my $slot = $params->[2];
         die "Undefined slot for OP_PHI" unless $slot;
 
@@ -166,8 +166,8 @@ sub _opcode_set {
     my( $self, $index, $arg, $slot ) = @_;
 
     my $op = opcode_np( OP_SET, $arg->{pos}, $arg );
-    $op->{attributes}{index} = $index;
-    $op->{attributes}{slot} = $slot || _slot_type( $self->_current, $arg );
+    $op->set_index( $index );
+    $op->set_slot( $slot || _slot_type( $self->_current, $arg ) );
 
     return $op;
 }
@@ -339,10 +339,10 @@ sub _ssa_to_tree {
             ++$op_off;
             next if    $op->{label}
                     || $op->{opcode_n} != OP_SET
-                    || $op->{parameters}[0]->{opcode_n} != OP_PHI;
+                    || $op->parameters->[0]->{opcode_n} != OP_PHI;
 
-            my $parameters = $op->{parameters}[0]->{parameters};
-            my $result_slot = _slot_type( $self->_current, $op->{parameters}[0] );
+            my $parameters = $op->parameters->[0]->parameters;
+            my $result_slot = _slot_type( $self->_current, $op->parameters->[0] );
 
             for( my $i = 0; $i < @$parameters; $i += 3 ) {
                 my( $label, $variable, $slot ) = @{$parameters}[ $i, $i + 1, $i + 2];
@@ -353,7 +353,7 @@ sub _ssa_to_tree {
                 # find the jump coming to this block
                 while( $op_from_off >= 0 ) {
                     my $op_from = $block_from->bytecode->[$op_from_off];
-                    last if    $op_from->{attributes}
+                    last if    $op_from->{attributes} # TODO is_jump
                             && exists $op_from->{attributes}{to}
                             && $op_from->{attributes}{to} eq $block;
                     --$op_from_off;
@@ -365,12 +365,12 @@ sub _ssa_to_tree {
 
                 # add SET nodes to rename the variables
                 splice @{$block_from->bytecode}, $op_from_off, 0,
-                       _opcode_set( $self, $op->{attributes}{index},
+                       _opcode_set( $self, $op->index,
                                     opcode_npm( OP_GET, $op->{pos},
                                                 index => $variable,
                                                 slot  => $slot ),
                                     $result_slot )
-                    if $op->{attributes}{index} != $variable;
+                    if $op->index != $variable;
             }
 
             --$op_off;
@@ -451,7 +451,7 @@ sub _jump_to {
                                 ->new_from_label( $to->start_label,
                                                   $to->lexical_state,
                                                   $to->scope, $to->dead );
-    $op->{attributes}{to} = $converted->{block};
+    $op->set_to( $converted->{block} );
     push @{$self->_queue}, $to;
 
     return $out_names;
@@ -479,7 +479,7 @@ sub _emit_out_stack {
     for( my $j = 0; $j < $i; ++$j ) {
         my $op = $stack->[$j];
         if( $op->{opcode_n} == OP_GET ) {
-            push @out_names, [ $op->{attributes}{index}, $op->{attributes}{slot} ];
+            push @out_names, [ $op->index, $op->slot ];
         } else {
             my $index = _local_name( $self );
             my $slot = _slot_type( $self->_current, $op );
@@ -490,7 +490,7 @@ sub _emit_out_stack {
     for( my $j = $i; $i < @$stack; ++$i, ++$j ) {
         my $op = $stack->[$i];
         if( $op->{opcode_n} == OP_GET ) {
-            $out_names[$j] = [ $op->{attributes}{index}, _slot_type( $self->_current, $op ) ];
+            $out_names[$j] = [ $op->index, _slot_type( $self->_current, $op ) ];
             $out_stack[$i] = $op;
         } else {
             my $index = _local_name( $self );
@@ -515,12 +515,12 @@ sub _generic {
     my @in = $in_args ? _get_stack( $self, $in_args ) : ();
     my $new_op;
 
-    if( $op->{attributes} ) {
+    if( $op->{attributes} ) { # TODO clone
         $new_op = opcode_nm( $op->{opcode_n}, %{$op->{attributes}} );
-        $new_op->{parameters} = \@in if @in;
-    } elsif( $op->{parameters} ) {
+        $new_op->set_parameters( \@in ) if @in;
+    } elsif( $op->parameters ) {
         die "Can't handle fixed and dynamic parameters for $NUMBER_TO_NAME{$op->{opcode_n}}" if @in;
-        $new_op = opcode_n( $op->{opcode_n}, @{$op->{parameters}} );
+        $new_op = opcode_n( $op->{opcode_n}, @{$op->parameters} );
     } else {
         $new_op = opcode_n( $op->{opcode_n}, @in );
     }
@@ -539,7 +539,7 @@ sub _generic {
 
 sub _const_sub {
     my( $self, $op ) = @_;
-    my $new_seg = $self->_converted_segments->{$op->{attributes}{value}};
+    my $new_seg = $self->_converted_segments->{$op->value};
     my $new_op = opcode_nm( OP_CONSTANT_SUB, value => $new_seg );
 
     push @{$self->_stack}, $new_op;
@@ -548,7 +548,7 @@ sub _const_sub {
 
 sub _const_regex {
     my( $self, $op ) = @_;
-    my $new_seg = $self->_converted_segments->{$op->{attributes}{value}};
+    my $new_seg = $self->_converted_segments->{$op->value};
     my $new_op = opcode_nm( OP_CONSTANT_REGEX, value => $new_seg );
 
     push @{$self->_stack}, $new_op;
@@ -601,8 +601,8 @@ sub _make_list_array {
     my( $self, $op ) = @_;
 
     my $nop = opcode_npm( $op->{opcode_n}, $op->{pos},
-                          context => $op->{attributes}{context} );
-    $nop->{parameters} = [ _get_stack( $self, $op->{attributes}{count} ) ]
+                          context => $op->context );
+    $nop->set_parameters( [ _get_stack( $self, $op->{attributes}{count} ) ] )
         if $op->{attributes}{count};
 
     push @{$self->_stack}, $nop;
@@ -618,9 +618,9 @@ sub _cond_jump {
     my $new_jump = opcode_n( OP_JUMP );
 
     my @out_names;
-    _jump_to( $self, $new_cond, $op->{attributes}{true}, \@out_names );
+    _jump_to( $self, $new_cond, $op->true, \@out_names );
     _add_bytecode $self, $new_cond;
-    _jump_to( $self,$new_jump,  $op->{attributes}{false}, \@out_names );
+    _jump_to( $self,$new_jump,  $op->false, \@out_names );
     _add_bytecode $self, $new_jump;
 }
 
@@ -628,20 +628,20 @@ sub _jump {
     my( $self, $op ) = @_;
     my $new_jump = opcode_nm( $op->{opcode_n} );
 
-    _jump_to( $self, $new_jump, $op->{attributes}{to}, [] );
+    _jump_to( $self, $new_jump, $op->to, [] );
     _add_bytecode $self, $new_jump;
 }
 
 sub _replace {
     my( $self, $op ) = @_;
     my $new_jump = opcode_npm( $op->{opcode_n}, $op->{pos},
-                               context => $op->{attributes}{context},
-                               index   => $op->{attributes}{index},
-                               flags   => $op->{attributes}{flags},
+                               context => $op->context,
+                               index   => $op->index,
+                               flags   => $op->flags,
                                );
-    $new_jump->{parameters} = [ _get_stack( $self, 2 ) ];
+    $new_jump->set_parameters( [ _get_stack( $self, 2 ) ] );
 
-    my $to = $op->{attributes}{to};
+    my $to = $op->to;
 
     # extracted from _jump_to
     my $converted_blocks = $self->_converted;
@@ -651,7 +651,7 @@ sub _replace {
                                 ->new_from_label( $to->start_label,
                                                   $to->lexical_state,
                                                   $to->scope, $to->dead );
-    $new_jump->{attributes}{to} = $converted->{block};
+    $new_jump->set_to( $converted->{block} );
     push @{$self->_queue}, $to;
 
     push @{$self->_stack}, $new_jump;
@@ -663,14 +663,14 @@ sub _rx_start_group {
     my( $self, $op ) = @_;
     my $new_jump = opcode_nm( OP_RX_START_GROUP );
 
-    _jump_to( $self, $new_jump, $op->{attributes}{to}, [] );
+    _jump_to( $self, $new_jump, $op->to, [] );
     _add_bytecode $self, $new_jump;
 }
 
 sub _rx_quantifier {
     my( $self, $op ) = @_;
     my $attrs = $op->{attributes};
-    my $new_quant =
+    my $new_quant = # TODO clone
         opcode_nm( OP_RX_QUANTIFIER,
                    min => $attrs->{min}, max => $attrs->{max},
                    greedy => $attrs->{greedy},
@@ -679,9 +679,9 @@ sub _rx_quantifier {
                    subgroups_end => $attrs->{subgroups_end} );
     my $new_jump = opcode_n( OP_JUMP );
 
-    _jump_to( $self, $new_quant, $op->{attributes}{true}, [] );
+    _jump_to( $self, $new_quant, $op->true, [] );
     _add_bytecode $self, $new_quant;
-    _jump_to( $self, $new_jump, $op->{attributes}{false}, [] );
+    _jump_to( $self, $new_jump, $op->false, [] );
     _add_bytecode $self, $new_jump;
 }
 
@@ -689,7 +689,7 @@ sub _rx_try {
     my( $self, $op ) = @_;
     my $new_jump = opcode_nm( OP_RX_TRY );
 
-    _jump_to( $self, $new_jump, $op->{attributes}{to}, [] );
+    _jump_to( $self, $new_jump, $op->to, [] );
     _add_bytecode $self, $new_jump;
 }
 
@@ -697,7 +697,7 @@ sub _rx_backtrack {
     my( $self, $op ) = @_;
     my $new_jump = opcode_nm( OP_RX_BACKTRACK );
 
-    _jump_to( $self, $new_jump, $op->{attributes}{to}, [] );
+    _jump_to( $self, $new_jump, $op->to, [] );
     _add_bytecode $self, $new_jump;
 }
 

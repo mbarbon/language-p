@@ -8,6 +8,7 @@ use Language::P::Intermediate::Generator;
 use Language::P::Intermediate::Transform;
 use Language::P::Opcodes;
 use Language::P::Constants qw(:all);
+use Language::P::Toy::Assembly;
 
 use Exporter 'import';
 our @EXPORT_OK = qw(generate_main basic_blocks blocks_as_string
