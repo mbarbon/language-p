@@ -15,6 +15,7 @@ MYMETA.yml
 # Misc
 TAGS
 cover_db
+foo
 
 # Compilation byproducts
 *.pt

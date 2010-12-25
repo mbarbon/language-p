@@ -11,6 +11,7 @@
 ^support/parrot/runtime/.*\.pbc$
 ^lib/Language/P/Intermediate/SerializeGenerated\.pm$
 ^MYMETA.yml$
+^foo$
 
 # Avoid version control files.
 \bRCS\b
