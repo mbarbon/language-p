@@ -59,11 +59,15 @@ sub ACTION_code {
     }
     if( !$self->up_to_date( [ 'inc/Opcodes.pm', 'inc/Keywords.pm',
                               'lib/Language/P/Keywords.pm' ],
-                            [ 'lib/Language/P/Opcodes.pm' ] ) ) {
+                            [ 'lib/Language/P/Opcodes.pm', 'lib/Language/P/Toy/Assembly.pm' ] ) ) {
         $self->do_system( $^X, '-Iinc', '-Ilib',
                           '-MOpcodes', '-e', 'write_opcodes()',
                           '--', 'lib/Language/P/Opcodes.pm' );
-        $self->add_to_cleanup( 'lib/Language/P/Opcodes.pm' );
+        $self->do_system( $^X, '-Iinc', '-Ilib',
+                          '-MOpcodes', '-e', 'write_toy_opclasses()',
+                          '--', 'lib/Language/P/Toy/Assembly.pm' );
+        $self->add_to_cleanup( 'lib/Language/P/Opcodes.pm',
+                               'lib/Language/P/Toy/Assembly.pm' );
     }
     if( !$self->up_to_date( [ 'inc/Opcodes.pm', 'lib/Language/P/Keywords.pm' ],
                             [ 'lib/Language/P/Intermediate/SerializeGenerated.pm' ] ) ) {

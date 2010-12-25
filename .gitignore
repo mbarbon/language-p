@@ -8,6 +8,7 @@ t/perl5/[a-z]*
 t/harness
 lib/Language/P/Keywords.pm
 lib/Language/P/Opcodes.pm
+lib/Language/P/Toy/Assembly.pm
 lib/Language/P/Intermediate/SerializeGenerated.pm
 META.yml
 MYMETA.yml

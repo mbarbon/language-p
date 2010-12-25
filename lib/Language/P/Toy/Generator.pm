@@ -13,6 +13,7 @@ __PACKAGE__->mk_accessors( qw(_code _pending _block_map _index_map
 use Language::P::Intermediate::Code qw(:all);
 use Language::P::Intermediate::Generator;
 use Language::P::Opcodes qw(:all);
+use Language::P::Toy::Assembly;
 use Language::P::Toy::Opcodes qw(o);
 use Language::P::Toy::Value::StringNumber;
 use Language::P::Toy::Value::Handle;

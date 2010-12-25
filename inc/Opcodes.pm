@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Exporter 'import';
 
-our @EXPORT = qw(write_opcodes write_perl_serializer);
+our @EXPORT = qw(write_opcodes write_perl_serializer parse_opdesc write_toy_opclasses);
 
 use Language::P::Constants qw(:all);
 use Language::P::Keywords qw(:all);
@@ -59,6 +59,105 @@ sub parse_opdesc {
     }
 
     return \%op;
+}
+
+sub write_toy_opclasses {
+    my( $file ) = @ARGV;
+
+    my %op = %{parse_opdesc()};
+
+    open my $out, '>', $file;
+
+    my %classes;
+    while( my( $k, $v ) = each %op ) {
+        my( $attrs, $class ) = ( $v->[3][0], $v->[5] );
+        next unless $class;
+        push @{$classes{$class} ||= []}, $k;
+    }
+
+    print $out <<'EOT';
+package Language::P::Assembly;
+
+use Language::P::Opcodes qw(:all);
+
+sub i {
+    my $op = $_[0]->{opcode_n} || -1;
+
+    if( 0 ) {
+        # helps code generation
+EOT
+
+    while( my( $k, $v ) = each %classes ) {
+        printf $out <<'EOT',
+    } elsif( %s ) {
+        return Language::P::Instruction::%s->new( $_[0] );
+EOT
+        join( ' || ', map "\$op == $_", @$v ), $k;
+    }
+
+    print $out <<'EOT';
+    }
+
+    return Language::P::Instruction::Base->new( $_[0] );
+}
+
+package Language::P::Instruction::Base;
+
+use parent qw(Language::P::Instruction);
+
+sub     context { $_[0]->{attributes}{context} }
+sub     parameters { $_[0]->{parameters} }
+sub set_parameters { $_[0]->{parameters} = $_[1] }
+
+EOT
+
+    my %emitted;
+
+    while( my( $k, $v ) = each %op ) {
+        my( $attrs, $class ) = ( $v->[3][0], $v->[5] );
+        next unless $class && !$emitted{$class};
+        $emitted{$class} = 1;
+
+        printf $out <<'EOT',
+package Language::P::Instruction::%s;
+
+our @ISA = qw(Language::P::Instruction::Base);
+
+EOT
+          $class;
+
+        for( my $i = 0; $i < @$attrs; $i += 2) {
+            if(    $attrs->[$i] ne 'context'
+                && $attrs->[$i] ne 'arg_count'
+                && $attrs->[$i] ne 'class' ) {
+                printf $out <<'EOT',
+sub     %s { $_[0]->{attributes}{%s} }
+sub set_%s { $_[0]->{attributes}{%s} = $_[1] }
+
+EOT
+                  $attrs->[$i], $attrs->[$i], $attrs->[$i], $attrs->[$i];
+            }
+        }
+    }
+
+    print $out <<'EOT';
+
+# TODO refactor jump opcode handling
+
+package Language::P::Instruction::Jump;
+
+sub set_false { $_[0]->{attributes}{false} = $_[1] }
+sub     false { $_[0]->{attributes}{false} }
+sub set_true { $_[0]->{attributes}{true} = $_[1] }
+sub     true { $_[0]->{attributes}{true} }
+
+package Language::P::Instruction::RegexQuantifier;
+
+sub     false { $_[0]->{attributes}{false} }
+sub     true { $_[0]->{attributes}{true} }
+
+1;
+EOT
 }
 
 sub write_opcodes {

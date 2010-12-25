@@ -1,6 +1,7 @@
 # Avoid build files
 ^lib/Language/P/Keywords.pm$
 ^lib/Language/P/Opcodes.pm$
+^lib/Language/P/Toy/Assembly.pm$
 ^t/.*/.*\.ir$
 ^t/.*/.*\.pt$
 ^t/harness$

@@ -4,8 +4,6 @@ use strict;
 use warnings;
 use Exporter 'import';
 
-use Language::P::Instruction;
-
 our @EXPORT_OK = qw(label literal opcode opcode_n opcode_m opcode_nm
                     opcode_np opcode_npm);
 our %EXPORT_TAGS =
@@ -25,7 +23,7 @@ by backends.
 
 =cut
 
-sub i { Language::P::Instruction->new( $_[0] ) }
+sub i;
 
 =head2 label
 
