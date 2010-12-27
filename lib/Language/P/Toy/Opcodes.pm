@@ -1986,6 +1986,9 @@ _make_bool_ft( $_ ) foreach
     { name     => 'o_ft_isfile',
       operator => 'f',
       },
+    { name     => 'o_ft_nonempty',
+      operator => 's',
+      },
     );
 
 sub o_array_element {
