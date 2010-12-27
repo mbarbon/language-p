@@ -669,14 +669,13 @@ sub _rx_start_group {
 
 sub _rx_quantifier {
     my( $self, $op ) = @_;
-    my $attrs = $op->{attributes};
     my $new_quant = # TODO clone
         opcode_nm( OP_RX_QUANTIFIER,
-                   min => $attrs->{min}, max => $attrs->{max},
-                   greedy => $attrs->{greedy},
-                   group => $attrs->{group},
-                   subgroups_start => $attrs->{subgroups_start},
-                   subgroups_end => $attrs->{subgroups_end} );
+                   min => $op->min, max => $op->max,
+                   greedy => $op->greedy,
+                   group => $op->group,
+                   subgroups_start => $op->subgroups_start,
+                   subgroups_end => $op->subgroups_end );
     my $new_jump = opcode_n( OP_JUMP );
 
     _jump_to( $self, $new_quant, $op->true, [] );
