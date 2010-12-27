@@ -602,8 +602,8 @@ sub _make_list_array {
 
     my $nop = opcode_npm( $op->{opcode_n}, $op->{pos},
                           context => $op->context );
-    $nop->set_parameters( [ _get_stack( $self, $op->{attributes}{count} ) ] )
-        if $op->{attributes}{count};
+    $nop->set_parameters( [ _get_stack( $self, $op->arg_count ) ] )
+        if $op->arg_count;
 
     push @{$self->_stack}, $nop;
 

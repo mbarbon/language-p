@@ -511,7 +511,7 @@ sub _end {
         # generation and automatically handles the 'return undef on
         # failure' behaviour of eval
         push @$bytecode,
-            o( 'make_list', count => 0, context => CXT_LIST ),
+            o( 'make_list', arg_count => 0, context => CXT_LIST ),
             o( 'return' );
     } else {
         push @$bytecode, o( 'end' );

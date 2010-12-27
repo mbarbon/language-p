@@ -78,7 +78,7 @@ L3:
   concat context=4
   concat context=4
   concat context=4
-  make_array context=8, count=1
+  make_array arg_count=1, context=8
   die context=2
   pop
   jump to=L4

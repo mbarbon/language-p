@@ -9,11 +9,11 @@ EOP
 # main
 L1:
   lexical_state_set index=0
-  make_list context=8, count=0
+  make_list arg_count=0, context=8
   temporary_set index=0, slot=2
   global context=8, name="y", slot=2
-  make_list context=8, count=1
-  make_list context=8, count=1
+  make_list arg_count=1, context=8
+  make_list arg_count=1, context=8
   iterator
   temporary_set index=1, slot=9
   global context=4, name="_", slot=5
@@ -55,11 +55,11 @@ EOP
 # main
 L1:
   lexical_state_set index=0
-  make_list context=8, count=0
+  make_list arg_count=0, context=8
   temporary_set index=0, slot=2
   global context=8, name="y", slot=2
-  make_list context=8, count=1
-  make_list context=8, count=1
+  make_list arg_count=1, context=8
+  make_list arg_count=1, context=8
   iterator
   temporary_set index=1, slot=9
   global context=4, name="_", slot=5
@@ -73,7 +73,7 @@ L10:
 L11:
   temporary index=4, slot=2
   temporary_clear index=4, slot=2
-  make_list context=8, count=2
+  make_list arg_count=2, context=8
   global context=24, name="r", slot=2
   swap
   assign context=2
@@ -100,11 +100,11 @@ L5:
 L6:
   temporary index=0, slot=2
   temporary_clear index=0, slot=2
-  make_list context=8, count=0
+  make_list arg_count=0, context=8
   temporary_set index=4, slot=2
   global context=8, name="z", slot=2
-  make_list context=8, count=1
-  make_list context=8, count=1
+  make_list arg_count=1, context=8
+  make_list arg_count=1, context=8
   iterator
   temporary_set index=5, slot=9
   global context=4, name="_", slot=5

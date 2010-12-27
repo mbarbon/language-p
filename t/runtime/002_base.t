@@ -27,7 +27,7 @@ my @program1 =
     o( 'constant',
        value => Language::P::Toy::Value::StringNumber->new( $runtime, { string => "Hello, world!\n" } ),
        ),
-    o( 'make_list', count => 1, context => CXT_LIST ),
+    o( 'make_list', arg_count => 1, context => CXT_LIST ),
     o( 'print' ),
     o( 'end' ),
   );
@@ -50,7 +50,7 @@ my @program2 =
     o( 'constant',
        value => Language::P::Toy::Value::StringNumber->new( $runtime, { string => "\n" } ),
        ),
-    o( 'make_list', count => 3, context => CXT_LIST, context => CXT_LIST ),
+    o( 'make_list', arg_count => 3, context => CXT_LIST, context => CXT_LIST ),
     o( 'print' ),
     o( 'end' ),
     );

@@ -793,12 +793,12 @@ sub o_make_array {
 
     # create the array
     my $array = Language::P::Toy::Value::Array->new( $runtime );
-    if( $op->{count} ) {
-        for( my $j = $#$st - $op->{count} + 1; $j <= $#$st; ++$j ) {
+    if( $op->{arg_count} ) {
+        for( my $j = $#$st - $op->{arg_count} + 1; $j <= $#$st; ++$j ) {
             $array->push_flatten( $runtime, $st->[$j] );
         }
         # clear the stack
-        $#$st -= $op->{count} - 1;
+        $#$st -= $op->{arg_count} - 1;
         $st->[-1] = $array;
     } else {
         push @$st, $array;
@@ -815,12 +815,12 @@ sub o_make_list {
     my $list = ( $op->{context} & CXT_LVALUE ) ?
                    Language::P::Toy::Value::LvalueList->new( $runtime ) :
                    Language::P::Toy::Value::List->new( $runtime );
-    if( $op->{count} ) {
-        for( my $j = $#$st - $op->{count} + 1; $j <= $#$st; ++$j ) {
+    if( $op->{arg_count} ) {
+        for( my $j = $#$st - $op->{arg_count} + 1; $j <= $#$st; ++$j ) {
             $list->push_value( $runtime, $st->[$j] );
         }
         # clear the stack
-        $#$st -= $op->{count} - 1;
+        $#$st -= $op->{arg_count} - 1;
         $st->[-1] = $list;
     } else {
         push @$st, $list;

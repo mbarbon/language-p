@@ -32,8 +32,8 @@ L6:
 L7:
   constant_integer value=1
   constant_integer value=2
-  make_list context=8, count=2
-  make_list context=8, count=1
+  make_list arg_count=2, context=8
+  make_list arg_count=1, context=8
   iterator
   temporary_set index=0, slot=9
   global context=4, name="y", slot=5

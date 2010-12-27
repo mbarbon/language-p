@@ -12,7 +12,7 @@ L1:
   global context=8, name="foo", slot=2
   constant_integer value=1
   constant_integer value=2
-  make_array context=8, count=2
+  make_array arg_count=2, context=8
   array_push context=2
   pop
   jump to=L2
@@ -46,7 +46,7 @@ L1:
   reference
   constant_integer value=1
   constant_integer value=2
-  make_array context=8, count=3
+  make_array arg_count=3, context=8
   global context=4, name="mypush", slot=4
   call context=2
   pop
