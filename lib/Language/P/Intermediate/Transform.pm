@@ -512,18 +512,13 @@ sub _generic {
     my $in_args = ( $attrs->{flags} & Language::P::Opcodes::FLAG_VARIADIC ) ?
                       $op->arg_count : $attrs->{in_args};
     my @in = $in_args ? _get_stack( $self, $in_args ) : ();
-    my $new_op;
+    my $new_op = $op->clone;
 
-    if( $op->{attributes} ) { # TODO clone
-        $new_op = opcode_nm( $op->{opcode_n}, %{$op->{attributes}} );
-        $new_op->set_parameters( \@in ) if @in;
-    } elsif( $op->parameters ) {
+    if( $new_op->parameters && @in ) {
         die "Can't handle fixed and dynamic parameters for $NUMBER_TO_NAME{$op->{opcode_n}}" if @in;
-        $new_op = opcode_n( $op->{opcode_n}, @{$op->parameters} );
     } else {
-        $new_op = opcode_n( $op->{opcode_n}, @in );
+        $new_op->set_parameters( \@in ) if @in;
     }
-    $new_op->{pos} = $op->{pos} if $op->{pos};
 
     if( !$attrs->{out_args} ) {
         _emit_out_stack( $self );

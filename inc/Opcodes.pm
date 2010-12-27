@@ -111,6 +111,17 @@ sub set_parameters { $_[0]->{parameters} = $_[1] }
 sub     arg_count  { $_[0]->{attributes}{arg_count} }
 sub is_jump { 0 }
 
+sub clone {
+    my( $self ) = @_;
+    my $new_op = Language::P::Assembly::opcode_n( $self->{opcode_n} );
+
+    $new_op->{pos} = $self->{pos} if $self->{pos};
+    $new_op->{parameters} = [ @{$self->{paramaters}} ] if $self->{parameters};
+    $new_op->{attributes} = { %{$self->{attributes}} } if $self->{attributes};
+
+    return $new_op;
+}
+
 EOT
 
     my %emitted;
