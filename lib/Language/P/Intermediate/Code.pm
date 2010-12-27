@@ -5,6 +5,7 @@ use warnings;
 use parent qw(Language::P::Object);
 
 use Scalar::Util; # weaken
+use Language::P::Intermediate::LexicalState;
 
 __PACKAGE__->mk_ro_accessors( qw(type name basic_blocks outer inner
                                  lexicals prototype scopes lexical_states
@@ -39,11 +40,12 @@ sub new {
     $self->{inner} = [];
     $self->{scopes} ||= [];
     $self->{lexical_states} ||=
-        [ { scope    => 0,
-            package  => 'main',
-            hints    => 0,
-            warnings => undef,
-            } ];
+        [ Language::P::Intermediate::LexicalState->new
+              ( { scope    => 0,
+                  package  => 'main',
+                  hints    => 0,
+                  warnings => undef,
+                  } ) ];
     $self->{regex_string} ||= undef;
 
     return $self;

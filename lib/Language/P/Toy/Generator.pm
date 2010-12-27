@@ -265,9 +265,9 @@ sub _generate_scope {
           bytecode      => \@exit_bytecode,
           pos_s         => $scope->{pos_s},
           pos_e         => $scope->{pos_e},
-          warnings      => $state->{warnings},
-          hints         => $state->{hints},
-          package       => $state->{package},
+          warnings      => $state->warnings,
+          hints         => $state->hints,
+          package       => $state->package,
           };
 
     foreach my $chunk ( reverse @{$scope->{bytecode}} ) {
@@ -628,9 +628,9 @@ sub _lexical_state_set {
 
     push @$bytecode,
          o( 'lexical_state_set',
-            package  => $state->{package},
-            hints    => $state->{hints} & 0xff,
-            warnings => $state->{warnings},
+            package  => $state->package,
+            hints    => $state->hints & 0xff,
+            warnings => $state->warnings,
             );
 }
 

@@ -10,6 +10,7 @@ __PACKAGE__->mk_accessors( qw(_code_segments _current_basic_block _options
 
 use Language::P::Intermediate::Code qw(:all);
 use Language::P::Intermediate::BasicBlock;
+use Language::P::Intermediate::LexicalState;
 use Language::P::Opcodes qw(:all);
 use Language::P::ParseTree::PropagateContext;
 use Language::P::Constants qw(:all);
@@ -558,11 +559,12 @@ sub _lexical_state {
     my $state_id = @{$self->_code_segments->[0]->lexical_states};
 
     push @{$self->_code_segments->[0]->lexical_states},
-         { scope    => $scope_id,
-           package  => $tree->package,
-           hints    => $tree->hints,
-           warnings => $tree->warnings,
-           };
+         Language::P::Intermediate::LexicalState->new
+             ( { scope    => $scope_id,
+                 package  => $tree->package,
+                 hints    => $tree->hints,
+                 warnings => $tree->warnings,
+                 } );
     $self->_code_segments->[0]->scopes->[$scope_id]->{flags} |= SCOPE_LEX_STATE;
     $self->_current_block->{lexical_state} = $state_id;
 

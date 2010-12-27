@@ -133,10 +133,10 @@ sub _write_scope {
 sub _write_lex_state {
     my( $self, $out, $lex_state ) = @_;
 
-    print $out pack 'V', $lex_state->{scope};
-    print $out pack 'V', $lex_state->{hints};
-    _write_string( $out, $lex_state->{package} );
-    _write_string( $out, $lex_state->{warnings} || '' );
+    print $out pack 'V', $lex_state->scope;
+    print $out pack 'V', $lex_state->hints;
+    _write_string( $out, $lex_state->package );
+    _write_string( $out, $lex_state->warnings || '' );
 }
 
 sub _write_bb {
