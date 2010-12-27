@@ -108,6 +108,7 @@ use parent qw(Language::P::Instruction);
 sub     context { $_[0]->{attributes}{context} }
 sub     parameters { $_[0]->{parameters} }
 sub set_parameters { $_[0]->{parameters} = $_[1] }
+sub     arg_count  { $_[0]->{attributes}{arg_count} }
 
 EOT
 
