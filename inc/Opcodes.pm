@@ -109,6 +109,7 @@ sub     context { $_[0]->{attributes}{context} }
 sub     parameters { $_[0]->{parameters} }
 sub set_parameters { $_[0]->{parameters} = $_[1] }
 sub     arg_count  { $_[0]->{attributes}{arg_count} }
+sub is_jump { 0 }
 
 EOT
 
@@ -151,6 +152,7 @@ sub set_false { $_[0]->{attributes}{false} = $_[1] }
 sub     false { $_[0]->{attributes}{false} }
 sub set_true { $_[0]->{attributes}{true} = $_[1] }
 sub     true { $_[0]->{attributes}{true} }
+sub is_jump  { 1 }
 
 package Language::P::Instruction::RegexQuantifier;
 

@@ -353,9 +353,8 @@ sub _ssa_to_tree {
                 # find the jump coming to this block
                 while( $op_from_off >= 0 ) {
                     my $op_from = $block_from->bytecode->[$op_from_off];
-                    last if    $op_from->{attributes} # TODO is_jump
-                            && exists $op_from->{attributes}{to}
-                            && $op_from->{attributes}{to} eq $block;
+                    last if    $op_from->is_jump
+                            && $op_from->to eq $block;
                     --$op_from_off;
                 }
 
