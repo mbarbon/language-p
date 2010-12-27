@@ -80,9 +80,9 @@ sub _slot_type {
         my $slot;
 
         if( $opn == OP_LEXICAL ) {
-            $slot = $sub->lexicals->{lex_idx}[$index]->{sigil};
+            $slot = $sub->lexicals->{lex_idx}[$index]->sigil;
         } else {
-            $slot = $sub->lexicals->{pad_idx}[$index]->{sigil};
+            $slot = $sub->lexicals->{pad_idx}[$index]->sigil;
         }
 
         die "Undefined slot for $opn" unless $slot;

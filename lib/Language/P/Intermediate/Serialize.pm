@@ -81,7 +81,7 @@ sub _write_sub {
         my $index = 0;
         foreach my $l ( values %{$code->lexicals->{map}} ) {
             _write_lex_info( $self, $out, $l );
-            $self->{li_map}{$l->{index} . "|" . $l->{in_pad}} = $index++;
+            $self->{li_map}{$l->index . "|" . $l->in_pad} = $index++;
         }
     }
 
@@ -101,13 +101,13 @@ sub _write_sub {
 sub _write_lex_info {
     my( $self, $out, $lex_info ) = @_;
 
-    print $out pack 'V', $lex_info->{level};
-    print $out pack 'V', $lex_info->{index};
-    print $out pack 'V', $lex_info->{outer_index};
-    _write_string( $out, $lex_info->{name} );
-    print $out pack 'C', $lex_info->{sigil};
-    print $out pack 'C', $lex_info->{in_pad};
-    print $out pack 'C', $lex_info->{from_main};
+    print $out pack 'V', $lex_info->level;
+    print $out pack 'V', $lex_info->index;
+    print $out pack 'V', $lex_info->outer_index;
+    _write_string( $out, $lex_info->name );
+    print $out pack 'C', $lex_info->sigil;
+    print $out pack 'C', $lex_info->in_pad;
+    print $out pack 'C', $lex_info->from_main;
 }
 
 sub _write_scope {
