@@ -134,10 +134,10 @@ EOT
         printf $out <<'EOT',
 package Language::P::Instruction::%s;
 
-our @ISA = qw(Language::P::Instruction::Base);
+@Language::P::Instruction::%s::ISA = qw(Language::P::Instruction::Base);
 
 EOT
-          $class;
+          $class, $class;
 
         for( my $i = 0; $i < @$attrs; $i += 2) {
             if(    $attrs->[$i] ne 'context'
@@ -164,6 +164,10 @@ sub     false { $_[0]->{attributes}{false} }
 sub set_true { $_[0]->{attributes}{true} = $_[1] }
 sub     true { $_[0]->{attributes}{true} }
 sub is_jump  { 1 }
+
+package Language::P::Instruction::Phi;
+
+@Language::P::Instruction::Phi::ISA = qw(Language::P::Instruction::GetSet);
 
 package Language::P::Instruction::RegexQuantifier;
 
@@ -648,7 +652,7 @@ oct                 u       same                 1   1  context=i1
 open                0       same                 1   1  context=i1
 ord                 u       same                 1   1  context=i1
 parentheses         0       same                -1  -1  noattr
-phi                 0       same                -1  -1  noattr
+phi                 0       same                -1  -1  noattr,class=Phi
 pipe                0       same                 2   1  context=i1
 plus                0       same                 1   1  noattr
 pop                 0       same                 1   0  noattr

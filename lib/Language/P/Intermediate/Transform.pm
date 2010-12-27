@@ -311,8 +311,9 @@ sub to_ssa {
         if( $same ) {
             # morph the PHI opcode into a GET
             $phi->{opcode_n} = OP_GET;
-            $phi->{attributes} = { index => $index, slot => $slot };
-            $phi->{parameters} = undef;
+            $phi->set_index( $index );
+            $phi->set_slot( $slot );
+            $phi->set_parameters( undef );
         }
     }
 
