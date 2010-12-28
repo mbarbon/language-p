@@ -225,8 +225,6 @@ sub generate_use {
 
     my $head = $self->_new_block;
     my $empty = $self->_new_block;
-    my $body = $self->_new_block;
-    my $return = $self->_new_block;
 
     push @{$self->_code_segments},
          Language::P::Intermediate::Code->new
@@ -242,6 +240,9 @@ sub generate_use {
     $self->push_block( SCOPE_SUB|SCOPE_MAIN, $tree->pos_s, $tree->pos_e );
 
     _lexical_state( $self, $tree->lexical_state );
+
+    my $body = $self->_new_block;
+    my $return = $self->_new_block;
 
     # check the Perl version
     if( $tree->version && !$tree->package ) {
@@ -1677,12 +1678,13 @@ sub _cond {
     my $with_scope =    $tree->iffalse
                      || $tree->iftrues->[0]->block->isa( 'Language::P::ParseTree::Block' );
 
+    my $last = _new_block( $self );
     if( $with_scope ) {
         _start_bb( $self );
         $self->push_block( 0, $tree->pos_s, $tree->pos_e );
     }
 
-    my( $next, $last ) = _new_blocks( $self, 2 );
+    my $next = _new_block( $self );
     _add_jump $self, opcode_nm( OP_JUMP, to => $next ), $next;
 
     foreach my $elsif ( @{$tree->iftrues} ) {

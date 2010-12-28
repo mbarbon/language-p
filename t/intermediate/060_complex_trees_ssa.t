@@ -58,29 +58,29 @@ EOP
 L1:
   lexical_state_set index=0
   constant_integer value=1
-  jump to=L5
+  jump to=L6
 L10:
-  jump to=L4
+  jump_if_true to=L11 (constant_integer value=4)
+  jump to=L17
 L11:
-  jump to=L5
+  jump to=L6
 L15:
   end
 L16:
-  jump to=L9
-L17:
   jump to=L10
+L17:
+  jump to=L9
 L4:
   constant_integer value=6
   jump to=L15
-L5:
+L6:
   jump_if_true to=L7 (constant_integer value=3)
   jump to=L16
 L7:
   constant_integer value=2
-  jump to=L9
+  jump to=L10
 L9:
-  jump_if_true to=L11 (constant_integer value=4)
-  jump to=L17
+  jump to=L4
 EOI
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
@@ -96,16 +96,16 @@ L2:
 # anoncode
 L1:
   lexical_state_set index=1
-  jump to=L2
+  jump to=L3
 L2:
+  end
+L3:
   jump_if_true to=L4 (array_element context=4, create=0 (constant_integer value=0), (lexical index=0, slot=2))
   jump to=L7
-L3:
-  end
 L4:
   return context=1 (make_list context=8 (call context=1 (make_array context=8 (constant_integer value=123)), (global context=4, name="xx", slot=4)))
 L7:
-  jump to=L3
+  jump to=L2
 EOI
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
