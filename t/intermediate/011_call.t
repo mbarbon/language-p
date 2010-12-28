@@ -11,7 +11,7 @@ sub foo {
 foo( 1 );
 EOP
 # main
-L1:
+L1: # scope=1
   lexical_state_set index=0
   constant_integer value=1
   make_array arg_count=1, context=8
@@ -19,10 +19,10 @@ L1:
   call context=2
   pop
   jump to=L2
-L2:
+L2: # scope=0
   end
 # foo
-L1:
+L1: # scope=1
   lexical_state_set index=1
   global context=4, name="STDOUT", slot=7
   fresh_string value=""

@@ -7,7 +7,7 @@ generate_and_diff( <<'EOP', <<'EOI' );
 push @foo, 1, 2;
 EOP
 # main
-L1:
+L1: # scope=1
   lexical_state_set index=0
   global context=8, name="foo", slot=2
   constant_integer value=1
@@ -16,7 +16,7 @@ L1:
   array_push context=2
   pop
   jump to=L2
-L2:
+L2: # scope=0
   end
 EOI
 
@@ -24,13 +24,13 @@ generate_and_diff( <<'EOP', <<'EOI' );
 pop @foo;
 EOP
 # main
-L1:
+L1: # scope=1
   lexical_state_set index=0
   global context=8, name="foo", slot=2
   array_pop context=2
   pop
   jump to=L2
-L2:
+L2: # scope=0
   end
 EOI
 
@@ -40,7 +40,7 @@ sub mypush(\@@);
 mypush @foo, 1, 2;
 EOP
 # main
-L1:
+L1: # scope=1
   lexical_state_set index=0
   global context=8, name="foo", slot=2
   reference
@@ -51,6 +51,6 @@ L1:
   call context=2
   pop
   jump to=L2
-L2:
+L2: # scope=0
   end
 EOI

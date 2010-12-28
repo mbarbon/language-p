@@ -7,7 +7,7 @@ generate_and_diff( <<'EOP', <<'EOI' );
 $x = $a + 2
 EOP
 # main
-L1:
+L1: # scope=1
   lexical_state_set index=0
   global context=4, name="a", slot=1
   constant_integer value=2
@@ -17,7 +17,7 @@ L1:
   assign context=2
   pop
   jump to=L2
-L2:
+L2: # scope=0
   end
 EOI
 
@@ -25,7 +25,7 @@ generate_and_diff( <<'EOP', <<'EOI' );
 print !$a
 EOP
 # main
-L1:
+L1: # scope=1
   lexical_state_set index=0
   global context=4, name="STDOUT", slot=7
   global context=4, name="a", slot=1
@@ -34,7 +34,7 @@ L1:
   print context=2
   pop
   jump to=L2
-L2:
+L2: # scope=0
   end
 EOI
 
@@ -42,7 +42,7 @@ generate_and_diff( <<'EOP', <<'EOI' );
 $x = "$a\n";
 EOP
 # main
-L1:
+L1: # scope=1
   lexical_state_set index=0
   fresh_string value=""
   global context=4, name="a", slot=1
@@ -54,6 +54,6 @@ L1:
   assign context=2
   pop
   jump to=L2
-L2:
+L2: # scope=0
   end
 EOI
