@@ -7,6 +7,8 @@ use parent qw(Language::P::Object);
 __PACKAGE__->mk_ro_accessors( qw(bytecode start_label lexical_state scope
                                  predecessors successors dead) );
 
+sub set_scope { $_[0]->{scope} = $_[1] }
+
 use Scalar::Util; # weaken
 use Language::P::Assembly qw(label);
 use Language::P::Opcodes qw(OP_JUMP);

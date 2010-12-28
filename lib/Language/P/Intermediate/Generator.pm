@@ -94,8 +94,7 @@ sub push_block {
 
     Carp::confess( "Instructions at scope start" )
       if @{$self->_current_basic_block->bytecode} != 1;
-    # TODO encapsulation
-    $self->_current_basic_block->{scope} = $id;
+    $self->_current_basic_block->set_scope( $id );
 
     push @{$self->_code_segments->[0]->scopes},
          { outer         => $outer ? $outer->{id} : -1,
