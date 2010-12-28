@@ -109,10 +109,10 @@ sub push_block {
            };
 
     $self->_current_block
-      ( { outer         => $outer,
+      ( { outer         => $outer ? $outer->{id} : -1,
           flags         => $flags,
           bytecode      => $bytecode,
-          pos           => $exit_pos,
+          pos_e         => $exit_pos,
           id            => $id,
           lexical_state => $outer ? $outer->{lexical_state} : 0,
           } );
@@ -120,11 +120,18 @@ sub push_block {
     return $self->_current_block;
 }
 
+sub _outer_scope {
+    my( $self, $scope ) = @_;
+
+    return $scope->{outer} == -1 ? undef :
+               $self->_code_segments->[0]->scopes->[$scope->{outer}];
+}
+
 sub pop_block {
     my( $self ) = @_;
     my $to_ret = $self->_current_block;
 
-    $self->_current_block( $to_ret->{outer} );
+    $self->_current_block( _outer_scope( $self, $to_ret ) );
 
     return $to_ret;
 }
@@ -755,7 +762,7 @@ sub _function_call {
             while( $block ) {
                 _exit_scope( $self, $block );
                 last if $block->{flags} & CODE_MAIN;
-                $block = $block->{outer};
+                $block = _outer_scope( $self, $block )
             }
         }
 
@@ -866,7 +873,7 @@ sub _local {
                         );
 
         push @{$self->_current_block->{bytecode}},
-             [ opcode_npm( $op_rest, $self->_current_block->{pos},
+             [ opcode_npm( $op_rest, $self->_current_block->{pos_e},
                            index => $index,
                            ),
                ];
@@ -882,7 +889,7 @@ sub _local {
                         );
 
         push @{$self->_current_block->{bytecode}},
-             [ opcode_npm( OP_RESTORE_GLOB_SLOT, $self->_current_block->{pos},
+             [ opcode_npm( OP_RESTORE_GLOB_SLOT, $self->_current_block->{pos_e},
                            name  => $left->name,
                            slot  => $left->sigil,
                            index => $index,
@@ -1277,7 +1284,7 @@ sub _do_lexical_access {
 
         push @{$self->_current_block->{bytecode}},
              [ opcode_npm( $lex_info->in_pad ? OP_LEXICAL_PAD_CLEAR : OP_LEXICAL_CLEAR,
-                           $self->_current_block->{pos},
+                           $self->_current_block->{pos_e},
                            index => $lex_info->index,
                            slot  => $tree->sigil,
                            ),
@@ -2081,7 +2088,7 @@ sub _jump {
     my $block = $self->_current_block;
     foreach ( 1 .. $level ) {
         _exit_scope( $self, $block );
-        $block = $block->{outer};
+        $block = _outer_scope( $self, $block );
     }
 
     my $label_to;
