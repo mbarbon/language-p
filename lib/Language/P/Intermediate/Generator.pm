@@ -108,14 +108,7 @@ sub push_block {
            lexical_state => $self->_current_lexical_state || 0,
            };
 
-    $self->_current_block
-      ( { outer         => $outer ? $outer->{id} : -1,
-          flags         => $flags,
-          bytecode      => $bytecode,
-          pos_e         => $exit_pos,
-          id            => $id,
-          } );
-
+    $self->_current_block( $self->_code_segments->[0]->scopes->[-1] );
     $self->_current_lexical_state( $outer ? $outer->{lexical_state} : 0 );
 
     return $self->_current_block;
