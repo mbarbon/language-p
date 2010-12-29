@@ -113,18 +113,18 @@ sub _write_lex_info {
 sub _write_scope {
     my( $self, $out, $scope ) = @_;
 
-    print $out pack 'V', $scope->{outer};
-    print $out pack 'V', $scope->{id};
-    print $out pack 'V', $scope->{flags};
-    print $out pack 'V', $scope->{context};
-    _write_pos( $self, $out, $scope->{pos_s} );
-    _write_pos( $self, $out, $scope->{pos_e} );
-    print $out pack 'V', $scope->{lexical_state};
-    print $out pack 'V', $scope->{exception} ?
-        $self->{bb_map}{$scope->{exception}} : -1;
-    print $out pack 'V', scalar @{$scope->{bytecode}};
+    print $out pack 'V', $scope->outer;
+    print $out pack 'V', $scope->id;
+    print $out pack 'V', $scope->flags;
+    print $out pack 'V', $scope->context;
+    _write_pos( $self, $out, $scope->pos_s );
+    _write_pos( $self, $out, $scope->pos_e );
+    print $out pack 'V', $scope->lexical_state;
+    print $out pack 'V', $scope->exception ?
+        $self->{bb_map}{$scope->exception} : -1;
+    print $out pack 'V', scalar @{$scope->bytecode};
 
-    foreach my $bc ( @{$scope->{bytecode}} ) {
+    foreach my $bc ( @{$scope->bytecode} ) {
         print $out pack 'V', scalar @$bc;
         _write_op( $self, $out, $_ ) foreach @$bc;
     }

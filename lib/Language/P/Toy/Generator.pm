@@ -253,7 +253,7 @@ sub _generate_scope {
     my $scope = $self->_segment->scopes->[$scope_id];
     _generate_scope( $self, $scope->{outer}, $converted )
         if $scope->{outer} != -1;
-    my $state = $self->_segment->lexical_states->[$scope->{lexical_state}];
+    my $state = $self->_segment->lexical_states->[$scope->lexical_state];
 
     my @exit_bytecode;
     $self->_code->scopes->[$scope_id] =

@@ -11,6 +11,8 @@ __PACKAGE__->mk_ro_accessors( qw(type name basic_blocks outer inner
                                  lexicals prototype scopes lexical_states
                                  regex_string) );
 
+sub set_outer { $_[0]->{outer} = $_[1] }
+
 use Exporter 'import';
 
 our @EXPORT_OK = qw(SCOPE_SUB SCOPE_EVAL SCOPE_MAIN SCOPE_LEX_STATE SCOPE_REGEX
@@ -61,7 +63,7 @@ sub weaken   { $_->weaken, Scalar::Util::weaken( $_ ) foreach @{$_[0]->inner} }
 sub find_alive_blocks {
     my( $self ) = @_;
     my @queue = ( $self->basic_blocks->[0],
-                  grep defined, map $_->{exception}, @{$self->scopes} );
+                  grep defined, map $_->exception, @{$self->scopes} );
     $_->{dead} = 0 foreach @queue;
 
     while( @queue ) {

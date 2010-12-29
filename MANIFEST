@@ -21,6 +21,7 @@ lib/Language/P/Intermediate/Code.pm
 lib/Language/P/Intermediate/Generator.pm
 lib/Language/P/Intermediate/LexicalInfo.pm
 lib/Language/P/Intermediate/LexicalState.pm
+lib/Language/P/Intermediate/Scope.pm
 lib/Language/P/Intermediate/Serialize.pm
 lib/Language/P/Intermediate/Transform.pm
 lib/Language/P/Lexer.pm

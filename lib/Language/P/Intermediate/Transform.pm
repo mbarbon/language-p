@@ -214,7 +214,7 @@ sub to_ssa {
     foreach my $inner ( @{$code_segment->inner} ) {
         next unless $inner;
         my $new_inner = $self->to_ssa( $inner );
-        $new_inner->{outer} = $new_code;
+        $new_inner->set_outer( $new_code );
         push @{$new_code->inner}, $new_inner;
     }
 
@@ -266,18 +266,19 @@ sub to_ssa {
     # convert block exit bytecode
     foreach my $scope ( @{$code_segment->scopes} ) {
          push @{$new_code->scopes},
-             { outer         => $scope->{outer},
-               bytecode      => [],
-               id            => $scope->{id},
-               flags         => $scope->{flags},
-               context       => $scope->{context},
-               pos_s         => $scope->{pos_s},
-               pos_e         => $scope->{pos_e},
-               lexical_state => $scope->{lexical_state},
-               exception     => $scope->{exception} ? $self->_converted->{$scope->{exception}}{block} : undef,
-               };
+             Language::P::Intermediate::Scope->new
+                 ( { outer         => $scope->outer,
+                     bytecode      => [],
+                     id            => $scope->id,
+                     flags         => $scope->flags,
+                     context       => $scope->context,
+                     pos_s         => $scope->pos_s,
+                     pos_e         => $scope->pos_e,
+                     lexical_state => $scope->lexical_state,
+                     exception     => $scope->exception ? $self->_converted->{$scope->exception}{block} : undef,
+                     } );
 
-       foreach my $seg ( @{$scope->{bytecode}} ) {
+       foreach my $seg ( @{$scope->bytecode} ) {
             my @bytecode;
             @$stack = ();
             $self->_bytecode( \@bytecode );

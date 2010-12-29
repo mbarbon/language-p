@@ -13,6 +13,7 @@ use Language::P::Intermediate::Code qw(:all);
 use Language::P::Intermediate::BasicBlock;
 use Language::P::Intermediate::LexicalState;
 use Language::P::Intermediate::LexicalInfo;
+use Language::P::Intermediate::Scope;
 use Language::P::Opcodes qw(:all);
 use Language::P::ParseTree::PropagateContext;
 use Language::P::Constants qw(:all);
@@ -68,7 +69,7 @@ sub _new_block {
 
     return Language::P::Intermediate::BasicBlock->new_from_label
                ( 'L' . ++$self->{_label_count},
-                 $block ? $block->{id} : 0 );
+                 $block ? $block->id : 0 );
 }
 
 sub _start_bb {
@@ -97,19 +98,20 @@ sub push_block {
     $self->_current_basic_block->set_scope( $id );
 
     push @{$self->_code_segments->[0]->scopes},
-         { outer         => $outer ? $outer->{id} : -1,
-           bytecode      => $bytecode,
-           id            => $id,
-           flags         => $flags,
-           context       => $context || 0, # for eval BLOCK only
-           exception     => undef, # for eval BLOCK only
-           pos_s         => $start_pos,
-           pos_e         => $exit_pos,
-           lexical_state => $self->_current_lexical_state || 0,
-           };
+         Language::P::Intermediate::Scope->new
+             ( { outer         => $outer ? $outer->id : -1,
+                 bytecode      => $bytecode,
+                 id            => $id,
+                 flags         => $flags,
+                 context       => $context || 0, # for eval BLOCK only
+                 exception     => undef, # for eval BLOCK only
+                 pos_s         => $start_pos,
+                 pos_e         => $exit_pos,
+                 lexical_state => $self->_current_lexical_state || 0,
+                 } );
 
     $self->_current_block( $self->_code_segments->[0]->scopes->[-1] );
-    $self->_current_lexical_state( $outer ? $outer->{lexical_state} : 0 );
+    $self->_current_lexical_state( $outer ? $outer->lexical_state : 0 );
 
     return $self->_current_block;
 }
@@ -117,8 +119,8 @@ sub push_block {
 sub _outer_scope {
     my( $self, $scope ) = @_;
 
-    return $scope->{outer} == -1 ? undef :
-               $self->_code_segments->[0]->scopes->[$scope->{outer}];
+    return $scope->outer == -1 ? undef :
+               $self->_code_segments->[0]->scopes->[$scope->outer];
 }
 
 sub pop_block {
@@ -127,7 +129,7 @@ sub pop_block {
     my $outer = _outer_scope( $self, $to_ret );
 
     $self->_current_block( $outer );
-    $self->_current_lexical_state( $outer ? $outer->{lexical_state} : 0 );
+    $self->_current_lexical_state( $outer ? $outer->lexical_state : 0 );
 
     return $to_ret;
 }
@@ -560,7 +562,7 @@ my %conditionals =
 
 sub _lexical_state {
     my( $self, $tree ) = @_;
-    my $scope_id = $self->_current_block->{id};
+    my $scope_id = $self->_current_block->id;
     my $state_id = @{$self->_code_segments->[0]->lexical_states};
 
     push @{$self->_code_segments->[0]->lexical_states},
@@ -570,8 +572,8 @@ sub _lexical_state {
                  hints    => $tree->hints,
                  warnings => $tree->warnings,
                  } );
-    $self->_code_segments->[0]->scopes->[$scope_id]->{flags} |= SCOPE_LEX_STATE;
     $self->_current_lexical_state( $state_id );
+    $self->_code_segments->[0]->scopes->[$scope_id]->set_flags( $self->_code_segments->[0]->scopes->[$scope_id]->flags | SCOPE_LEX_STATE );
 
     # avoid generating a new basic block if the current basic block only
     # contains a label
@@ -757,7 +759,7 @@ sub _function_call {
             my $block = $self->_current_block;
             while( $block ) {
                 _exit_scope( $self, $block );
-                last if $block->{flags} & CODE_MAIN;
+                last if $block->flags & CODE_MAIN;
                 $block = _outer_scope( $self, $block )
             }
         }
@@ -868,8 +870,8 @@ sub _local {
                         index => $index,
                         );
 
-        push @{$self->_current_block->{bytecode}},
-             [ opcode_npm( $op_rest, $self->_current_block->{pos_e},
+        push @{$self->_current_block->bytecode},
+             [ opcode_npm( $op_rest, $self->_current_block->pos_e,
                            index => $index,
                            ),
                ];
@@ -884,8 +886,8 @@ sub _local {
                         index => $index,
                         );
 
-        push @{$self->_current_block->{bytecode}},
-             [ opcode_npm( OP_RESTORE_GLOB_SLOT, $self->_current_block->{pos_e},
+        push @{$self->_current_block->bytecode},
+             [ opcode_npm( OP_RESTORE_GLOB_SLOT, $self->_current_block->pos_e,
                            name  => $left->name,
                            slot  => $left->sigil,
                            index => $index,
@@ -1016,11 +1018,11 @@ sub _binary_op {
             return;
         }
 
-        my $scope_id = $self->_current_block->{id};
+        my $scope_id = $self->_current_block->id;
 
-        unless( $self->_code_segments->[0]->scopes->[$scope_id]->{flags} & SCOPE_REGEX ) {
-            $self->_code_segments->[0]->scopes->[$scope_id]->{flags} |= SCOPE_REGEX;
-            push @{$self->_current_block->{bytecode}},
+        unless( $self->_code_segments->[0]->scopes->[$scope_id]->flags & SCOPE_REGEX ) {
+            $self->_code_segments->[0]->scopes->[$scope_id]->set_flags( $self->_code_segments->[0]->scopes->[$scope_id]->flags | SCOPE_REGEX );
+            push @{$self->_current_block->bytecode},
                  [ opcode_nm( OP_RX_STATE_RESTORE, index => $scope_id ) ];
         }
 
@@ -1278,9 +1280,9 @@ sub _do_lexical_access {
     if( $is_decl ) {
         $lex_info->set_declaration( 1 );
 
-        push @{$self->_current_block->{bytecode}},
+        push @{$self->_current_block->bytecode},
              [ opcode_npm( $lex_info->in_pad ? OP_LEXICAL_PAD_CLEAR : OP_LEXICAL_CLEAR,
-                           $self->_current_block->{pos_e},
+                           $self->_current_block->pos_e,
                            index => $lex_info->index,
                            slot  => $tree->sigil,
                            ),
@@ -1383,7 +1385,7 @@ sub _setup_list_iteration {
                         ),
             opcode_n( OP_POP );
 
-        push @{$self->_current_block->{bytecode}},
+        push @{$self->_current_block->bytecode},
              [ opcode_nm( OP_TEMPORARY_CLEAR,
                           index => $glob,
                           slot  => VALUE_GLOB ),
@@ -1404,7 +1406,7 @@ sub _setup_list_iteration {
                        index   => $slot,
                        );
 
-        push @{$self->_current_block->{bytecode}},
+        push @{$self->_current_block->bytecode},
              [ opcode_nm( $in_pad ? OP_RESTORE_LEXICAL_PAD : OP_RESTORE_LEXICAL,
                           lexical => $lex_info->index,
                           index   => $slot,
@@ -1736,12 +1738,12 @@ sub _emit_lexical_state {
     my( $self, $tree ) = @_;
 
     if( $tree->get_attribute( 'lexical_state' ) ) {
-        my $scope_id = $self->_current_block->{id};
-        my $lex_state = $self->_code_segments->[0]->scopes->[$scope_id]->{lexical_state};
+        my $scope_id = $self->_current_block->id;
+        my $lex_state = $self->_code_segments->[0]->scopes->[$scope_id]->lexical_state;
 
         _add_bytecode $self,
             opcode_nm( OP_LEXICAL_STATE_SAVE, index => $lex_state );
-        push @{$self->_current_block->{bytecode}},
+        push @{$self->_current_block->bytecode},
              [ opcode_nm( OP_LEXICAL_STATE_RESTORE, index => $lex_state ) ];
     }
 }
@@ -1779,7 +1781,7 @@ sub _block {
     if( $is_eval ) {
         my( $except, $resume ) = _new_blocks( $self, 2 );
 
-        $self->_code_segments->[0]->scopes->[$block->{id}]->{exception} = $except;
+        $self->_code_segments->[0]->scopes->[$block->id]->set_exception( $except );
 
         # execution resumes here for both success and failure
         _add_jump $self, opcode_nm( OP_JUMP, to => $resume ), $resume;
@@ -2156,7 +2158,7 @@ sub _interpolated_pattern {
 sub _exit_scope {
     my( $self, $block ) = @_;
 
-    foreach my $code ( reverse @{$block->{bytecode}} ) {
+    foreach my $code ( reverse @{$block->bytecode} ) {
         _add_bytecode $self, @$code;
     }
 }
