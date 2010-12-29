@@ -142,12 +142,10 @@ namespace org.mbarbon.p.runtime
         public static BasicBlock ReadBasicBlock(BinaryReader reader,
                                                 Subroutine sub)
         {
-            int state = reader.ReadInt32();
             int scope = reader.ReadInt32();
             int count = reader.ReadInt32();
             var bb = new BasicBlock(count);
 
-            bb.LexicalState = state;
             bb.Scope = scope;
 
             for (int i = 0; i < count; ++i)
@@ -476,7 +474,6 @@ namespace org.mbarbon.p.runtime
         }
 
         public int Index;
-        public int LexicalState;
         public int Scope;
         public Opcode[] Opcodes;
     }
