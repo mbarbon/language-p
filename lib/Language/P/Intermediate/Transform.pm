@@ -244,7 +244,6 @@ sub to_ssa {
         my $cblock = $self->_converting->{block} ||=
             Language::P::Intermediate::BasicBlock
                 ->new_from_label( $block->start_label,
-                                  $block->lexical_state,
                                   $block->scope, $block->dead );
 
         push @{$new_code->basic_blocks}, $cblock;
@@ -449,7 +448,6 @@ sub _jump_to {
     $converted->{depth} = @$stack;
     $converted->{block} ||= Language::P::Intermediate::BasicBlock
                                 ->new_from_label( $to->start_label,
-                                                  $to->lexical_state,
                                                   $to->scope, $to->dead );
     $op->set_to( $converted->{block} );
     push @{$self->_queue}, $to;
@@ -644,7 +642,6 @@ sub _replace {
 
     $converted->{block} ||= Language::P::Intermediate::BasicBlock
                                 ->new_from_label( $to->start_label,
-                                                  $to->lexical_state,
                                                   $to->scope, $to->dead );
     $new_jump->set_to( $converted->{block} );
     push @{$self->_queue}, $to;

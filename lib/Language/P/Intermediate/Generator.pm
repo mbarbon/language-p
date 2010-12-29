@@ -67,7 +67,6 @@ sub _new_block {
 
     return Language::P::Intermediate::BasicBlock->new_from_label
                ( 'L' . ++$self->{_label_count},
-                 $block ? $block->{lexical_state} : 0,
                  $block ? $block->{id} : 0 );
 }
 
@@ -585,7 +584,6 @@ sub _lexical_state {
         _add_bytecode $self,
             opcode_nm( OP_LEXICAL_STATE_SET,  index => $state_id );
 
-        $bb->{lexical_state} = $state_id;
         return;
     }
 
