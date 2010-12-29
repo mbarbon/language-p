@@ -6,6 +6,7 @@ use parent qw(Language::P::ParseTree::Visitor);
 
 __PACKAGE__->mk_accessors( qw(_code_segments _current_basic_block _options
                               _label_count _temporary_count _current_block
+                              _current_lexical_state
                               _group_count _pos_count _main file_name) );
 
 use Language::P::Intermediate::Code qw(:all);
@@ -104,7 +105,7 @@ sub push_block {
            exception     => undef, # for eval BLOCK only
            pos_s         => $start_pos,
            pos_e         => $exit_pos,
-           lexical_state => $outer ? $outer->{lexical_state} : 0,
+           lexical_state => $self->_current_lexical_state || 0,
            };
 
     $self->_current_block
@@ -113,8 +114,9 @@ sub push_block {
           bytecode      => $bytecode,
           pos_e         => $exit_pos,
           id            => $id,
-          lexical_state => $outer ? $outer->{lexical_state} : 0,
           } );
+
+    $self->_current_lexical_state( $outer ? $outer->{lexical_state} : 0 );
 
     return $self->_current_block;
 }
@@ -129,8 +131,10 @@ sub _outer_scope {
 sub pop_block {
     my( $self ) = @_;
     my $to_ret = $self->_current_block;
+    my $outer = _outer_scope( $self, $to_ret );
 
-    $self->_current_block( _outer_scope( $self, $to_ret ) );
+    $self->_current_block( $outer );
+    $self->_current_lexical_state( $outer ? $outer->{lexical_state} : 0 );
 
     return $to_ret;
 }
@@ -574,7 +578,7 @@ sub _lexical_state {
                  warnings => $tree->warnings,
                  } );
     $self->_code_segments->[0]->scopes->[$scope_id]->{flags} |= SCOPE_LEX_STATE;
-    $self->_current_block->{lexical_state} = $state_id;
+    $self->_current_lexical_state( $state_id );
 
     # avoid generating a new basic block if the current basic block only
     # contains a label
