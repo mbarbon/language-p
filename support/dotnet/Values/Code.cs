@@ -152,7 +152,7 @@ namespace org.mbarbon.p.values
                                                       runtime.File,
                                                       runtime.Line, this,
                                                       context, false));
-                return Subref(runtime, context, null, args);
+                return Subref(runtime, context, ScratchPad, args);
             }
             finally
             {
