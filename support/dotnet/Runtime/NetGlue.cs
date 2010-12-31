@@ -73,6 +73,45 @@ namespace org.mbarbon.p.runtime
             return new P5Scalar(wrapper);
         }
 
+        private static IP5Any WrapNew(Runtime runtime, Opcode.ContextValues context,
+                                      P5ScratchPad pad, P5Array args)
+        {
+            var count = args.GetCount(runtime);
+            var arg = new P5Scalar[count - 1];
+
+            for (int i = 1; i < count; ++i)
+                arg[i - 1] = args.GetItem(runtime, i) as P5Scalar;
+
+            var cls = pad[0] as P5Scalar;
+            var pack = pad[1] as P5SymbolTable;
+            var val = CallConstructor(runtime, cls, arg);
+            var res = new P5Scalar(runtime, val);
+
+            val.Bless(runtime, pack);
+
+            return res;
+        }
+
+        public static IP5Any Extend(Runtime runtime, string pack, string name)
+        {
+            var cls = System.Type.GetType(name);
+            var wrapper = new P5Scalar(new P5NetWrapper(runtime, cls));
+            var stash = runtime.SymbolTable.GetPackage(runtime, pack);
+            var pad = new P5ScratchPad();
+
+            pad.Add(wrapper);
+            pad.Add(stash);
+
+            var glob = stash.GetStashGlob(runtime, "new", true);
+
+            var code = new P5NativeCode(pack + "::new", new P5Code.Sub(WrapNew));
+
+            code.ScratchPad = pad;
+            glob.Code = code;
+
+            return new P5Scalar(runtime);
+        }
+
         public static IP5Any CallConstructor(Runtime runtime, P5Scalar wrapper,
                                              P5Scalar[] args)
         {

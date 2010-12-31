@@ -320,6 +320,9 @@ namespace org.mbarbon.p.values
 
             var set_property = internals_net.GetStashGlob(runtime, "set_property", true);
             set_property.Code = new P5NativeCode("Internals::Net::set_property", new P5Code.Sub(WrapSetProperty));
+
+            var extend = internals_net.GetStashGlob(runtime, "extend", true);
+            extend.Code = new P5NativeCode("Internals::Net::extend", new P5Code.Sub(WrapExtend));
         }
 
         private static IP5Any WrapIsa(Runtime runtime, Opcode.ContextValues context,
@@ -398,6 +401,15 @@ namespace org.mbarbon.p.values
             Glue.SetProperty(runtime, obj, name.AsString(runtime), value);
 
             return new P5Scalar(runtime);
+        }
+
+        private static IP5Any WrapExtend(Runtime runtime, Opcode.ContextValues context,
+                                         P5ScratchPad pad, P5Array args)
+        {
+            var pack = args.GetItem(runtime, 0);
+            var cls = args.GetItem(runtime, 1);
+
+            return Glue.Extend(runtime, pack.AsString(runtime), cls.AsString(runtime));
         }
 
         public override bool IsMain
