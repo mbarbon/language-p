@@ -322,6 +322,14 @@ namespace org.mbarbon.p.values
             if (wrapper != null)
                 return wrapper;
 
+            var reference = body as P5Reference;
+            if (reference != null)
+            {
+                var scalar = reference.Referred as P5Scalar;
+                if (scalar != null)
+                    return scalar.Body as P5NetWrapper;
+            }
+
             return null;
         }
 
