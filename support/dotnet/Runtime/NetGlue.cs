@@ -18,7 +18,7 @@ namespace org.mbarbon.p.runtime
                 return true;
             }
 
-            var net_wrapper = scalar.Body as P5NetWrapper;
+            var net_wrapper = scalar.NetWrapper(runtime);
             if (net_wrapper == null)
                 return false;
             if (type != net_wrapper.Object.GetType())
@@ -50,7 +50,7 @@ namespace org.mbarbon.p.runtime
             var scalar = arg as P5Scalar;
 
             // fallback
-            var net_wrapper = scalar.Body as P5NetWrapper;
+            var net_wrapper = scalar.NetWrapper(runtime);
             return net_wrapper.Object;
         }
 
@@ -76,7 +76,7 @@ namespace org.mbarbon.p.runtime
         public static IP5Any CallConstructor(Runtime runtime, P5Scalar wrapper,
                                              P5Scalar[] args)
         {
-            var net_wrapper = wrapper.Body as P5NetWrapper;
+            var net_wrapper = wrapper.NetWrapper(runtime);
             var type = net_wrapper.Object as System.Type;
 
             foreach (var ctor in type.GetConstructors())
@@ -97,7 +97,7 @@ namespace org.mbarbon.p.runtime
         public static IP5Any CallMethod(Runtime runtime, P5Scalar wrapper,
                                         string method, P5Scalar[] args)
         {
-            var net_wrapper = wrapper.Body as P5NetWrapper;
+            var net_wrapper = wrapper.NetWrapper(runtime);
             var obj = net_wrapper.Object;
             var type = obj.GetType();
 
@@ -121,7 +121,7 @@ namespace org.mbarbon.p.runtime
         public static IP5Any GetProperty(Runtime runtime, P5Scalar wrapper,
                                          string name)
         {
-            var net_wrapper = wrapper.Body as P5NetWrapper;
+            var net_wrapper = wrapper.NetWrapper(runtime);
             var obj = net_wrapper.Object;
             var prop = obj.GetType().GetProperty(name);
             var val = prop.GetValue(obj, null);
@@ -134,7 +134,7 @@ namespace org.mbarbon.p.runtime
         public static void SetProperty(Runtime runtime, P5Scalar wrapper,
                                        string name, IP5Any value)
         {
-            var net_wrapper = wrapper.Body as P5NetWrapper;
+            var net_wrapper = wrapper.NetWrapper(runtime);
             var obj = net_wrapper.Object;
             var prop = obj.GetType().GetProperty(name);
 

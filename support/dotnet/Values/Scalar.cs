@@ -316,6 +316,15 @@ namespace org.mbarbon.p.values
             return (body as P5Reference).Referred;
         }
 
+        internal P5NetWrapper NetWrapper(Runtime runtime)
+        {
+            var wrapper = body as P5NetWrapper;
+            if (wrapper != null)
+                return wrapper;
+
+            return null;
+        }
+
         public virtual P5Scalar VivifyScalar(Runtime runtime)
         {
             var undef = body as P5Undef;
