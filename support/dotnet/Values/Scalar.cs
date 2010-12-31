@@ -359,6 +359,10 @@ namespace org.mbarbon.p.values
                                  string method, P5Array args)
         {
             var pmethod = FindMethod(runtime, method);
+            var wrapper = NetWrapper(runtime);
+
+            if (pmethod == null && wrapper != null)
+                return wrapper.CallMethod(runtime, context, method, args);
 
             if (pmethod == null)
                 throw new System.Exception("Can't find method " + method);

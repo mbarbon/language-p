@@ -363,6 +363,7 @@ t/run/files/Moo.pm
 t/run/files/foo.pl
 t/run/files/my_strict.pm
 t/run/net/001_base.t
+t/run/net/030_methods.t
 t/run/parser/021_interpolated_regexp.t
 t/run/parser/110_eval.t
 t/run/parser/120_stack_unwind.t

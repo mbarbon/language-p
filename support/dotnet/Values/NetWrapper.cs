@@ -1,5 +1,7 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
+using Opcode = org.mbarbon.p.runtime.Opcode;
 using Builtins = org.mbarbon.p.runtime.Builtins;
+using NetGlue = org.mbarbon.p.runtime.NetGlue;
 using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
@@ -138,6 +140,18 @@ namespace org.mbarbon.p.values
         public P5Handle DereferenceHandle(Runtime runtime)
         {
             throw new System.NotImplementedException();
+        }
+
+        public IP5Any CallMethod(Runtime runtime, Opcode.ContextValues context,
+                                 string method, P5Array args)
+        {
+            int count = args.GetCount(runtime);
+            var arg = new P5Scalar[count - 1];
+
+            for (int i = 1; i < count; ++i)
+                arg[i - 1] = args.GetItem(runtime, i) as P5Scalar;
+
+            return NetGlue.CallMethod(runtime, obj, method, arg);
         }
 
         public object Object
