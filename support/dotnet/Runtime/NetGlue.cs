@@ -79,6 +79,12 @@ namespace org.mbarbon.p.runtime
             var net_wrapper = wrapper.NetWrapper(runtime);
             var type = net_wrapper.Object as System.Type;
 
+            return CallConstructor(runtime, type, args);
+        }
+
+        public static IP5Any CallConstructor(Runtime runtime, System.Type type,
+                                             P5Scalar[] args)
+        {
             foreach (var ctor in type.GetConstructors())
             {
                 if (!Matches(runtime, ctor, args))
@@ -99,6 +105,13 @@ namespace org.mbarbon.p.runtime
         {
             var net_wrapper = wrapper.NetWrapper(runtime);
             var obj = net_wrapper.Object;
+
+            return CallMethod(runtime, obj, method, args);
+        }
+
+        public static IP5Any CallMethod(Runtime runtime, object obj,
+                                        string method, P5Scalar[] args)
+        {
             var type = obj.GetType();
 
             foreach (var meth in type.GetMethods())
