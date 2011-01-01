@@ -14,7 +14,6 @@ Parsing:
   - warnings
 - proper lexing of ${  id # comment\n } vs. ${ id # comment \n expr }
 - more tests for ${foo[.......} crazy cases
-- proper check for overridable builtins (only if imported)
 - builtins overridable using CORE::GLOBAL
 - CORE::builtin to always call builtin
 - special treatment for glob()
