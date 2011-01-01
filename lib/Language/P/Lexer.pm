@@ -61,6 +61,7 @@ use constant
     O_TYPE            => 1,
     O_VALUE           => 2,
     O_ID_TYPE         => 3,
+    O_ID_FLAGS        => 4,
     O_FT_OP           => 3,
     O_QS_INTERPOLATE  => 3,
     O_QS_BUFFER       => 4,
@@ -82,7 +83,7 @@ our @EXPORT_OK =
        X_OPERATOR_INDIROBJ
        O_POS O_TYPE O_VALUE O_ID_TYPE O_FT_OP O_QS_INTERPOLATE O_QS_BUFFER
        O_RX_REST O_RX_SECOND_HALF O_RX_FLAGS O_RX_INTERPOLATED O_NUM_FLAGS
-       LEX_NO_PACKAGE
+       O_ID_FLAGS LEX_NO_PACKAGE
        ), @TOKENS );
 our %EXPORT_TAGS =
   ( all  => \@EXPORT_OK,
@@ -641,7 +642,7 @@ sub lex_quote {
                     _quoted_code_lookahead( $self );
 
                     # handle \1 backreference in substitution
-                    $self->unlex( [ $self->{pos}, T_ID, $qc, T_ID ] );
+                    $self->unlex( [ $self->{pos}, T_ID, $qc, T_ID, 0 ] );
 
                     if( length $v ) {
                         $self->unlex( [ $self->{pos}, T_DOLLAR, '$' ] );
@@ -754,14 +755,14 @@ sub lex_identifier {
 
     my $id;
     $$_ =~ s/^\^([A-Z\[\\\]^_?])//x and do {
-        $id = [ $self->{pos}, T_ID, chr( ord( $1 ) - ord( 'A' ) + 1 ), T_FQ_ID ];
+        $id = [ $self->{pos}, T_ID, chr( ord( $1 ) - ord( 'A' ) + 1 ), T_FQ_ID, 0 ];
     };
     $id or $$_ =~ s/^::(?=\W)//x and do {
-        $id = [ $self->{pos}, T_ID, 'main::', T_FQ_ID ];
+        $id = [ $self->{pos}, T_ID, 'main::', T_FQ_ID, 0 ];
     };
     $id or $$_ =~ s/^(\'|::)?(\w+)//x and do {
         if( $flags & LEX_NO_PACKAGE ) {
-            return [ $self->{pos}, T_ID, $2, T_ID ];
+            return [ $self->{pos}, T_ID, $2, T_ID, 0 ];
         }
 
         my $ids = defined $1 ? '::' . $2 : $2;
@@ -772,10 +773,10 @@ sub lex_identifier {
             $idt = T_FQ_ID;
         }
 
-        $id = [ $self->{pos}, T_ID, $ids, $idt ];
+        $id = [ $self->{pos}, T_ID, $ids, $idt, 0 ];
     };
     $id or $$_ =~ s/^{\^([A-Z\[\\\]^_?])(\w*)}//x and do {
-        $id = [ $self->{pos}, T_ID, chr( ord( $1 ) - ord( 'A' ) + 1 ) . $2, T_FQ_ID ];
+        $id = [ $self->{pos}, T_ID, chr( ord( $1 ) - ord( 'A' ) + 1 ) . $2, T_FQ_ID, 0 ];
     };
     $id or $$_ =~ s/^{//x and do {
         my $spcbef = _skip_space( $self );
@@ -789,7 +790,7 @@ sub lex_identifier {
         my $spcaft = _skip_space( $self );
 
         if( $$_ =~ s/^}//x ) {
-            $id = [ $self->{pos}, T_ID, $maybe_id, T_ID ];
+            $id = [ $self->{pos}, T_ID, $maybe_id, T_ID, 0 ];
             if( $self->{brackets} == 0 && $self->quote ) {
                 $self->unlex( $self->lex_quote );
                 return $id;
@@ -797,7 +798,7 @@ sub lex_identifier {
         } elsif( $$_ =~ /^\[|^\{/ ) {
             ++$self->{brackets};
             push @{$self->{pending_brackets}}, $self->{brackets};
-            $id = [ $self->{pos}, T_ID, $maybe_id, T_ID ];
+            $id = [ $self->{pos}, T_ID, $maybe_id, T_ID, 0 ];
         } else {
             # not a simple identifier
             $$_ = '{' . $spcbef . $maybe_id . $spcaft . $$_;
@@ -808,7 +809,7 @@ sub lex_identifier {
         return;
     };
     $id or $$_ =~ s/^(\W)(?=\W|$)// and do {
-        $id = [ $self->{pos}, T_ID, $1, T_FQ_ID ];
+        $id = [ $self->{pos}, T_ID, $1, T_FQ_ID, 0 ];
     };
 
     if( $id && $self->quote && $self->{brackets} == 0 ) {
@@ -1164,7 +1165,7 @@ sub lex {
             # fully qualified name (foo::moo) is quoted only if not declared
             if(    $type == T_FQ_ID
                 && $self->runtime->get_symbol( $ids, '*' ) ) {
-                return [ $pos, T_ID, $ids, $type ];
+                return [ $pos, T_ID, $ids, $type, 0 ];
             } else {
                 return [ $pos, T_STRING, $ids ];
             }
@@ -1186,12 +1187,12 @@ sub lex {
         if( $op ) {
             # 'x' is an operator only when we expect it
             if( $op == T_SSTAR && $expect != X_OPERATOR ) {
-                return [ $pos, T_ID, $ids, T_ID ];
+                return [ $pos, T_ID, $ids, T_ID, 0 ];
             }
 
             return [ $pos, $op, $ids ];
         }
-        return [ $pos, T_ID, $ids, $type ];
+        return [ $pos, T_ID, $ids, $type, 0 ];
     };
     $$_ =~ s/^(["'`])//x and do {
         _lexer_error( $self, $self->{pos},
