@@ -15,7 +15,6 @@ Parsing:
 - proper lexing of ${  id # comment\n } vs. ${ id # comment \n expr }
 - more tests for ${foo[.......} crazy cases
 - builtins overridable using CORE::GLOBAL
-- CORE::builtin to always call builtin
 - special treatment for glob()
 - simplify detection of <foo> vs. <foo >, avoid constructing a lexer
 - quoted strings

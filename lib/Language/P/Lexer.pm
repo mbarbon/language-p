@@ -1146,11 +1146,20 @@ sub lex {
             while( $$_ =~ s/^::(\w*)|^\'(\w+)// ) {
                 $ids .= '::' . ( defined $1 ? $1 : $2 );
             }
-            if( $ids =~ s/::$// ) {
-                # warn for nonexistent package
-            }
+
             $op = undef;
             $type = T_FQ_ID;
+            if( $ids =~ s/::$// ) {
+                # TODO warn for nonexistent package
+            } elsif( $ids =~ /^CORE::/ ) {
+                my $k = substr $ids, 6;
+                $op = $ops{$k};
+                $kw = $Language::P::Keywords::KEYWORDS{$k};
+
+                _lexer_error( $self, $self->{pos}, "CORE::%s is not a keyword", $k ) unless $kw || $op;
+                return [ $self->{pos}, T_ID, $ids, $kw, 1 ] if $kw;
+                $type = -1;
+            }
         }
         # force subroutine call
         if( $no_space && $type == T_ID && $$_ =~ /^\(/ ) {
