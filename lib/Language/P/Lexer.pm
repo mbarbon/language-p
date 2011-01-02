@@ -6,7 +6,7 @@ use parent qw(Language::P::Object);
 
 __PACKAGE__->mk_ro_accessors( qw(stream buffer tokens runtime
                                  file line _start_of_line _heredoc_lexer
-                                 _line_length
+                                 _line_length _columns
                                  ) );
 __PACKAGE__->mk_accessors( qw(quote) );
 
@@ -101,6 +101,7 @@ sub new {
     $self->{line} ||= 1;
     $self->{_start_of_line} = 1;
     $self->{_line_length} = 1;
+    $self->{_columns} = _line_end( $self->{buffer} );
     $self->{pos} = [ $self->file, $self->line ];
 
     return $self;
@@ -119,6 +120,21 @@ sub unlex {
     my( $self, $token ) = @_;
 
     push @{$self->tokens}, $token;
+}
+
+sub _line_end {
+    my( $buffer ) = @_;
+    my $c = index $$buffer, "\n";
+
+    $c = length $$buffer if $c == -1;
+
+    return $c;
+}
+
+sub _column {
+    my( $self ) = @_;
+
+    return $self->{_columns} - _line_end( $self->{buffer} ) + 1;
 }
 
 sub _lexer_error {
@@ -285,6 +301,7 @@ sub _skip_space {
     for(;;) {
         $self->_fill_buffer unless length $$buffer;
         return unless length $$buffer;
+        $self->{_columns} = _line_end( $buffer ) if $self->{_start_of_line};
 
         if(    $self->{_start_of_line}
             && $$buffer =~ s/^#[ \t]*line[ \t]+([0-9]+)(?:[ \t]+"([^"]+)")?[ \t]*[\r\n]// ) {
@@ -1333,7 +1350,8 @@ sub lex {
     $$_ =~ s/^([:;,()\?<>!~=\/\\\+\-\.\|^\*%@&])//x and return [ $self->{pos}, $ops{$1}, $1 ];
 
     _lexer_error( $self, $self->{pos},
-                  'Unrecognized character %s', substr $$_, 0, 1 );
+                  'Unrecognized character \x%02X in column %d',
+                  ord( substr( $$_, 0, 1 ) ), _column( $self ) );
 }
 
 sub _fill_buffer {
