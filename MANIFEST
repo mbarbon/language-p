@@ -191,6 +191,7 @@ t/parser/expressions/024_or_low.t
 t/parser/loops/001_block.t
 t/parser/overrides/005_imported.t
 t/parser/overrides/015_core.t
+t/parser/overrides/025_core_global.t
 t/parser/regex/002_base.t
 t/parser/regex/004_quoting.t
 t/parser/regex/010_character_classes.t
