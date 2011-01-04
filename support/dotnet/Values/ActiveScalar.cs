@@ -64,9 +64,9 @@ namespace org.mbarbon.p.values
             return Get(runtime).Body.IsFloat(runtime);
         }
 
-        public virtual P5Scalar ReferenceType(Runtime runtime)
+        public virtual string ReferenceTypeString(Runtime runtime)
         {
-            return Get(runtime).ReferenceType(runtime);
+            return Get(runtime).ReferenceTypeString(runtime);
         }
 
         public virtual P5Scalar DereferenceScalar(Runtime runtime)

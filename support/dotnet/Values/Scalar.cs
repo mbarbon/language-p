@@ -269,9 +269,19 @@ namespace org.mbarbon.p.values
             return new P5Scalar(runtime);
         }
 
+        public virtual string ReferenceTypeString(Runtime runtime)
+        {
+            return body.ReferenceTypeString(runtime);
+        }
+
         public virtual P5Scalar ReferenceType(Runtime runtime)
         {
-            return body.ReferenceType(runtime);
+            var refbody = body as P5Reference;
+
+            if (refbody != null)
+                return new P5Scalar(runtime, refbody.ReferenceType(runtime));
+
+            return new P5Scalar(runtime, "");
         }
 
         public virtual P5Scalar DereferenceScalar(Runtime runtime)
@@ -480,7 +490,7 @@ namespace org.mbarbon.p.values
         int GetPos(Runtime runtime, out bool pos_set);
         void SetPos(Runtime runtime, int pos, bool pos_set);
 
-        P5Scalar ReferenceType(Runtime runtime);
+        string ReferenceTypeString(Runtime runtime);
 
         P5Scalar DereferenceScalar(Runtime runtime);
         P5Array DereferenceArray(Runtime runtime);

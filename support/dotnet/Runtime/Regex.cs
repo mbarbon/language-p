@@ -160,6 +160,11 @@ namespace org.mbarbon.p.runtime
             return runtime.SymbolTable.GetPackage(runtime, "Regexp");
         }
 
+        public virtual string ReferenceTypeString(Runtime runtime)
+        {
+            return "Regexp";
+        }
+
         private void SaveGroups(ref RxContext cxt, int start, int end,
                                 bool clear, out RxSavedGroups groups)
         {

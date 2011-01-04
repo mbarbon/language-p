@@ -110,6 +110,11 @@ namespace org.mbarbon.p.values
             return blessed;
         }
 
+        public virtual string ReferenceTypeString(Runtime runtime)
+        {
+            return "CODE";
+        }
+
         public P5ScratchPad ScratchPad
         {
             get { return scratchpad; }

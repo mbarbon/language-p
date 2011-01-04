@@ -1053,6 +1053,17 @@ namespace org.mbarbon.p.runtime
                     ModuleGenerator.InitRuntime));
         }
 
+        private Expression ForceScalar(Expression e)
+        {
+            if (typeof(P5Scalar).IsAssignableFrom(e.Type))
+                return e;
+
+            return Expression.Call(
+                e,
+                typeof(IP5Any).GetMethod("AsScalar"),
+                Runtime);
+        }
+
         public Expression Generate(Subroutine sub, Opcode op)
         {
             switch(op.Number)
@@ -2125,8 +2136,8 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_REFTYPE:
             {
                 return Expression.Call(
-                    Generate(sub, op.Childs[0]),
-                    typeof(IP5Any).GetMethod("ReferenceType"),
+                    ForceScalar(Generate(sub, op.Childs[0])),
+                    typeof(P5Scalar).GetMethod("ReferenceType"),
                     Runtime);
             }
             case Opcode.OpNumber.OP_REFERENCE:

@@ -137,9 +137,9 @@ namespace org.mbarbon.p.values
             return AsString(runtime).Length;
         }
 
-        public virtual P5Scalar ReferenceType(Runtime runtime)
+        public virtual string ReferenceTypeString(Runtime runtime)
         {
-            return new P5Scalar(runtime);
+            return "GLOB";
         }
 
         public virtual P5Scalar DereferenceScalar(Runtime runtime)

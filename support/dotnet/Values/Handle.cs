@@ -113,9 +113,9 @@ namespace org.mbarbon.p.values
             return ok;
         }
 
-        public virtual P5Scalar ReferenceType(Runtime runtime)
+        public virtual string ReferenceTypeString(Runtime runtime)
         {
-            return new P5Scalar(runtime);
+            return "IO";
         }
 
         public virtual void Bless(Runtime runtime, P5SymbolTable stash)

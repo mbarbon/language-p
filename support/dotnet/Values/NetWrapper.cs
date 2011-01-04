@@ -107,9 +107,9 @@ namespace org.mbarbon.p.values
             throw new System.NotImplementedException();
         }
 
-        public P5Scalar ReferenceType(Runtime runtime)
+        public string ReferenceTypeString(Runtime runtime)
         {
-            throw new System.NotImplementedException();
+            return obj.GetType().FullName;
         }
 
         public P5Scalar DereferenceScalar(Runtime runtime)

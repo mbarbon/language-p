@@ -14,6 +14,7 @@ namespace org.mbarbon.p.values
         void Bless(Runtime runtime, P5SymbolTable stash);
         bool IsBlessed(Runtime runtime);
         P5SymbolTable Blessed(Runtime runtime);
+        string ReferenceTypeString(Runtime runtime);
     }
 
     public interface IP5Any : IP5Referrable
@@ -33,7 +34,6 @@ namespace org.mbarbon.p.values
 
         IP5Any Clone(Runtime runtime, int depth);
         IP5Any Localize(Runtime runtime);
-        P5Scalar ReferenceType(Runtime runtime);
 
         P5Scalar DereferenceScalar(Runtime runtime);
         P5Array DereferenceArray(Runtime runtime);

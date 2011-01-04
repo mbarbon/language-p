@@ -24,9 +24,9 @@ namespace org.mbarbon.p.values
         public virtual bool IsString(Runtime runtime) { return true; }
         public virtual bool IsFloat(Runtime runtime) { return true; }
 
-        public virtual P5Scalar ReferenceType(Runtime runtime)
+        public virtual string ReferenceTypeString(Runtime runtime)
         {
-            return new P5Scalar(runtime);
+            return "SCALAR";
         }
 
         public virtual P5Scalar DereferenceScalar(Runtime runtime)

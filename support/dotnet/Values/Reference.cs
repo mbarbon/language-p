@@ -60,37 +60,17 @@ namespace org.mbarbon.p.values
             return AsString(runtime).Length;
         }
 
-        internal string ReferenceTypeString(Runtime runtime)
+        public virtual string ReferenceType(Runtime runtime)
         {
             if (referred.IsBlessed(runtime))
                 return referred.Blessed(runtime).GetName(runtime);
-            if (referred as P5Scalar != null)
-            {
-                var wrapper = (referred as P5Scalar).Body as P5NetWrapper;
 
-                if (wrapper != null)
-                    return wrapper.Object.GetType().FullName;
-
-                return "SCALAR";
-            }
-            if (referred as P5Array != null)
-                return "ARRAY";
-            if (referred as P5Hash != null)
-                return "HASH";
-            if (referred as P5Typeglob != null)
-                return "GLOB";
-            if (referred as P5Code != null)
-                return "CODE";
-
-            // TODO use package for blessed values
-            return null;
+            return referred.ReferenceTypeString(runtime);
         }
 
-        public virtual P5Scalar ReferenceType(Runtime runtime)
+        public virtual string ReferenceTypeString(Runtime runtime)
         {
-            var s = ReferenceTypeString(runtime);
-
-            return s == null ? new P5Scalar(runtime) : new P5Scalar(runtime, s);
+            return "REF";
         }
 
         public virtual P5Scalar DereferenceScalar(Runtime runtime)

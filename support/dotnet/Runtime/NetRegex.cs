@@ -27,6 +27,11 @@ namespace org.mbarbon.p.runtime
             return runtime.SymbolTable.GetPackage(runtime, "Regexp");
         }
 
+        public virtual string ReferenceTypeString(Runtime runtime)
+        {
+            return "Regexp";
+        }
+
         public IP5Any Match(Runtime runtime, IP5Any value, int flags,
                             Opcode.ContextValues cxt, ref RxResult oldState)
         {

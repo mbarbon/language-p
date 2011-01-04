@@ -261,9 +261,9 @@ namespace org.mbarbon.p.values
                 hash[key] = value;
         }
 
-        public virtual P5Scalar ReferenceType(Runtime runtime)
+        public virtual string ReferenceTypeString(Runtime runtime)
         {
-            return new P5Scalar(runtime);
+            return "HASH";
         }
 
         public virtual P5Scalar DereferenceScalar(Runtime runtime)
