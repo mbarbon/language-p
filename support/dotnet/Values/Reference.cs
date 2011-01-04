@@ -1,4 +1,5 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
+using IdDispenser = Microsoft.Scripting.Runtime.IdDispenser;
 
 namespace org.mbarbon.p.values
 {
@@ -22,12 +23,14 @@ namespace org.mbarbon.p.values
             if (rx != null)
                 return rx.GetOriginal();
 
-            return "SOMETHING";
+            return string.Format("{0:s}({1:x8})", ReferenceTypeString(runtime),
+                                 IdDispenser.GetId(referred));
         }
 
         public virtual int AsInteger(Runtime runtime)
         {
-            return -1;
+            // TODO maybe use long everywhere
+            return (int)IdDispenser.GetId(referred);
         }
 
         public virtual double AsFloat(Runtime runtime)
@@ -49,23 +52,30 @@ namespace org.mbarbon.p.values
             return AsString(runtime).Length;
         }
 
-        public virtual P5Scalar ReferenceType(Runtime runtime)
+        internal string ReferenceTypeString(Runtime runtime)
         {
             if (referred.IsBlessed(runtime))
-                return new P5Scalar(runtime, referred.Blessed(runtime).GetName(runtime));
+                return referred.Blessed(runtime).GetName(runtime);
             if (referred as P5Scalar != null)
-                return new P5Scalar(runtime, "SCALAR");
+                return "SCALAR";
             if (referred as P5Array != null)
-                return new P5Scalar(runtime, "ARRAY");
+                return "ARRAY";
             if (referred as P5Hash != null)
-                return new P5Scalar(runtime, "HASH");
+                return "HASH";
             if (referred as P5Typeglob != null)
-                return new P5Scalar(runtime, "GLOB");
+                return "GLOB";
             if (referred as P5Code != null)
-                return new P5Scalar(runtime, "CODE");
+                return "CODE";
 
             // TODO use package for blessed values
-            return new P5Scalar(runtime);
+            return null;
+        }
+
+        public virtual P5Scalar ReferenceType(Runtime runtime)
+        {
+            var s = ReferenceTypeString(runtime);
+
+            return s == null ? new P5Scalar(runtime) : new P5Scalar(runtime, s);
         }
 
         public virtual P5Scalar DereferenceScalar(Runtime runtime)
