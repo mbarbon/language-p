@@ -754,6 +754,8 @@ namespace org.mbarbon.p.runtime
                 return false;
 
             var stash = scalar.Dereference(runtime).Blessed(runtime);
+            if (stash == null)
+                return false;
 
             overloads = stash.Overloads;
 
