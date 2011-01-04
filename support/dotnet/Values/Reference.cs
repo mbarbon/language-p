@@ -24,11 +24,19 @@ namespace org.mbarbon.p.values
                 return rx.GetOriginal();
 
             return string.Format("{0:s}({1:x8})", ReferenceTypeString(runtime),
-                                 IdDispenser.GetId(referred));
+                                 AsInteger(runtime));
         }
 
         public virtual int AsInteger(Runtime runtime)
         {
+            if (referred as P5Scalar != null)
+            {
+                var wrapper = (referred as P5Scalar).Body as P5NetWrapper;
+
+                if (wrapper != null)
+                    return (int)IdDispenser.GetId(wrapper.Object);
+            }
+
             // TODO maybe use long everywhere
             return (int)IdDispenser.GetId(referred);
         }
@@ -57,7 +65,14 @@ namespace org.mbarbon.p.values
             if (referred.IsBlessed(runtime))
                 return referred.Blessed(runtime).GetName(runtime);
             if (referred as P5Scalar != null)
+            {
+                var wrapper = (referred as P5Scalar).Body as P5NetWrapper;
+
+                if (wrapper != null)
+                    return wrapper.Object.GetType().FullName;
+
                 return "SCALAR";
+            }
             if (referred as P5Array != null)
                 return "ARRAY";
             if (referred as P5Hash != null)
