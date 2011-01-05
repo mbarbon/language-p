@@ -36,6 +36,7 @@ lib/Language/P/Parser/Lexicals.pm
 lib/Language/P/Parser/Regex.pm
 lib/Language/P/Toy/Exception.pm
 lib/Language/P/Toy/Generator.pm
+lib/Language/P/Toy/Intermediate.pm
 lib/Language/P/Toy/Opcodes.pm
 lib/Language/P/Toy/Opcodes/Regex.pm
 lib/Language/P/Toy/Runtime.pm

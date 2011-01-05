@@ -9,6 +9,7 @@ use Language::P::Intermediate::Transform;
 use Language::P::Opcodes;
 use Language::P::Constants qw(:all);
 use Language::P::Toy::Assembly;
+use Language::P::Toy::Intermediate;
 
 use Exporter 'import';
 our @EXPORT_OK = qw(generate_main_linear basic_blocks blocks_as_string

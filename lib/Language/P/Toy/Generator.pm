@@ -10,6 +10,7 @@ __PACKAGE__->mk_accessors( qw(_code _pending _block_map _index_map
                               _eval_context _segment _saved_subs
                               _generated_scopes _data_handle) );
 
+use Language::P::Toy::Intermediate;
 use Language::P::Intermediate::Generator;
 use Language::P::Intermediate::Transform;
 use Language::P::Opcodes qw(:all);
