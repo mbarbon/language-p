@@ -11,7 +11,7 @@ __PACKAGE__->mk_accessors( qw(_code_segments _current_basic_block _options
                               _group_count _pos_count _main file_name) );
 __PACKAGE__->mk_ro_accessors( qw(is_stack) );
 
-use Language::P::Intermediate::Code qw(:all);
+use Language::P::Intermediate::Code;
 use Language::P::Intermediate::BasicBlock;
 use Language::P::Intermediate::LexicalState;
 use Language::P::Intermediate::LexicalInfo;

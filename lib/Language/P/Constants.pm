@@ -46,6 +46,9 @@ our @EXPORT_OK =
        RX_GROUP_POSITIVE_LOOKAHEAD RX_GROUP_NEGATIVE_LOOKAHEAD
        RX_GROUP_POSITIVE_LOOKBEHIND RX_GROUP_NEGATIVE_LOOKBEHIND
 
+       SCOPE_SUB SCOPE_EVAL SCOPE_MAIN SCOPE_LEX_STATE SCOPE_REGEX
+       SCOPE_VALUE CODE_MAIN CODE_SUB CODE_REGEX CODE_EVAL
+
        CHANGED_HINTS CHANGED_WARNINGS CHANGED_PACKAGE CHANGED_ALL) );
 our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,
@@ -182,6 +185,20 @@ use constant
     CHANGED_WARNINGS   => 2,
     CHANGED_PACKAGE    => 4,
     CHANGED_ALL        => 7,
+
+    # scope type
+    SCOPE_SUB        => 1, # top subroutine scope
+    SCOPE_EVAL       => 2, # eval block/eval string
+    SCOPE_MAIN       => 4, # eval string, file or subroutine top scope
+    SCOPE_LEX_STATE  => 8, # there is a lexical state change inside the scope
+    SCOPE_REGEX      => 16,# there is a regex match inside the scope
+    SCOPE_VALUE      => 32,# the scope returns a value (do BLOCK, eval, ...)
+
+    # code segment type
+    CODE_MAIN        => 1,
+    CODE_SUB         => 2,
+    CODE_REGEX       => 3,
+    CODE_EVAL        => 4,
     };
 
 1;
