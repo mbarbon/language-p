@@ -101,11 +101,32 @@ sub reference_type {
 }
 
 sub find_method {
-    my( $self, $runtime, $name ) = @_;
+    my( $self, $runtime, $name, $is_super ) = @_;
     my $stash = $runtime->symbol_table->get_package( $runtime, $self->as_string( $runtime ) );
 
     $stash ||= $runtime->symbol_table->get_package( $runtime, 'UNIVERSAL' );
-    return $stash->find_method( $runtime, $name );
+    return $stash->find_method( $runtime, $name, $is_super );
+}
+
+sub find_method_slow {
+    my( $self, $runtime, $name ) = @_;
+
+    if( ( my $idx = rindex $name, '::' ) >= 0 ) {
+        my $pack = substr $name, 0, $idx;
+        my $meth = substr $name, $idx + 2;
+        my $is_super = 0;
+
+        if( $pack eq 'SUPER' ) {
+            $pack = $runtime->{_lex}{package};
+            $is_super = 1;
+        }
+
+        my $stash = $runtime->symbol_table->get_package( $runtime, $pack, 1 );
+
+        return $stash->find_method( $runtime, $meth, $is_super );
+    } else {
+        return $self->find_method( $runtime, $name, 0 );
+    }
 }
 
 # FIXME integer arithmetic, "aaa"++

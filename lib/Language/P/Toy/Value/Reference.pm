@@ -145,10 +145,10 @@ sub bless {
 }
 
 sub find_method {
-    my( $self, $runtime, $name ) = @_;
+    my( $self, $runtime, $name, $is_super ) = @_;
 
     die "Value is not blessed" unless $self->reference->is_blessed;
-    return $self->reference->stash->find_method( $runtime, $name );
+    return $self->reference->stash->find_method( $runtime, $name, $is_super );
 }
 
 sub as_handle {

@@ -937,17 +937,7 @@ sub o_call_method {
     my( $op, $runtime, $pc ) = @_;
     my $args = $runtime->{_stack}[-1];
     my $invocant = $args->get_item( $runtime, 0 );
-    my $sub;
-
-    if( ( my $idx = rindex $op->{method}, '::' ) >= 0 ) {
-        my $pack = substr $op->{method}, 0, $idx;
-        my $meth = substr $op->{method}, $idx + 2;
-
-        my $stash = $runtime->symbol_table->get_package( $runtime, $pack, 1 );
-        $sub = $stash->find_method( $runtime, $meth );
-    } else {
-        $sub = $invocant->find_method( $runtime, $op->{method} );
-    }
+    my $sub = $invocant->find_method_slow( $runtime, $op->{method} );
 
     die "Can't find method $op->{method}" unless $sub;
 
@@ -970,15 +960,7 @@ sub o_call_method_indirect {
     } else {
         my $name = $method->as_string( $runtime );
 
-        if( ( my $idx = rindex $name, '::' ) >= 0 ) {
-            my $pack = substr $name, 0, $idx;
-            my $meth = substr $name, $idx + 2;
-
-            my $stash = $runtime->symbol_table->get_package( $runtime, $pack, 1 );
-            $sub = $stash->find_method( $runtime, $meth );
-        } else {
-            $sub = $invocant->find_method( $runtime, $name );
-        }
+        $sub = $invocant->find_method_slow( $runtime, $name );
 
         die "Can't find method $name" unless $sub;
     }
@@ -989,7 +971,7 @@ sub o_call_method_indirect {
 sub o_find_method {
     my( $op, $runtime, $pc ) = @_;
     my $invocant = pop @{$runtime->{_stack}};
-    my $sub = $invocant->find_method( $runtime, $op->{method} );
+    my $sub = $invocant->find_method_slow( $runtime, $op->{method} );
 
     push @{$runtime->{_stack}}, $sub;
 

@@ -141,10 +141,10 @@ sub set_symbol {
 }
 
 sub find_method {
-    my( $self, $runtime, $name ) = @_;
+    my( $self, $runtime, $name, $is_super ) = @_;
 
     my $name_glob = $self->{hash}{$name};
-    if( $name_glob ) {
+    if( $name_glob && !$is_super ) {
         my $sub = $name_glob->body->subroutine;
 
         return $sub if $sub;
@@ -154,7 +154,7 @@ sub find_method {
     unless( $isa_glob ) {
         my $universal_stash = $runtime->symbol_table->get_package( $runtime, 'UNIVERSAL' );
 
-        return $universal_stash->find_method( $runtime, $name )
+        return $universal_stash->find_method( $runtime, $name, 0 )
             if $self != $universal_stash;
         return undef;
     }
@@ -164,7 +164,7 @@ sub find_method {
         my $base = $isa_array->get_item( $runtime, $i )->as_string( $runtime );
         my $base_stash = $runtime->symbol_table->get_package( $runtime, $base );
         next unless $base_stash;
-        my $sub = $base_stash->find_method( $runtime, $name );
+        my $sub = $base_stash->find_method( $runtime, $name, 0 );
 
         return $sub if $sub;
     }
