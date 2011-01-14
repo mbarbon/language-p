@@ -453,6 +453,7 @@ sub finished {
 
         $serialize->serialize( $tree, $outfile, $data_handle );
         $tree->[0]->weaken; # allow GC to happen
+        $self->_saved_subs( undef );
     }
 
     return $res;
