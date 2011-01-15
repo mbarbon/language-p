@@ -14,10 +14,10 @@ Parsing:
   - warnings
 - proper lexing of ${  id # comment\n } vs. ${ id # comment \n expr }
 - more tests for ${foo[.......} crazy cases
-- proper check for overridable builtins (only if imported)
-- builtins overridable using CORE::GLOBAL
-- CORE::builtin to always call builtin
-- special treatment for glob()
+- special treatment for glob() (calls CORE::GLOBAL::glob)
+- override <> (glob), `` (backtick) and <> (readline) by overriding
+  (CORE::GLOBAL::) glob, readpipe, readline
+- fix parsing of do, glob and require when overridden without prototype
 - simplify detection of <foo> vs. <foo >, avoid constructing a lexer
 - quoted strings
   - \x{af}, when lexing quoted strings

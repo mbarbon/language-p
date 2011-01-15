@@ -60,11 +60,15 @@ sub blocks_as_string {
         $segment->find_alive_blocks;
         my $name = $segment->is_main ? 'main' :
                                        $segment->name || 'anoncode';
-        $str .= "# " . $name . "\n";
+        $str .= sprintf "# %s\n", $name;
         foreach my $block ( sort { $a->start_label cmp $b->start_label}
                                  @{$segment->basic_blocks} ) {
             next if $block->dead;
+            $str .= sprintf "%s: # scope=%d\n",
+                            $block->start_label,
+                            $block->scope;
             foreach my $instr ( @{$block->bytecode} ) {
+                next if $instr->{label};
                 $str .= $instr->as_string( $op_map, $op_attr )
             }
         }

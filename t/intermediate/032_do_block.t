@@ -10,10 +10,10 @@ $x = do {
 }
 EOP
 # main
-L1:
+L1: # scope=1
   lexical_state_set index=0
   jump to=L2
-L2:
+L2: # scope=2
   constant_integer value=1
   pop
   constant_integer value=2
@@ -22,7 +22,7 @@ L2:
   assign context=2
   pop
   jump to=L3
-L3:
+L3: # scope=0
   end
 EOI
 
@@ -34,10 +34,10 @@ $x = do {
 }
 EOP
 # main
-L1:
+L1: # scope=1
   lexical_state_set index=0
   jump to=L2
-L2:
+L2: # scope=2
   constant_integer value=1
   localize_glob_slot index=0, name="x", slot=1
   swap
@@ -52,6 +52,6 @@ L2:
   assign context=2
   pop
   jump to=L3
-L3:
+L3: # scope=0
   end
 EOI

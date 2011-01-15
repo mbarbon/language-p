@@ -4,8 +4,10 @@ use strict;
 use warnings;
 use parent qw(Language::P::Object);
 
-__PACKAGE__->mk_ro_accessors( qw(bytecode start_label lexical_state scope
+__PACKAGE__->mk_ro_accessors( qw(bytecode start_label scope
                                  predecessors successors dead) );
+
+sub set_scope { $_[0]->{scope} = $_[1] }
 
 use Scalar::Util; # weaken
 use Language::P::Assembly qw(label);
@@ -27,9 +29,8 @@ sub new {
 
 sub new_from_label {
     return $_[0]->new( { start_label   => $_[1],
-                         lexical_state => $_[2],
-                         scope         => $_[3],
-                         dead          => $_[4],
+                         scope         => $_[2],
+                         dead          => $_[3],
                          } );
 }
 

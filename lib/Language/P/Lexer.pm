@@ -6,7 +6,7 @@ use parent qw(Language::P::Object);
 
 __PACKAGE__->mk_ro_accessors( qw(stream buffer tokens runtime
                                  file line _start_of_line _heredoc_lexer
-                                 _line_length
+                                 _line_length _columns
                                  ) );
 __PACKAGE__->mk_accessors( qw(quote) );
 
@@ -61,6 +61,7 @@ use constant
     O_TYPE            => 1,
     O_VALUE           => 2,
     O_ID_TYPE         => 3,
+    O_ID_FLAGS        => 4,
     O_FT_OP           => 3,
     O_QS_INTERPOLATE  => 3,
     O_QS_BUFFER       => 4,
@@ -82,7 +83,7 @@ our @EXPORT_OK =
        X_OPERATOR_INDIROBJ
        O_POS O_TYPE O_VALUE O_ID_TYPE O_FT_OP O_QS_INTERPOLATE O_QS_BUFFER
        O_RX_REST O_RX_SECOND_HALF O_RX_FLAGS O_RX_INTERPOLATED O_NUM_FLAGS
-       LEX_NO_PACKAGE
+       O_ID_FLAGS LEX_NO_PACKAGE
        ), @TOKENS );
 our %EXPORT_TAGS =
   ( all  => \@EXPORT_OK,
@@ -100,6 +101,7 @@ sub new {
     $self->{line} ||= 1;
     $self->{_start_of_line} = 1;
     $self->{_line_length} = 1;
+    $self->{_columns} = _line_end( $self->{buffer} );
     $self->{pos} = [ $self->file, $self->line ];
 
     return $self;
@@ -118,6 +120,21 @@ sub unlex {
     my( $self, $token ) = @_;
 
     push @{$self->tokens}, $token;
+}
+
+sub _line_end {
+    my( $buffer ) = @_;
+    my $c = index $$buffer, "\n";
+
+    $c = length $$buffer if $c == -1;
+
+    return $c;
+}
+
+sub _column {
+    my( $self ) = @_;
+
+    return $self->{_columns} - _line_end( $self->{buffer} ) + 1;
 }
 
 sub _lexer_error {
@@ -284,6 +301,7 @@ sub _skip_space {
     for(;;) {
         $self->_fill_buffer unless length $$buffer;
         return unless length $$buffer;
+        $self->{_columns} = _line_end( $buffer ) if $self->{_start_of_line};
 
         if(    $self->{_start_of_line}
             && $$buffer =~ s/^#[ \t]*line[ \t]+([0-9]+)(?:[ \t]+"([^"]+)")?[ \t]*[\r\n]// ) {
@@ -641,7 +659,7 @@ sub lex_quote {
                     _quoted_code_lookahead( $self );
 
                     # handle \1 backreference in substitution
-                    $self->unlex( [ $self->{pos}, T_ID, $qc, T_ID ] );
+                    $self->unlex( [ $self->{pos}, T_ID, $qc, T_ID, 0 ] );
 
                     if( length $v ) {
                         $self->unlex( [ $self->{pos}, T_DOLLAR, '$' ] );
@@ -754,14 +772,14 @@ sub lex_identifier {
 
     my $id;
     $$_ =~ s/^\^([A-Z\[\\\]^_?])//x and do {
-        $id = [ $self->{pos}, T_ID, chr( ord( $1 ) - ord( 'A' ) + 1 ), T_FQ_ID ];
+        $id = [ $self->{pos}, T_ID, chr( ord( $1 ) - ord( 'A' ) + 1 ), T_FQ_ID, 0 ];
     };
     $id or $$_ =~ s/^::(?=\W)//x and do {
-        $id = [ $self->{pos}, T_ID, 'main::', T_FQ_ID ];
+        $id = [ $self->{pos}, T_ID, 'main::', T_FQ_ID, 0 ];
     };
     $id or $$_ =~ s/^(\'|::)?(\w+)//x and do {
         if( $flags & LEX_NO_PACKAGE ) {
-            return [ $self->{pos}, T_ID, $2, T_ID ];
+            return [ $self->{pos}, T_ID, $2, T_ID, 0 ];
         }
 
         my $ids = defined $1 ? '::' . $2 : $2;
@@ -772,10 +790,10 @@ sub lex_identifier {
             $idt = T_FQ_ID;
         }
 
-        $id = [ $self->{pos}, T_ID, $ids, $idt ];
+        $id = [ $self->{pos}, T_ID, $ids, $idt, 0 ];
     };
     $id or $$_ =~ s/^{\^([A-Z\[\\\]^_?])(\w*)}//x and do {
-        $id = [ $self->{pos}, T_ID, chr( ord( $1 ) - ord( 'A' ) + 1 ) . $2, T_FQ_ID ];
+        $id = [ $self->{pos}, T_ID, chr( ord( $1 ) - ord( 'A' ) + 1 ) . $2, T_FQ_ID, 0 ];
     };
     $id or $$_ =~ s/^{//x and do {
         my $spcbef = _skip_space( $self );
@@ -789,7 +807,7 @@ sub lex_identifier {
         my $spcaft = _skip_space( $self );
 
         if( $$_ =~ s/^}//x ) {
-            $id = [ $self->{pos}, T_ID, $maybe_id, T_ID ];
+            $id = [ $self->{pos}, T_ID, $maybe_id, T_ID, 0 ];
             if( $self->{brackets} == 0 && $self->quote ) {
                 $self->unlex( $self->lex_quote );
                 return $id;
@@ -797,7 +815,7 @@ sub lex_identifier {
         } elsif( $$_ =~ /^\[|^\{/ ) {
             ++$self->{brackets};
             push @{$self->{pending_brackets}}, $self->{brackets};
-            $id = [ $self->{pos}, T_ID, $maybe_id, T_ID ];
+            $id = [ $self->{pos}, T_ID, $maybe_id, T_ID, 0 ];
         } else {
             # not a simple identifier
             $$_ = '{' . $spcbef . $maybe_id . $spcaft . $$_;
@@ -808,7 +826,7 @@ sub lex_identifier {
         return;
     };
     $id or $$_ =~ s/^(\W)(?=\W|$)// and do {
-        $id = [ $self->{pos}, T_ID, $1, T_FQ_ID ];
+        $id = [ $self->{pos}, T_ID, $1, T_FQ_ID, 0 ];
     };
 
     if( $id && $self->quote && $self->{brackets} == 0 ) {
@@ -1145,11 +1163,20 @@ sub lex {
             while( $$_ =~ s/^::(\w*)|^\'(\w+)// ) {
                 $ids .= '::' . ( defined $1 ? $1 : $2 );
             }
-            if( $ids =~ s/::$// ) {
-                # warn for nonexistent package
-            }
+
             $op = undef;
             $type = T_FQ_ID;
+            if( $ids =~ s/::$// ) {
+                # TODO warn for nonexistent package
+            } elsif( $ids =~ /^CORE::/ ) {
+                my $k = substr $ids, 6;
+                $op = $ops{$k};
+                $kw = $Language::P::Keywords::KEYWORDS{$k};
+
+                _lexer_error( $self, $self->{pos}, "CORE::%s is not a keyword", $k ) unless $kw || $op;
+                return [ $self->{pos}, T_ID, $ids, $kw, 1 ] if $kw;
+                $type = -1;
+            }
         }
         # force subroutine call
         if( $no_space && $type == T_ID && $$_ =~ /^\(/ ) {
@@ -1164,7 +1191,7 @@ sub lex {
             # fully qualified name (foo::moo) is quoted only if not declared
             if(    $type == T_FQ_ID
                 && $self->runtime->get_symbol( $ids, '*' ) ) {
-                return [ $pos, T_ID, $ids, $type ];
+                return [ $pos, T_ID, $ids, $type, 0 ];
             } else {
                 return [ $pos, T_STRING, $ids ];
             }
@@ -1186,12 +1213,12 @@ sub lex {
         if( $op ) {
             # 'x' is an operator only when we expect it
             if( $op == T_SSTAR && $expect != X_OPERATOR ) {
-                return [ $pos, T_ID, $ids, T_ID ];
+                return [ $pos, T_ID, $ids, T_ID, 0 ];
             }
 
             return [ $pos, $op, $ids ];
         }
-        return [ $pos, T_ID, $ids, $type ];
+        return [ $pos, T_ID, $ids, $type, 0 ];
     };
     $$_ =~ s/^(["'`])//x and do {
         _lexer_error( $self, $self->{pos},
@@ -1323,7 +1350,8 @@ sub lex {
     $$_ =~ s/^([:;,()\?<>!~=\/\\\+\-\.\|^\*%@&])//x and return [ $self->{pos}, $ops{$1}, $1 ];
 
     _lexer_error( $self, $self->{pos},
-                  'Unrecognized character %s', substr $$_, 0, 1 );
+                  'Unrecognized character \x%02X in column %d',
+                  ord( substr( $$_, 0, 1 ) ), _column( $self ) );
 }
 
 sub _fill_buffer {

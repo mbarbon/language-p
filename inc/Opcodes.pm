@@ -108,6 +108,19 @@ use parent qw(Language::P::Instruction);
 sub     context { $_[0]->{attributes}{context} }
 sub     parameters { $_[0]->{parameters} }
 sub set_parameters { $_[0]->{parameters} = $_[1] }
+sub     arg_count  { $_[0]->{attributes}{arg_count} }
+sub is_jump { 0 }
+
+sub clone {
+    my( $self ) = @_;
+    my $new_op = Language::P::Assembly::opcode_n( $self->{opcode_n} );
+
+    $new_op->{pos} = $self->{pos} if $self->{pos};
+    $new_op->{parameters} = [ @{$self->{paramaters}} ] if $self->{parameters};
+    $new_op->{attributes} = { %{$self->{attributes}} } if $self->{attributes};
+
+    return $new_op;
+}
 
 EOT
 
@@ -121,10 +134,10 @@ EOT
         printf $out <<'EOT',
 package Language::P::Instruction::%s;
 
-our @ISA = qw(Language::P::Instruction::Base);
+@Language::P::Instruction::%s::ISA = qw(Language::P::Instruction::Base);
 
 EOT
-          $class;
+          $class, $class;
 
         for( my $i = 0; $i < @$attrs; $i += 2) {
             if(    $attrs->[$i] ne 'context'
@@ -150,6 +163,11 @@ sub set_false { $_[0]->{attributes}{false} = $_[1] }
 sub     false { $_[0]->{attributes}{false} }
 sub set_true { $_[0]->{attributes}{true} = $_[1] }
 sub     true { $_[0]->{attributes}{true} }
+sub is_jump  { 1 }
+
+package Language::P::Instruction::Phi;
+
+@Language::P::Instruction::Phi::ISA = qw(Language::P::Instruction::GetSet);
 
 package Language::P::Instruction::RegexQuantifier;
 
@@ -609,9 +627,9 @@ log_not             0       not                  1   1  context=i1
 log_or              0       same                 2   1  noattr
 log_or_assign       0       same                 2   1  context=i1
 log_xor             0       same                 2   1  context=i1
-make_array          0       same                -1   1  context=i1
+make_array          v       same                -1   1  context=i1,arg_count=i1
 make_closure        0       same                 1   1  noattr
-make_list           0       same                -1   1  context=i1
+make_list           v       same                -1   1  context=i1,arg_count=i1
 make_qr             0       same                 1   1  noattr
 map                 0       same                 1   1  context=i1
 match               0       rx_match             2   1  context=i1,flags=i,index=i,class=RegexMatch
@@ -634,7 +652,7 @@ oct                 u       same                 1   1  context=i1
 open                0       same                 1   1  context=i1
 ord                 u       same                 1   1  context=i1
 parentheses         0       same                -1  -1  noattr
-phi                 0       same                -1  -1  noattr
+phi                 0       same                -1  -1  noattr,class=Phi
 pipe                0       same                 2   1  context=i1
 plus                0       same                 1   1  noattr
 pop                 0       same                 1   0  noattr

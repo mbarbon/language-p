@@ -6,10 +6,14 @@ use parent qw(Language::P::ParseTree::Visitor);
 
 __PACKAGE__->mk_accessors( qw(_code_segments _current_basic_block _options
                               _label_count _temporary_count _current_block
+                              _current_lexical_state
                               _group_count _pos_count _main file_name) );
 
 use Language::P::Intermediate::Code qw(:all);
 use Language::P::Intermediate::BasicBlock;
+use Language::P::Intermediate::LexicalState;
+use Language::P::Intermediate::LexicalInfo;
+use Language::P::Intermediate::Scope;
 use Language::P::Opcodes qw(:all);
 use Language::P::ParseTree::PropagateContext;
 use Language::P::Constants qw(:all);
@@ -65,8 +69,7 @@ sub _new_block {
 
     return Language::P::Intermediate::BasicBlock->new_from_label
                ( 'L' . ++$self->{_label_count},
-                 $block ? $block->{lexical_state} : 0,
-                 $block ? $block->{id} : 0 );
+                 $block ? $block->id : 0 );
 }
 
 sub _start_bb {
@@ -92,38 +95,41 @@ sub push_block {
 
     Carp::confess( "Instructions at scope start" )
       if @{$self->_current_basic_block->bytecode} != 1;
-    # TODO encapsulation
-    $self->_current_basic_block->{scope} = $id;
+    $self->_current_basic_block->set_scope( $id );
 
     push @{$self->_code_segments->[0]->scopes},
-         { outer         => $outer ? $outer->{id} : -1,
-           bytecode      => $bytecode,
-           id            => $id,
-           flags         => $flags,
-           context       => $context || 0, # for eval BLOCK only
-           exception     => undef, # for eval BLOCK only
-           pos_s         => $start_pos,
-           pos_e         => $exit_pos,
-           lexical_state => $outer ? $outer->{lexical_state} : 0,
-           };
+         Language::P::Intermediate::Scope->new
+             ( { outer         => $outer ? $outer->id : -1,
+                 bytecode      => $bytecode,
+                 id            => $id,
+                 flags         => $flags,
+                 context       => $context || 0, # for eval BLOCK only
+                 exception     => undef, # for eval BLOCK only
+                 pos_s         => $start_pos,
+                 pos_e         => $exit_pos,
+                 lexical_state => $self->_current_lexical_state || 0,
+                 } );
 
-    $self->_current_block
-      ( { outer         => $outer,
-          flags         => $flags,
-          bytecode      => $bytecode,
-          pos           => $exit_pos,
-          id            => $id,
-          lexical_state => $outer ? $outer->{lexical_state} : 0,
-          } );
+    $self->_current_block( $self->_code_segments->[0]->scopes->[-1] );
+    $self->_current_lexical_state( $outer ? $outer->lexical_state : 0 );
 
     return $self->_current_block;
+}
+
+sub _outer_scope {
+    my( $self, $scope ) = @_;
+
+    return $scope->outer == -1 ? undef :
+               $self->_code_segments->[0]->scopes->[$scope->outer];
 }
 
 sub pop_block {
     my( $self ) = @_;
     my $to_ret = $self->_current_block;
+    my $outer = _outer_scope( $self, $to_ret );
 
-    $self->_current_block( $to_ret->{outer} );
+    $self->_current_block( $outer );
+    $self->_current_lexical_state( $outer ? $outer->lexical_state : 0 );
 
     return $to_ret;
 }
@@ -156,14 +162,15 @@ sub create_eval_context {
     while( my( $name, $index ) = each %$indices ) {
         my $lexical = $lexicals->names->{$name};
         $lex->{$lexical} = $pad_idx->[$index] =
-          { index       => $index,
-            outer_index => -1,
-            name        => $lexical->name,
-            sigil       => $lexical->sigil,
-            symbol_name => $lexical->symbol_name,
-            level       => 0,
-            in_pad      => 1,
-            };
+          Language::P::Intermediate::LexicalInfo->new
+              ( { index       => $index,
+                  outer_index => -1,
+                  name        => $lexical->name,
+                  sigil       => $lexical->sigil,
+                  symbol_name => $lexical->symbol_name,
+                  level       => 0,
+                  in_pad      => 1,
+                  } );
     }
 
     return $cxt;
@@ -216,8 +223,6 @@ sub generate_use {
 
     my $head = $self->_new_block;
     my $empty = $self->_new_block;
-    my $body = $self->_new_block;
-    my $return = $self->_new_block;
 
     push @{$self->_code_segments},
          Language::P::Intermediate::Code->new
@@ -233,6 +238,9 @@ sub generate_use {
     $self->push_block( SCOPE_SUB|SCOPE_MAIN, $tree->pos_s, $tree->pos_e );
 
     _lexical_state( $self, $tree->lexical_state );
+
+    my $body = $self->_new_block;
+    my $return = $self->_new_block;
 
     # check the Perl version
     if( $tree->version && !$tree->package ) {
@@ -263,7 +271,7 @@ sub generate_use {
                       opcode_nm( OP_CONCATENATE, context => CXT_SCALAR ),
                       opcode_nm( OP_CONCATENATE, context => CXT_SCALAR ),
                       opcode_nm( OP_CONCATENATE, context => CXT_SCALAR ),
-                      opcode_nm( OP_MAKE_ARRAY, count => 1, context => CXT_LIST ),
+                      opcode_nm( OP_MAKE_ARRAY, arg_count => 1, context => CXT_LIST ),
                       opcode_npm( OP_DIE, $tree->pos, context => CXT_VOID ),
                       opcode_n( OP_POP );
         _add_jump $self,
@@ -295,13 +303,13 @@ sub generate_use {
         }
         _add_bytecode $self,
             opcode_nm( OP_MAKE_ARRAY,
-                       count   => @{$tree->import} + 1,
-                       context => CXT_LIST );
+                       arg_count => @{$tree->import} + 1,
+                       context   => CXT_LIST );
     } else {
         _add_bytecode $self,
             opcode_nm( OP_MAKE_ARRAY,
-                       count   => 1,
-                       context => CXT_LIST );
+                       arg_count => 1,
+                       context   => CXT_LIST );
     }
 
     _add_bytecode $self,
@@ -554,17 +562,18 @@ my %conditionals =
 
 sub _lexical_state {
     my( $self, $tree ) = @_;
-    my $scope_id = $self->_current_block->{id};
+    my $scope_id = $self->_current_block->id;
     my $state_id = @{$self->_code_segments->[0]->lexical_states};
 
     push @{$self->_code_segments->[0]->lexical_states},
-         { scope    => $scope_id,
-           package  => $tree->package,
-           hints    => $tree->hints,
-           warnings => $tree->warnings,
-           };
-    $self->_code_segments->[0]->scopes->[$scope_id]->{flags} |= SCOPE_LEX_STATE;
-    $self->_current_block->{lexical_state} = $state_id;
+         Language::P::Intermediate::LexicalState->new
+             ( { scope    => $scope_id,
+                 package  => $tree->package,
+                 hints    => $tree->hints,
+                 warnings => $tree->warnings,
+                 } );
+    $self->_current_lexical_state( $state_id );
+    $self->_code_segments->[0]->scopes->[$scope_id]->set_flags( $self->_code_segments->[0]->scopes->[$scope_id]->flags | SCOPE_LEX_STATE );
 
     # avoid generating a new basic block if the current basic block only
     # contains a label
@@ -574,7 +583,6 @@ sub _lexical_state {
         _add_bytecode $self,
             opcode_nm( OP_LEXICAL_STATE_SET,  index => $state_id );
 
-        $bb->{lexical_state} = $state_id;
         return;
     }
 
@@ -618,8 +626,8 @@ sub _indirect {
 
     _add_bytecode $self,
          opcode_nm( OP_MAKE_ARRAY,
-                    count   => scalar @{$tree->arguments},
-                    context => CXT_LIST ),
+                    arg_count => scalar @{$tree->arguments},
+                    context   => CXT_LIST ),
          opcode_npm( $tree->function, $tree->pos,
                      context   => _context( $tree ) );
 }
@@ -690,7 +698,7 @@ sub _builtin {
             my %lex;
             while( my( $n, $l ) = each %$plex ) {
                 $lex{$n} = _allocate_lexical( $self, $self->_code_segments->[0],
-                                              $l, 1 )->{index};
+                                              $l, 1 )->index;
             }
             my $env = $tree->get_attribute( 'environment' );
             _add_bytecode $self,
@@ -740,7 +748,7 @@ sub _function_call {
 
     _add_bytecode $self,
          opcode_nm( $tree->function == OP_RETURN ? OP_MAKE_LIST : OP_MAKE_ARRAY,
-                    count => $argcount, context => CXT_LIST );
+                    arg_count => $argcount, context => CXT_LIST );
 
     if( $is_func ) {
         $self->dispatch( $tree->function );
@@ -751,8 +759,8 @@ sub _function_call {
             my $block = $self->_current_block;
             while( $block ) {
                 _exit_scope( $self, $block );
-                last if $block->{flags} & CODE_MAIN;
-                $block = $block->{outer};
+                last if $block->flags & CODE_MAIN;
+                $block = _outer_scope( $self, $block )
             }
         }
 
@@ -779,7 +787,7 @@ sub _method_call {
     }
 
     _add_bytecode $self,
-        opcode_nm( OP_MAKE_ARRAY, count => 1 + scalar @$args, context => CXT_LIST );
+        opcode_nm( OP_MAKE_ARRAY, arg_count => 1 + scalar @$args, context => CXT_LIST );
 
     if( $tree->indirect ) {
         _add_bytecode $self,
@@ -803,8 +811,8 @@ sub _list {
 
     _add_bytecode $self,
          opcode_nm( OP_MAKE_LIST,
-                    count    => @{$tree->expressions} + 0,
-                    context  => _context_lvalue( $tree ) );
+                    arg_count => @{$tree->expressions} + 0,
+                    context   => _context_lvalue( $tree ) );
 }
 
 sub _unary_op {
@@ -862,8 +870,8 @@ sub _local {
                         index => $index,
                         );
 
-        push @{$self->_current_block->{bytecode}},
-             [ opcode_npm( $op_rest, $self->_current_block->{pos},
+        push @{$self->_current_block->bytecode},
+             [ opcode_npm( $op_rest, $self->_current_block->pos_e,
                            index => $index,
                            ),
                ];
@@ -878,8 +886,8 @@ sub _local {
                         index => $index,
                         );
 
-        push @{$self->_current_block->{bytecode}},
-             [ opcode_npm( OP_RESTORE_GLOB_SLOT, $self->_current_block->{pos},
+        push @{$self->_current_block->bytecode},
+             [ opcode_npm( OP_RESTORE_GLOB_SLOT, $self->_current_block->pos_e,
                            name  => $left->name,
                            slot  => $left->sigil,
                            index => $index,
@@ -1010,11 +1018,11 @@ sub _binary_op {
             return;
         }
 
-        my $scope_id = $self->_current_block->{id};
+        my $scope_id = $self->_current_block->id;
 
-        unless( $self->_code_segments->[0]->scopes->[$scope_id]->{flags} & SCOPE_REGEX ) {
-            $self->_code_segments->[0]->scopes->[$scope_id]->{flags} |= SCOPE_REGEX;
-            push @{$self->_current_block->{bytecode}},
+        unless( $self->_code_segments->[0]->scopes->[$scope_id]->flags & SCOPE_REGEX ) {
+            $self->_code_segments->[0]->scopes->[$scope_id]->set_flags( $self->_code_segments->[0]->scopes->[$scope_id]->flags | SCOPE_REGEX );
+            push @{$self->_current_block->bytecode},
                  [ opcode_nm( OP_RX_STATE_RESTORE, index => $scope_id ) ];
         }
 
@@ -1058,7 +1066,7 @@ sub _binary_op {
         if( $tree->left->isa( 'Language::P::ParseTree::Parentheses' ) ) {
             $op = OP_REPEAT_ARRAY;
             _add_bytecode $self,
-                opcode_nm( OP_MAKE_LIST, count => 1, context => CXT_LIST );
+                opcode_nm( OP_MAKE_LIST, arg_count => 1, context => CXT_LIST );
         } else {
             $op = OP_REPEAT_SCALAR;
         }
@@ -1181,19 +1189,16 @@ sub _lexical_declaration {
     _do_lexical_access( $self, $tree, 0, 1 );
 }
 
-sub _add_value {
-    my( $code, $lexical, $index ) = @_;
-
-    return $code->lexicals->{map}{$lexical}{index} = $index;
-}
-
 sub _find_add_value {
     my( $code, $lexical ) = @_;
-    my $lex = $code->lexicals;
+    my $lex = $code->lexicals->{map}{$lexical};
 
-    return $lex->{map}{$lexical}{index}
-        if $lex->{map}{$lexical} && $lex->{map}{$lexical}{index} >= 0;
-    return $lex->{map}{$lexical}{index} = $lex->{max_pad}++;
+    return $lex->index
+        if $lex && $lex->index >= 0;
+
+    $lex->set_index( $code->lexicals->{max_pad}++ );
+
+    return $lex->index;
 }
 
 sub _uplevel {
@@ -1206,48 +1211,51 @@ sub _uplevel {
 
 sub _allocate_lexical {
     my( $self, $code, $lexical, $level ) = @_;
-    my $lex_info = $code->lexicals->{map}->{$lexical} ||=
-        { level       => $level,
-          name        => $lexical->name,
-          sigil       => $lexical->sigil,
-          symbol_name => $lexical->symbol_name,
-          index       => -1,
-          outer_index => -1,
-          in_pad      => $lexical->closed_over ? 1 : 0,
-          from_main   => 0,
-          };
-    return $lex_info if $lex_info->{index} >= 0;
+    my $lex_info = $code->lexicals->{map}->{$lexical};
+    return $lex_info if $lex_info && $lex_info->index >= 0;
+
+    $lex_info = $code->lexicals->{map}->{$lexical} =
+      Language::P::Intermediate::LexicalInfo->new
+          ( { level       => $level,
+              name        => $lexical->name,
+              sigil       => $lexical->sigil,
+              symbol_name => $lexical->symbol_name,
+              index       => -1,
+              outer_index => -1,
+              in_pad      => $lexical->closed_over ? 1 : 0,
+              from_main   => 0,
+              } );
 
     if(    $lexical->name eq '_'
         && $lexical->sigil == VALUE_ARRAY ) {
-        $lex_info->{index} = 0; # arguments are always first
+        $lex_info->set_index( 0 ); # arguments are always first
     } elsif( $lexical->closed_over ) {
-        my $level = $lex_info->{level};
+        $level = $lex_info->level;
         if( $level ) {
             my $code_from = _uplevel( $code, $level );
             my $val = _allocate_lexical( $self, $code_from,
-                                         $lexical, 0 )->{index};
+                                         $lexical, 0 )->index;
             if( $code_from->is_sub ) {
                 my $outer = $code->outer;
                 _allocate_lexical( $self, $outer, $lexical, $level - 1 );
-                $lex_info->{index} = _find_add_value( $code, $lexical );
-                $lex_info->{outer_index} = _find_add_value( $outer, $lexical );
+                $lex_info->set_index( _find_add_value( $code, $lexical ) );
+                $lex_info->set_outer_index( _find_add_value( $outer, $lexical ) );
             } else {
-                $lex_info->{index} = _find_add_value( $code, $lexical );
-                $lex_info->{outer_index} = $val;
-                $lex_info->{from_main} = 1;
+                $lex_info->set_index( _find_add_value( $code, $lexical ) );
+                $lex_info->set_outer_index( $val );
+                $lex_info->set_from_main( 1 );
             }
         } else {
-            $lex_info->{index} = _find_add_value( $code, $lexical );
+            $lex_info->set_index( _find_add_value( $code, $lexical ) );
         }
     } else {
-        $lex_info->{index} = $code->lexicals->{max_stack}++;
+        $lex_info->set_index( $code->lexicals->{max_stack}++ );
     }
 
-    if( $lex_info->{in_pad} ) {
-        $code->lexicals->{pad_idx}[$lex_info->{index}] = $lex_info;
+    if( $lex_info->in_pad ) {
+        $code->lexicals->{pad_idx}[$lex_info->index] = $lex_info;
     } else {
-        $code->lexicals->{lex_idx}[$lex_info->{index}] = $lex_info;
+        $code->lexicals->{lex_idx}[$lex_info->index] = $lex_info;
     }
 
     return $lex_info;
@@ -1258,24 +1266,24 @@ sub _do_lexical_access {
 
     # maybe do it while parsing, in _find_symbol/_process_lexical_declaration
     my $lex_info = $self->_code_segments->[0]->lexicals->{map}->{$tree};
-    if( !$lex_info || $lex_info->{index} < 0 ) {
+    if( !$lex_info || $lex_info->index < 0 ) {
         $lex_info = _allocate_lexical( $self, $self->_code_segments->[0],
                                        $tree, $level );
     }
 
     _add_bytecode $self,
-         opcode_nm( $lex_info->{in_pad} ? OP_LEXICAL_PAD : OP_LEXICAL,
-                    index => $lex_info->{index},
+         opcode_nm( $lex_info->in_pad ? OP_LEXICAL_PAD : OP_LEXICAL,
+                    index => $lex_info->index,
                     slot  => $tree->sigil,
                     );
 
     if( $is_decl ) {
-        $lex_info->{declaration} = 1;
+        $lex_info->set_declaration( 1 );
 
-        push @{$self->_current_block->{bytecode}},
-             [ opcode_npm( $lex_info->{in_pad} ? OP_LEXICAL_PAD_CLEAR : OP_LEXICAL_CLEAR,
-                           $self->_current_block->{pos},
-                           index => $lex_info->{index},
+        push @{$self->_current_block->bytecode},
+             [ opcode_npm( $lex_info->in_pad ? OP_LEXICAL_PAD_CLEAR : OP_LEXICAL_CLEAR,
+                           $self->_current_block->pos_e,
+                           index => $lex_info->index,
                            slot  => $tree->sigil,
                            ),
                ];
@@ -1341,7 +1349,7 @@ sub _setup_list_iteration {
     }
 
     $self->dispatch( $list );
-    _add_bytecode $self, opcode_nm( OP_MAKE_LIST, count => 1, context => CXT_LIST );
+    _add_bytecode $self, opcode_nm( OP_MAKE_LIST, arg_count => 1, context => CXT_LIST );
 
     my $iterator = $self->{_temporary_count}++;
     my( $glob );
@@ -1377,7 +1385,7 @@ sub _setup_list_iteration {
                         ),
             opcode_n( OP_POP );
 
-        push @{$self->_current_block->{bytecode}},
+        push @{$self->_current_block->bytecode},
              [ opcode_nm( OP_TEMPORARY_CLEAR,
                           index => $glob,
                           slot  => VALUE_GLOB ),
@@ -1390,17 +1398,17 @@ sub _setup_list_iteration {
     } elsif( !$is_lexical_declaration ) {
         my $slot = $self->{_temporary_count}++;
         my $lex_info = $self->_code_segments->[0]->lexicals->{map}->{$iter_var->declaration};
-        my $in_pad = $lex_info->{in_pad};
+        my $in_pad = $lex_info->in_pad;
 
         _add_bytecode $self,
             opcode_nm( $in_pad ? OP_LOCALIZE_LEXICAL_PAD : OP_LOCALIZE_LEXICAL,
-                       lexical => $lex_info->{index},
+                       lexical => $lex_info->index,
                        index   => $slot,
                        );
 
-        push @{$self->_current_block->{bytecode}},
+        push @{$self->_current_block->bytecode},
              [ opcode_nm( $in_pad ? OP_RESTORE_LEXICAL_PAD : OP_RESTORE_LEXICAL,
-                          lexical => $lex_info->{index},
+                          lexical => $lex_info->index,
                           index   => $slot,
                           ),
                ];
@@ -1449,8 +1457,8 @@ sub _setup_list_iteration {
         }
 
         _add_bytecode $self,
-            opcode_nm( $lex_info->{in_pad} ? OP_LEXICAL_PAD_SET : OP_LEXICAL_SET,
-                       index => $lex_info->{index},
+            opcode_nm( $lex_info->in_pad ? OP_LEXICAL_PAD_SET : OP_LEXICAL_SET,
+                       index => $lex_info->index,
                        );
     }
 
@@ -1522,7 +1530,7 @@ sub _map {
     # result value
     my $result = $self->{_temporary_count}++;
     _add_bytecode $self,
-        opcode_nm( OP_MAKE_LIST, count => 0, context => CXT_LIST ),
+        opcode_nm( OP_MAKE_LIST, arg_count => 0, context => CXT_LIST ),
         opcode_nm( OP_TEMPORARY_SET, index => $result, slot => VALUE_ARRAY );
 
     my( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop ) =
@@ -1563,7 +1571,7 @@ sub _grep {
     # result value
     my $result = $self->{_temporary_count}++;
     _add_bytecode $self,
-        opcode_nm( OP_MAKE_LIST, count => 0, context => CXT_LIST ),
+        opcode_nm( OP_MAKE_LIST, arg_count => 0, context => CXT_LIST ),
         opcode_nm( OP_TEMPORARY_SET, index => $result, slot => VALUE_ARRAY );
 
     my( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop ) =
@@ -1667,12 +1675,13 @@ sub _cond {
     my $with_scope =    $tree->iffalse
                      || $tree->iftrues->[0]->block->isa( 'Language::P::ParseTree::Block' );
 
+    my $last = _new_block( $self );
     if( $with_scope ) {
         _start_bb( $self );
         $self->push_block( 0, $tree->pos_s, $tree->pos_e );
     }
 
-    my( $next, $last ) = _new_blocks( $self, 2 );
+    my $next = _new_block( $self );
     _add_jump $self, opcode_nm( OP_JUMP, to => $next ), $next;
 
     foreach my $elsif ( @{$tree->iftrues} ) {
@@ -1729,12 +1738,12 @@ sub _emit_lexical_state {
     my( $self, $tree ) = @_;
 
     if( $tree->get_attribute( 'lexical_state' ) ) {
-        my $scope_id = $self->_current_block->{id};
-        my $lex_state = $self->_code_segments->[0]->scopes->[$scope_id]->{lexical_state};
+        my $scope_id = $self->_current_block->id;
+        my $lex_state = $self->_code_segments->[0]->scopes->[$scope_id]->lexical_state;
 
         _add_bytecode $self,
             opcode_nm( OP_LEXICAL_STATE_SAVE, index => $lex_state );
-        push @{$self->_current_block->{bytecode}},
+        push @{$self->_current_block->bytecode},
              [ opcode_nm( OP_LEXICAL_STATE_RESTORE, index => $lex_state ) ];
     }
 }
@@ -1772,7 +1781,7 @@ sub _block {
     if( $is_eval ) {
         my( $except, $resume ) = _new_blocks( $self, 2 );
 
-        $self->_code_segments->[0]->scopes->[$block->{id}]->{exception} = $except;
+        $self->_code_segments->[0]->scopes->[$block->id]->set_exception( $except );
 
         # execution resumes here for both success and failure
         _add_jump $self, opcode_nm( OP_JUMP, to => $resume ), $resume;
@@ -1887,7 +1896,7 @@ sub _quoted_string {
                             name => '"', slot => VALUE_SCALAR, context => CXT_SCALAR );
             $self->dispatch( $c );
             _add_bytecode $self,
-                opcode_nm( OP_MAKE_LIST, count => 2, context => CXT_LIST ),
+                opcode_nm( OP_MAKE_LIST, arg_count => 2, context => CXT_LIST ),
                 opcode_npm( OP_JOIN, $tree->pos, context => _context( $tree ) );
         } else {
             $self->dispatch( $c );
@@ -1910,7 +1919,7 @@ sub _quoted_string {
                             name => '"', slot => VALUE_SCALAR, context => CXT_SCALAR );
             $self->dispatch( $c );
             _add_bytecode $self,
-                opcode_nm( OP_MAKE_LIST, count => 2, context => CXT_LIST ),
+                opcode_nm( OP_MAKE_LIST, arg_count => 2, context => CXT_LIST ),
                 opcode_npm( OP_JOIN, $tree->pos, context => _context( $tree ) );
         } else {
             $self->dispatch( $c );
@@ -1993,7 +2002,7 @@ sub _ref_constructor {
     if( $tree->expression ) {
         $self->dispatch( $tree->expression );
     } else {
-        _add_bytecode $self, opcode_nm( OP_MAKE_LIST, count => 0, context => CXT_LIST );
+        _add_bytecode $self, opcode_nm( OP_MAKE_LIST, arg_count => 0, context => CXT_LIST );
     }
 
     if( $tree->type == VALUE_ARRAY ) {
@@ -2078,7 +2087,7 @@ sub _jump {
     my $block = $self->_current_block;
     foreach ( 1 .. $level ) {
         _exit_scope( $self, $block );
-        $block = $block->{outer};
+        $block = _outer_scope( $self, $block );
     }
 
     my $label_to;
@@ -2149,7 +2158,7 @@ sub _interpolated_pattern {
 sub _exit_scope {
     my( $self, $block ) = @_;
 
-    foreach my $code ( reverse @{$block->{bytecode}} ) {
+    foreach my $code ( reverse @{$block->bytecode} ) {
         _add_bytecode $self, @$code;
     }
 }

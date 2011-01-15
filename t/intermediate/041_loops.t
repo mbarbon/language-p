@@ -9,21 +9,21 @@ for( $i = 0; $i < 10; $i = $i + 1 ) {
 }
 EOP
 # main
-L1:
+L1: # scope=1
   lexical_state_set index=0
   jump to=L6
-L2:
+L2: # scope=1
   global context=4, name="i", slot=1
   constant_integer value=10
   jump_if_f_lt false=L5, true=L3
-L3:
+L3: # scope=3
   global context=4, name="STDOUT", slot=7
   global context=4, name="i", slot=1
-  make_array context=8, count=1
+  make_array arg_count=1, context=8
   print context=2
   pop
   jump to=L4
-L4:
+L4: # scope=1
   global context=4, name="i", slot=1
   constant_integer value=1
   add context=4
@@ -32,9 +32,9 @@ L4:
   assign context=2
   pop
   jump to=L2
-L5:
+L5: # scope=1
   end
-L6:
+L6: # scope=2
   constant_integer value=0
   global context=20, name="i", slot=1
   swap
@@ -49,13 +49,13 @@ for(;;) {
 }
 EOP
 # main
-L1:
+L1: # scope=1
   lexical_state_set index=0
   jump to=L3
-L3:
+L3: # scope=3
   global context=4, name="STDOUT", slot=7
   global context=4, name="i", slot=1
-  make_array context=8, count=1
+  make_array arg_count=1, context=8
   print context=2
   pop
   jump to=L3
@@ -67,17 +67,17 @@ for( $i = 0; ; $i = $i + 1 ) {
 }
 EOP
 # main
-L1:
+L1: # scope=1
   lexical_state_set index=0
   jump to=L6
-L3:
+L3: # scope=3
   global context=4, name="STDOUT", slot=7
   global context=4, name="i", slot=1
-  make_array context=8, count=1
+  make_array arg_count=1, context=8
   print context=2
   pop
   jump to=L4
-L4:
+L4: # scope=1
   global context=4, name="i", slot=1
   constant_integer value=1
   add context=4
@@ -86,7 +86,7 @@ L4:
   assign context=2
   pop
   jump to=L3
-L6:
+L6: # scope=2
   constant_integer value=0
   global context=20, name="i", slot=1
   swap
@@ -101,21 +101,21 @@ for( $i = 0; $i < 10; $i = $i + 1 ) {
 }
 EOP
 # main
-L1:
+L1: # scope=1
   lexical_state_set index=0
   jump to=L6
-L2:
+L2: # scope=1
   global context=4, name="i", slot=1
   constant_integer value=10
   jump_if_f_lt false=L5, true=L3
-L3:
+L3: # scope=3
   global context=4, name="STDOUT", slot=7
   global context=4, name="i", slot=1
-  make_array context=8, count=1
+  make_array arg_count=1, context=8
   print context=2
   pop
   jump to=L4
-L4:
+L4: # scope=1
   global context=4, name="i", slot=1
   constant_integer value=1
   add context=4
@@ -124,9 +124,9 @@ L4:
   assign context=2
   pop
   jump to=L2
-L5:
+L5: # scope=1
   end
-L6:
+L6: # scope=2
   constant_integer value=0
   global context=20, name="i", slot=1
   swap

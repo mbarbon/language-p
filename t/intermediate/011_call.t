@@ -11,18 +11,18 @@ sub foo {
 foo( 1 );
 EOP
 # main
-L1:
+L1: # scope=1
   lexical_state_set index=0
   constant_integer value=1
-  make_array context=8, count=1
+  make_array arg_count=1, context=8
   global context=4, name="foo", slot=4
   call context=2
   pop
   jump to=L2
-L2:
+L2: # scope=0
   end
 # foo
-L1:
+L1: # scope=1
   lexical_state_set index=1
   global context=4, name="STDOUT", slot=7
   fresh_string value=""
@@ -34,8 +34,8 @@ L1:
   concat_assign context=4
   constant_string value="\x0a"
   concat_assign context=4
-  make_array context=8, count=1
+  make_array arg_count=1, context=8
   print context=1
-  make_list context=8, count=1
+  make_list arg_count=1, context=8
   return context=1
 EOI

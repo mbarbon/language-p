@@ -80,9 +80,9 @@ sub _slot_type {
         my $slot;
 
         if( $opn == OP_LEXICAL ) {
-            $slot = $sub->lexicals->{lex_idx}[$index]->{sigil};
+            $slot = $sub->lexicals->{lex_idx}[$index]->sigil;
         } else {
-            $slot = $sub->lexicals->{pad_idx}[$index]->{sigil};
+            $slot = $sub->lexicals->{pad_idx}[$index]->sigil;
         }
 
         die "Undefined slot for $opn" unless $slot;
@@ -214,7 +214,7 @@ sub to_ssa {
     foreach my $inner ( @{$code_segment->inner} ) {
         next unless $inner;
         my $new_inner = $self->to_ssa( $inner );
-        $new_inner->{outer} = $new_code;
+        $new_inner->set_outer( $new_code );
         push @{$new_code->inner}, $new_inner;
     }
 
@@ -244,7 +244,6 @@ sub to_ssa {
         my $cblock = $self->_converting->{block} ||=
             Language::P::Intermediate::BasicBlock
                 ->new_from_label( $block->start_label,
-                                  $block->lexical_state,
                                   $block->scope, $block->dead );
 
         push @{$new_code->basic_blocks}, $cblock;
@@ -267,18 +266,19 @@ sub to_ssa {
     # convert block exit bytecode
     foreach my $scope ( @{$code_segment->scopes} ) {
          push @{$new_code->scopes},
-             { outer         => $scope->{outer},
-               bytecode      => [],
-               id            => $scope->{id},
-               flags         => $scope->{flags},
-               context       => $scope->{context},
-               pos_s         => $scope->{pos_s},
-               pos_e         => $scope->{pos_e},
-               lexical_state => $scope->{lexical_state},
-               exception     => $scope->{exception} ? $self->_converted->{$scope->{exception}}{block} : undef,
-               };
+             Language::P::Intermediate::Scope->new
+                 ( { outer         => $scope->outer,
+                     bytecode      => [],
+                     id            => $scope->id,
+                     flags         => $scope->flags,
+                     context       => $scope->context,
+                     pos_s         => $scope->pos_s,
+                     pos_e         => $scope->pos_e,
+                     lexical_state => $scope->lexical_state,
+                     exception     => $scope->exception ? $self->_converted->{$scope->exception}{block} : undef,
+                     } );
 
-       foreach my $seg ( @{$scope->{bytecode}} ) {
+       foreach my $seg ( @{$scope->bytecode} ) {
             my @bytecode;
             @$stack = ();
             $self->_bytecode( \@bytecode );
@@ -311,8 +311,9 @@ sub to_ssa {
         if( $same ) {
             # morph the PHI opcode into a GET
             $phi->{opcode_n} = OP_GET;
-            $phi->{attributes} = { index => $index, slot => $slot };
-            $phi->{parameters} = undef;
+            $phi->set_index( $index );
+            $phi->set_slot( $slot );
+            $phi->set_parameters( undef );
         }
     }
 
@@ -353,9 +354,8 @@ sub _ssa_to_tree {
                 # find the jump coming to this block
                 while( $op_from_off >= 0 ) {
                     my $op_from = $block_from->bytecode->[$op_from_off];
-                    last if    $op_from->{attributes} # TODO is_jump
-                            && exists $op_from->{attributes}{to}
-                            && $op_from->{attributes}{to} eq $block;
+                    last if    $op_from->is_jump
+                            && $op_from->to eq $block;
                     --$op_from_off;
                 }
 
@@ -449,7 +449,6 @@ sub _jump_to {
     $converted->{depth} = @$stack;
     $converted->{block} ||= Language::P::Intermediate::BasicBlock
                                 ->new_from_label( $to->start_label,
-                                                  $to->lexical_state,
                                                   $to->scope, $to->dead );
     $op->set_to( $converted->{block} );
     push @{$self->_queue}, $to;
@@ -511,20 +510,15 @@ sub _generic {
     my( $self, $op ) = @_;
     my $attrs = $OP_ATTRIBUTES{$op->{opcode_n}};
     my $in_args = ( $attrs->{flags} & Language::P::Opcodes::FLAG_VARIADIC ) ?
-                      $op->{attributes}{arg_count} : $attrs->{in_args};
+                      $op->arg_count : $attrs->{in_args};
     my @in = $in_args ? _get_stack( $self, $in_args ) : ();
-    my $new_op;
+    my $new_op = $op->clone;
 
-    if( $op->{attributes} ) { # TODO clone
-        $new_op = opcode_nm( $op->{opcode_n}, %{$op->{attributes}} );
-        $new_op->set_parameters( \@in ) if @in;
-    } elsif( $op->parameters ) {
+    if( $new_op->parameters && @in ) {
         die "Can't handle fixed and dynamic parameters for $NUMBER_TO_NAME{$op->{opcode_n}}" if @in;
-        $new_op = opcode_n( $op->{opcode_n}, @{$op->parameters} );
     } else {
-        $new_op = opcode_n( $op->{opcode_n}, @in );
+        $new_op->set_parameters( \@in ) if @in;
     }
-    $new_op->{pos} = $op->{pos} if $op->{pos};
 
     if( !$attrs->{out_args} ) {
         _emit_out_stack( $self );
@@ -602,8 +596,8 @@ sub _make_list_array {
 
     my $nop = opcode_npm( $op->{opcode_n}, $op->{pos},
                           context => $op->context );
-    $nop->set_parameters( [ _get_stack( $self, $op->{attributes}{count} ) ] )
-        if $op->{attributes}{count};
+    $nop->set_parameters( [ _get_stack( $self, $op->arg_count ) ] )
+        if $op->arg_count;
 
     push @{$self->_stack}, $nop;
 
@@ -649,7 +643,6 @@ sub _replace {
 
     $converted->{block} ||= Language::P::Intermediate::BasicBlock
                                 ->new_from_label( $to->start_label,
-                                                  $to->lexical_state,
                                                   $to->scope, $to->dead );
     $new_jump->set_to( $converted->{block} );
     push @{$self->_queue}, $to;
@@ -669,14 +662,13 @@ sub _rx_start_group {
 
 sub _rx_quantifier {
     my( $self, $op ) = @_;
-    my $attrs = $op->{attributes};
     my $new_quant = # TODO clone
         opcode_nm( OP_RX_QUANTIFIER,
-                   min => $attrs->{min}, max => $attrs->{max},
-                   greedy => $attrs->{greedy},
-                   group => $attrs->{group},
-                   subgroups_start => $attrs->{subgroups_start},
-                   subgroups_end => $attrs->{subgroups_end} );
+                   min => $op->min, max => $op->max,
+                   greedy => $op->greedy,
+                   group => $op->group,
+                   subgroups_start => $op->subgroups_start,
+                   subgroups_end => $op->subgroups_end );
     my $new_jump = opcode_n( OP_JUMP );
 
     _jump_to( $self, $new_quant, $op->true, [] );

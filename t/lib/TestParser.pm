@@ -57,6 +57,8 @@ my @lines;
 
     package TestParserRuntime;
 
+    use Language::P::Constants qw(VALUE_SUB);
+
     sub new {
         my $self = bless {}, __PACKAGE__;
         my $st = Language::P::Toy::Value::MainSymbolTable->new( $self );
@@ -66,20 +68,49 @@ my @lines;
         return $self;
     }
 
+    sub set_declarations {
+        my( $self, $decls ) = @_;
+
+        $self->{declarations} = $decls;
+
+        foreach my $dec ( @{$self->{declarations}} ) {
+            next if $dec->[1] != VALUE_SUB;
+            my $sub = Language::P::Toy::Value::Subroutine::Stub->new
+                          ( $self,
+                            { name     => $dec->[0],
+                              prototype=> undef,
+                              } );
+            $self->_symbol_table->set_symbol( $self, $dec->[0], '&', $sub );
+        }
+    }
+
     sub get_symbol { $_[0]->_symbol_table->get_symbol( $_[0], $_[1], $_[2] ) }
     sub get_package { $_[0]->_symbol_table->get_package( $_[0], $_[1] ) }
     sub _symbol_table { $_[0]->{symbol_table} }
     sub set_bytecode { }
     sub wrap_method { }
+
+    sub is_declared {
+        my( $self, $name, $sigil ) = @_;
+
+        foreach my $dec ( @{$self->{declarations}} ) {
+            return 1 if $dec->[0] eq $name && $dec->[1] == $sigil;
+        }
+
+        return 0;
+    }
 }
 
 sub fresh_parser {
+    my( $declarations ) = @_;
     my $rt = TestParserRuntime->new;
     my $parser = Language::P::Parser->new
                      ( { generator => TestParserGenerator->new
                                           ( { runtime => $rt } ),
                          runtime   => $rt,
                          } );
+
+    $rt->set_declarations( $declarations || [] );
 
     return $parser;
 }
@@ -120,9 +151,9 @@ sub parse_ok {
 }
 
 sub parse_string {
-    my( $expr, $package ) = @_;
+    my( $expr, $package, $declarations ) = @_;
 
-    my $parser = fresh_parser();
+    my $parser = fresh_parser( $declarations );
     $parser->parse_string( $expr, 0, '<string>',
                            { package  => $package || 'main',
                              lexicals => undef,
@@ -134,7 +165,7 @@ sub parse_string {
 }
 
 sub parse_and_diff_yaml {
-    my( $expr, $expected ) = @_;
+    my( $expr, $expected, $declarations ) = @_;
 
     $expected =~ s{ ((?:NUM|CXT|FLAG|CONST|STRING|VALUE|OP|DECLARATION|PROTO|CHANGED|RX_CLASS|RX_GROUP|RX_POSIX|RX_ASSERTION)_[A-Z_ \|]+)}
                   {" " . ( eval $1 or die $@ )}eg;
@@ -144,7 +175,7 @@ sub parse_and_diff_yaml {
     my $got = '';
     my $dumper = Language::P::ParseTree::DumpYAML->new;
     eval {
-        foreach my $line ( @{parse_string( $expr )} ) {
+        foreach my $line ( @{parse_string( $expr, undef, $declarations )} ) {
             $got .= $dumper->dump( $line );
         }
     };

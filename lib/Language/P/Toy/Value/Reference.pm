@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use parent qw(Language::P::Toy::Value::Scalar);
 
+require Config;
+
 __PACKAGE__->mk_ro_accessors( qw(reference) );
 
 sub type { 10 }
@@ -85,6 +87,8 @@ sub dereference_glob {
     return $self->{reference};
 }
 
+my $REF_FORMAT = $Config::Config{ptrsize} == 4 ? '%s(0x%08x)' : '%s(0x%016x)';
+
 sub as_string {
     my( $self, $runtime ) = @_;
 
@@ -93,7 +97,7 @@ sub as_string {
         return $self->{reference}->regex_string;
     }
 
-    return sprintf '%s(0x%p)', _reference_string( $self ), $self->{reference};
+    return sprintf $REF_FORMAT, _reference_string( $self ), $self->{reference};
 }
 
 sub as_integer {
@@ -141,10 +145,10 @@ sub bless {
 }
 
 sub find_method {
-    my( $self, $runtime, $name ) = @_;
+    my( $self, $runtime, $name, $is_super ) = @_;
 
     die "Value is not blessed" unless $self->reference->is_blessed;
-    return $self->reference->stash->find_method( $runtime, $name );
+    return $self->reference->stash->find_method( $runtime, $name, $is_super );
 }
 
 sub as_handle {

@@ -81,7 +81,7 @@ sub _write_sub {
         my $index = 0;
         foreach my $l ( values %{$code->lexicals->{map}} ) {
             _write_lex_info( $self, $out, $l );
-            $self->{li_map}{$l->{index} . "|" . $l->{in_pad}} = $index++;
+            $self->{li_map}{$l->index . "|" . $l->in_pad} = $index++;
         }
     }
 
@@ -101,30 +101,30 @@ sub _write_sub {
 sub _write_lex_info {
     my( $self, $out, $lex_info ) = @_;
 
-    print $out pack 'V', $lex_info->{level};
-    print $out pack 'V', $lex_info->{index};
-    print $out pack 'V', $lex_info->{outer_index};
-    _write_string( $out, $lex_info->{name} );
-    print $out pack 'C', $lex_info->{sigil};
-    print $out pack 'C', $lex_info->{in_pad};
-    print $out pack 'C', $lex_info->{from_main};
+    print $out pack 'V', $lex_info->level;
+    print $out pack 'V', $lex_info->index;
+    print $out pack 'V', $lex_info->outer_index;
+    _write_string( $out, $lex_info->name );
+    print $out pack 'C', $lex_info->sigil;
+    print $out pack 'C', $lex_info->in_pad;
+    print $out pack 'C', $lex_info->from_main;
 }
 
 sub _write_scope {
     my( $self, $out, $scope ) = @_;
 
-    print $out pack 'V', $scope->{outer};
-    print $out pack 'V', $scope->{id};
-    print $out pack 'V', $scope->{flags};
-    print $out pack 'V', $scope->{context};
-    _write_pos( $self, $out, $scope->{pos_s} );
-    _write_pos( $self, $out, $scope->{pos_e} );
-    print $out pack 'V', $scope->{lexical_state};
-    print $out pack 'V', $scope->{exception} ?
-        $self->{bb_map}{$scope->{exception}} : -1;
-    print $out pack 'V', scalar @{$scope->{bytecode}};
+    print $out pack 'V', $scope->outer;
+    print $out pack 'V', $scope->id;
+    print $out pack 'V', $scope->flags;
+    print $out pack 'V', $scope->context;
+    _write_pos( $self, $out, $scope->pos_s );
+    _write_pos( $self, $out, $scope->pos_e );
+    print $out pack 'V', $scope->lexical_state;
+    print $out pack 'V', $scope->exception ?
+        $self->{bb_map}{$scope->exception} : -1;
+    print $out pack 'V', scalar @{$scope->bytecode};
 
-    foreach my $bc ( @{$scope->{bytecode}} ) {
+    foreach my $bc ( @{$scope->bytecode} ) {
         print $out pack 'V', scalar @$bc;
         _write_op( $self, $out, $_ ) foreach @$bc;
     }
@@ -133,17 +133,16 @@ sub _write_scope {
 sub _write_lex_state {
     my( $self, $out, $lex_state ) = @_;
 
-    print $out pack 'V', $lex_state->{scope};
-    print $out pack 'V', $lex_state->{hints};
-    _write_string( $out, $lex_state->{package} );
-    _write_string( $out, $lex_state->{warnings} || '' );
+    print $out pack 'V', $lex_state->scope;
+    print $out pack 'V', $lex_state->hints;
+    _write_string( $out, $lex_state->package );
+    _write_string( $out, $lex_state->warnings || '' );
 }
 
 sub _write_bb {
     my( $self, $out, $bb ) = @_;
     my $ops = $bb->bytecode;
 
-    print $out pack 'V', $bb->lexical_state;
     print $out pack 'V', $bb->scope;
     print $out pack 'V', scalar( @$ops ) - 1; # skips label
 

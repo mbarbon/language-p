@@ -253,7 +253,7 @@ sub _generate_scope {
     my $scope = $self->_segment->scopes->[$scope_id];
     _generate_scope( $self, $scope->{outer}, $converted )
         if $scope->{outer} != -1;
-    my $state = $self->_segment->lexical_states->[$scope->{lexical_state}];
+    my $state = $self->_segment->lexical_states->[$scope->lexical_state];
 
     my @exit_bytecode;
     $self->_code->scopes->[$scope_id] =
@@ -265,9 +265,9 @@ sub _generate_scope {
           bytecode      => \@exit_bytecode,
           pos_s         => $scope->{pos_s},
           pos_e         => $scope->{pos_e},
-          warnings      => $state->{warnings},
-          hints         => $state->{hints},
-          package       => $state->{package},
+          warnings      => $state->warnings,
+          hints         => $state->hints,
+          package       => $state->package,
           };
 
     foreach my $chunk ( reverse @{$scope->{bytecode}} ) {
@@ -453,6 +453,7 @@ sub finished {
 
         $serialize->serialize( $tree, $outfile, $data_handle );
         $tree->[0]->weaken; # allow GC to happen
+        $self->_saved_subs( undef );
     }
 
     return $res;
@@ -511,7 +512,7 @@ sub _end {
         # generation and automatically handles the 'return undef on
         # failure' behaviour of eval
         push @$bytecode,
-            o( 'make_list', count => 0, context => CXT_LIST ),
+            o( 'make_list', arg_count => 0, context => CXT_LIST ),
             o( 'return' );
     } else {
         push @$bytecode, o( 'end' );
@@ -628,9 +629,9 @@ sub _lexical_state_set {
 
     push @$bytecode,
          o( 'lexical_state_set',
-            package  => $state->{package},
-            hints    => $state->{hints} & 0xff,
-            warnings => $state->{warnings},
+            package  => $state->package,
+            hints    => $state->hints & 0xff,
+            warnings => $state->warnings,
             );
 }
 
@@ -831,30 +832,30 @@ sub _allocate_lexicals {
     my $needs_pad = 0;
 
     foreach my $lex_info ( values %{$ir_code->lexicals->{map}} ) {
-        unless( $lex_info->{in_pad} ) {
-            $toy_code->lexical_init->[$lex_info->{index}] =
-              $lex_info->{sigil};
+        unless( $lex_info->in_pad ) {
+            $toy_code->lexical_init->[$lex_info->index] =
+              $lex_info->sigil;
             next;
         }
         $needs_pad ||= 1;
-        if( $lex_info->{from_main} ) {
-            my $main_pad = $self->_processing->[-$lex_info->{level} - 1]->lexicals;
-            $main_pad->add_value_index( $self->runtime, $lex_info, $lex_info->{outer_index} );
-            $pad->add_value_index( $self->runtime, $lex_info, $lex_info->{index},
-                                   $main_pad->values->[$lex_info->{outer_index}] );
+        if( $lex_info->from_main ) {
+            my $main_pad = $self->_processing->[-$lex_info->level - 1]->lexicals;
+            $main_pad->add_value_index( $self->runtime, $lex_info, $lex_info->outer_index );
+            $pad->add_value_index( $self->runtime, $lex_info, $lex_info->index,
+                                   $main_pad->values->[$lex_info->outer_index] );
         } else {
-            $pad->add_value_index( $self->runtime, $lex_info, $lex_info->{index} );
+            $pad->add_value_index( $self->runtime, $lex_info, $lex_info->index );
             push @{$toy_code->{closed}},
-                 [$lex_info->{outer_index}, $lex_info->{index}]
-                   if $lex_info->{outer_index} >= 0;
-            if( $lex_info->{declaration} ) {
-                push @{$pad->{clear}{indices}}, $lex_info->{index};
-                if( $lex_info->{sigil} == VALUE_SCALAR ) {
-                    push @{$pad->{clear}{scalar}}, $lex_info->{index};
-                } elsif( $lex_info->{sigil} == VALUE_ARRAY ) {
-                    push @{$pad->{clear}{array}}, $lex_info->{index};
-                } elsif( $lex_info->{sigil} == VALUE_HASH ) {
-                    push @{$pad->{clear}{hash}}, $lex_info->{index};
+                 [$lex_info->outer_index, $lex_info->index]
+                   if $lex_info->outer_index >= 0;
+            if( $lex_info->declaration ) {
+                push @{$pad->{clear}{indices}}, $lex_info->index;
+                if( $lex_info->sigil == VALUE_SCALAR ) {
+                    push @{$pad->{clear}{scalar}}, $lex_info->index;
+                } elsif( $lex_info->sigil == VALUE_ARRAY ) {
+                    push @{$pad->{clear}{array}}, $lex_info->index;
+                } elsif( $lex_info->sigil == VALUE_HASH ) {
+                    push @{$pad->{clear}{hash}}, $lex_info->index;
                 }
             }
         }

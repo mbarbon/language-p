@@ -2292,13 +2292,13 @@ sub _declared_id {
     my( $self, $op ) = @_;
     my $call;
     my $opidt = $op->[O_ID_TYPE];
+    my $cg = is_overridable( $opidt ) && $self->runtime->is_declared( 'CORE::GLOBAL::' . $op->[O_VALUE], VALUE_SUB );
+    my $ov = is_overridable( $opidt ) && $self->runtime->is_declared( _qualify( $self, $op->[O_VALUE], $opidt ), VALUE_SUB );
 
-    if( is_overridable( $opidt ) ) {
-        my $rt = $self->runtime;
-
-        if( $rt->get_symbol( _qualify( $self, $op->[O_VALUE], $opidt ), '&' ) ) {
-            die "Overriding '" . $op->[O_VALUE] . "' not implemented";
-        }
+    if(    is_overridable( $opidt )
+        && ( $op->[O_ID_FLAGS] || !$ov )
+        && !$cg ) {
+        # all other overridable builtins
         if( $opidt == KEY_GLOB ) {
             $call = Language::P::ParseTree::Glob->new
                         ( { pos       => $op->[O_POS],
@@ -2319,8 +2319,13 @@ sub _declared_id {
 
         return ( $call, 1 );
     } else {
-        my $rt = $self->runtime;
-        my $fqname = _qualify( $self, $op->[O_VALUE], $opidt );
+        my $fqname;
+
+        if( $cg && !$ov ) {
+            $fqname = 'CORE::GLOBAL::' . $op->[O_VALUE];
+        } else {
+            $fqname = _qualify( $self, $op->[O_VALUE], $opidt );
+        }
 
         my $symbol = Language::P::ParseTree::Symbol->new
                          ( { name  => $fqname,
@@ -2333,7 +2338,7 @@ sub _declared_id {
                         pos       => $op->[O_POS],
                         } );
 
-        if( my $decl = $rt->get_symbol( $fqname, '&' ) ) {
+        if( my $decl = $self->runtime->get_symbol( $fqname, '&' ) ) {
             # FIXME accessor
             $call->{prototype} = $decl->prototype;
             return ( $call, 1 );
