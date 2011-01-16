@@ -151,14 +151,14 @@ sub find_method {
     }
 
     my $isa_glob = $self->{hash}{ISA};
-    unless( $isa_glob ) {
+    my $isa_array = $isa_glob ? $isa_glob->body->array : undef;
+    if( !$isa_array || $isa_array->get_count( $runtime ) == 0 ) {
         my $universal_stash = $runtime->symbol_table->get_package( $runtime, 'UNIVERSAL' );
 
         return $universal_stash->find_method( $runtime, $name, 0 )
             if $self != $universal_stash;
         return undef;
     }
-    my $isa_array = $isa_glob->body->array;
 
     for( my $i = 0; $i < $isa_array->get_count( $runtime ); ++$i ) {
         my $base = $isa_array->get_item( $runtime, $i )->as_string( $runtime );
