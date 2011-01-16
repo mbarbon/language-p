@@ -52,11 +52,17 @@ namespace org.mbarbon.p.values
                 var referred = obr.Referred;
                 var code = referred as P5Code;
                 var scalar = referred as P5Scalar;
+                var array = referred as P5Array;
+                var hash = referred as P5Hash;
 
                 if (code != null)
                     globBody.Code = code;
                 else if (scalar != null)
                     globBody.Scalar = scalar;
+                else if (array != null)
+                    globBody.Array = array;
+                else if (hash != null)
+                    globBody.Hash = hash;
             }
             else
             {
