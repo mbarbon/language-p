@@ -36,8 +36,11 @@ namespace org.mbarbon.p.runtime
 
             int index = 0;
             foreach (var parm in parms)
+            {
                 if (!Matches(runtime, parm.ParameterType, args[index]))
                     return false;
+                ++index;
+            }
 
             return true;
         }
