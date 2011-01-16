@@ -376,14 +376,15 @@ namespace org.mbarbon.p.values
         public IP5Any CallMethod(Runtime runtime, Opcode.ContextValues context,
                                  string method, P5Array args)
         {
-            var pmethod = FindMethod(runtime, method);
+            P5Exception error;
+            var pmethod = FindMethod(runtime, method, out error);
             var wrapper = NetWrapper(runtime);
 
             if (pmethod == null && wrapper != null)
                 return wrapper.CallMethod(runtime, context, method, args);
 
             if (pmethod == null)
-                throw new System.Exception("Can't find method " + method);
+                throw error;
 
             return pmethod.Call(runtime, context, args);
         }
@@ -427,10 +428,20 @@ namespace org.mbarbon.p.values
 
         public virtual P5Code FindMethod(Runtime runtime, string method)
         {
+            P5Exception error;
+
+            return FindMethod(runtime, method, out error);
+        }
+
+        public virtual P5Code FindMethod(Runtime runtime, string method,
+                                         out P5Exception error)
+        {
             var refbody = body as P5Reference;
             int colon = method.LastIndexOf("::");
             bool is_super = false;
             P5SymbolTable stash;
+
+            error = null;
 
             if (colon != -1)
             {
@@ -451,7 +462,12 @@ namespace org.mbarbon.p.values
             if (stash == null)
                 return null;
 
-            return stash.FindMethod(runtime, method, is_super);
+            var res = stash.FindMethod(runtime, method, is_super);
+
+            if (res == null)
+                error = new P5Exception(runtime, string.Format("Can't locate object method \"{0:S}\" via package \"{1:S}\"", method, stash.GetName(runtime)));
+
+            return res;
         }
 
         internal void BlessReference(Runtime runtime, P5SymbolTable stash)

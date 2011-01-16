@@ -167,7 +167,7 @@ namespace org.mbarbon.p.runtime
                 return new P5Scalar(res_wrapper);
             }
 
-            throw new System.Exception("Method not found");
+            throw new P5Exception(runtime, string.Format("Can't locate object method \"{0:S}\" via type \"{1:S}\"", method, type.FullName));
         }
 
         public static IP5Any GetProperty(Runtime runtime, P5Scalar wrapper,
