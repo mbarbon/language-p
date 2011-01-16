@@ -257,6 +257,7 @@ t/run/015_pos.t
 t/run/015_quoting.t
 t/run/015_range.t
 t/run/015_scalar.t
+t/run/017_aliasing.t
 t/run/017_ref.t
 t/run/017_reference_id.t
 t/run/017_references.t
