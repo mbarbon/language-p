@@ -197,7 +197,11 @@ namespace org.mbarbon.p.values
                 return code;
 
             IP5Any isa;
-            if (!hash.TryGetValue("ISA", out isa))
+            P5Array isa_array = null;
+            if (hash.TryGetValue("ISA", out isa))
+                isa_array = (isa as P5Typeglob).Array;
+
+            if (isa_array == null || isa_array.GetCount(runtime) == 0)
             {
                 var universal = runtime.SymbolTable.Universal;
 
@@ -206,10 +210,6 @@ namespace org.mbarbon.p.values
                     return null;
                 return universal.FindMethod(runtime, method, false);
             }
-
-            P5Array isa_array = (isa as P5Typeglob).Array;
-            if (isa_array == null)
-                return null;
 
             foreach (var c in isa_array)
             {
@@ -232,10 +232,13 @@ namespace org.mbarbon.p.values
                 return true;
 
             IP5Any isa;
-            if (!hash.TryGetValue("ISA", out isa))
+            P5Array isa_array = null;
+            if (hash.TryGetValue("ISA", out isa))
+                isa_array = (isa as P5Typeglob).Array;
+
+            if (isa_array == null || isa_array.GetCount(runtime) == 0)
                 return parent == runtime.SymbolTable.Universal;
 
-            var isa_array = (isa as P5Typeglob).Array;
             foreach (var e in isa_array)
             {
                 var base_name = e.AsString(runtime);
