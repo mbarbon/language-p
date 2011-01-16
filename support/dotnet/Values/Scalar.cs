@@ -429,11 +429,18 @@ namespace org.mbarbon.p.values
         {
             var refbody = body as P5Reference;
             int colon = method.LastIndexOf("::");
+            bool is_super = false;
             P5SymbolTable stash;
 
             if (colon != -1)
             {
-                stash = runtime.SymbolTable.GetPackage(runtime, method, true, false);
+                is_super = method.StartsWith("SUPER::");
+
+                if (is_super)
+                    stash = runtime.SymbolTable.GetPackage(runtime, runtime.Package);
+                else
+                    stash = runtime.SymbolTable.GetPackage(runtime, method, true, false);
+
                 method = method.Substring(colon + 2);
             }
             else if (refbody != null)
@@ -444,7 +451,7 @@ namespace org.mbarbon.p.values
             if (stash == null)
                 return null;
 
-            return stash.FindMethod(runtime, method);
+            return stash.FindMethod(runtime, method, is_super);
         }
 
         internal void BlessReference(Runtime runtime, P5SymbolTable stash)

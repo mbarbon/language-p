@@ -190,10 +190,10 @@ namespace org.mbarbon.p.values
             return current;
         }
 
-        public new P5Code FindMethod(Runtime runtime, string method)
+        public P5Code FindMethod(Runtime runtime, string method, bool is_super)
         {
             var code = GetStashCode(runtime, method, false);
-            if (code != null)
+            if (code != null && !is_super)
                 return code;
 
             IP5Any isa;
@@ -204,7 +204,7 @@ namespace org.mbarbon.p.values
                 // avoid infinite recursion when searching in UNIVERSAL
                 if (this == universal)
                     return null;
-                return universal.FindMethod(runtime, method);
+                return universal.FindMethod(runtime, method, false);
             }
 
             P5Array isa_array = (isa as P5Typeglob).Array;
@@ -218,7 +218,7 @@ namespace org.mbarbon.p.values
                 if (super == null)
                     continue;
 
-                code = super.FindMethod(runtime, method);
+                code = super.FindMethod(runtime, method, false);
                 if (code != null)
                     return code;
             }
