@@ -60,7 +60,18 @@ namespace org.mbarbon.p.values
 
         public bool AsBoolean(Runtime runtime)
         {
-            return true;
+            var type = obj.GetType();
+
+            if (type == typeof(double))
+                return (double)obj != 0.0;
+            if (type == typeof(int))
+                return (int)obj != 0;
+            if (type == typeof(string))
+                return (string)obj != "";
+            if (type == typeof(bool))
+                return (bool)obj;
+
+            return obj != null;
         }
 
         public int Length(Runtime runtime)

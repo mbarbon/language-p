@@ -10,6 +10,11 @@ namespace org.mbarbon.p.runtime
         {
             var scalar = value as P5Scalar;
 
+            if (   type == typeof(bool)
+                || type == typeof(string)
+                || type == typeof(char))
+                return true;
+
             if (type == typeof(int))
             {
                 if (scalar != null && !scalar.IsInteger(runtime))
@@ -49,6 +54,12 @@ namespace org.mbarbon.p.runtime
         {
             if (type == typeof(int))
                 return arg.AsInteger(runtime);
+            if (type == typeof(char))
+                return arg.AsString(runtime)[0];
+            if (type == typeof(bool))
+                return arg.AsBoolean(runtime);
+            if (type == typeof(string))
+                return arg.AsString(runtime);
 
             var scalar = arg as P5Scalar;
 
