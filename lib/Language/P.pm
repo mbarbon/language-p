@@ -78,13 +78,8 @@ sub new_from_argv {
 sub initialize {
     my( $self, $args ) = @_;
 
-    my $parser = Language::P::Parser->new( { generator => $args->{generator},
-                                             runtime   => $args->{runtime},
-                                             } );
-
     $self->{runtime} = $args->{runtime};
     $self->{generator} = $args->{generator};
-    $self->runtime->parser( $parser );
 }
 
 sub process_command_line {

@@ -10,6 +10,11 @@ use Language::P;
 
 my $runtime = Language::P::Toy::Runtime->new;
 my $generator = Language::P::Toy::Generator->new( { runtime => $runtime } );
+my $parser = Language::P::Parser->new( { generator => $generator,
+                                         runtime   => $runtime,
+                                         } );
+$runtime->parser( $parser);
+
 my $p = Language::P->new_from_argv( \@ARGV,
                                     { runtime   => $runtime,
                                       generator => $generator,
