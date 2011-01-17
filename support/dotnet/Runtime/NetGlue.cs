@@ -23,6 +23,12 @@ namespace org.mbarbon.p.runtime
                 return true;
             }
 
+            if (typeof(IP5Any).IsAssignableFrom(type))
+            {
+                if (type == value.GetType())
+                    return true;
+            }
+
             var net_wrapper = scalar.NetWrapper(runtime);
             if (net_wrapper == null)
                 return false;
@@ -62,6 +68,9 @@ namespace org.mbarbon.p.runtime
                 return arg.AsString(runtime);
 
             var scalar = arg as P5Scalar;
+
+            if (typeof(IP5Any).IsAssignableFrom(type))
+                return arg;
 
             // fallback
             var net_wrapper = scalar.NetWrapper(runtime);
