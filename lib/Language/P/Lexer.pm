@@ -1165,6 +1165,8 @@ sub lex {
             while( $$_ =~ s/^::(\w*)|^\'(\w+)// ) {
                 $ids .= '::' . ( defined $1 ? $1 : $2 );
             }
+            # refresh $no_space after lexing the id
+            $no_space = $$_ !~ /^[ \t\r\n]/;
 
             $op = undef;
             $type = T_FQ_ID;
