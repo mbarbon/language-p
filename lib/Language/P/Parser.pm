@@ -2571,6 +2571,7 @@ sub _parse_arglist {
             $term = _parse_indirobj( $self, 0 );
         } elsif(    ( $proto_char & PROTO_FILEHANDLE )
                  && $la->[O_TYPE] == T_ID
+                 && !( $la->[O_ID_FLAGS] & T_ID_SUB )
                  && (    $la->[O_ID_TYPE] == T_ID
                       || $la->[O_ID_TYPE] == T_FQ_ID ) ) {
             # check if it is a declared id

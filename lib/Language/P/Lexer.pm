@@ -26,7 +26,7 @@ use Language::P::Keywords;
 our @TOKENS;
 BEGIN {
   our @TOKENS =
-    qw(T_ID T_FQ_ID T_SUB_ID T_EOF T_PACKAGE T_FILETEST
+    qw(T_ID T_FQ_ID T_EOF T_PACKAGE T_FILETEST
        T_PATTERN T_STRING T_NUMBER T_QUOTE T_OR T_XOR T_SHIFT_LEFT T_SHIFT_RIGHT
        T_SHIFT_LEFT_EQUAL T_SHIFT_RIGHT_EQUAL
        T_SEMICOLON T_COLON T_COMMA T_OPPAR T_CLPAR T_OPSQ T_CLSQ
@@ -74,6 +74,7 @@ use constant
     LEX_NO_PACKAGE    => 1,
 
     T_ID_CORE         => 1,
+    T_ID_SUB          => 2,
 
     map { $TOKENS[$_] => $_ + 1 } 0 .. $#TOKENS,
     };
@@ -85,7 +86,7 @@ our @EXPORT_OK =
        X_OPERATOR_INDIROBJ
        O_POS O_TYPE O_VALUE O_ID_TYPE O_FT_OP O_QS_INTERPOLATE O_QS_BUFFER
        O_RX_REST O_RX_SECOND_HALF O_RX_FLAGS O_RX_INTERPOLATED O_NUM_FLAGS
-       O_ID_FLAGS LEX_NO_PACKAGE T_ID_CORE
+       O_ID_FLAGS LEX_NO_PACKAGE T_ID_CORE T_ID_SUB
        ), @TOKENS );
 our %EXPORT_TAGS =
   ( all  => \@EXPORT_OK,
@@ -1183,8 +1184,10 @@ sub lex {
             }
         }
         # force subroutine call
-        if( $no_space && $type == T_ID && $$_ =~ /^\(/ ) {
-            $type = T_SUB_ID;
+        my $parens = $no_space && $$_ =~ /^\(/;
+        my $flag = 0;
+        if( ( $type == T_ID || $type == T_FQ_ID ) && $parens ) {
+            $flag = T_ID_SUB;
         }
 
         # look ahead for fat comma, save the original value for __LINE__
@@ -1195,7 +1198,7 @@ sub lex {
             # fully qualified name (foo::moo) is quoted only if not declared
             if(    $type == T_FQ_ID
                 && $self->runtime->get_symbol( $ids, '*' ) ) {
-                return [ $pos, T_ID, $ids, $type, 0 ];
+                return [ $pos, T_ID, $ids, $type, $flag ];
             } else {
                 return [ $pos, T_STRING, $ids ];
             }
@@ -1222,7 +1225,7 @@ sub lex {
 
             return [ $pos, $op, $ids ];
         }
-        return [ $pos, T_ID, $ids, $type, 0 ];
+        return [ $pos, T_ID, $ids, $type, $flag ];
     };
     $$_ =~ s/^(["'`])//x and do {
         _lexer_error( $self, $self->{pos},
