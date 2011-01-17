@@ -23,7 +23,8 @@ namespace org.mbarbon.p.values
             if (rx != null)
                 return rx.GetOriginal();
 
-            return string.Format("{0:s}({1:x8})", ReferenceTypeString(runtime),
+            return string.Format("{0:s}(0x{1:x8})",
+                                 referred.ReferenceTypeString(runtime),
                                  AsInteger(runtime));
         }
 
