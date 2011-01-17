@@ -288,6 +288,7 @@ t/run/045_splice.t
 t/run/045_sprintf.t
 t/run/045_substr.t
 t/run/045_uclc.t
+t/run/069_ref_string.t
 t/run/070_objects.t
 t/run/073_super.t
 t/run/080_recursion.t
