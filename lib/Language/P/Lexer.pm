@@ -73,6 +73,8 @@ use constant
 
     LEX_NO_PACKAGE    => 1,
 
+    T_ID_CORE         => 1,
+
     map { $TOKENS[$_] => $_ + 1 } 0 .. $#TOKENS,
     };
 
@@ -83,7 +85,7 @@ our @EXPORT_OK =
        X_OPERATOR_INDIROBJ
        O_POS O_TYPE O_VALUE O_ID_TYPE O_FT_OP O_QS_INTERPOLATE O_QS_BUFFER
        O_RX_REST O_RX_SECOND_HALF O_RX_FLAGS O_RX_INTERPOLATED O_NUM_FLAGS
-       O_ID_FLAGS LEX_NO_PACKAGE
+       O_ID_FLAGS LEX_NO_PACKAGE T_ID_CORE
        ), @TOKENS );
 our %EXPORT_TAGS =
   ( all  => \@EXPORT_OK,
@@ -1174,7 +1176,7 @@ sub lex {
                 $kw = $Language::P::Keywords::KEYWORDS{$k};
 
                 _lexer_error( $self, $self->{pos}, "CORE::%s is not a keyword", $k ) unless $kw || $op;
-                return [ $self->{pos}, T_ID, $ids, $kw, 1 ] if $kw;
+                return [ $self->{pos}, T_ID, $ids, $kw, T_ID_CORE ] if $kw;
                 $type = -1;
             }
         }

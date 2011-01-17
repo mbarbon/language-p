@@ -2296,7 +2296,7 @@ sub _declared_id {
     my $ov = is_overridable( $opidt ) && $self->runtime->is_declared( _qualify( $self, $op->[O_VALUE], $opidt ), VALUE_SUB );
 
     if(    is_overridable( $opidt )
-        && ( $op->[O_ID_FLAGS] || !$ov )
+        && ( ( $op->[O_ID_FLAGS] & T_ID_CORE ) || !$ov )
         && !$cg ) {
         # all other overridable builtins
         if( $opidt == KEY_GLOB ) {
