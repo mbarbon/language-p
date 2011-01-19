@@ -763,7 +763,7 @@ namespace org.mbarbon.p.runtime
         }
 
         public static P5Scalar CallOverload(Runtime runtime, OverloadOperation op,
-                                            P5Scalar left, P5Scalar right)
+                                            P5Scalar left, IP5Any right)
         {
             Overloads oleft, oright;
 
@@ -777,24 +777,24 @@ namespace org.mbarbon.p.runtime
                                           overload == oright);
         }
 
-        public static P5Scalar AddScalarsAssign(Runtime runtime, P5Scalar left, P5Scalar right)
+        public static P5Scalar AddScalarsAssign(Runtime runtime, P5Scalar left, IP5Any right)
         {
             return AddScalars(runtime, left, left, right);
         }
 
-        public static P5Scalar AddScalars(Runtime runtime, P5Scalar res, P5Scalar left, P5Scalar right)
+        public static P5Scalar AddScalars(Runtime runtime, P5Scalar res, IP5Any left, IP5Any right)
         {
             // TODO handle integer addition and integer -> float promotion
             res.SetFloat(runtime, left.AsFloat(runtime) + right.AsFloat(runtime));
             return res;
         }
 
-        public static P5Scalar SubtractScalarsAssign(Runtime runtime, P5Scalar left, P5Scalar right)
+        public static P5Scalar SubtractScalarsAssign(Runtime runtime, P5Scalar left, IP5Any right)
         {
             return SubtractScalars(runtime, left, left, right);
         }
 
-        public static P5Scalar SubtractScalars(Runtime runtime, P5Scalar res, P5Scalar left, P5Scalar right)
+        public static P5Scalar SubtractScalars(Runtime runtime, P5Scalar res, IP5Any left, IP5Any right)
         {
             // TODO handle integer addition and integer -> float promotion
             res.SetFloat(runtime, left.AsFloat(runtime) - right.AsFloat(runtime));
@@ -802,12 +802,12 @@ namespace org.mbarbon.p.runtime
             return res;
         }
 
-        public static P5Scalar MultiplyScalarsAssign(Runtime runtime, P5Scalar left, P5Scalar right)
+        public static P5Scalar MultiplyScalarsAssign(Runtime runtime, P5Scalar left, IP5Any right)
         {
             return MultiplyScalars(runtime, left, left, right);
         }
 
-        public static P5Scalar MultiplyScalars(Runtime runtime, P5Scalar res, P5Scalar left, P5Scalar right)
+        public static P5Scalar MultiplyScalars(Runtime runtime, P5Scalar res, IP5Any left, IP5Any right)
         {
             // TODO handle integer addition and integer -> float promotion
             res.SetFloat(runtime, left.AsFloat(runtime) * right.AsFloat(runtime));
@@ -815,12 +815,12 @@ namespace org.mbarbon.p.runtime
             return res;
         }
 
-        public static P5Scalar DivideScalarsAssign(Runtime runtime, P5Scalar left, P5Scalar right)
+        public static P5Scalar DivideScalarsAssign(Runtime runtime, P5Scalar left, IP5Any right)
         {
             return DivideScalars(runtime, left, left, right);
         }
 
-        public static P5Scalar DivideScalars(Runtime runtime, P5Scalar res, P5Scalar left, P5Scalar right)
+        public static P5Scalar DivideScalars(Runtime runtime, P5Scalar res, IP5Any left, IP5Any right)
         {
             // TODO handle integer addition and integer -> float promotion
             res.SetFloat(runtime, left.AsFloat(runtime) / right.AsFloat(runtime));
@@ -828,24 +828,24 @@ namespace org.mbarbon.p.runtime
             return res;
         }
 
-        public static P5Scalar LeftShiftScalarsAssign(Runtime runtime, P5Scalar left, P5Scalar right)
+        public static P5Scalar LeftShiftScalarsAssign(Runtime runtime, P5Scalar left, IP5Any right)
         {
             return LeftShiftScalars(runtime, left, left, right);
         }
 
-        public static P5Scalar LeftShiftScalars(Runtime runtime, P5Scalar res, P5Scalar left, P5Scalar right)
+        public static P5Scalar LeftShiftScalars(Runtime runtime, P5Scalar res, IP5Any left, IP5Any right)
         {
             res.SetInteger(runtime, left.AsInteger(runtime) << right.AsInteger(runtime));
 
             return res;
         }
 
-        public static P5Scalar RightShiftScalarsAssign(Runtime runtime, P5Scalar left, P5Scalar right)
+        public static P5Scalar RightShiftScalarsAssign(Runtime runtime, P5Scalar left, IP5Any right)
         {
             return RightShiftScalars(runtime, left, left, right);
         }
 
-        public static P5Scalar RightShiftScalars(Runtime runtime, P5Scalar res, P5Scalar left, P5Scalar right)
+        public static P5Scalar RightShiftScalars(Runtime runtime, P5Scalar res, IP5Any left, IP5Any right)
         {
             res.SetInteger(runtime, left.AsInteger(runtime) >> right.AsInteger(runtime));
 

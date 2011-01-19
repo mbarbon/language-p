@@ -97,7 +97,7 @@ namespace org.mbarbon.p.runtime
         }
 
         public P5Scalar CallOperation(Runtime runtime, OverloadOperation op,
-                                      P5Scalar left, P5Scalar right,
+                                      P5Scalar left, IP5Any right,
                                       bool inverted)
         {
             var args = new P5Array(runtime,
