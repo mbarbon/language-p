@@ -4,7 +4,6 @@ use strict;
 use warnings;
 use parent qw(Language::P::Object);
 
-use Scalar::Util; # weaken
 use Language::P::Intermediate::LexicalState;
 
 __PACKAGE__->mk_ro_accessors( qw(type name basic_blocks outer inner
@@ -57,8 +56,6 @@ sub is_main  { $_[0]->{type} == CODE_MAIN || $_[0]->{type} == CODE_EVAL }
 sub is_sub   { $_[0]->{type} == CODE_SUB }
 sub is_regex { $_[0]->{type} == CODE_REGEX }
 sub is_eval  { $_[0]->{type} == CODE_EVAL }
-
-sub weaken   { $_->weaken, Scalar::Util::weaken( $_ ) foreach @{$_[0]->inner} }
 
 sub find_alive_blocks {
     my( $self ) = @_;

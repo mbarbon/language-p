@@ -432,7 +432,6 @@ sub finished {
     my $head = pop @{$self->{_processing}};
 
     my $res = _generate_segment( $self, $main_int->[0], $head );
-    $main_int->[0]->weaken; # allow GC to happen
     $self->_cleanup;
 
     if( $self->_options->{'dump-bytecode'} && !$main_int->[0]->is_eval ) {
@@ -452,7 +451,6 @@ sub finished {
         File::Path::mkpath( File::Basename::dirname( $outfile ) );
 
         $serialize->serialize( $tree, $outfile, $data_handle );
-        $tree->[0]->weaken; # allow GC to happen
         $self->_saved_subs( undef );
     }
 

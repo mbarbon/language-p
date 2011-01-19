@@ -338,7 +338,7 @@ sub _patch_gotos {
 
     foreach my $goto ( @{$state->{sub}{jumps}} ) {
         if( $labels->{$goto->left} ) {
-            $goto->set_attribute( 'target', $labels->{$goto->left}, 1 );
+            $goto->set_attribute( 'target', $labels->{$goto->left} );
         }
     }
 }

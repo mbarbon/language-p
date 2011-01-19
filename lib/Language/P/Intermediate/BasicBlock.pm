@@ -9,7 +9,6 @@ __PACKAGE__->mk_ro_accessors( qw(bytecode start_label scope
 
 sub set_scope { $_[0]->{scope} = $_[1] }
 
-use Scalar::Util; # weaken
 use Language::P::Assembly qw(label);
 use Language::P::Opcodes qw(OP_JUMP);
 
@@ -41,7 +40,6 @@ sub _change_successor {
     foreach my $succ ( @{$self->successors} ) {
         if( $succ == $from ) {
             $succ = $to;
-            Scalar::Util::weaken( $succ );
             last;
         }
     }
@@ -102,7 +100,6 @@ sub add_predecessor {
     return if grep $block == $_, @{$self->predecessors};
 
     push @{$self->predecessors}, $block;
-    Scalar::Util::weaken( $self->predecessors->[-1] );
 }
 
 sub add_successor {
@@ -110,7 +107,6 @@ sub add_successor {
     return if grep $block == $_, @{$self->successors};
 
     push @{$self->successors}, $block;
-    Scalar::Util::weaken( $self->successors->[-1] );
 }
 
 1;
