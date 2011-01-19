@@ -56,8 +56,14 @@ namespace org.mbarbon.p.runtime
 
         public static BindingRestrictions RestrictToAny(DynamicMetaObject a, DynamicMetaObject b)
         {
-            return BindingRestrictions.GetTypeRestriction(a.Expression, typeof(IP5Any))
-                .Merge(BindingRestrictions.GetTypeRestriction(b.Expression, typeof(IP5Any)));
+            // no way to restrict to an interface: restrict to the type
+            return RestrictToRuntimeType(a, b);
+        }
+
+        public static BindingRestrictions RestrictToAny(DynamicMetaObject a)
+        {
+            // no way to restrict to an interface: restrict to the type
+            return RestrictToRuntimeType(a);
         }
     }
 }
