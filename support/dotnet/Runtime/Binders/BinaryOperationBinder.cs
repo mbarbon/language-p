@@ -142,7 +142,19 @@ namespace org.mbarbon.p.runtime
                     Expression.Constant(Runtime),
                     Expression.Constant(op),
                     Utils.CastScalar(target),
-                    Utils.CastScalar(arg)),
+                    Utils.CastAny(arg)),
+                fallback);
+        }
+
+        private Expression CallOverloadInverted(DynamicMetaObject target, DynamicMetaObject arg, OverloadOperation op, Expression fallback)
+        {
+            return Expression.Coalesce(
+                Expression.Call(
+                    typeof(Builtins).GetMethod("CallOverloadInverted"),
+                    Expression.Constant(Runtime),
+                    Expression.Constant(op),
+                    Utils.CastScalar(target),
+                    Utils.CastAny(arg)),
                 fallback);
         }
 
@@ -212,7 +224,7 @@ namespace org.mbarbon.p.runtime
                 throw new System.Exception("Unhandled overloaded operation");
             }
 
-            if (Utils.IsScalar(target) || Utils.IsScalar(arg))
+            if (Utils.IsScalar(target) && Utils.IsAny(arg))
             {
                 Expression op;
 
@@ -221,7 +233,7 @@ namespace org.mbarbon.p.runtime
                         typeof(Builtins).GetMethod(op_method),
                         Expression.Constant(Runtime),
                         Utils.CastScalar(target),
-                        Utils.CastScalar(arg));
+                        Utils.CastAny(arg));
                 else
                     op = Expression.Call(
                         typeof(Builtins).GetMethod(op_method),
@@ -230,7 +242,7 @@ namespace org.mbarbon.p.runtime
                             typeof(P5Scalar).GetConstructor(new[] { typeof(IP5ScalarBody) }),
                             Expression.Constant(null, typeof(IP5ScalarBody))),
                         Utils.CastScalar(target),
-                        Utils.CastScalar(arg));
+                        Utils.CastAny(arg));
 
                 return new DynamicMetaObject(
                     CallOverload(
@@ -238,10 +250,29 @@ namespace org.mbarbon.p.runtime
                         arg,
                         ovl_op,
                         op),
-                    BindingRestrictions.GetExpressionRestriction(
-                        Expression.Or(
-                            Expression.TypeEqual(target.Expression, typeof(P5Scalar)),
-                            Expression.TypeEqual(arg.Expression, typeof(P5Scalar)))));
+                    Utils.RestrictToScalar(target).Merge(Utils.RestrictToAny(arg)));
+            }
+            else if (Utils.IsScalar(arg) && Utils.IsAny(target))
+            {
+                if (is_assign)
+                    return null;
+
+                Expression op = Expression.Call(
+                    typeof(Builtins).GetMethod(op_method),
+                    Expression.Constant(Runtime),
+                    Expression.New(
+                        typeof(P5Scalar).GetConstructor(new[] { typeof(IP5ScalarBody) }),
+                        Expression.Constant(null, typeof(IP5ScalarBody))),
+                    Utils.CastAny(target),
+                    Utils.CastScalar(arg));
+
+                return new DynamicMetaObject(
+                    CallOverloadInverted(
+                        target,
+                        arg,
+                        ovl_op,
+                        op),
+                    Utils.RestrictToAny(target).Merge(Utils.RestrictToScalar(arg)));
             }
             else if (Utils.IsAny(target) && Utils.IsAny(arg))
             {
@@ -249,23 +280,17 @@ namespace org.mbarbon.p.runtime
                     return null;
 
                 // TODO must handle double promotion (esp. for division)
-                Expression op =
-                    Expression.MakeBinary(
-                        Operation,
-                        Expression.Call(
-                            Utils.CastAny(target),
-                            typeof(IP5Any).GetMethod("AsInteger"),
-                            Expression.Constant(Runtime)),
-                        Expression.Call(
-                            Utils.CastAny(target),
-                            typeof(IP5Any).GetMethod("AsInteger"),
-                            Expression.Constant(Runtime)));
+                Expression op = Expression.Call(
+                    typeof(Builtins).GetMethod(op_method),
+                    Expression.Constant(Runtime),
+                    Expression.New(
+                        typeof(P5Scalar).GetConstructor(new[] { typeof(IP5ScalarBody) }),
+                        Expression.Constant(null, typeof(IP5ScalarBody))),
+                    Utils.CastAny(target),
+                    Utils.CastAny(arg));
 
                 return new DynamicMetaObject(
-                    Expression.New(
-                        typeof(P5Scalar).GetConstructor(new[] { typeof(Runtime), typeof(int) }),
-                        Expression.Constant(Runtime),
-                        op),
+                    op,
                     Utils.RestrictToAny(target, arg));
             }
 
