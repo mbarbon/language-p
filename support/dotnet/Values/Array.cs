@@ -147,7 +147,7 @@ namespace org.mbarbon.p.values
         public virtual P5Scalar PushList(Runtime runtime, P5Array items)
         {
             foreach (var item in items)
-                array.Add(item.AsScalar(runtime));
+                array.Add(item.Clone(runtime, 0));
 
             return new P5Scalar(runtime, array.Count);
         }
@@ -166,10 +166,13 @@ namespace org.mbarbon.p.values
 
         public virtual P5Scalar UnshiftList(Runtime runtime, P5Array items)
         {
-            var newArray = new List<IP5Any>(items);
-            newArray.AddRange(array);
+            var new_array = new List<IP5Any>(items.GetCount(runtime) + array.Count);
 
-            array = newArray;
+            foreach (var item in items)
+                new_array.Add(item.Clone(runtime, 0));
+            new_array.AddRange(array);
+
+            array = new_array;
 
             return new P5Scalar(runtime, array.Count);
         }
