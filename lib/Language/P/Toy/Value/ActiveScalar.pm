@@ -18,6 +18,12 @@ sub _set {
     Carp::confess( "Implement active _set" );
 }
 
+sub clone {
+    my( $self, $runtime, $level ) = @_;
+
+    return $self->_get( $runtime )->clone( $runtime, $level );
+}
+
 sub as_scalar {
     my( $self, $runtime ) = @_;
 
