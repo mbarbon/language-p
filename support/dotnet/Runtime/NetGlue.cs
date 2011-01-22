@@ -218,5 +218,21 @@ namespace org.mbarbon.p.runtime
 
             prop.SetValue(obj, Convert(runtime, value, prop.PropertyType), null);
         }
+
+        public static object UnwrapValue(IP5Any value, System.Type type)
+        {
+            var scalar = value as P5Scalar;
+            if (scalar == null)
+                return null;
+
+            var wrapper = scalar.Body as P5NetWrapper;
+            if (wrapper == null)
+                return null;
+
+            if (type.IsAssignableFrom(wrapper.Object.GetType()))
+                return wrapper.Object;
+
+            return null;
+        }
     }
 }
