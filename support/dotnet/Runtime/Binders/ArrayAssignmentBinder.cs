@@ -78,7 +78,7 @@ namespace org.mbarbon.p.runtime
                 lvalue,
                 target.RuntimeType.GetMethod("AssignArray"),
                 Expression.Constant(Runtime),
-                Utils.CastAny(arg));
+                Utils.CastValue(arg));
             var result = Expression.Condition(
                 Expression.Equal(
                     ContextExpression(),

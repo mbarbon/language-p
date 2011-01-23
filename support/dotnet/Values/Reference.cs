@@ -84,7 +84,7 @@ namespace org.mbarbon.p.values
                 throw new System.Exception("Not a SCALAR reference");
         }
 
-        public virtual P5Array DereferenceArray(Runtime runtime)
+        public virtual IP5Array DereferenceArray(Runtime runtime)
         {
             P5Array val = referred as P5Array;
 

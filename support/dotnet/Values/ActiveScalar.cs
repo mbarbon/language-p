@@ -74,7 +74,7 @@ namespace org.mbarbon.p.values
             return Get(runtime).DereferenceScalar(runtime);
         }
 
-        public virtual P5Array DereferenceArray(Runtime runtime)
+        public virtual IP5Array DereferenceArray(Runtime runtime)
         {
             return Get(runtime).DereferenceArray(runtime);
         }

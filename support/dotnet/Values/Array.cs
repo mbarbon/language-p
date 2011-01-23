@@ -5,7 +5,29 @@ using System.Collections;
 
 namespace org.mbarbon.p.values
 {
-    public class P5Array : IP5Any, IP5Referrable, IEnumerable<IP5Any>, IP5Enumerable
+    public interface IP5Array : IP5Any, IEnumerable<IP5Any>, IP5Enumerable
+    {
+        int GetCount(Runtime runtime);
+
+        IP5Any GetItemOrUndef(Runtime runtime, IP5Any index, bool create);
+        IP5Any GetItem(Runtime runtime, int i);
+        int GetItemIndex(Runtime runtime, int i, bool create);
+        P5List Slice(Runtime runtime, P5Array keys, bool create);
+
+        void PushFlatten(Runtime runtime, IP5Value value);
+        P5Scalar PushList(Runtime runtime, P5Array items);
+        P5Scalar UnshiftList(Runtime runtime, P5Array items);
+        IP5Any PopElement(Runtime runtime);
+        IP5Any ShiftElement(Runtime runtime);
+
+        P5List Splice(Runtime runtime, int start, int length);
+        P5List Replace(Runtime runtime, int start, int length, IP5Any[] values);
+
+        IP5Any LocalizeElement(Runtime runtime, int index);
+        void RestoreElement(Runtime runtime, int index, IP5Any value);
+    }
+
+    public class P5Array : IP5Array
     {
         public P5Array(Runtime runtime)
         {
@@ -217,7 +239,7 @@ namespace org.mbarbon.p.values
             return -1;
         }
 
-        public virtual int AssignArray(Runtime runtime, IP5Any other)
+        public virtual int AssignArray(Runtime runtime, IP5Value other)
         {
             // FIXME multiple dispatch
             P5Scalar s = other as P5Scalar;
@@ -304,7 +326,7 @@ namespace org.mbarbon.p.values
             throw new System.InvalidOperationException("Not a reference");
         }
 
-        public virtual P5Array DereferenceArray(Runtime runtime)
+        public virtual IP5Array DereferenceArray(Runtime runtime)
         {
             throw new System.InvalidOperationException("Not a reference");
         }
@@ -329,7 +351,7 @@ namespace org.mbarbon.p.values
             throw new System.InvalidOperationException("Not a reference");
         }
 
-        public virtual P5Array VivifyArray(Runtime runtime)
+        public virtual IP5Array VivifyArray(Runtime runtime)
         {
             throw new System.InvalidOperationException("Not a reference");
         }

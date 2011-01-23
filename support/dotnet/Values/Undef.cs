@@ -34,7 +34,7 @@ namespace org.mbarbon.p.values
             return Builtins.SymbolicReferenceScalar(runtime, this, true);
         }
 
-        public virtual P5Array DereferenceArray(Runtime runtime)
+        public virtual IP5Array DereferenceArray(Runtime runtime)
         {
             return Builtins.SymbolicReferenceArray(runtime, this, true);
         }

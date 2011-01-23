@@ -289,7 +289,7 @@ namespace org.mbarbon.p.values
             return body.DereferenceScalar(runtime);
         }
 
-        public virtual P5Array DereferenceArray(Runtime runtime)
+        public virtual IP5Array DereferenceArray(Runtime runtime)
         {
             return body.DereferenceArray(runtime);
         }
@@ -353,7 +353,7 @@ namespace org.mbarbon.p.values
             return body.DereferenceScalar(runtime);
         }
 
-        public virtual P5Array VivifyArray(Runtime runtime)
+        public virtual IP5Array VivifyArray(Runtime runtime)
         {
             var undef = body as P5Undef;
 
@@ -516,7 +516,7 @@ namespace org.mbarbon.p.values
         string ReferenceTypeString(Runtime runtime);
 
         P5Scalar DereferenceScalar(Runtime runtime);
-        P5Array DereferenceArray(Runtime runtime);
+        IP5Array DereferenceArray(Runtime runtime);
         P5Hash DereferenceHash(Runtime runtime);
         P5Typeglob DereferenceGlob(Runtime runtime);
         P5Code DereferenceSubroutine(Runtime runtime);

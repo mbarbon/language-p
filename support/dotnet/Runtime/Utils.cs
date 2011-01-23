@@ -22,6 +22,11 @@ namespace org.mbarbon.p.runtime
             return Expression.Convert(o.Expression, typeof(IP5Any));
         }
 
+        public static Expression CastValue(DynamicMetaObject o)
+        {
+            return Expression.Convert(o.Expression, typeof(IP5Value));
+        }
+
         public static Expression CastScalar(DynamicMetaObject o)
         {
             return Expression.Convert(o.Expression, typeof(P5Scalar));

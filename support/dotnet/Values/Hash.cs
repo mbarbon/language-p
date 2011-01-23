@@ -123,7 +123,7 @@ namespace org.mbarbon.p.values
             return -1;
         }
 
-        public virtual int AssignArray(Runtime runtime, IP5Any other)
+        public virtual int AssignArray(Runtime runtime, IP5Value other)
         {
             // FIXME multiple dispatch
             P5Array a = other as P5Array;
@@ -271,7 +271,7 @@ namespace org.mbarbon.p.values
             throw new System.InvalidOperationException("Not a reference");
         }
 
-        public virtual P5Array DereferenceArray(Runtime runtime)
+        public virtual IP5Array DereferenceArray(Runtime runtime)
         {
             throw new System.InvalidOperationException("Not a reference");
         }
@@ -296,7 +296,7 @@ namespace org.mbarbon.p.values
             throw new System.InvalidOperationException("Not a reference");
         }
 
-        public virtual P5Array VivifyArray(Runtime runtime)
+        public virtual IP5Array VivifyArray(Runtime runtime)
         {
             throw new System.InvalidOperationException("Not a reference");
         }

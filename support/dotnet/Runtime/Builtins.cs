@@ -408,7 +408,7 @@ namespace org.mbarbon.p.runtime
             return glob.Hash = new P5Hash(runtime);
         }
 
-        public static IP5Any LocalizeArrayElement(Runtime runtime, P5Array array, IP5Any index, ref SavedValue state)
+        public static IP5Any LocalizeArrayElement(Runtime runtime, IP5Array array, IP5Any index, ref SavedValue state)
         {
             int int_index = array.GetItemIndex(runtime, index.AsInteger(runtime), true);
             var saved = array.LocalizeElement(runtime, int_index);
@@ -425,7 +425,7 @@ namespace org.mbarbon.p.runtime
             if (state.container == null)
                 return;
 
-            (state.container as P5Array).RestoreElement(runtime, state.int_key, state.value);
+            (state.container as IP5Array).RestoreElement(runtime, state.int_key, state.value);
             state.container = null;
             state.str_key = null;
             state.value = null;
@@ -617,7 +617,7 @@ namespace org.mbarbon.p.runtime
             return new P5Scalar(runtime, new string(value));
         }
 
-        public static IP5Any ArraySplice(Runtime runtime, P5Array array,
+        public static IP5Any ArraySplice(Runtime runtime, IP5Array array,
                                          IP5Any offset, IP5Any count)
         {
             int start, length, max = array.GetCount(runtime);
@@ -639,7 +639,7 @@ namespace org.mbarbon.p.runtime
             return array.Splice(runtime, start, length);
         }
 
-        public static IP5Any ArrayReplace(Runtime runtime, P5Array array,
+        public static IP5Any ArrayReplace(Runtime runtime, IP5Array array,
                                           IP5Any offset, IP5Any count,
                                           params IP5Any[] values)
         {

@@ -128,7 +128,7 @@ namespace org.mbarbon.p.values
             throw new System.NotImplementedException();
         }
 
-        public P5Array DereferenceArray(Runtime runtime)
+        public IP5Array DereferenceArray(Runtime runtime)
         {
             throw new System.NotImplementedException();
         }

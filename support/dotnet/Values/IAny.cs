@@ -36,14 +36,14 @@ namespace org.mbarbon.p.values
         IP5Any Localize(Runtime runtime);
 
         P5Scalar DereferenceScalar(Runtime runtime);
-        P5Array DereferenceArray(Runtime runtime);
+        IP5Array DereferenceArray(Runtime runtime);
         P5Hash DereferenceHash(Runtime runtime);
         P5Typeglob DereferenceGlob(Runtime runtime);
         P5Code DereferenceSubroutine(Runtime runtime);
         P5Handle DereferenceHandle(Runtime runtime);
 
         P5Scalar VivifyScalar(Runtime runtime);
-        P5Array VivifyArray(Runtime runtime);
+        IP5Array VivifyArray(Runtime runtime);
         P5Hash VivifyHash(Runtime runtime);
 
         P5Code FindMethod(Runtime runtime, string method);

@@ -343,7 +343,7 @@ namespace org.mbarbon.p.values
         {
             var pack = args.GetItem(runtime, 0) as P5Scalar;
             var opref = args.GetItem(runtime, 1) as P5Scalar;
-            var ops = opref.DereferenceArray(runtime);
+            var ops = opref.DereferenceArray(runtime) as P5Array;
 
             Builtins.AddOverload(runtime, pack.AsString(runtime), ops);
 

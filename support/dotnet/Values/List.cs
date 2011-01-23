@@ -47,7 +47,7 @@ namespace org.mbarbon.p.values
             return AsScalar(runtime).IsDefined(runtime);
         }
 
-        public override int AssignArray(Runtime runtime, IP5Any other)
+        public override int AssignArray(Runtime runtime, IP5Value other)
         {
             // FIXME multiple dispatch
             P5Scalar s = other as P5Scalar;

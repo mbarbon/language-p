@@ -551,7 +551,7 @@ namespace org.mbarbon.p.runtime
         private Type TypeForSlot(Opcode.Sigil slot)
         {
             return slot == Opcode.Sigil.SCALAR   ? typeof(P5Scalar) :
-                   slot == Opcode.Sigil.INDEXABLE? typeof(P5Array) :
+                   slot == Opcode.Sigil.INDEXABLE? typeof(IP5Array) :
                    slot == Opcode.Sigil.HASH     ? typeof(P5Hash) :
                    slot == Opcode.Sigil.ITERATOR ? typeof(IEnumerator<IP5Any>) :
                    slot == Opcode.Sigil.GLOB     ? typeof(P5Typeglob) :
@@ -1416,7 +1416,7 @@ namespace org.mbarbon.p.runtime
             {
                 var le = Generate(sub, op.Childs[0]);
 
-                if (   typeof(P5Array).IsAssignableFrom(le.Type)
+                if (   typeof(IP5Array).IsAssignableFrom(le.Type)
                     || typeof(P5Hash).IsAssignableFrom(le.Type))
                     return BinaryOperator<object>(
                         sub, op,
@@ -1605,8 +1605,8 @@ namespace org.mbarbon.p.runtime
                     Expression.Call(
                         Expression.Convert(
                             Generate(sub, op.Childs[0]),
-                            typeof(P5Array)),
-                        typeof(P5Array).GetMethod("GetCount"),
+                            typeof(IP5Array)),
+                        typeof(IP5Array).GetMethod("GetCount"),
                         Runtime);
                 Expression len_1 = Expression.Subtract(len, Expression.Constant(1));
                 return Expression.New(
@@ -1715,7 +1715,7 @@ namespace org.mbarbon.p.runtime
 
                 return Expression.Call(
                     Generate(sub, op.Childs[1]),
-                    typeof(P5Array).GetMethod("GetItemOrUndef"),
+                    typeof(IP5Array).GetMethod("GetItemOrUndef"),
                     Runtime,
                     Generate(sub, op.Childs[0]),
                     Expression.Constant(ea.Create != 0));
@@ -1759,7 +1759,7 @@ namespace org.mbarbon.p.runtime
             {
                 return Expression.Call(
                     Generate(sub, op.Childs[0]),
-                    typeof(P5Array).GetMethod("PushFlatten"),
+                    typeof(IP5Array).GetMethod("PushFlatten"),
                     Runtime,
                     Generate(sub, op.Childs[1]));
             }
@@ -1767,7 +1767,7 @@ namespace org.mbarbon.p.runtime
             {
                 return Expression.Call(
                     Generate(sub, op.Childs[0]),
-                    typeof(P5Array).GetMethod("PushList"),
+                    typeof(IP5Array).GetMethod("PushList"),
                     Runtime,
                     Generate(sub, op.Childs[1]));
             }
@@ -1775,7 +1775,7 @@ namespace org.mbarbon.p.runtime
             {
                 return Expression.Call(
                     Generate(sub, op.Childs[0]),
-                    typeof(P5Array).GetMethod("UnshiftList"),
+                    typeof(IP5Array).GetMethod("UnshiftList"),
                     Runtime,
                     Generate(sub, op.Childs[1]));
             }
@@ -1783,14 +1783,14 @@ namespace org.mbarbon.p.runtime
             {
                 return Expression.Call(
                     Generate(sub, op.Childs[0]),
-                    typeof(P5Array).GetMethod("PopElement"),
+                    typeof(IP5Array).GetMethod("PopElement"),
                     Runtime);
             }
             case Opcode.OpNumber.OP_ARRAY_SHIFT:
             {
                 return Expression.Call(
                     Generate(sub, op.Childs[0]),
-                    typeof(P5Array).GetMethod("ShiftElement"),
+                    typeof(IP5Array).GetMethod("ShiftElement"),
                     Runtime);
             }
             case Opcode.OpNumber.OP_QUOTEMETA:
@@ -1886,7 +1886,7 @@ namespace org.mbarbon.p.runtime
 
                 return Expression.Call(
                     Generate(sub, op.Childs[1]),
-                    typeof(P5Array).GetMethod("Slice"),
+                    typeof(IP5Array).GetMethod("Slice"),
                     Runtime,
                     Generate(sub, op.Childs[0]),
                     Expression.Constant(ea.Create != 0));

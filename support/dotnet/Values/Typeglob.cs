@@ -153,7 +153,7 @@ namespace org.mbarbon.p.values
             return scalar;
         }
 
-        public virtual P5Array DereferenceArray(Runtime runtime)
+        public virtual IP5Array DereferenceArray(Runtime runtime)
         {
             return array;
         }
