@@ -162,7 +162,11 @@ namespace org.mbarbon.p.values
             for (int i = 1; i < count; ++i)
                 arg[i - 1] = args.GetItem(runtime, i) as P5Scalar;
 
-            return NetGlue.CallMethod(runtime, obj, method, arg);
+            var type = obj as System.Type;
+            if (type != null)
+                return NetGlue.CallStaticMethod(runtime, type, method, arg);
+            else
+                return NetGlue.CallMethod(runtime, obj, method, arg);
         }
 
         public object Object

@@ -32,7 +32,7 @@ namespace org.mbarbon.p.runtime
             var net_wrapper = scalar.NetWrapper(runtime);
             if (net_wrapper == null)
                 return false;
-            if (type != net_wrapper.Object.GetType())
+            if (!type.IsAssignableFrom(net_wrapper.Object.GetType()))
                 return false;
 
             return true;
@@ -185,6 +185,26 @@ namespace org.mbarbon.p.runtime
                 var net_args = ConvertArgs(runtime, meth, args);
 
                 var res = meth.Invoke(obj, net_args);
+                var res_wrapper = new P5NetWrapper(runtime, res);
+
+                return new P5Scalar(res_wrapper);
+            }
+
+            throw new P5Exception(runtime, string.Format("Can't locate object method \"{0:S}\" via type \"{1:S}\"", method, type.FullName));
+        }
+
+        public static IP5Any CallStaticMethod(Runtime runtime, System.Type type,
+                                              string method, P5Scalar[] args)
+        {
+            foreach (var meth in type.GetMethods(BindingFlags.FlattenHierarchy|BindingFlags.Public|BindingFlags.Static))
+            {
+                if (meth.Name != method)
+                    continue;
+                if (!Matches(runtime, meth, args))
+                    continue;
+                var net_args = ConvertArgs(runtime, meth, args);
+
+                var res = meth.Invoke(null, net_args);
                 var res_wrapper = new P5NetWrapper(runtime, res);
 
                 return new P5Scalar(res_wrapper);
