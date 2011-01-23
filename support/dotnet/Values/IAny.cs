@@ -64,4 +64,80 @@ namespace org.mbarbon.p.values
                          ref RxResult oldState);
         string GetOriginal();
     }
+
+    public abstract class AnyBase : IP5Any
+    {
+        // IP5Referrable
+        public abstract void Bless(Runtime runtime, P5SymbolTable stash);
+        public abstract bool IsBlessed(Runtime runtime);
+        public abstract P5SymbolTable Blessed(Runtime runtime);
+        public abstract string ReferenceTypeString(Runtime runtime);
+
+        // IP5Any
+        public abstract P5Scalar AsScalar(Runtime runtime);
+        public abstract string AsString(Runtime runtime);
+        public abstract int AsInteger(Runtime runtime);
+        public abstract double AsFloat(Runtime runtime);
+        public abstract bool AsBoolean(Runtime runtime);
+        public abstract int StringLength(Runtime runtime);
+
+        public abstract int GetPos(Runtime runtime);
+        public abstract int GetPos(Runtime runtime, out bool _pos_set);
+
+        public abstract IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> e);
+        public abstract void Undef(Runtime runtime);
+
+        public abstract IP5Any Clone(Runtime runtime, int depth);
+        public abstract IP5Any Localize(Runtime runtime);
+
+        public P5Scalar DereferenceScalar(Runtime runtime)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
+
+        public IP5Array DereferenceArray(Runtime runtime)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
+
+        public P5Hash DereferenceHash(Runtime runtime)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
+
+        public P5Typeglob DereferenceGlob(Runtime runtime)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
+
+        public P5Code DereferenceSubroutine(Runtime runtime)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
+
+        public P5Handle DereferenceHandle(Runtime runtime)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
+
+        public P5Scalar VivifyScalar(Runtime runtime)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
+
+        public IP5Array VivifyArray(Runtime runtime)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
+
+        public P5Hash VivifyHash(Runtime runtime)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
+
+        public P5Code FindMethod(Runtime runtime, string method)
+        {
+            throw new System.InvalidOperationException("Not a reference");
+        }
+    }
 }
