@@ -245,6 +245,8 @@ namespace org.mbarbon.p.values
             P5Scalar s = other as P5Scalar;
             P5Array a = other as P5Array;
             P5Hash h = other as P5Hash;
+            P5NetArray na = other as P5NetArray;
+
             if (s != null)
             {
                 array = new List<IP5Any>(1);
@@ -263,6 +265,12 @@ namespace org.mbarbon.p.values
                 AssignIterator(runtime, ((P5Array)a.Clone(runtime, 1)).GetEnumerator(runtime));
 
                 return a.GetCount(runtime);
+            }
+            else if (na != null)
+            {
+                AssignIterator(runtime, na.GetEnumerator(runtime));
+
+                return na.GetCount(runtime);
             }
 
             return 0;

@@ -89,6 +89,7 @@
     <Compile Include="Values\Vec.cs" />
     <Compile Include="Values\Substr.cs" />
     <Compile Include="Values\NetWrapper.cs" />
+    <Compile Include="Values\NetArray.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

@@ -95,6 +95,7 @@ support/dotnet/Values/Handle.cs
 support/dotnet/Values/Hash.cs
 support/dotnet/Values/IAny.cs
 support/dotnet/Values/List.cs
+support/dotnet/Values/NetArray.cs
 support/dotnet/Values/NetWrapper.cs
 support/dotnet/Values/Pos.cs
 support/dotnet/Values/Range.cs
@@ -381,6 +382,7 @@ t/run/net/017_reference_id.t
 t/run/net/030_methods.t
 t/run/net/032_static_methods.t
 t/run/net/040_extend.t
+t/run/net/050_array_base.t
 t/run/parser/021_interpolated_regexp.t
 t/run/parser/110_eval.t
 t/run/parser/120_stack_unwind.t
