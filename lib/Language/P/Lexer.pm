@@ -696,7 +696,7 @@ sub lex_quote {
                 }
 
                 if(    $c eq '@' && length( $$buffer )
-                    && $$buffer !~ /^[a-zA-Z0-9_{]/ ) {
+                    && $$buffer !~ /^[a-zA-Z0-9_{\$]/ ) {
                     $v .= $c;
                 } elsif(    $interpolated_pattern
                          && (    !length( $$buffer )
