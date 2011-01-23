@@ -8,7 +8,7 @@ namespace org.mbarbon.p.values
 {
     public class P5NetWrapper : IP5ScalarBody
     {
-        public P5NetWrapper(Runtime runtime, object _obj)
+        public P5NetWrapper(object _obj)
         {
             obj = _obj;
         }

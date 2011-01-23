@@ -91,7 +91,7 @@ namespace org.mbarbon.p.runtime
         public static IP5Any GetClass(Runtime runtime, string name)
         {
             var cls = System.Type.GetType(name);
-            var wrapper = new P5NetWrapper(runtime, cls);
+            var wrapper = new P5NetWrapper(cls);
 
             return new P5Scalar(wrapper);
         }
@@ -118,7 +118,7 @@ namespace org.mbarbon.p.runtime
         public static IP5Any Extend(Runtime runtime, string pack, string name)
         {
             var cls = System.Type.GetType(name);
-            var wrapper = new P5Scalar(new P5NetWrapper(runtime, cls));
+            var wrapper = new P5Scalar(new P5NetWrapper(cls));
             var stash = runtime.SymbolTable.GetPackage(runtime, pack);
             var pad = new P5ScratchPad();
 
@@ -154,7 +154,7 @@ namespace org.mbarbon.p.runtime
                 var net_args = ConvertArgs(runtime, ctor, args);
 
                 var res = ctor.Invoke(net_args);
-                var res_wrapper = new P5NetWrapper(runtime, res);
+                var res_wrapper = new P5NetWrapper(res);
 
                 return new P5Scalar(res_wrapper);
             }
@@ -185,7 +185,7 @@ namespace org.mbarbon.p.runtime
                 var net_args = ConvertArgs(runtime, meth, args);
 
                 var res = meth.Invoke(obj, net_args);
-                var res_wrapper = new P5NetWrapper(runtime, res);
+                var res_wrapper = new P5NetWrapper(res);
 
                 return new P5Scalar(res_wrapper);
             }
@@ -205,7 +205,7 @@ namespace org.mbarbon.p.runtime
                 var net_args = ConvertArgs(runtime, meth, args);
 
                 var res = meth.Invoke(null, net_args);
-                var res_wrapper = new P5NetWrapper(runtime, res);
+                var res_wrapper = new P5NetWrapper(res);
 
                 return new P5Scalar(res_wrapper);
             }
@@ -221,7 +221,7 @@ namespace org.mbarbon.p.runtime
             var prop = obj.GetType().GetProperty(name);
             var val = prop.GetValue(obj, null);
 
-            var res_wrapper = new P5NetWrapper(runtime, val);
+            var res_wrapper = new P5NetWrapper(val);
 
             return new P5Scalar(res_wrapper);
         }
