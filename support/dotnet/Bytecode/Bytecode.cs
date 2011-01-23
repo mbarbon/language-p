@@ -254,6 +254,7 @@ namespace org.mbarbon.p.runtime
             HANDLE    = 7,
             ITERATOR  = 9,
             STASH     = 10,
+            INDEXABLE = 11,
         }
 
         public OpNumber Number;

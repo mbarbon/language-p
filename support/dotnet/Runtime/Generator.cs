@@ -551,12 +551,13 @@ namespace org.mbarbon.p.runtime
         private Type TypeForSlot(Opcode.Sigil slot)
         {
             return slot == Opcode.Sigil.SCALAR   ? typeof(P5Scalar) :
-                   slot == Opcode.Sigil.ARRAY    ? typeof(P5Array) :
+                   slot == Opcode.Sigil.INDEXABLE? typeof(P5Array) :
                    slot == Opcode.Sigil.HASH     ? typeof(P5Hash) :
                    slot == Opcode.Sigil.ITERATOR ? typeof(IEnumerator<IP5Any>) :
                    slot == Opcode.Sigil.GLOB     ? typeof(P5Typeglob) :
                    slot == Opcode.Sigil.SUB      ? typeof(P5Code) :
                    slot == Opcode.Sigil.HANDLE   ? typeof(P5Handle) :
+                   slot == Opcode.Sigil.ARRAY    ? typeof(P5Array) :
                                                    typeof(void);
         }
 
