@@ -95,9 +95,12 @@ sub _slot_type {
         return $slot;
     }
     if(    $opn == OP_DEREFERENCE_ARRAY
-        || $opn == OP_MAKE_ARRAY
-        || $opn == OP_MAKE_LIST
         || $opn == OP_VIVIFY_ARRAY ) {
+        # for now, make no difference between lists and arrays
+        return VALUE_INDEXABLE;
+    }
+    if(    $opn == OP_MAKE_ARRAY
+        || $opn == OP_MAKE_LIST ) {
         # for now, make no difference between lists and arrays
         return VALUE_ARRAY;
     }
@@ -137,11 +140,14 @@ sub _slot_type {
 sub _unify_slot_types {
     my( $a, $b ) = @_;
 
+    return $a if $a == $b;
+
     ( $a, $b ) = ( $b, $a ) if $b == VALUE_SCALAR;
 
     if( $a == VALUE_SCALAR ) {
         if(    $b == VALUE_SCALAR
             || $b == VALUE_ARRAY
+            || $b == VALUE_INDEXABLE
             || $b == VALUE_HASH ) {
             return VALUE_SCALAR;
         }
@@ -149,11 +155,13 @@ sub _unify_slot_types {
         die "Unable to unify";
     }
 
-    if( $a != $b ) {
-        die "Unable to unify";
+    if(    ( $a == VALUE_ARRAY || $a == VALUE_INDEXABLE )
+        && ( $b == VALUE_ARRAY || $b == VALUE_INDEXABLE ) ) {
+        return VALUE_ARRAY;
     }
 
-    return $a;
+    # $a != $b and no unification is possible
+    die "Unable to unify";
 }
 
 sub _add_bytecode {
