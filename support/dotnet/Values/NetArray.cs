@@ -7,17 +7,17 @@ namespace org.mbarbon.p.values
 {
     public class P5NetArray : AnyBase, IP5Array
     {
-        public P5NetArray(System.Array _array)
+        public P5NetArray(System.Collections.IList _array)
         {
             array = _array;
         }
 
         // IP5Any
-        public override P5Scalar AsScalar(Runtime runtime) { return new P5Scalar(runtime, array.Length); }
+        public override P5Scalar AsScalar(Runtime runtime) { return new P5Scalar(runtime, array.Count); }
         public override string AsString(Runtime runtime) { return AsScalar(runtime).AsString(runtime); }
-        public override int AsInteger(Runtime runtime) { return array.Length; }
-        public override double AsFloat(Runtime runtime) { return array.Length; }
-        public override bool AsBoolean(Runtime runtime) { return array.Length != 0; }
+        public override int AsInteger(Runtime runtime) { return array.Count; }
+        public override double AsFloat(Runtime runtime) { return array.Count; }
+        public override bool AsBoolean(Runtime runtime) { return array.Count != 0; }
 
         public override int StringLength(Runtime runtime)
         {
@@ -34,12 +34,12 @@ namespace org.mbarbon.p.values
 
         public override IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> e)
         {
-            for (int i = 0; i < array.Length; ++i)
+            for (int i = 0; i < array.Count; ++i)
             {
                 if (e.MoveNext())
-                    array.SetValue(NetGlue.UnwrapValue(e.Current, typeof(object)), i);
+                    array[i] = NetGlue.UnwrapValue(e.Current, typeof(object));
                 else
-                    array.SetValue(null, i);
+                    array[i] = null;
             }
 
             return this;
@@ -61,7 +61,7 @@ namespace org.mbarbon.p.values
         }
 
         // IP5Array
-        public int GetCount(Runtime runtime) { return array.Length; }
+        public int GetCount(Runtime runtime) { return array.Count; }
 
         public IP5Any GetItemOrUndef(Runtime runtime, IP5Any index, bool create)
         {
@@ -70,12 +70,12 @@ namespace org.mbarbon.p.values
             if (create)
                 return new P5NetArrayItem(array, idx);
             else
-                return new P5Scalar(new P5NetWrapper(array.GetValue(idx)));
+                return new P5Scalar(new P5NetWrapper(array[idx]));
         }
 
         public IP5Any GetItem(Runtime runtime, int index)
         {
-            return new P5Scalar(new P5NetWrapper(array.GetValue(index)));
+            return new P5Scalar(new P5NetWrapper(array[index]));
         }
 
         public int GetItemIndex(Runtime runtime, int i, bool create)
@@ -172,12 +172,12 @@ namespace org.mbarbon.p.values
             return "ARRAY";
         }
 
-        private System.Array array;
+        private System.Collections.IList array;
     }
 
     public class P5NetArrayItem : P5ActiveScalar
     {
-        public P5NetArrayItem(System.Array _array, int _index)
+        public P5NetArrayItem(System.Collections.IList _array, int _index)
         {
             body = new P5NetArrayItemBody(_array, _index);
         }
@@ -185,7 +185,7 @@ namespace org.mbarbon.p.values
 
     public class P5NetArrayItemBody : P5ActiveScalarBody
     {
-        public P5NetArrayItemBody(System.Array _array, int _index)
+        public P5NetArrayItemBody(System.Collections.IList _array, int _index)
         {
             array = _array;
             index = _index;
@@ -193,15 +193,15 @@ namespace org.mbarbon.p.values
 
         public override void Set(Runtime runtime, IP5Any other)
         {
-            array.SetValue(NetGlue.UnwrapValue(other, typeof(object)), index);
+            array[index] = NetGlue.UnwrapValue(other, typeof(object));
         }
 
         public override P5Scalar Get(Runtime runtime)
         {
-            return new P5Scalar(new P5NetWrapper(array.GetValue(index)));
+            return new P5Scalar(new P5NetWrapper(array[index]));
         }
 
-        private System.Array array;
+        private System.Collections.IList array;
         private int index;
     }
 }

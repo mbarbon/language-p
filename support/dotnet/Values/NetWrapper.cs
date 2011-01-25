@@ -130,8 +130,9 @@ namespace org.mbarbon.p.values
 
         public IP5Array DereferenceArray(Runtime runtime)
         {
-            if (obj.GetType().IsArray)
-                return new P5NetArray(obj as System.Array);
+            var list = obj as System.Collections.IList;
+            if (list != null)
+                return new P5NetArray(list);
 
             throw new System.NotImplementedException();
         }
