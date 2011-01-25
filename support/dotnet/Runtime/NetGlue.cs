@@ -23,6 +23,10 @@ namespace org.mbarbon.p.runtime
                 return true;
             }
 
+            // treat undef as null
+            if (scalar != null && !scalar.IsDefined(runtime))
+                return true;
+
             if (typeof(IP5Any).IsAssignableFrom(type))
             {
                 if (type == value.GetType())
@@ -68,6 +72,10 @@ namespace org.mbarbon.p.runtime
                 return arg.AsString(runtime);
 
             var scalar = arg as P5Scalar;
+
+            // treat undef as null
+            if (scalar != null && !scalar.IsDefined(runtime))
+                return null;
 
             if (typeof(IP5Any).IsAssignableFrom(type))
                 return arg;
@@ -154,6 +162,9 @@ namespace org.mbarbon.p.runtime
                 var net_args = ConvertArgs(runtime, ctor, args);
 
                 var res = ctor.Invoke(net_args);
+                if (res == null)
+                    return new P5Scalar(runtime);
+
                 var res_wrapper = new P5NetWrapper(res);
 
                 return new P5Scalar(res_wrapper);
@@ -185,6 +196,9 @@ namespace org.mbarbon.p.runtime
                 var net_args = ConvertArgs(runtime, meth, args);
 
                 var res = meth.Invoke(obj, net_args);
+                if (res == null)
+                    return new P5Scalar(runtime);
+
                 var res_wrapper = new P5NetWrapper(res);
 
                 return new P5Scalar(res_wrapper);
@@ -205,6 +219,9 @@ namespace org.mbarbon.p.runtime
                 var net_args = ConvertArgs(runtime, meth, args);
 
                 var res = meth.Invoke(null, net_args);
+                if (res == null)
+                    return new P5Scalar(runtime);
+
                 var res_wrapper = new P5NetWrapper(res);
 
                 return new P5Scalar(res_wrapper);
@@ -219,9 +236,12 @@ namespace org.mbarbon.p.runtime
             var net_wrapper = wrapper.NetWrapper(runtime);
             var obj = net_wrapper.Object;
             var prop = obj.GetType().GetProperty(name);
-            var val = prop.GetValue(obj, null);
 
-            var res_wrapper = new P5NetWrapper(val);
+            var res = prop.GetValue(obj, null);
+            if (res == null)
+                return new P5Scalar(runtime);
+
+            var res_wrapper = new P5NetWrapper(res);
 
             return new P5Scalar(res_wrapper);
         }
