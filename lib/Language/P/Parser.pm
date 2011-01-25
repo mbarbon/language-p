@@ -2178,6 +2178,8 @@ sub _add_implicit_return {
     } elsif( $line->isa( 'Language::P::ParseTree::ConditionalBlock' ) ) {
         $line->{block} = _add_implicit_return( $line->block )
     } else {
+        require Carp;
+
         Carp::confess( "Unhandled statement type: ", ref( $line ) );
     }
 
@@ -2417,8 +2419,11 @@ sub _parse_listop_like {
     } elsif( $proto->[1] == 1 ) {
         ( $args, undef ) = _parse_arglist( $self, PREC_NAMED_UNOP, 1, $proto->[2] );
     } elsif( $proto->[1] != 0 ) {
-        Carp::confess( "Undeclared identifier '" . $op->[O_VALUE] . "'" )
-            unless $declared;
+        unless( $declared ) {
+            require Carp;
+
+            Carp::confess( "Undeclared identifier '" . $op->[O_VALUE] . "'" );
+        }
         ( $args, $fh ) = _parse_arglist( $self, PREC_COMMA, 0, $proto->[2] );
     }
 

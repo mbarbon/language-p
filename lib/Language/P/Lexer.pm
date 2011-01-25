@@ -1104,7 +1104,11 @@ sub _prepare_sublex_heredoc {
 
     $lex->{_line_length} = $str =~ tr/\n/\n/ + 2;
 
-    Carp::confess( "EOF while looking for terminator '$end'" ) unless $finished;
+    unless( $finished ) {
+        require Carp;
+
+        Carp::confess( "EOF while looking for terminator '$end'" );
+    }
 
     return [ $pos, T_QUOTE, $quote eq "`" ? OP_QL_QX : 0, $quote ne "'", \$str ];
 }

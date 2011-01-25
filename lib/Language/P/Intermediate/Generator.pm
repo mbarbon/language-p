@@ -93,8 +93,11 @@ sub push_block {
     my $outer = $self->_current_block;
     my $bytecode = [];
 
-    Carp::confess( "Instructions at scope start" )
-      if @{$self->_current_basic_block->bytecode} != 1;
+    if( @{$self->_current_basic_block->bytecode} != 1 ) {
+        require Carp;
+
+        Carp::confess( "Instructions at scope start" );
+    }
     $self->_current_basic_block->set_scope( $id );
 
     push @{$self->_code_segments->[0]->scopes},

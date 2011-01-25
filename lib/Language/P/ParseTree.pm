@@ -525,7 +525,11 @@ sub lvalue_context {
     my $l = $self->iftrue->lvalue_context;
     my $r = $self->iffalse->lvalue_context;
 
-    Carp::confess( "Assigning to both scalar and array" ) unless $r == $l;
+    unless( $r == $l ) {
+        require Carp;
+
+        Carp::confess( "Assigning to both scalar and array" );
+    }
 
     return $r;
 }
