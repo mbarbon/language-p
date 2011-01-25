@@ -318,6 +318,9 @@ namespace org.mbarbon.p.values
             var call_method = internals_net.GetStashGlob(runtime, "call_method", true);
             call_method.Code = new P5NativeCode("Internals::Net::call_mehtod", new P5Code.Sub(WrapCallMethod));
 
+            var call_static = internals_net.GetStashGlob(runtime, "call_static", true);
+            call_static.Code = new P5NativeCode("Internals::Net::call_static", new P5Code.Sub(WrapCallStatic));
+
             var get_property = internals_net.GetStashGlob(runtime, "get_property", true);
             get_property.Code = new P5NativeCode("Internals::Net::get_property", new P5Code.Sub(WrapGetProperty));
 
@@ -383,6 +386,20 @@ namespace org.mbarbon.p.values
                 arg[i - 2] = args.GetItem(runtime, i) as P5Scalar;
 
             return Glue.CallMethod(runtime, obj, name, arg);
+        }
+
+        private static IP5Any WrapCallStatic(Runtime runtime, Opcode.ContextValues context,
+                                             P5ScratchPad pad, P5Array args)
+        {
+            var type = Glue.UnwrapValue(args.GetItem(runtime, 0), typeof(System.Type)) as System.Type;
+            var name = args.GetItem(runtime, 1).AsString(runtime);
+            int count = args.GetCount(runtime);
+            var arg = new P5Scalar[count - 2];
+
+            for (int i = 2; i < count; ++i)
+                arg[i - 2] = args.GetItem(runtime, i) as P5Scalar;
+
+            return Glue.CallStaticMethod(runtime, type, name, arg);
         }
 
         private static IP5Any WrapGetProperty(Runtime runtime, Opcode.ContextValues context,
