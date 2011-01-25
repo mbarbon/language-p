@@ -378,6 +378,7 @@ t/run/net/001_base.t
 t/run/net/002_bool.t
 t/run/net/002_null.t
 t/run/net/002_string.t
+t/run/net/006_generics.t
 t/run/net/015_hash_key.t
 t/run/net/017_reference_id.t
 t/run/net/030_methods.t
