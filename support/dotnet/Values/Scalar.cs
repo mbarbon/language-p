@@ -19,6 +19,11 @@ namespace org.mbarbon.p.values
         {
         }
 
+        public static P5Scalar Undef()
+        {
+            return new P5Scalar(new P5Undef(null));
+        }
+
         public P5Scalar(Runtime runtime, string val) : this(new P5StringNumber(runtime, val)) {}
         public P5Scalar(Runtime runtime, int val) : this(new P5StringNumber(runtime, val)) {}
         public P5Scalar(Runtime runtime, double val) : this(new P5StringNumber(runtime, val)) {}
