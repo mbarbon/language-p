@@ -588,6 +588,22 @@ namespace org.mbarbon.p.runtime
             }
         }
 
+        public static int GetItemIndex(Runtime runtime, int count,
+                                       int i, bool create)
+        {
+            if (i < 0 && -i > count)
+                return -1;
+            if (i < 0)
+                return count + i;
+
+            if (i < count)
+                return i;
+            if (create)
+                return i;
+            else
+                return -2;
+        }
+
         public static IP5Any Reverse(Runtime runtime, Opcode.ContextValues context,
                                      P5Array args)
         {

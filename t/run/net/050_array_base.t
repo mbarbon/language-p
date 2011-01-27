@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..6\n";
+print "1..7\n";
 
 if( defined &Internals::Net::get_class ) {
     $date_class = Internals::Net::get_class( 'System.DateTime' );
@@ -21,6 +21,7 @@ if( defined &Internals::Net::get_class ) {
     print $array->[0] eq $copy[0] ? "ok\n" : "not ok\n";
     print $array->[1] ne $copy[0] ? "ok\n" : "not ok\n";
     print $array->[2] eq $copy[2] ? "ok\n" : "not ok\n";
+    print $array->[-1] eq $array->[2] ? "ok\n" : "not ok\n";
 } else {
-    print "ok - skipped\n" for 1..6;
+    print "ok - skipped\n" for 1..7;
 }

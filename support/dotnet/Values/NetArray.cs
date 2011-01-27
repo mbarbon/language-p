@@ -1,5 +1,6 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
 using NetGlue = org.mbarbon.p.runtime.NetGlue;
+using Builtins = org.mbarbon.p.runtime.Builtins;
 using System.Collections.Generic;
 using System.Collections;
 
@@ -66,7 +67,7 @@ namespace org.mbarbon.p.values
 
         public IP5Any GetItemOrUndef(Runtime runtime, IP5Any index, bool create)
         {
-            int idx = index.AsInteger(runtime);
+            int idx = GetItemIndex(runtime, index.AsInteger(runtime), false);
 
             if (create)
                 return new P5NetArrayItem(array, type, idx);
@@ -81,7 +82,12 @@ namespace org.mbarbon.p.values
 
         public int GetItemIndex(Runtime runtime, int i, bool create)
         {
-            return i;
+            int idx = Builtins.GetItemIndex(runtime, array.Count, i, create);
+
+            if (idx > array.Count)
+                throw new System.NotImplementedException();
+
+            return idx;
         }
 
         public P5List Slice(Runtime runtime, P5Array keys, bool create)

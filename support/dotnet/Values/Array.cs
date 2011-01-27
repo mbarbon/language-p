@@ -1,5 +1,6 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
 using Opcode = org.mbarbon.p.runtime.Opcode;
+using Builtins = org.mbarbon.p.runtime.Builtins;
 using System.Collections.Generic;
 using System.Collections;
 
@@ -89,21 +90,13 @@ namespace org.mbarbon.p.values
 
         public int GetItemIndex(Runtime runtime, int i, bool create)
         {
-            if (i < 0 && -i > array.Count)
-                return -1;
-            if (i < 0)
-                return array.Count + i;
+            int idx = Builtins.GetItemIndex(runtime, array.Count, i, create);
 
-            if (i < array.Count)
-                return i;
-            if (create)
-            {
-                while (array.Count <= i)
+            if (create && idx >= array.Count)
+                while (array.Count <= idx)
                     array.Add(new P5Scalar(runtime));
-                return i;
-            }
-            else
-                return -2;
+
+            return idx;
         }
 
         public IP5Any GetItemOrUndef(Runtime runtime, IP5Any index, bool create)
