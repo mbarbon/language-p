@@ -7,9 +7,10 @@ namespace org.mbarbon.p.values
 {
     public class P5NetArray : AnyBase, IP5Array
     {
-        public P5NetArray(System.Collections.IList _array)
+        public P5NetArray(System.Collections.IList _array, System.Type _type)
         {
             array = _array;
+            type = _type;
         }
 
         // IP5Any
@@ -68,7 +69,7 @@ namespace org.mbarbon.p.values
             int idx = index.AsInteger(runtime);
 
             if (create)
-                return new P5NetArrayItem(array, idx);
+                return new P5NetArrayItem(array, type, idx);
             else
                 return NetGlue.WrapValue(array[idx]);
         }
@@ -143,7 +144,7 @@ namespace org.mbarbon.p.values
         public IEnumerator<IP5Any> GetEnumerator()
         {
             foreach (var i in array)
-                yield return new P5Scalar(new P5NetWrapper(i));
+                yield return NetGlue.WrapValue(i);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -173,27 +174,31 @@ namespace org.mbarbon.p.values
         }
 
         private System.Collections.IList array;
+        private System.Type type;
     }
 
     public class P5NetArrayItem : P5ActiveScalar
     {
-        public P5NetArrayItem(System.Collections.IList _array, int _index)
+        public P5NetArrayItem(System.Collections.IList _array,
+                              System.Type _type, int _index)
         {
-            body = new P5NetArrayItemBody(_array, _index);
+            body = new P5NetArrayItemBody(_array, _type, _index);
         }
     }
 
     public class P5NetArrayItemBody : P5ActiveScalarBody
     {
-        public P5NetArrayItemBody(System.Collections.IList _array, int _index)
+        public P5NetArrayItemBody(System.Collections.IList _array,
+                                  System.Type _type, int _index)
         {
             array = _array;
+            type = _type;
             index = _index;
         }
 
         public override void Set(Runtime runtime, IP5Any other)
         {
-            array[index] = NetGlue.UnwrapValue(other, typeof(object));
+            array[index] = NetGlue.UnwrapValue(other, type);
         }
 
         public override P5Scalar Get(Runtime runtime)
@@ -202,6 +207,7 @@ namespace org.mbarbon.p.values
         }
 
         private System.Collections.IList array;
+        private System.Type type;
         private int index;
     }
 }

@@ -386,6 +386,7 @@ t/run/net/032_static_methods.t
 t/run/net/040_extend.t
 t/run/net/050_array_base.t
 t/run/net/050_list_base.t
+t/run/net/052_iteration.t
 t/run/parser/021_interpolated_regexp.t
 t/run/parser/110_eval.t
 t/run/parser/120_stack_unwind.t
