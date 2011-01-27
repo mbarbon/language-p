@@ -162,12 +162,8 @@ namespace org.mbarbon.p.runtime
                 var net_args = ConvertArgs(runtime, ctor, args);
 
                 var res = ctor.Invoke(net_args);
-                if (res == null)
-                    return new P5Scalar(runtime);
 
-                var res_wrapper = new P5NetWrapper(res);
-
-                return new P5Scalar(res_wrapper);
+                return WrapValue(res);
             }
 
             throw new System.Exception("Constructor not found");
@@ -196,12 +192,8 @@ namespace org.mbarbon.p.runtime
                 var net_args = ConvertArgs(runtime, meth, args);
 
                 var res = meth.Invoke(obj, net_args);
-                if (res == null)
-                    return new P5Scalar(runtime);
 
-                var res_wrapper = new P5NetWrapper(res);
-
-                return new P5Scalar(res_wrapper);
+                return WrapValue(res);
             }
 
             throw new P5Exception(runtime, string.Format("Can't locate object method \"{0:S}\" via type \"{1:S}\"", method, type.FullName));
@@ -219,12 +211,8 @@ namespace org.mbarbon.p.runtime
                 var net_args = ConvertArgs(runtime, meth, args);
 
                 var res = meth.Invoke(null, net_args);
-                if (res == null)
-                    return new P5Scalar(runtime);
 
-                var res_wrapper = new P5NetWrapper(res);
-
-                return new P5Scalar(res_wrapper);
+                return WrapValue(res);
             }
 
             throw new P5Exception(runtime, string.Format("Can't locate object method \"{0:S}\" via type \"{1:S}\"", method, type.FullName));
@@ -238,12 +226,8 @@ namespace org.mbarbon.p.runtime
             var prop = obj.GetType().GetProperty(name);
 
             var res = prop.GetValue(obj, null);
-            if (res == null)
-                return new P5Scalar(runtime);
 
-            var res_wrapper = new P5NetWrapper(res);
-
-            return new P5Scalar(res_wrapper);
+            return WrapValue(res);
         }
 
         public static void SetProperty(Runtime runtime, P5Scalar wrapper,
@@ -273,6 +257,18 @@ namespace org.mbarbon.p.runtime
                 return wrapper.Object;
 
             return null;
+        }
+
+        public static P5Scalar WrapValue(object value)
+        {
+            if (value == null)
+                return P5Scalar.Undef();
+
+            P5Scalar scalar = value as P5Scalar;
+            if (scalar != null)
+                return scalar;
+
+            return new P5Scalar(new P5NetWrapper(value));
         }
     }
 }

@@ -70,12 +70,12 @@ namespace org.mbarbon.p.values
             if (create)
                 return new P5NetArrayItem(array, idx);
             else
-                return new P5Scalar(new P5NetWrapper(array[idx]));
+                return NetGlue.WrapValue(array[idx]);
         }
 
         public IP5Any GetItem(Runtime runtime, int index)
         {
-            return new P5Scalar(new P5NetWrapper(array[index]));
+            return NetGlue.WrapValue(array[index]);
         }
 
         public int GetItemIndex(Runtime runtime, int i, bool create)
@@ -198,7 +198,7 @@ namespace org.mbarbon.p.values
 
         public override P5Scalar Get(Runtime runtime)
         {
-            return new P5Scalar(new P5NetWrapper(array[index]));
+            return NetGlue.WrapValue(array[index]);
         }
 
         private System.Collections.IList array;
