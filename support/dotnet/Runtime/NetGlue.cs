@@ -245,13 +245,21 @@ namespace org.mbarbon.p.runtime
 
         public static object UnwrapValue(IP5Any value, System.Type type)
         {
+            if (value == null)
+                return null;
+
             var scalar = value as P5Scalar;
             if (scalar == null)
                 return null;
 
             var wrapper = scalar.Body as P5NetWrapper;
             if (wrapper == null)
+            {
+                if (type.IsAssignableFrom(value.GetType()))
+                    return value;
+
                 return null;
+            }
 
             if (type.IsAssignableFrom(wrapper.Object.GetType()))
                 return wrapper.Object;
