@@ -69,7 +69,7 @@ sub _new_block {
 
     return Language::P::Intermediate::BasicBlock->new_from_label
                ( 'L' . ++$self->{_label_count},
-                 $block ? $block->id : 0 );
+                 ( $block ? $block->id : 0 ), 1 );
 }
 
 sub _start_bb {

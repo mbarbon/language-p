@@ -18,7 +18,6 @@ sub new {
     $self->{predecessors} ||= [];
     $self->{successors} ||= [];
     $self->{bytecode} ||= [];
-    $self->{dead} = 1 unless defined $self->{dead};
 
     return $self;
 }
