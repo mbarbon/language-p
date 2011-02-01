@@ -74,7 +74,7 @@ sub _new_block {
 
 sub _start_bb {
     my( $self ) = @_;
-    return if @{$self->_current_basic_block->bytecode} == 1;
+    return if @{$self->_current_basic_block->bytecode} == 0;
     my $block = _new_block( $self );
 
     _add_jump $self,
@@ -93,7 +93,7 @@ sub push_block {
     my $outer = $self->_current_block;
     my $bytecode = [];
 
-    if( @{$self->_current_basic_block->bytecode} != 1 ) {
+    if( @{$self->_current_basic_block->bytecode} != 0 ) {
         require Carp;
 
         Carp::confess( "Instructions at scope start" );
@@ -435,7 +435,7 @@ sub _generate_bytecode {
 
     $self->pop_block;
 
-    if( @{$self->_current_basic_block->bytecode} > 1 ) {
+    if( @{$self->_current_basic_block->bytecode} != 0 ) {
         my $end = _new_block( $self );
         _add_jump $self, opcode_nm( OP_JUMP, to => $end ), $end;
         _add_blocks $self, $end;
@@ -581,7 +581,7 @@ sub _lexical_state {
     # avoid generating a new basic block if the current basic block only
     # contains a label
     my $bb = $self->_current_basic_block;
-    if( @{$bb->bytecode} == 1 ) {
+    if( @{$bb->bytecode} == 0 ) {
         # TODO emit _save at block start
         _add_bytecode $self,
             opcode_nm( OP_LEXICAL_STATE_SET,  index => $state_id );

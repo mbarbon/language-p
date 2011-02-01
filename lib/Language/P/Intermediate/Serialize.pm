@@ -144,7 +144,7 @@ sub _write_bb {
     my $ops = $bb->bytecode;
 
     print $out pack 'V', $bb->scope;
-    print $out pack 'V', scalar( @$ops ) - 1; # skips label
+    print $out pack 'V', scalar( @$ops );
 
     _write_op( $self, $out, $_ ) foreach @$ops;
 }

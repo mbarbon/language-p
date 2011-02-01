@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Exporter 'import';
 
-our @EXPORT_OK = qw(label literal opcode opcode_n opcode_m opcode_nm
+our @EXPORT_OK = qw(literal opcode opcode_n opcode_m opcode_nm
                     opcode_np opcode_npm);
 our %EXPORT_TAGS =
   ( all   => \@EXPORT_OK,
@@ -24,21 +24,6 @@ by backends.
 =cut
 
 sub i;
-
-=head2 label
-
-  my $l = label( 'lbl1' );
-
-A label, rendered as a left-aligned C<lbl1:>.
-
-=cut
-
-sub label {
-    my( $label ) = @_;
-
-    return i { label => $label,
-               };
-}
 
 =head2 literal
 

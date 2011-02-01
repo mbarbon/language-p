@@ -385,8 +385,6 @@ use warnings;
 
 sub _write_op {
     my( $self, $out, $op ) = @_;
-    return if $op->{label}; # skip label
-
     my $opn = $op->{opcode_n};
 
     print $out pack 'v', $opn;

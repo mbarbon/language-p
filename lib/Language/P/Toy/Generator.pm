@@ -216,7 +216,6 @@ sub _convert_bytecode {
     my @bytecode;
 
     foreach my $ins ( @$bytecode ) {
-        next if $ins->{label};
         my $name = $NUMBER_TO_NAME{$ins->{opcode_n}};
 
         die "Invalid $ins->{opcode}/$ins->{opcode_n}" unless $name;

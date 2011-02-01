@@ -261,7 +261,6 @@ sub to_ssa {
 
         # duplicated below
         foreach my $bc ( @{$block->bytecode} ) {
-            next if $bc->{label};
             my $meth = $op_map{$bc->{opcode_n}} || '_generic';
 
             $self->$meth( $bc );
@@ -293,7 +292,6 @@ sub to_ssa {
 
             # duplicated above
             foreach my $bc ( @$seg ) {
-                next if $bc->{label};
                 my $meth = $op_map{$bc->{opcode_n}} || '_generic';
 
                 $self->$meth( $bc );
@@ -346,8 +344,7 @@ sub _ssa_to_tree {
         while( $op_off <= $#{$block->bytecode} ) {
             my $op = $block->bytecode->[$op_off];
             ++$op_off;
-            next if    $op->{label}
-                    || $op->{opcode_n} != OP_SET
+            next if    $op->{opcode_n} != OP_SET
                     || $op->parameters->[0]->{opcode_n} != OP_PHI;
 
             my $parameters = $op->parameters->[0]->parameters;

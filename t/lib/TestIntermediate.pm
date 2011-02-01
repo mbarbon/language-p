@@ -68,7 +68,6 @@ sub blocks_as_string {
                             $block->start_label,
                             $block->scope;
             foreach my $instr ( @{$block->bytecode} ) {
-                next if $instr->{label};
                 $str .= $instr->as_string( $op_map, $op_attr )
             }
         }

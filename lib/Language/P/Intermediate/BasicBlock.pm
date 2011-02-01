@@ -9,7 +9,6 @@ __PACKAGE__->mk_ro_accessors( qw(bytecode start_label scope
 
 sub set_scope { $_[0]->{scope} = $_[1] }
 
-use Language::P::Assembly qw(label);
 use Language::P::Opcodes qw(OP_JUMP);
 
 sub new {
@@ -20,8 +19,6 @@ sub new {
     $self->{successors} ||= [];
     $self->{bytecode} ||= [];
     $self->{dead} = 1 unless defined $self->{dead};
-    push @{$self->bytecode}, label( $self->start_label )
-      unless @{$self->bytecode};
 
     return $self;
 }
@@ -70,9 +67,10 @@ sub _change_successor {
 sub add_jump {
     my( $self, $op, @to ) = @_;
 
-    if(    $op->{opcode_n} == OP_JUMP && @{$self->bytecode} == 1
+    if(    $op->{opcode_n} == OP_JUMP && @{$self->bytecode} == 0
         && @{$self->predecessors} ) {
-        $to[0] = $to[0]->successors->[0] until @{$to[0]->bytecode};
+        $to[0] = $to[0]->successors->[0] while    @{$to[0]->successors}
+                                               && !@{$to[0]->bytecode};
         foreach my $pred ( @{$self->predecessors} ) {
             _change_successor( $pred, $self, $to[0] );
         }
@@ -91,7 +89,7 @@ sub add_jump {
         # FIXME either move empty-block optimization later
         #       or backpatch goto/redo/last/... labels in parse tree!
         _change_successor( $self, $to, $to->successors->[0] )
-            unless @{$to->bytecode};
+            if !@{$to->bytecode} && @{$to->successors};
     }
 }
 

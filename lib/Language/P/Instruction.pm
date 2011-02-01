@@ -54,12 +54,7 @@ sub as_string {
 
     return $self->{literal} . "\n" if defined $self->{literal};
 
-    my $str = defined $self->{label} ? $self->{label} . ':' : ' ';
-
-    return $str . "\n" unless    defined $self->{opcode}
-                              || defined $self->{opcode_n};
-    $str .= ' ';
-
+    my $str = '  ';
     if( defined $self->{opcode} ) {
         $str .= $self->{opcode};
     } elsif( defined $self->{opcode_n} ) {
