@@ -91,7 +91,6 @@ sub push_block {
     my( $self, $flags, $start_pos, $exit_pos, $context ) = @_;
     my $id = @{$self->_code_segments->[0]->scopes};
     my $outer = $self->_current_block;
-    my $bytecode = [];
 
     if( @{$self->_current_basic_block->bytecode} != 0 ) {
         require Carp;
@@ -103,7 +102,6 @@ sub push_block {
     push @{$self->_code_segments->[0]->scopes},
          Language::P::Intermediate::Scope->new
              ( { outer         => $outer ? $outer->id : -1,
-                 bytecode      => $bytecode,
                  id            => $id,
                  flags         => $flags,
                  context       => $context || 0, # for eval BLOCK only

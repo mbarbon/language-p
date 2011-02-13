@@ -275,7 +275,6 @@ sub to_ssa {
          push @{$new_code->scopes},
              Language::P::Intermediate::Scope->new
                  ( { outer         => $scope->outer,
-                     bytecode      => [],
                      id            => $scope->id,
                      flags         => $scope->flags,
                      context       => $scope->context,
