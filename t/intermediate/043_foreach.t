@@ -3,7 +3,7 @@
 use strict;
 use t::lib::TestIntermediate tests => 1;
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 foreach $y ( 1, 2 ) {
   3
 }

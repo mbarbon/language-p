@@ -3,7 +3,7 @@
 use strict;
 use t::lib::TestIntermediate tests => 2;
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 eval "1";
 package x;
 eval "1";
@@ -25,7 +25,7 @@ L3: # scope=0
   end
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 $x = eval { 1 };
 eval {
     package x;

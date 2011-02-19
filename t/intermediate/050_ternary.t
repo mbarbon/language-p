@@ -3,7 +3,7 @@
 use strict;
 use t::lib::TestIntermediate tests => 3;
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 $x = $a > 2 ? $b : $c + 3;
 EOP
 # main
@@ -30,7 +30,7 @@ L5: # scope=0
   end
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 $a ? $b : $c
 EOP
 # main
@@ -50,7 +50,7 @@ L4: # scope=1
   jump to=L2
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 $x = $a > 2 ? $b :
      $c < 3 ? $d : $e;
 EOP

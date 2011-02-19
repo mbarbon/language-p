@@ -3,7 +3,7 @@
 use strict;
 use t::lib::TestIntermediate tests => 3;
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 $x = $a + 2
 EOP
 # main
@@ -21,7 +21,7 @@ L2: # scope=0
   end
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 print !$a
 EOP
 # main
@@ -38,7 +38,7 @@ L2: # scope=0
   end
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 $x = "$a\n";
 EOP
 # main

@@ -11,14 +11,14 @@ use Language::P::Constants qw(:all);
 use Language::P::Toy::Assembly;
 
 use Exporter 'import';
-our @EXPORT_OK = qw(generate_main basic_blocks blocks_as_string
-                    generate_and_diff generate_tree_and_diff
+our @EXPORT_OK = qw(generate_main_linear basic_blocks blocks_as_string
+                    generate_linear_and_diff generate_tree_and_diff
                     generate_ssa_and_diff);
 our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,
     );
 
-sub generate_main {
+sub generate_main_linear {
     my( $code ) = @_;
     my $parsetree = parse_string( $code );
     my $gen = Language::P::Intermediate::Generator->new;
@@ -76,9 +76,9 @@ sub blocks_as_string {
     return $str;
 }
 
-sub generate_and_diff {
+sub generate_linear_and_diff {
     my( $code, $assembly ) = @_;
-    my $blocks = generate_main( $code );
+    my $blocks = generate_main_linear( $code );
     my $asm_string = blocks_as_string( $blocks );
 
     $assembly =~ s{([= ])((?:NUM|CXT|FLAG|CONST|STRING|VALUE|OP|DECLARATION|PROTO|CHANGED|RX_CLASS|RX_GROUP|RX_POSIX|RX_ASSERTION)_[A-Z_\|]+)}

@@ -53,7 +53,7 @@ L4: # scope=0
   end
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 use 5;
 EOP
 # main

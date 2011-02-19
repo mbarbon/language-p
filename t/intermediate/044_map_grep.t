@@ -3,7 +3,7 @@
 use strict;
 use t::lib::TestIntermediate tests => 2;
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 @r = map 1, @y
 EOP
 # main
@@ -49,7 +49,7 @@ L7: # scope=0
   end
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 @r = ( ( map 1, @y ), ( map 2, @z ) )
 EOP
 # main

@@ -3,7 +3,7 @@
 use strict;
 use t::lib::TestIntermediate tests => 4;
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 for( $i = 0; $i < 10; $i = $i + 1 ) {
   print $i;
 }
@@ -43,7 +43,7 @@ L6: # scope=2
   jump to=L2
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 for(;;) {
   print $i;
 }
@@ -61,7 +61,7 @@ L3: # scope=3
   jump to=L3
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 for( $i = 0; ; $i = $i + 1 ) {
   print $i;
 }
@@ -95,7 +95,7 @@ L6: # scope=2
   jump to=L3
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 for( $i = 0; $i < 10; $i = $i + 1 ) {
   print $i;
 }
