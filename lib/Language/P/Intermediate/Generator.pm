@@ -982,7 +982,7 @@ sub _binary_op {
         }
         $self->dispatch( $tree->right );
         if( $tree->op == OP_LOG_AND_ASSIGN || $tree->op == OP_LOG_OR_ASSIGN ) {
-            _add_bytecode $self, opcode_nm( OP_ASSIGN, context => _context( $tree ) );
+            _add_bytecode $self, opcode_nm( OP_SWAP_ASSIGN, context => _context( $tree ) );
             _add_bytecode $self, opcode_n( OP_POP )
                 if _context( $tree ) == CXT_VOID;
         } elsif( _context( $tree ) == CXT_VOID && !$tree->right->always_void ) {
@@ -995,7 +995,6 @@ sub _binary_op {
         $self->dispatch( $tree->left );
 
         _add_bytecode $self,
-                      opcode_n( OP_SWAP ),
                       opcode_npm( $tree->op, $tree->pos,
                                   context => _context( $tree ) );
     } elsif( $tree->op == OP_MATCH || $tree->op == OP_NOT_MATCH ) {
@@ -1435,8 +1434,7 @@ sub _setup_list_iteration {
             opcode_nm( OP_TEMPORARY,
                        index => $glob,
                        slot  => VALUE_GLOB ),
-            opcode_n( OP_SWAP ),
-            opcode_nm( OP_GLOB_SLOT_SET, slot  => VALUE_SCALAR );
+            opcode_nm( OP_SWAP_GLOB_SLOT_SET, slot  => VALUE_SCALAR );
     } else {
         _add_bytecode $self,
             opcode_nm( OP_TEMPORARY,

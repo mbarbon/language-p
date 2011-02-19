@@ -195,7 +195,7 @@ L1: # scope=1
   lexical_state_set index=0
   jump to=L2
 L2: # scope=2
-  jump_if_true to=L3 (assign context=4 (make_list context=24 (lexical_pad index=0, slot=1), (lexical_pad index=1, slot=1)), (each context=8 (global context=8, name="x", slot=3)))
+  jump_if_true to=L3 (assign context=4 (each context=8 (global context=8, name="x", slot=3)), (make_list context=24 (lexical_pad index=0, slot=1), (lexical_pad index=1, slot=1)))
   jump to=L5
 L3: # scope=3
   constant_integer value=1

@@ -16,7 +16,7 @@ L2: # scope=2
   jump_if_true to=L3 (global context=4, name="a", slot=1)
   jump to=L5
 L3: # scope=3
-  assign context=2 (global context=20, name="x", slot=1), (add context=4 (constant_integer value=1), (constant_integer value=1))
+  assign context=2 (add context=4 (constant_integer value=1), (constant_integer value=1)), (global context=20, name="x", slot=1)
   jump to=L2
 L5: # scope=1
   end
@@ -61,10 +61,10 @@ L2: # scope=2
   jump_if_true to=L3 (global context=4, name="a", slot=1)
   jump to=L5
 L3: # scope=3
-  assign context=2 (global context=20, name="x", slot=1), (constant_integer value=1)
+  assign context=2 (constant_integer value=1), (global context=20, name="x", slot=1)
   jump to=L4
 L4: # scope=4
-  assign context=2 (global context=20, name="y", slot=1), (constant_integer value=2)
+  assign context=2 (constant_integer value=2), (global context=20, name="y", slot=1)
   jump to=L2
 L5: # scope=1
   end

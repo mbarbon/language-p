@@ -12,7 +12,7 @@ L1: # scope=1
   jump_if_f_gt to=L3 (global context=4, name="a", slot=1), (constant_integer value=2)
   jump to=L4
 L2: # scope=1
-  assign context=2 (global context=20, name="x", slot=1), (get index=3, slot=VALUE_SCALAR)
+  assign context=2 (get index=3, slot=VALUE_SCALAR), (global context=20, name="x", slot=1)
   jump to=L5
 L3: # scope=1
   set index=1, slot=VALUE_SCALAR (global context=4, name="b", slot=1)
@@ -36,7 +36,7 @@ L1: # scope=1
   jump_if_f_gt to=L3 (global context=4, name="a", slot=1), (constant_integer value=2)
   jump to=L4
 L2: # scope=1
-  assign context=2 (global context=20, name="x", slot=1), (get index=2, slot=VALUE_SCALAR)
+  assign context=2 (get index=2, slot=VALUE_SCALAR), (global context=20, name="x", slot=1)
   jump to=L8
 L3: # scope=1
   set index=1, slot=VALUE_SCALAR (global context=4, name="b", slot=1)
@@ -66,7 +66,7 @@ L1: # scope=1
   jump_if_f_gt to=L3 (global context=4, name="a", slot=1), (constant_integer value=2)
   jump to=L4
 L2: # scope=1
-  assign context=2 (global context=20, name="x", slot=1), (get index=3, slot=VALUE_SCALAR)
+  assign context=2 (get index=3, slot=VALUE_SCALAR), (global context=20, name="x", slot=1)
   jump to=L5
 L3: # scope=1
   set index=1, slot=VALUE_HASH (global context=4, name="x", slot=3)

@@ -19,8 +19,7 @@ L2: # scope=1
   jump_if_null false=L3, true=L5
 L3: # scope=1
   temporary index=1, slot=5
-  swap
-  glob_slot_set slot=1
+  swap_glob_slot_set slot=1
   jump to=L8
 L5: # scope=1
   pop

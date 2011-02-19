@@ -14,7 +14,6 @@ L1: # scope=1
   jump_if_f_gt false=L4, true=L3
 L2: # scope=1
   global context=20, name="x", slot=1
-  swap
   assign context=2
   pop
   jump to=L5
@@ -62,7 +61,6 @@ L1: # scope=1
   jump_if_f_gt false=L4, true=L3
 L2: # scope=1
   global context=20, name="x", slot=1
-  swap
   assign context=2
   pop
   jump to=L8

@@ -17,7 +17,7 @@ L2: # scope=1
   jump to=L3
 L3: # scope=1
   set index=3, slot=VALUE_SCALAR (phi L2, 2, VALUE_SCALAR, L6, 1, VALUE_SCALAR)
-  assign context=2 (global context=20, name="x", slot=1), (get index=3, slot=VALUE_SCALAR)
+  assign context=2 (get index=3, slot=VALUE_SCALAR), (global context=20, name="x", slot=1)
   jump to=L5
 L5: # scope=0
   end
@@ -35,7 +35,7 @@ L1: # scope=1
   jump_if_true to=L2 (get index=1, slot=VALUE_SCALAR)
   jump to=L4
 L2: # scope=1
-  assign context=2 (get index=1, slot=VALUE_SCALAR), (global context=4, name="b", slot=1)
+  swap_assign context=2 (get index=1, slot=VALUE_SCALAR), (global context=4, name="b", slot=1)
   jump to=L3
 L3: # scope=1
   end
@@ -57,7 +57,7 @@ L2: # scope=1
   jump to=L3
 L3: # scope=1
   set index=3, slot=VALUE_SCALAR (phi L6, 1, VALUE_SCALAR, L2, 2, VALUE_SCALAR)
-  assign context=2 (global context=20, name="x", slot=1), (get index=3, slot=VALUE_SCALAR)
+  assign context=2 (get index=3, slot=VALUE_SCALAR), (global context=20, name="x", slot=1)
   jump to=L5
 L5: # scope=0
   end
@@ -75,7 +75,7 @@ L1: # scope=1
   jump_if_true to=L4 (get index=1, slot=VALUE_SCALAR)
   jump to=L2
 L2: # scope=1
-  assign context=2 (get index=1, slot=VALUE_SCALAR), (global context=4, name="b", slot=1)
+  swap_assign context=2 (get index=1, slot=VALUE_SCALAR), (global context=4, name="b", slot=1)
   jump to=L3
 L3: # scope=1
   end
@@ -106,7 +106,7 @@ L5: # scope=1
   jump to=L6
 L6: # scope=1
   set index=5, slot=VALUE_SCALAR (phi L5, 4, VALUE_SCALAR, L10, 3, VALUE_SCALAR)
-  assign context=2 (global context=20, name="x", slot=1), (get index=5, slot=VALUE_SCALAR)
+  assign context=2 (get index=5, slot=VALUE_SCALAR), (global context=20, name="x", slot=1)
   jump to=L8
 L8: # scope=0
   end
@@ -164,7 +164,7 @@ L5: # scope=1
   jump to=L6
 L6: # scope=1
   set index=5, slot=VALUE_SCALAR (phi L10, 3, VALUE_SCALAR, L5, 4, VALUE_SCALAR)
-  assign context=2 (global context=20, name="x", slot=1), (get index=5, slot=VALUE_SCALAR)
+  assign context=2 (get index=5, slot=VALUE_SCALAR), (global context=20, name="x", slot=1)
   jump to=L8
 L8: # scope=0
   end

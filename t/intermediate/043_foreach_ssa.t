@@ -17,7 +17,7 @@ L2: # scope=1
   jump_if_null to=L5 (get index=1, slot=VALUE_SCALAR)
   jump to=L3
 L3: # scope=1
-  glob_slot_set slot=1 (temporary index=1, slot=5), (get index=1, slot=VALUE_SCALAR)
+  swap_glob_slot_set slot=1 (get index=1, slot=VALUE_SCALAR), (temporary index=1, slot=5)
   jump to=L8
 L5: # scope=1
   jump to=L6

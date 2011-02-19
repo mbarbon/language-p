@@ -16,7 +16,6 @@ my %op_map =
   ( OP_MAKE_LIST()        => '_make_list_array',
     OP_MAKE_ARRAY()       => '_make_list_array',
     OP_POP()              => '_pop',
-    OP_SWAP()             => '_swap',
     OP_DUP()              => '_dup',
     OP_DISCARD_STACK()    => '_discard',
     OP_CONSTANT_SUB()     => '_const_sub',
@@ -583,16 +582,6 @@ sub _dup {
     my( $v ) = _get_stack( $self, 1, 1 );
     push @{$self->_stack}, $v, $v;
     _created( $self, 2 );
-}
-
-sub _swap {
-    my( $self, $op ) = @_;
-    my $stack = $self->_stack;
-    my $t = $stack->[-1];
-
-    die 'Empty stack in swap' unless @{$self->_stack} >= 2;
-    $stack->[-1] = $stack->[-2];
-    $stack->[-2] = $t;
 }
 
 sub _make_list_array {

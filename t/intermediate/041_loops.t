@@ -28,7 +28,6 @@ L4: # scope=1
   constant_integer value=1
   add context=4
   global context=20, name="i", slot=1
-  swap
   assign context=2
   pop
   jump to=L2
@@ -37,7 +36,6 @@ L5: # scope=1
 L6: # scope=2
   constant_integer value=0
   global context=20, name="i", slot=1
-  swap
   assign context=2
   pop
   jump to=L2
@@ -82,14 +80,12 @@ L4: # scope=1
   constant_integer value=1
   add context=4
   global context=20, name="i", slot=1
-  swap
   assign context=2
   pop
   jump to=L3
 L6: # scope=2
   constant_integer value=0
   global context=20, name="i", slot=1
-  swap
   assign context=2
   pop
   jump to=L3
@@ -120,7 +116,6 @@ L4: # scope=1
   constant_integer value=1
   add context=4
   global context=20, name="i", slot=1
-  swap
   assign context=2
   pop
   jump to=L2
@@ -129,7 +124,6 @@ L5: # scope=1
 L6: # scope=2
   constant_integer value=0
   global context=20, name="i", slot=1
-  swap
   assign context=2
   pop
   jump to=L2

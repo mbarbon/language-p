@@ -572,7 +572,7 @@ get                 0       same                 0   1  index=i,slot=i_sigil,cla
 glob                0       same                 1   1  context=i1
 glob_element        0       same                 2   1  context=i1
 glob_slot           0       same                 1   1  slot=i_sigil,class=GlobSlot
-glob_slot_set       0       same                 2   0  slot=i_sigil,class=GlobSlot
+swap_glob_slot_set  0       same                 2   0  slot=i_sigil,class=GlobSlot
 global              0       same                 0   1  name=s,slot=i_sigil,context=i1,class=Global
 grep                0       same                 1   1  context=i1
 hash_element        0       same                 2   1  context=i1,create=i1,class=ElementAccess
@@ -711,7 +711,7 @@ stringify           0       same                 1   1  context=i1
 substr              v       same                -1   1  context=i1,arg_count=i1
 subtract            0       same                 2   1  context=i1
 subtract_assign     0       same                 2   1  context=i1
-swap                0       same                 2   2  noattr
+swap_assign         0       same                 2   1  context=i1
 temporary           0       same                 0   1  index=i,slot=i_sigil,class=Temporary
 temporary_clear     0       same                 0   0  index=i,slot=i_sigil,class=Temporary
 temporary_set       0       same                 1   0  index=i,slot=i_sigil,class=Temporary

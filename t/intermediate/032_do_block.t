@@ -18,7 +18,6 @@ L2: # scope=2
   pop
   constant_integer value=2
   global context=20, name="x", slot=1
-  swap
   assign context=2
   pop
   jump to=L3
@@ -40,7 +39,6 @@ L1: # scope=1
 L2: # scope=2
   constant_integer value=1
   localize_glob_slot index=0, name="x", slot=1
-  swap
   assign context=2
   pop
   constant_integer value=1
@@ -48,7 +46,6 @@ L2: # scope=2
   constant_integer value=2
   restore_glob_slot index=0, name="x", slot=1
   global context=20, name="x", slot=1
-  swap
   assign context=2
   pop
   jump to=L3

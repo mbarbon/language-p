@@ -18,7 +18,6 @@ L2: # scope=1
   jump to=L3
 L3: # scope=1
   global context=20, name="x", slot=1
-  swap
   assign context=2
   pop
   jump to=L5
@@ -43,7 +42,6 @@ L2: # scope=1
   jump to=L3
 L3: # scope=1
   global context=20, name="x", slot=1
-  swap
   assign context=2
   pop
   jump to=L5
@@ -107,7 +105,6 @@ L5: # scope=1
   jump to=L6
 L6: # scope=1
   global context=20, name="x", slot=1
-  swap
   assign context=2
   pop
   jump to=L8
@@ -141,7 +138,6 @@ L5: # scope=1
   jump to=L6
 L6: # scope=1
   global context=20, name="x", slot=1
-  swap
   assign context=2
   pop
   jump to=L8
@@ -162,7 +158,7 @@ L1: # scope=1
   jump_if_true false=L4, true=L2
 L2: # scope=1
   global context=4, name="a", slot=1
-  assign context=2
+  swap_assign context=2
   pop
   jump to=L3
 L3: # scope=1

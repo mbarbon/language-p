@@ -17,7 +17,7 @@ L2: # scope=1
   set index=3, slot=VALUE_SCALAR (get index=2, slot=VALUE_SCALAR)
   jump to=L3
 L3: # scope=1
-  assign context=2 (global context=20, name="x", slot=1), (get index=3, slot=VALUE_SCALAR)
+  assign context=2 (get index=3, slot=VALUE_SCALAR), (global context=20, name="x", slot=1)
   jump to=L5
 L5: # scope=0
   end
@@ -40,7 +40,7 @@ L2: # scope=1
   set index=3, slot=VALUE_SCALAR (get index=2, slot=VALUE_SCALAR)
   jump to=L3
 L3: # scope=1
-  assign context=2 (global context=20, name="x", slot=1), (get index=3, slot=VALUE_SCALAR)
+  assign context=2 (get index=3, slot=VALUE_SCALAR), (global context=20, name="x", slot=1)
   jump to=L5
 L5: # scope=0
   end
@@ -73,7 +73,7 @@ L5: # scope=1
   set index=5, slot=VALUE_SCALAR (get index=4, slot=VALUE_SCALAR)
   jump to=L6
 L6: # scope=1
-  assign context=2 (global context=20, name="x", slot=1), (get index=5, slot=VALUE_SCALAR)
+  assign context=2 (get index=5, slot=VALUE_SCALAR), (global context=20, name="x", slot=1)
   jump to=L8
 L8: # scope=0
   end
@@ -106,7 +106,7 @@ L5: # scope=1
   set index=5, slot=VALUE_SCALAR (get index=4, slot=VALUE_SCALAR)
   jump to=L6
 L6: # scope=1
-  assign context=2 (global context=20, name="x", slot=1), (get index=5, slot=VALUE_SCALAR)
+  assign context=2 (get index=5, slot=VALUE_SCALAR), (global context=20, name="x", slot=1)
   jump to=L8
 L8: # scope=0
   end

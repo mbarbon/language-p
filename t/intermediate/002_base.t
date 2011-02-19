@@ -13,7 +13,6 @@ L1: # scope=1
   constant_integer value=2
   add context=4
   global context=20, name="x", slot=1
-  swap
   assign context=2
   pop
   jump to=L2
@@ -50,7 +49,6 @@ L1: # scope=1
   constant_string value="\x0a"
   concat_assign context=4
   global context=20, name="x", slot=1
-  swap
   assign context=2
   pop
   jump to=L2
