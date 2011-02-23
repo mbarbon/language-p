@@ -78,6 +78,15 @@ sub _new_block {
                  ( $block ? $block->id : 0 ), 1 );
 }
 
+sub _new_fake_block {
+    my( $self ) = @_;
+
+    # there are assumptions elsewhere that basic blocks for the same
+    # scope are contiguous, so the scope id must be the correct one
+    return Language::P::Intermediate::BasicBlock->new_from_label
+               ( 'L0', $self->_current_block->id, 2 );
+}
+
 sub _start_bb {
     my( $self ) = @_;
     return if @{$self->_current_basic_block->bytecode} == 0;
@@ -721,6 +730,8 @@ sub _builtin {
                 opcode_npm( $tree->function, $tree->pos,
                             arg_count => scalar @{$tree->arguments || []},
                             context   => _context( $tree ) );
+        } elsif( $tree->function == OP_DYNAMIC_GOTO ) {
+            _return_like( $self, $tree );
         } else {
             _add_bytecode $self,
                 opcode_npm( $tree->function, $tree->pos,
@@ -729,6 +740,25 @@ sub _builtin {
     } else {
         return _function_call( $self, $tree );
     }
+}
+
+sub _return_like {
+    my( $self, $tree ) = @_;
+    my $attrs = $OP_ATTRIBUTES{$tree->function};
+
+    my $block = $self->_current_block;
+    while( $block ) {
+        _exit_scope( $self, $block );
+        last if $block->flags & CODE_MAIN;
+        $block = _outer_scope( $self, $block )
+    }
+
+    _add_bytecode $self,
+        opcode_npm( $tree->function, $tree->pos,
+                    context => _context( $tree ) );
+
+    # discard the code emitted after a return since it is unreachable
+    _add_blocks $self, _new_fake_block( $self );
 }
 
 sub _function_call {
@@ -761,22 +791,14 @@ sub _function_call {
         $self->dispatch( $tree->function );
         _add_bytecode $self,
              opcode_npm( OP_CALL, $tree->pos, context => _context( $tree ) );
+    } elsif( $tree->function == OP_RETURN ) {
+        _return_like( $self, $tree );
     } else {
-        if( $tree->function == OP_RETURN ) {
-            my $block = $self->_current_block;
-            while( $block ) {
-                _exit_scope( $self, $block );
-                last if $block->flags & CODE_MAIN;
-                $block = _outer_scope( $self, $block )
-            }
-        }
+        my $attrs = $OP_ATTRIBUTES{$tree->function};
 
-        _add_bytecode $self, opcode_npm( $tree->function, $tree->pos,
-                                         context => _context( $tree ) );
-
-        # discard the code emitted after a return since it is unreachable
-        _add_blocks $self, _new_block( $self )
-            if $tree->function == OP_RETURN;
+        _add_bytecode $self,
+            opcode_npm( $tree->function, $tree->pos,
+                        context => _context( $tree ) );
     }
 }
 

@@ -20,7 +20,7 @@ L1: # scope=1
   lexical_state_set index=1
   set index=1, slot=VALUE_HANDLE (global context=4, name="STDOUT", slot=VALUE_HANDLE)
   jump_if_true to=L5 (defined context=4 (want context=4))
-  jump to=L7
+  jump to=L6
 L2: # scope=1
   set index=5, slot=VALUE_SCALAR (phi L3, 2, VALUE_SCALAR, L4, 4, VALUE_SCALAR)
   set index=6, slot=VALUE_HANDLE (phi L3, 1, VALUE_HANDLE, L4, 3, VALUE_HANDLE)
@@ -35,10 +35,10 @@ L4: # scope=1
   jump to=L2
 L5: # scope=1
   jump_if_true to=L3 (not context=4 (want context=4))
-  jump to=L8
-L7: # scope=0
+  jump to=L7
+L6: # scope=0
   jump to=L4
-L8: # scope=0
+L7: # scope=0
   jump to=L4
 EOI
 
@@ -101,11 +101,9 @@ L2: # scope=1
   end
 L3: # scope=1
   jump_if_true to=L4 (array_element context=4, create=0 (constant_integer value=0), (lexical index=0, slot=2))
-  jump to=L7
+  jump to=L2
 L4: # scope=1
   return context=1 (make_list context=8 (call context=1 (make_array context=8 (constant_integer value=123)), (global context=4, name="xx", slot=4)))
-L7: # scope=0
-  jump to=L2
 EOI
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );

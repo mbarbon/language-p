@@ -89,6 +89,7 @@ sub add_jump_unoptimized {
     my( $self, $op, @to ) = @_;
 
     push @{$self->bytecode}, $op;
+    return if $self->dead == 2;
     foreach my $to ( @to ) {
         $self->add_successor( $to );
         $to->add_predecessor( $self );
