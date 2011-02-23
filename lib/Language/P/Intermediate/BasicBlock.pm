@@ -49,7 +49,10 @@ sub _change_successor {
     } elsif( $jump->false == $from ) {
         $jump->set_false( $to );
     } else {
-        die "Could not backpatch jump target";
+        require Carp;
+
+        Carp::confess( "Could not backpatch jump target ", $from->start_label,
+                       " for block ", $self->start_label );
     }
 
     # fix up predecessors

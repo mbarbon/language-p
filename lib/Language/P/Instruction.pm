@@ -62,14 +62,14 @@ sub as_string {
     }
 
     if( $self->{attributes} ) {
-        die "Can't happen" unless %{$self->{attributes}};
+        die "Can't happen ", $self->{opcode_n} unless %{$self->{attributes}};
         $str .= ' ' . join ', ',
                       map  { "$_=" . _p( $self, $self->{attributes}{$_}, $_, $number_to_name, $attributes ) }
                            sort keys %{$self->{attributes}};
     }
 
     if( $self->{parameters} ) {
-        die "Can't happen" unless @{$self->{parameters}};
+        die "Can't happen ", $self->{opcode_n} unless @{$self->{parameters}};
         $str .= ' ' . join ', ', map _p( $self, $_, undef, $number_to_name, $attributes ),
                                      @{$self->{parameters}};
     }
