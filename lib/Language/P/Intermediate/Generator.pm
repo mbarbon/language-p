@@ -64,6 +64,7 @@ sub _add_jump_unoptimized {
 sub _add_blocks {
     my( $self, $block ) = @_;
 
+    _check_split_edges( $self, $block ) if @{$block->predecessors} > 1;
     push @{$self->_code_segments->[0]->basic_blocks}, $block;
     _current_basic_block( $self, $block );
 }
@@ -97,6 +98,24 @@ sub _start_bb {
     _add_blocks $self, $block;
 
     return $block;
+}
+
+sub _check_split_edges {
+    my( $self, $current ) = @_;
+    return if @{$current->predecessors} < 2;
+
+    # remove edges from a node with multiple successors to a node
+    # with multiple predecessors by inserting an empty node and
+    # splitting the edge
+    my @pred = @{$current->predecessors};
+    foreach my $block ( @pred ) {
+        next if @{$block->successors} != 2;
+
+        my $new_block = _new_block( $self );
+        push @{$self->_code_segments->[0]->basic_blocks}, $new_block;
+        $new_block->add_jump_unoptimized( opcode_nm( OP_JUMP, to => $current ), $current );
+        $block->_change_successor( $current, $new_block );
+    }
 }
 
 sub _context { $_[0]->get_attribute( 'context' ) & CXT_CALL_MASK }
@@ -457,22 +476,10 @@ sub _generate_bytecode {
 
     $self->pop_block;
 
-    # eliminate edges from a node with multiple successors to a node
-    # with multiple predecessors by inserting an empty node and
-    # splitting the edge
-    foreach my $block ( @{$self->_code_segments->[0]->basic_blocks} ) {
-        next if @{$block->successors} != 2;
-        my @to_change;
-        foreach my $succ ( @{$block->successors} ) {
-            push @to_change, $succ if @{$succ->predecessors} >= 2;
-        }
-        # in two steps to avoid changing successors while iterating
-        foreach my $succ ( @to_change ) {
-            _add_blocks $self, _new_block( $self );
-            _add_jump $self, opcode_nm( OP_JUMP, to => $succ ), $succ;
-            $block->_change_successor( $succ, $self->_current_basic_block );
-        }
-    }
+    # remove edges from nodes with multiple successors to nodes
+    # with multiple predecessors
+    _check_split_edges( $self, $_ )
+        foreach @{$self->_code_segments->[0]->basic_blocks};
 
     if( $self->_options->{'dump-ir'} ) {
         ( my $outfile = $self->file_name ) =~ s/(\.\w+)?$/.ir/;

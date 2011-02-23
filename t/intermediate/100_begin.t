@@ -67,7 +67,7 @@ L1: # scope=0
   lexical_state_set index=1
   constant_integer value=5
   global context=4, name="]", slot=1
-  jump_if_f_lt false=L3, true=L4
+  jump_if_f_lt false=L3, true=L5
 L3: # scope=0
   fresh_string value="Perl "
   constant_float value=5
@@ -84,6 +84,8 @@ L3: # scope=0
   jump to=L4
 L4: # scope=0
   end
+L5: # scope=0
+  jump to=L4
 EOI
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
@@ -98,11 +100,13 @@ L2: # scope=0
 # BEGIN
 L1: # scope=0
   lexical_state_set index=1
-  jump_if_f_lt to=L4 (constant_integer value=5), (global context=4, name="]", slot=1)
+  jump_if_f_lt to=L5 (constant_integer value=5), (global context=4, name="]", slot=1)
   jump to=L3
 L3: # scope=0
   die context=2 (make_array context=8 (concat context=4 (fresh_string value="Perl "), (concat context=4 (constant_float value=5), (concat context=4 (constant_string value=" required--this is only "), (concat context=4 (global context=4, name="]", slot=1), (constant_string value=", stopped"))))))
   jump to=L4
 L4: # scope=0
   end
+L5: # scope=0
+  jump to=L4
 EOI

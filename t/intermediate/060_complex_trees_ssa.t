@@ -36,9 +36,9 @@ L4: # scope=1
 L5: # scope=1
   jump_if_true to=L3 (not context=4 (want context=4))
   jump to=L7
-L6: # scope=0
+L6: # scope=1
   jump to=L4
-L7: # scope=0
+L7: # scope=1
   jump to=L4
 EOI
 
@@ -60,27 +60,27 @@ L1: # scope=1
   constant_integer value=1
   jump to=L6
 L10: # scope=2
-  jump_if_true to=L11 (constant_integer value=4)
-  jump to=L17
+  jump to=L4
 L11: # scope=2
+  jump_if_true to=L12 (constant_integer value=4)
+  jump to=L15
+L12: # scope=2
   jump to=L6
-L15: # scope=0
-  end
-L16: # scope=0
+L15: # scope=2
   jump to=L10
 L17: # scope=0
-  jump to=L9
+  end
 L4: # scope=1
   constant_integer value=6
-  jump to=L15
+  jump to=L17
 L6: # scope=2
   jump_if_true to=L7 (constant_integer value=3)
-  jump to=L16
+  jump to=L9
 L7: # scope=2
   constant_integer value=2
-  jump to=L10
+  jump to=L11
 L9: # scope=2
-  jump to=L4
+  jump to=L11
 EOI
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
@@ -123,7 +123,7 @@ L3: # scope=3
   jump to=L5
 L5: # scope=1
   end
-L7: # scope=0
+L7: # scope=2
   jump to=L5
 EOI
 

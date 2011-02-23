@@ -10,7 +10,7 @@ EOP
 L1: # scope=1
   lexical_state_set index=0
   jump to=L2
-L10: # scope=0
+L10: # scope=1
   jump to=L5
 L2: # scope=1
   jump_if_true to=L3 (constant_integer value=1)

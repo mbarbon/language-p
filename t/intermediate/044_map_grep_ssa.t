@@ -45,7 +45,7 @@ L1: # scope=1
   localize_glob_slot index=3, name="_", slot=1
   jump to=L2
 L10: # scope=0
-  jump to=L2
+  end
 L2: # scope=1
   set index=1, slot=VALUE_SCALAR (iterator_next (temporary index=1, slot=9))
   jump_if_null to=L5 (get index=1, slot=VALUE_SCALAR)
@@ -53,19 +53,19 @@ L2: # scope=1
 L3: # scope=1
   swap_glob_slot_set slot=1 (get index=1, slot=VALUE_SCALAR), (temporary index=2, slot=5)
   jump_if_true to=L7 (constant_integer value=1)
-  jump to=L10
+  jump to=L9
 L5: # scope=1
   jump to=L6
 L6: # scope=1
   set index=2, slot=VALUE_ARRAY (temporary index=0, slot=2)
   temporary_clear index=0, slot=2
   assign context=2 (get index=2, slot=VALUE_ARRAY), (global context=24, name="r", slot=2)
-  jump to=L9
+  jump to=L10
 L7: # scope=1
   push_element (temporary index=0, slot=2), (global context=4, name="_", slot=1)
   jump to=L2
-L9: # scope=0
-  end
+L9: # scope=1
+  jump to=L2
 EOI
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
