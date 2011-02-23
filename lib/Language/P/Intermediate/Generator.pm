@@ -55,11 +55,17 @@ sub _add_jump {
     $self->_current_basic_block->add_jump( $op, @to );
 }
 
-sub _add_blocks {
-    my( $self, @blocks ) = @_;
+sub _add_jump_unoptimized {
+    my( $self, $op, @to ) = @_;
 
-    push @{$self->_code_segments->[0]->basic_blocks}, @blocks;
-    _current_basic_block( $self, $blocks[-1] );
+    $self->_current_basic_block->add_jump_unoptimized( $op, @to );
+}
+
+sub _add_blocks {
+    my( $self, $block ) = @_;
+
+    push @{$self->_code_segments->[0]->basic_blocks}, $block;
+    _current_basic_block( $self, $block );
 }
 
 sub _new_blocks { map _new_block( $_[0] ), 1 .. $_[1] }
@@ -972,7 +978,7 @@ sub _binary_op {
         # context
         _add_bytecode $self, opcode_n( OP_POP )
             if _context( $tree ) == CXT_VOID;
-        _add_jump $self, opcode_nm( OP_JUMP, to => $end ), $end;
+        _add_jump_unoptimized $self, opcode_nm( OP_JUMP, to => $end ), $end;
 
         _add_blocks $self, $right;
 

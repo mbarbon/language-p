@@ -11,7 +11,7 @@ L1: # scope=1
   lexical_state_set index=0
   global context=4, name="a", slot=1
   dup
-  jump_if_true false=L6, true=L2
+  jump_if_true false=L4, true=L2
 L2: # scope=1
   pop
   global context=4, name="b", slot=1
@@ -21,10 +21,10 @@ L3: # scope=1
   assign context=2
   pop
   jump to=L5
+L4: # scope=1
+  jump to=L3
 L5: # scope=0
   end
-L6: # scope=0
-  jump to=L3
 EOI
 
 generate_linear_and_diff( <<'EOP', <<'EOI' );
@@ -35,7 +35,7 @@ L1: # scope=1
   lexical_state_set index=0
   global context=4, name="a", slot=1
   dup
-  jump_if_true false=L2, true=L6
+  jump_if_true false=L2, true=L4
 L2: # scope=1
   pop
   global context=4, name="b", slot=1
@@ -45,10 +45,10 @@ L3: # scope=1
   assign context=2
   pop
   jump to=L5
+L4: # scope=1
+  jump to=L3
 L5: # scope=0
   end
-L6: # scope=0
-  jump to=L3
 EOI
 
 generate_linear_and_diff( <<'EOP', <<'EOI' );
@@ -59,7 +59,7 @@ L1: # scope=1
   lexical_state_set index=0
   global context=4, name="a", slot=1
   dup
-  jump_if_true false=L8, true=L2
+  jump_if_true false=L4, true=L2
 L2: # scope=1
   pop
   global context=4, name="b", slot=1
@@ -67,6 +67,8 @@ L2: # scope=1
 L3: # scope=1
   dup
   jump_if_true false=L7, true=L5
+L4: # scope=1
+  jump to=L3
 L5: # scope=1
   pop
   global context=2, name="c", slot=1
@@ -77,8 +79,6 @@ L6: # scope=1
 L7: # scope=1
   pop
   jump to=L6
-L8: # scope=0
-  jump to=L3
 EOI
 
 generate_linear_and_diff( <<'EOP', <<'EOI' );
@@ -89,16 +89,16 @@ L1: # scope=1
   lexical_state_set index=0
   global context=4, name="a", slot=1
   dup
-  jump_if_true false=L9, true=L2
-L10: # scope=0
-  jump to=L6
+  jump_if_true false=L4, true=L2
 L2: # scope=1
   pop
   global context=4, name="b", slot=1
   jump to=L3
 L3: # scope=1
   dup
-  jump_if_true false=L10, true=L5
+  jump_if_true false=L7, true=L5
+L4: # scope=1
+  jump to=L3
 L5: # scope=1
   pop
   global context=4, name="c", slot=1
@@ -108,10 +108,10 @@ L6: # scope=1
   assign context=2
   pop
   jump to=L8
+L7: # scope=1
+  jump to=L6
 L8: # scope=0
   end
-L9: # scope=0
-  jump to=L3
 EOI
 
 generate_linear_and_diff( <<'EOP', <<'EOI' );
@@ -122,16 +122,16 @@ L1: # scope=1
   lexical_state_set index=0
   global context=4, name="a", slot=1
   dup
-  jump_if_true false=L2, true=L9
-L10: # scope=0
-  jump to=L6
+  jump_if_true false=L2, true=L4
 L2: # scope=1
   pop
   global context=4, name="b", slot=1
   jump to=L3
 L3: # scope=1
   dup
-  jump_if_true false=L5, true=L10
+  jump_if_true false=L5, true=L7
+L4: # scope=1
+  jump to=L3
 L5: # scope=1
   pop
   global context=4, name="c", slot=1
@@ -141,10 +141,10 @@ L6: # scope=1
   assign context=2
   pop
   jump to=L8
+L7: # scope=1
+  jump to=L6
 L8: # scope=0
   end
-L9: # scope=0
-  jump to=L3
 EOI
 
 generate_linear_and_diff( <<'EOP', <<'EOI' );

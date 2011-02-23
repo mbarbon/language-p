@@ -77,9 +77,13 @@ sub add_jump {
         # keep track where this block goes
         $self->add_successor( $to[0] );
         undef @{$self->bytecode};
-
-        return;
+    } else {
+        add_jump_unoptimized( $self, $op, @to );
     }
+}
+
+sub add_jump_unoptimized {
+    my( $self, $op, @to ) = @_;
 
     push @{$self->bytecode}, $op;
     foreach my $to ( @to ) {
