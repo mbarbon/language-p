@@ -42,7 +42,7 @@ sub _change_successor {
 
     # patch jump target to $to
     my $jump = $self->bytecode->[-1];
-    if( $jump->{opcode_n} == OP_JUMP ) {
+    if( $jump->{opcode_n} == OP_JUMP && $jump->to == $from ) {
         $jump->set_to( $to );
     } elsif( $jump->true == $from ) {
         $jump->set_true( $to );
@@ -57,10 +57,10 @@ sub _change_successor {
 
     # fix up predecessors
     $to->add_predecessor( $self );
-    # remove $sel from $from predecessors
+    # remove $self from $from predecessors
     foreach my $i ( 0 .. $#{$from->{predecessors}} ) {
         if( $from->{predecessors}[$i] == $self ) {
-            splice @{$from->{predecessors}}, $i, 0;
+            splice @{$from->{predecessors}}, $i, 1;
             last;
         }
     }
@@ -73,13 +73,14 @@ sub add_jump {
         && @{$self->predecessors} ) {
         $to[0] = $to[0]->successors->[0] while    @{$to[0]->successors}
                                                && !@{$to[0]->bytecode};
-        foreach my $pred ( @{$self->predecessors} ) {
+
+        my @pred = @{$self->predecessors};
+        foreach my $pred ( @pred ) {
             _change_successor( $pred, $self, $to[0] );
         }
 
         # keep track where this block goes
         $self->add_successor( $to[0] );
-        undef @{$self->bytecode};
     } else {
         add_jump_unoptimized( $self, $op, @to );
     }
