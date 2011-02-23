@@ -97,6 +97,7 @@ t/intermediate/085_closure_ssa.t
 t/intermediate/100_begin.t
 t/intermediate/110_prototypes.t
 t/intermediate/120_builtins.t
+t/intermediate/125_dynamic_goto_ssa.t
 t/intermediate/165_split.t
 t/lib/TestIntermediate.pm
 t/lib/TestParser.pm
