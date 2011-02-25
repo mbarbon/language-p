@@ -71,6 +71,9 @@ t/intermediate/005_lexicals_ssa.t
 t/intermediate/005_lexicals_tree.t
 t/intermediate/011_call.t
 t/intermediate/011_call_tree.t
+t/intermediate/013_anonarrayhash_ssa.t
+t/intermediate/021_replace_ssa.t
+t/intermediate/021_transliterate_ssa.t
 t/intermediate/030_if.t
 t/intermediate/031_eval.t
 t/intermediate/031_eval_ssa.t
@@ -97,6 +100,7 @@ t/intermediate/085_closure_ssa.t
 t/intermediate/100_begin.t
 t/intermediate/110_prototypes.t
 t/intermediate/120_builtins.t
+t/intermediate/121_bless_ssa.t
 t/intermediate/125_dynamic_goto_ssa.t
 t/intermediate/165_split.t
 t/lib/TestIntermediate.pm
