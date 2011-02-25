@@ -6,8 +6,10 @@ use parent qw(Language::P::ParseTree::Visitor);
 
 __PACKAGE__->mk_accessors( qw(_code_segments _current_basic_block _options
                               _label_count _temporary_count _current_block
-                              _current_lexical_state
+                              _current_lexical_state _stack _local_count
+                              _current_subroutine _in_args_map _needed
                               _group_count _pos_count _main file_name) );
+__PACKAGE__->mk_ro_accessors( qw(is_stack) );
 
 use Language::P::Intermediate::Code qw(:all);
 use Language::P::Intermediate::BasicBlock;
@@ -25,10 +27,6 @@ sub new {
     my $self = $class->SUPER::new( $args );
 
     $self->_options( {} ) unless $self->_options;
-    $self->_label_count( 0 );
-    $self->_temporary_count( 0 );
-    $self->_group_count( 0 );
-    $self->_pos_count( 0 );
 
     return $self;
 }
@@ -43,6 +41,125 @@ sub set_option {
     return 0;
 }
 
+# determine the slot type for the result value of an opcode
+sub _slot_type {
+    my( $sub, $op ) = @_;
+    my $opn = $op->{opcode_n};
+
+    if(    $opn == OP_GLOB_SLOT
+        || $opn == OP_GLOBAL
+        || $opn == OP_TEMPORARY
+        || $opn == OP_GET ) {
+        my $slot = $op->slot;
+        die "Undefined slot for $opn" unless $slot;
+
+        # for now, make no difference between scalars and globs
+        return VALUE_SCALAR if $slot == VALUE_GLOB;
+        # stashes really are just hashes
+        return VALUE_HASH if $slot == VALUE_STASH;
+
+        return $slot;
+    }
+    if(    $opn == OP_LEXICAL
+        || $opn == OP_LEXICAL_PAD ) {
+        my $index = $op->index;
+        my $slot;
+
+        if( $opn == OP_LEXICAL ) {
+            $slot = $sub->lexicals->{lex_idx}[$index]->sigil;
+        } else {
+            $slot = $sub->lexicals->{pad_idx}[$index]->sigil;
+        }
+
+        die "Undefined slot for $opn" unless $slot;
+
+        # for now, make no difference between scalars and globs
+        return VALUE_SCALAR if $slot == VALUE_GLOB;
+        # stashes really are just hashes
+        return VALUE_HASH if $slot == VALUE_STASH;
+
+        return $slot;
+    }
+    if(    $opn == OP_DEREFERENCE_ARRAY
+        || $opn == OP_VIVIFY_ARRAY ) {
+        # for now, make no difference between lists and arrays
+        return VALUE_INDEXABLE;
+    }
+    if(    $opn == OP_MAKE_ARRAY
+        || $opn == OP_MAKE_LIST ) {
+        # for now, make no difference between lists and arrays
+        return VALUE_ARRAY;
+    }
+    if(    $opn == OP_DEREFERENCE_HASH
+        || $opn == OP_VIVIFY_HASH ) {
+        return VALUE_HASH;
+    }
+    if(    $opn == OP_CONSTANT_SUB
+        || $opn == OP_DEREFERENCE_SUB
+        || $opn == OP_FIND_METHOD ) {
+        return VALUE_SUB;
+    }
+    if( $opn == OP_PHI ) {
+        my $params = $op->parameters;
+        my $slot = $params->[2];
+        die "Undefined slot for OP_PHI" unless $slot;
+
+        # unify the values coming from the different basic blocks
+        for( my $i = 5; $i <= $#$params; $i += 3 ) {
+            $slot = _unify_slot_types( $slot, $params->[$i] );
+        }
+
+        return $slot;
+    }
+
+    # these are never transmitted across blocks (not unless codegen changes)
+    if(    $opn == OP_CONSTANT_REGEX
+        || $opn == OP_ITERATOR ) {
+        die "Should not happen";
+    }
+
+    # defaul to a scalar value
+    return VALUE_SCALAR;
+}
+
+# determine the common supertype of two slot types
+sub _unify_slot_types {
+    my( $a, $b ) = @_;
+
+    return $a if $a == $b;
+
+    ( $a, $b ) = ( $b, $a ) if $b == VALUE_SCALAR;
+
+    if( $a == VALUE_SCALAR ) {
+        if(    $b == VALUE_SCALAR
+            || $b == VALUE_ARRAY
+            || $b == VALUE_INDEXABLE
+            || $b == VALUE_HASH ) {
+            return VALUE_SCALAR;
+        }
+
+        require Carp;
+
+        Carp::confess( "Unable to unify" );
+    }
+
+    if(    ( $a == VALUE_ARRAY || $a == VALUE_INDEXABLE )
+        && ( $b == VALUE_ARRAY || $b == VALUE_INDEXABLE ) ) {
+        return VALUE_ARRAY;
+    }
+
+    # $a != $b and no unification is possible
+    require Carp;
+
+    Carp::confess( "Unable to unify" );
+}
+
+sub _add_value {
+    my( $self, $op ) = @_;
+
+    push @{$self->_stack}, $op;
+}
+
 sub _add_bytecode {
     my( $self, @bytecode ) = @_;
 
@@ -52,13 +169,41 @@ sub _add_bytecode {
 sub _add_jump {
     my( $self, $op, @to ) = @_;
 
-    $self->_current_basic_block->add_jump( $op, @to );
+    _leave_current_basic_block( $self );
+    if( _needed( $self ) ) {
+        $self->_current_basic_block->add_jump_unoptimized( $op, @to );
+    } else {
+        $self->_current_basic_block->add_jump( $op, @to );
+    }
 }
 
 sub _add_jump_unoptimized {
     my( $self, $op, @to ) = @_;
 
+    _leave_current_basic_block( $self );
     $self->_current_basic_block->add_jump_unoptimized( $op, @to );
+}
+
+sub _fake_stack {
+    my( $count ) = @_;
+
+    # fake stack; since the block is dead code, there is no need for
+    # real values
+    return [ map opcode_n( OP_GET ), 0 .. $count ];
+}
+
+sub _create_in_stack {
+    my( $self, $vars ) = @_;
+    my @stack;
+
+    foreach my $var ( @$vars ) {
+        push @stack,
+             opcode_nm( OP_GET,
+                        index => $var->[0],
+                        slot  => $var->[1] );
+    }
+
+    return \@stack;
 }
 
 sub _add_blocks {
@@ -66,7 +211,127 @@ sub _add_blocks {
 
     _check_split_edges( $self, $block ) if @{$block->predecessors} > 1;
     push @{$self->_code_segments->[0]->basic_blocks}, $block;
+    if(    @{$block->predecessors}
+        && exists $self->_in_args_map->{$block->predecessors->[0]} ) {
+        my @stack;
+        foreach my $i ( 0 .. $#{$self->_in_args_map->{$block->predecessors->[0]}} ) {
+            my( @phi, $slot, $diff );
+            foreach my $pred ( @{$block->predecessors} ) {
+                my $val = $self->_in_args_map->{$pred}[$i];
+                push @phi, $pred, $val->[0], $val->[1];
+                $diff ||= $phi[1] != $phi[-2];
+                $slot = $slot ? _unify_slot_types( $slot, $val->[1] ) : $val->[1];
+            }
+
+            if( $diff && !$self->is_stack ) {
+                push @stack,
+                     opcode_n( OP_PHI, @phi );
+            } else {
+                push @stack,
+                     opcode_nm( OP_GET,
+                                index => $phi[1],
+                                slot  => $slot );
+            }
+        }
+
+        $self->_stack( \@stack );
+    }
     _current_basic_block( $self, $block );
+    _needed( $self, 0 );
+}
+
+sub _local_name { ++$_[0]->{_local_count} }
+
+sub _get_stack {
+    my( $self, $count ) = @_;
+    return undef unless $count;
+
+    if( @{$self->_stack} < $count ) {
+        require Carp;
+
+        Carp::confess( 'Shallow stack ', $count, ' in ',
+                       $self->_current_basic_block->start_label );
+    }
+
+    my @values = splice @{$self->_stack}, -$count;
+    return \@values if $self->is_stack;
+
+    foreach my $value ( @values ) {
+        next if $value->{opcode_n} != OP_PHI;
+        my $name = _local_name( $self );
+        my $slot = _slot_type( $self->_current_subroutine, $value );
+        _add_bytecode $self,
+            opcode_npam( OP_SET, $value->{pos}, [ $value ],
+                         index => $name,
+                         slot  => $slot );
+        $value = opcode_npm( OP_GET, $value->{pos},
+                             index => $name,
+                             slot  => $slot );
+    }
+
+    return \@values;
+}
+
+sub _leave_current_basic_block {
+    my( $self ) = @_;
+
+    if( @{$self->_stack} ) {
+        $self->_in_args_map->{$self->_current_basic_block} = _emit_out_stack( $self );
+        $self->_stack( [] );
+    }
+}
+
+sub _dump_out_stack {
+    my( $self ) = @_;
+
+    $self->_stack( _create_in_stack( $self, _emit_out_stack( $self ) ) );
+}
+
+sub _pop {
+    my( $self ) = @_;
+    my $top = pop @{$self->_stack};
+
+    if( $self->is_stack ) {
+        _add_bytecode $self, opcode_nam( OP_POP, [ $top ] );
+    } elsif( $top->opcode_n != OP_GET && $top->opcode_n != OP_PHI ) {
+        _add_bytecode $self, $top;
+    }
+    _needed( $self, 1 );
+}
+
+sub _dup {
+    my( $self ) = @_;
+
+    push @{$self->_stack}, $self->_stack->[-1];
+    _add_bytecode $self, opcode_n( OP_DUP )
+        if $self->is_stack;
+}
+
+sub _emit_out_stack {
+    my( $self ) = @_;
+    my $stack = $self->_stack;
+    return unless @$stack;
+
+    my @out_names;
+    foreach my $op ( @{$stack} ) {
+        if( $op->{opcode_n} == OP_GET ) {
+            push @out_names, [ $op->index, $op->slot ];
+        } else {
+            my $index = _local_name( $self );
+            my $slot = _slot_type( $self->_current_subroutine, $op );
+            push @out_names, [ $index, $slot ];
+            if( $self->is_stack ) {
+                _add_bytecode $self, $op;
+            } else {
+                _add_bytecode $self,
+                    opcode_npam( OP_SET, $op->{pos}, [ $op ],
+                                 index => $index,
+                                 slot  => $slot );
+            }
+        }
+    }
+
+    return \@out_names;
 }
 
 sub _new_blocks { map _new_block( $_[0] ), 1 .. $_[1] }
@@ -94,7 +359,7 @@ sub _start_bb {
     my $block = _new_block( $self );
 
     _add_jump $self,
-         opcode_nm( OP_JUMP, to => $block ), $block;
+        opcode_nm( OP_JUMP, to => $block ), $block;
     _add_blocks $self, $block;
 
     return $block;
@@ -115,6 +380,7 @@ sub _check_split_edges {
         push @{$self->_code_segments->[0]->basic_blocks}, $new_block;
         $new_block->add_jump_unoptimized( opcode_nm( OP_JUMP, to => $current ), $current );
         $block->_change_successor( $current, $new_block );
+        $self->_in_args_map->{$new_block} = $self->_in_args_map->{$block};
     }
 }
 
@@ -214,6 +480,7 @@ sub create_eval_context {
 sub generate_regex {
     my( $self, $regex ) = @_;
 
+    $self->_current_subroutine( undef );
     _generate_regex( $self, $regex, undef );
 }
 
@@ -223,6 +490,9 @@ sub _generate_regex {
     $self->_code_segments( [] );
     $self->_group_count( 0 );
     $self->_pos_count( 0 );
+    $self->_label_count( 0 );
+    $self->_temporary_count( 0 );
+    $self->_local_count( 0 );
 
     push @{$self->_code_segments},
          Language::P::Intermediate::Code->new
@@ -253,8 +523,17 @@ sub generate_use {
 
     my $context = Language::P::ParseTree::PropagateContext->new;
     $context->visit( $tree, CXT_VOID );
+    $self->_current_subroutine( undef );
 
     $self->_code_segments( [] );
+    $self->_current_basic_block( undef );
+    $self->_current_block( undef );
+    $self->_current_lexical_state( undef );
+    $self->_stack( [] );
+    $self->_label_count( 0 );
+    $self->_temporary_count( 0 );
+    $self->_local_count( 0 );
+    $self->_in_args_map( {} );
 
     my $head = $self->_new_block;
     my $empty = $self->_new_block;
@@ -280,37 +559,38 @@ sub generate_use {
     # check the Perl version
     if( $tree->version && !$tree->package ) {
         # compare version
-        _add_bytecode $self,
-                      opcode_nm( OP_CONSTANT_INTEGER, value => $tree->version ),
-                      opcode_npm( OP_GLOBAL, $tree->pos,
+        my $reqver  = opcode_nm( OP_CONSTANT_INTEGER, value => $tree->version );
+        my $perlver = opcode_npm( OP_GLOBAL, $tree->pos,
                                   name    => ']',
                                   slot    => VALUE_SCALAR,
                                   context => CXT_SCALAR,
                                   );
         _add_jump $self,
-                  opcode_nm( OP_JUMP_IF_F_LT,
-                             true  => $return,
-                             false => $body ),
+            opcode_nam( OP_JUMP_IF_F_LT,
+                        [ $reqver, $perlver ],
+                        true  => $return,
+                        false => $body ),
             $return, $body;
 
         # TODO use version objects
         # Perl v6.0.0 required--this is only v5.10.1, stopped
+        my $die_string =
+            opcode_nam( OP_MAKE_ARRAY,
+                        [ opcode_nm( OP_FRESH_STRING, value => 'Perl ' ),
+                          opcode_nm( OP_CONSTANT_FLOAT, value => $tree->version ),
+                          opcode_nm( OP_CONSTANT_STRING, value => ' required--this is only ' ),
+                          opcode_nm( OP_GLOBAL, name => ']', slot => VALUE_SCALAR, context => CXT_SCALAR ),
+                          opcode_nm( OP_CONSTANT_STRING, value => ', stopped' ),
+                          ],
+                         context => CXT_LIST );
+
         _add_blocks $self, $body;
-        _add_bytecode $self,
-                      opcode_nm( OP_FRESH_STRING, value => 'Perl ' ),
-                      opcode_nm( OP_CONSTANT_FLOAT, value => $tree->version ),
-                      opcode_nm( OP_CONSTANT_STRING, value => ' required--this is only ' ),
-                      opcode_nm( OP_GLOBAL, name => ']', slot => VALUE_SCALAR, context => CXT_SCALAR ),
-                      opcode_nm( OP_CONSTANT_STRING, value => ', stopped' ),
-                      opcode_nm( OP_CONCATENATE, context => CXT_SCALAR ),
-                      opcode_nm( OP_CONCATENATE, context => CXT_SCALAR ),
-                      opcode_nm( OP_CONCATENATE, context => CXT_SCALAR ),
-                      opcode_nm( OP_CONCATENATE, context => CXT_SCALAR ),
-                      opcode_nm( OP_MAKE_ARRAY, arg_count => 1, context => CXT_LIST ),
-                      opcode_npm( OP_DIE, $tree->pos, context => CXT_VOID ),
-                      opcode_n( OP_POP );
+        _add_value $self,
+            opcode_npam( OP_DIE, $tree->pos, [ $die_string ],
+                         context => CXT_VOID );
+        _pop( $self );
         _add_jump $self,
-                  opcode_nm( OP_JUMP, to => $return ),
+            opcode_nm( OP_JUMP, to => $return ),
             $return;
 
         # return
@@ -322,47 +602,50 @@ sub generate_use {
     }
 
     ( my $file = $tree->package ) =~ s{::}{/}g;
-    _add_bytecode $self,
-         opcode_nm( OP_CONSTANT_STRING, value => "$file.pm" ),
-         opcode_npm( OP_REQUIRE_FILE, $tree->pos, context => CXT_VOID ),
-         opcode_n( OP_POP );
+    _add_value $self,
+        opcode_npam( OP_REQUIRE_FILE, $tree->pos,
+                     [ opcode_nm( OP_CONSTANT_STRING, value => "$file.pm" ) ],
+                     context => CXT_VOID );
+    _pop( $self );
 
     # TODO check version
 
     # always evaluate arguments, even if no import/unimport is present
-    _add_bytecode $self,
+    _add_value $self,
         opcode_nm( OP_CONSTANT_STRING, value => $tree->package );
     if( $tree->import ) {
         foreach my $arg ( @{$tree->import} ) {
             $self->dispatch( $arg );
         }
-        _add_bytecode $self,
-            opcode_nm( OP_MAKE_ARRAY,
-                       arg_count => @{$tree->import} + 1,
-                       context   => CXT_LIST );
+        _add_value $self,
+            opcode_nam( OP_MAKE_ARRAY,
+                        _get_stack( $self, @{$tree->import} + 1 ),
+                        context   => CXT_LIST );
     } else {
-        _add_bytecode $self,
-            opcode_nm( OP_MAKE_ARRAY,
-                       arg_count => 1,
-                       context   => CXT_LIST );
+        _add_value $self,
+            opcode_nam( OP_MAKE_ARRAY,
+                        _get_stack( $self, 1 ),
+                        context   => CXT_LIST );
     }
 
-    _add_bytecode $self,
-        opcode_nm( OP_CONSTANT_STRING, value => $tree->package ),
-        opcode_npm( OP_FIND_METHOD, $tree->pos,
-                    method => $tree->is_no ? 'unimport' : 'import' ),
-        opcode_n( OP_DUP );
+    _add_value $self,
+        opcode_npam( OP_FIND_METHOD, $tree->pos,
+                     [ opcode_nm( OP_CONSTANT_STRING,
+                                  value => $tree->package ) ],
+                     method => $tree->is_no ? 'unimport' : 'import' );
+    _dump_out_stack( $self );
+    _dup( $self );
     _add_jump $self,
-        opcode_nm( OP_JUMP_IF_NULL,
-                   true  => $empty,
-                   false => $body ),
+        opcode_nam( OP_JUMP_IF_NULL,
+                    _get_stack( $self, 1 ),
+                    true  => $empty,
+                    false => $body ),
         $empty, $body;
 
     # empty block, for SSA conversion
     _add_blocks $self, $empty;
-    _add_bytecode $self, # pop undef value and arguments
-        opcode_n( OP_POP ),
-        opcode_n( OP_POP );
+    _pop( $self ); # pop undef value and arguments
+    _pop( $self );
     _add_jump $self,
         opcode_nm( OP_JUMP, to => $return ),
         $return;
@@ -370,9 +653,11 @@ sub generate_use {
     # call the import method
     _add_blocks $self, $body;
 
-    _add_bytecode $self,
-        opcode_npm( OP_CALL, $tree->pos, context => CXT_VOID ),
-        opcode_n( OP_POP );
+    _add_value $self,
+        opcode_npam( OP_CALL, $tree->pos,
+                     _get_stack( $self, 2 ),
+                     context => CXT_VOID );
+    _pop( $self );
     _add_jump $self,
         opcode_nm( OP_JUMP, to => $return ),
         $return;
@@ -415,6 +700,14 @@ sub _generate_bytecode {
         $pos_s, $pos_e ) = @_;
 
     $self->_code_segments( [] );
+    $self->_current_basic_block( undef );
+    $self->_current_block( undef );
+    $self->_current_lexical_state( undef );
+    $self->_stack( [] );
+    $self->_label_count( 0 );
+    $self->_temporary_count( 0 );
+    $self->_local_count( 0 );
+    $self->_in_args_map( {} );
 
     if( !$is_sub && $self->_main ) {
         push @{$self->_code_segments}, $self->_main;
@@ -431,6 +724,7 @@ sub _generate_bytecode {
                      } );
     }
     push @{$outer->inner}, $self->_code_segments->[-1] if $outer;
+    $self->_current_subroutine( $self->_code_segments->[-1] );
 
     _add_blocks $self, _new_block( $self );
     my $is_eval = $self->_code_segments->[-1]->is_eval;
@@ -449,8 +743,11 @@ sub _generate_bytecode {
     # clear $@ when entering eval scope
     if( $is_eval ) {
         _add_bytecode $self,
-            opcode_nm( OP_GLOBAL, name => '@', slot => VALUE_SCALAR, context => CXT_SCALAR ),
-            opcode_nm( OP_UNDEF );
+            opcode_nam( OP_UNDEF,
+                        [ opcode_nm( OP_GLOBAL,
+                                     name    => '@',
+                                     slot    => VALUE_SCALAR,
+                                     context => CXT_SCALAR ) ] );
     }
 
     foreach my $tree ( @$statements ) {
@@ -458,11 +755,16 @@ sub _generate_bytecode {
         _discard_if_void( $self, $tree );
     }
 
+    _dump_out_stack( $self );
+
     # clear $@ when exiting eval scope
     if( $is_eval ) {
         _add_bytecode $self,
-            opcode_nm( OP_GLOBAL, name => '@', slot => VALUE_SCALAR, context => CXT_SCALAR ),
-            opcode_nm( OP_UNDEF );
+            opcode_nam( OP_UNDEF,
+                        [ opcode_nm( OP_GLOBAL,
+                                     name    => '@',
+                                     slot    => VALUE_SCALAR,
+                                     context => CXT_SCALAR ) ] );
     }
 
     $self->pop_block;
@@ -635,23 +937,25 @@ sub _indirect {
     if( $tree->indirect ) {
         $self->dispatch( $tree->indirect );
     } else {
-        _add_bytecode $self,
-             opcode_npm( OP_GLOBAL, $tree->pos,
-                         name    => 'STDOUT',
-                         slot    => VALUE_HANDLE,
-                         context => CXT_SCALAR,
-                         );
+        _add_value $self,
+            opcode_npm( OP_GLOBAL, $tree->pos,
+                        name    => 'STDOUT',
+                        slot    => VALUE_HANDLE,
+                        context => CXT_SCALAR,
+                        );
     }
 
     foreach my $arg ( @{$tree->arguments} ) {
         $self->dispatch( $arg );
     }
 
-    _add_bytecode $self,
-         opcode_nm( OP_MAKE_ARRAY,
-                    arg_count => scalar @{$tree->arguments},
-                    context   => CXT_LIST ),
-         opcode_npm( $tree->function, $tree->pos,
+    my $args = _get_stack( $self, scalar @{$tree->arguments} );
+    _add_value $self,
+        opcode_npam( $tree->function, $tree->pos,
+                     [ @{_get_stack( $self, 1 )},
+                       opcode_nam( OP_MAKE_ARRAY,
+                                   $args,
+                                   context   => CXT_LIST ) ],
                      context   => _context( $tree ) );
 }
 
@@ -663,9 +967,11 @@ sub _builtin {
         _emit_label( $self, $tree );
         if( $tree->arguments ) {
             $self->dispatch( $tree->arguments->[0] );
-            _add_bytecode $self, opcode_np( OP_UNDEF, $tree->pos );
+            _add_bytecode $self,
+                opcode_npam( OP_UNDEF, $tree->pos,
+                             _get_stack( $self, 1 ) );
         }
-        _add_bytecode $self, opcode_n( OP_CONSTANT_UNDEF );
+        _add_value $self, opcode_n( OP_CONSTANT_UNDEF );
     } elsif(    $tree->function == OP_EXISTS
              && $tree->arguments->[0]->isa( 'Language::P::ParseTree::Subscript' ) ) {
         _emit_label( $self, $tree );
@@ -675,15 +981,17 @@ sub _builtin {
         $self->dispatch( $arg->subscript );
         $self->dispatch( $arg->subscripted );
 
-        _add_bytecode $self,
-            opcode_npm( $arg->type == VALUE_ARRAY ? OP_VIVIFY_ARRAY :
-                                                    OP_VIVIFY_HASH,
-                        $tree->pos, context => CXT_SCALAR )
+        _add_value $self,
+            opcode_npam( $arg->type == VALUE_ARRAY ? OP_VIVIFY_ARRAY :
+                                                     OP_VIVIFY_HASH,
+                         $tree->pos, _get_stack( $self, 1 ),
+                         context => CXT_SCALAR )
               if $arg->reference;
-        _add_bytecode $self,
-            opcode_npm( $arg->type == VALUE_ARRAY ? OP_EXISTS_ARRAY :
-                                                    OP_EXISTS_HASH,
-                        $tree->pos, context => _context( $tree ) );
+        _add_value $self,
+            opcode_npam( $arg->type == VALUE_ARRAY ? OP_EXISTS_ARRAY :
+                                                     OP_EXISTS_HASH,
+                         $tree->pos, _get_stack( $self, 2 ),
+                         context => _context( $tree ) );
     } elsif( $tree->function == OP_DELETE ) {
         _emit_label( $self, $tree );
 
@@ -692,26 +1000,31 @@ sub _builtin {
         $self->dispatch( $arg->subscript );
         $self->dispatch( $arg->subscripted );
 
-        _add_bytecode $self,
-            opcode_npm( $arg->type == VALUE_ARRAY ? OP_VIVIFY_ARRAY :
-                                                    OP_VIVIFY_HASH,
-                        $tree->pos, context => CXT_SCALAR )
+        _add_value $self,
+            opcode_npam( $arg->type == VALUE_ARRAY ? OP_VIVIFY_ARRAY :
+                                                     OP_VIVIFY_HASH,
+                         $tree->pos, _get_stack( $self, 1 ),
+                         context => CXT_SCALAR )
               if $arg->reference;
         if( $tree->arguments->[0]->isa( 'Language::P::ParseTree::Subscript' ) ) {
             # element
-            _add_bytecode $self,
-                opcode_npm( $arg->type == VALUE_ARRAY ? OP_DELETE_ARRAY :
-                                                        OP_DELETE_HASH,
-                            $tree->pos, context => _context( $tree ) );
+            _add_value $self,
+                opcode_npam( $arg->type == VALUE_ARRAY ? OP_DELETE_ARRAY :
+                                                         OP_DELETE_HASH,
+                             $tree->pos, _get_stack( $self, 2 ),
+                             context => _context( $tree ) );
         } else {
             # slice
-            _add_bytecode $self,
-                opcode_npm( $arg->type == VALUE_ARRAY ? OP_DELETE_ARRAY_SLICE :
-                                                        OP_DELETE_HASH_SLICE,
-                            $tree->pos, context => _context( $tree ) );
+            _add_value $self,
+                opcode_npam( $arg->type == VALUE_ARRAY ? OP_DELETE_ARRAY_SLICE :
+                                                         OP_DELETE_HASH_SLICE,
+                             $tree->pos, _get_stack( $self, 2 ),
+                             context => _context( $tree ) );
         }
     } elsif( $op_flags & Language::P::Opcodes::FLAG_UNARY ) {
         _emit_label( $self, $tree );
+
+        my $count = scalar @{$tree->arguments || []};
         foreach my $arg ( @{$tree->arguments || []} ) {
             $self->dispatch( $arg );
         }
@@ -724,25 +1037,27 @@ sub _builtin {
                                               $l, 1 )->index;
             }
             my $env = $tree->get_attribute( 'environment' );
-            _add_bytecode $self,
-                opcode_npm( $tree->function, $tree->pos,
-                            context  => _context( $tree ),
-                            hints    => $env->{hints},
-                            warnings => $env->{warnings},
-                            package  => $env->{package},
-                            lexicals => \%lex,
-                            globals  => $tree->get_attribute( 'globals' ) );
+            _add_value $self,
+                opcode_npam( $tree->function, $tree->pos,
+                             _get_stack( $self, 1 ),
+                             context  => _context( $tree ),
+                             hints    => $env->{hints},
+                             warnings => $env->{warnings},
+                             package  => $env->{package},
+                             lexicals => \%lex,
+                             globals  => $tree->get_attribute( 'globals' ) );
         } elsif( $op_flags & Language::P::Opcodes::FLAG_VARIADIC ) {
-            _add_bytecode $self,
-                opcode_npm( $tree->function, $tree->pos,
-                            arg_count => scalar @{$tree->arguments || []},
-                            context   => _context( $tree ) );
+            _add_value $self,
+                opcode_npam( $tree->function, $tree->pos,
+                             _get_stack( $self, $count ),
+                             context   => _context( $tree ) );
         } elsif( $tree->function == OP_DYNAMIC_GOTO ) {
             _return_like( $self, $tree );
         } else {
-            _add_bytecode $self,
-                opcode_npm( $tree->function, $tree->pos,
-                            context => _context( $tree ) );
+            _add_value $self,
+                opcode_npam( $tree->function, $tree->pos,
+                             _get_stack( $self, $count ),
+                             context => _context( $tree ) );
         }
     } else {
         return _function_call( $self, $tree );
@@ -752,6 +1067,7 @@ sub _builtin {
 sub _return_like {
     my( $self, $tree ) = @_;
     my $attrs = $OP_ATTRIBUTES{$tree->function};
+    my $stack_count = @{$self->_stack};
 
     my $block = $self->_current_block;
     while( $block ) {
@@ -760,11 +1076,15 @@ sub _return_like {
         $block = _outer_scope( $self, $block )
     }
 
+    my $stack = _get_stack( $self, 1 );
+
+    _discard_stack( $self );
     _add_bytecode $self,
-        opcode_npm( $tree->function, $tree->pos,
-                    context => _context( $tree ) );
+        opcode_npam( $tree->function, $tree->pos, $stack,
+                     context => _context( $tree ) );
 
     # discard the code emitted after a return since it is unreachable
+    $self->_stack( _fake_stack( $stack_count ) );
     _add_blocks $self, _new_fake_block( $self );
 }
 
@@ -781,7 +1101,9 @@ sub _function_call {
         if(    $i + 3 <= $#$proto
             && ( $proto->[$i + 3] & PROTO_REFERENCE ) ) {
             if( $is_func ) {
-                _add_bytecode $self, opcode_np( OP_REFERENCE, $arg->pos );
+                _add_value $self,
+                    opcode_npam( OP_REFERENCE, $arg->pos,
+                                 _get_stack( $self, 1 ) );
             } else {
                 --$argcount;
             }
@@ -790,22 +1112,26 @@ sub _function_call {
         ++$i;
     }
 
-    _add_bytecode $self,
-         opcode_nm( $tree->function == OP_RETURN ? OP_MAKE_LIST : OP_MAKE_ARRAY,
-                    arg_count => $argcount, context => CXT_LIST );
+    _add_value $self,
+        opcode_npam( $tree->function == OP_RETURN ? OP_MAKE_LIST : OP_MAKE_ARRAY,
+                     undef, _get_stack( $self, $argcount ),
+                     context => CXT_LIST );
 
     if( $is_func ) {
         $self->dispatch( $tree->function );
-        _add_bytecode $self,
-             opcode_npm( OP_CALL, $tree->pos, context => _context( $tree ) );
+        _add_value $self,
+            opcode_npam( OP_CALL, $tree->pos,
+                         _get_stack( $self, 2 ),
+                         context => _context( $tree ) );
     } elsif( $tree->function == OP_RETURN ) {
         _return_like( $self, $tree );
     } else {
         my $attrs = $OP_ATTRIBUTES{$tree->function};
 
-        _add_bytecode $self,
-            opcode_npm( $tree->function, $tree->pos,
-                        context => _context( $tree ) );
+        _add_value $self,
+            opcode_npam( $tree->function, $tree->pos,
+                         _get_stack( $self, $attrs->{in_args} ),
+                         context => _context( $tree ) );
     }
 }
 
@@ -822,18 +1148,21 @@ sub _method_call {
         $self->dispatch( $arg );
     }
 
-    _add_bytecode $self,
-        opcode_nm( OP_MAKE_ARRAY, arg_count => 1 + scalar @$args, context => CXT_LIST );
+    my $arglist = opcode_nam( OP_MAKE_ARRAY,
+                              _get_stack( $self, 1 + scalar @$args ),
+                              context => CXT_LIST );
 
     if( $tree->indirect ) {
-        _add_bytecode $self,
-            opcode_npm( OP_CALL_METHOD_INDIRECT, $tree->pos,
-                        context  => _context( $tree ) );
+        my $indirect = _get_stack( $self, 1 );
+        _add_value $self,
+            opcode_npam( OP_CALL_METHOD_INDIRECT, $tree->pos,
+                         [ $indirect->[0], $arglist ],
+                         context  => _context( $tree ) );
     } else {
-        _add_bytecode $self,
-            opcode_npm( OP_CALL_METHOD, $tree->pos,
-                        context  => _context( $tree ),
-                        method   => $tree->method );
+        _add_value $self,
+            opcode_npam( OP_CALL_METHOD, $tree->pos, [ $arglist ],
+                         context  => _context( $tree ),
+                         method   => $tree->method );
     }
 }
 
@@ -845,9 +1174,9 @@ sub _list {
         $self->dispatch( $arg );
     }
 
-    _add_bytecode $self,
-         opcode_nm( OP_MAKE_LIST,
-                    arg_count => @{$tree->expressions} + 0,
+    _add_value $self,
+        opcode_nam( OP_MAKE_LIST,
+                    _get_stack( $self, scalar @{$tree->expressions} ),
                     context   => _context_lvalue( $tree ) );
 }
 
@@ -869,9 +1198,10 @@ sub _unary_op {
         }
     }
 
-    _add_bytecode $self,
-        opcode_npm( $op, $tree->pos,
-                    context   => _context_lvalue( $tree ) );
+    _add_value $self,
+        opcode_npam( $op, $tree->pos,
+                     _get_stack( $self, 1 ),
+                     context   => _context_lvalue( $tree ) );
 }
 
 sub _local {
@@ -897,14 +1227,16 @@ sub _local {
         $self->dispatch( $left->subscripted );
 
         if( $vivify ) {
-            _add_bytecode $self,
-                opcode_npm( $vivify, $tree->pos, context => CXT_SCALAR );
+            _add_value $self,
+                opcode_npam( $vivify, $tree->pos,
+                             _get_stack( $self, 1 ),
+                             context => CXT_SCALAR );
         }
 
-        _add_bytecode $self,
-            opcode_npm( $op_save, $left->pos,
-                        index => $index,
-                        );
+        _add_value $self,
+            opcode_npam( $op_save, $left->pos,
+                         _get_stack( $self, 2 ),
+                         index => $index );
 
         push @{$self->_current_block->bytecode},
              [ opcode_npm( $op_rest, $self->_current_block->pos_e,
@@ -915,12 +1247,11 @@ sub _local {
         die;
     } elsif( $left->isa( 'Language::P::ParseTree::Symbol' ) ) {
         my $index = $self->{_temporary_count}++;
-        _add_bytecode $self,
+        _add_value $self,
             opcode_npm( OP_LOCALIZE_GLOB_SLOT, $tree->pos,
                         name  => $left->name,
                         slot  => $left->sigil,
-                        index => $index,
-                        );
+                        index => $index );
 
         push @{$self->_current_block->bytecode},
              [ opcode_npm( OP_RESTORE_GLOB_SLOT, $self->_current_block->pos_e,
@@ -951,8 +1282,11 @@ sub _substitution {
         die $pat;
     }
 
+    my $stack = $self->_stack;
     my $current = $self->_current_basic_block;
     my $block = _new_block( $self );
+
+    $self->_stack( [] );
     _add_blocks $self, $block;
 
     $self->push_block( SCOPE_VALUE, $tree->replacement->pos_s,
@@ -973,9 +1307,10 @@ sub _substitution {
     # OP_STOP marks the end of a sequence of opcodes that are run in a
     # secondary run loop; it is currently used only for regex
     # substitutions; maybe can be removed
-    _add_bytecode $self, opcode_n( OP_STOP );
+    _add_bytecode $self, opcode_nam( OP_STOP, _get_stack( $self, 1 ) );
 
     $self->_current_basic_block( $current );
+    $self->_stack( $stack );
 
     return $block;
 }
@@ -991,10 +1326,11 @@ sub _binary_op {
         my( $right, $end, $to_end ) = _new_blocks( $self, 3 );
 
         # jump to $end if evalutating right is not necessary
-        _add_bytecode $self,
-             opcode_n( OP_DUP );
+        _dump_out_stack( $self );
+        _dup( $self );
         _add_jump $self,
-             opcode_npm( OP_JUMP_IF_TRUE, $tree->pos,
+            opcode_npam( OP_JUMP_IF_TRUE, $tree->pos,
+                         _get_stack( $self, 1 ),
                          $tree->op == OP_LOG_AND || $tree->op == OP_LOG_AND_ASSIGN ?
                              ( true => $right,  false => $to_end ) :
                              ( true => $to_end, false => $right ) ),
@@ -1005,7 +1341,7 @@ sub _binary_op {
         # the left-hand tree is always in scalar context (so it always
         # produces a value) and it needs to be discarded if the tree is in void
         # context
-        _add_bytecode $self, opcode_n( OP_POP )
+        _discard_value( $self )
             if _context( $tree ) == CXT_VOID;
         _add_jump_unoptimized $self, opcode_nm( OP_JUMP, to => $end ), $end;
 
@@ -1013,15 +1349,18 @@ sub _binary_op {
 
         # evalutates right only if this is the correct return value
         if( $tree->op == OP_LOG_AND || $tree->op == OP_LOG_OR ) {
-            _add_bytecode $self, opcode_n( OP_POP );
+            _discard_value( $self )
         }
         $self->dispatch( $tree->right );
         if( $tree->op == OP_LOG_AND_ASSIGN || $tree->op == OP_LOG_OR_ASSIGN ) {
-            _add_bytecode $self, opcode_nm( OP_SWAP_ASSIGN, context => _context( $tree ) );
-            _add_bytecode $self, opcode_n( OP_POP )
+            _add_value $self,
+                opcode_nam( OP_SWAP_ASSIGN,
+                            _get_stack( $self, 2 ),
+                            context => _context( $tree ) );
+            _discard_value( $self )
                 if _context( $tree ) == CXT_VOID;
         } elsif( _context( $tree ) == CXT_VOID && !$tree->right->always_void ) {
-            _add_bytecode $self, opcode_n( OP_POP );
+            _discard_value( $self );
         }
         _add_jump $self, opcode_nm( OP_JUMP, to => $end ), $end;
         _add_blocks $self, $end;
@@ -1029,25 +1368,27 @@ sub _binary_op {
         $self->dispatch( $tree->right );
         $self->dispatch( $tree->left );
 
-        _add_bytecode $self,
-                      opcode_npm( $tree->op, $tree->pos,
-                                  context => _context( $tree ) );
+        _add_value $self,
+            opcode_npam( $tree->op, $tree->pos,
+                         _get_stack( $self, 2 ),
+                         context => _context( $tree ) );
     } elsif( $tree->op == OP_MATCH || $tree->op == OP_NOT_MATCH ) {
         # TODO maybe build a different parse tree?
         if( $tree->right->isa( 'Language::P::ParseTree::Transliteration' ) ) {
             $self->dispatch( $tree->left );
-
-            _add_bytecode $self,
-                opcode_npm( OP_TRANSLITERATE, $tree->pos,
-                            context     => _context( $tree ),
-                            match       => ( join '', @{$tree->right->match} ),
-                            replacement => ( join '', @{$tree->right->replacement} ),
-                            flags       => $tree->right->flags );
+            _add_value $self,
+                opcode_npam( OP_TRANSLITERATE, $tree->pos,
+                             _get_stack( $self, 1 ),
+                             context     => _context( $tree ),
+                             match       => ( join '', @{$tree->right->match} ),
+                             replacement => ( join '', @{$tree->right->replacement} ),
+                             flags       => $tree->right->flags );
 
             if( $tree->op == OP_NOT_MATCH ) {
-                _add_bytecode $self,
-                    opcode_npm( OP_LOG_NOT, $tree->pos,
-                                context   => _context( $tree ) );
+                _add_value $self,
+                    opcode_npam( OP_LOG_NOT, $tree->pos,
+                                 _get_stack( $self, 1 ),
+                                 context   => _context( $tree ) );
             }
 
             return;
@@ -1068,12 +1409,15 @@ sub _binary_op {
             my $flags = $tree->right->pattern->flags &
                         (FLAG_RX_GLOBAL|FLAG_RX_KEEP);
 
-            _add_bytecode $self,
-                opcode_npm( OP_REPLACE, $tree->pos,
-                            context   => _context( $tree ),
-                            index     => $scope_id,
-                            flags     => $flags,
-                            to        => $repl );
+            _add_value $self,
+                opcode_npam( OP_REPLACE, $tree->pos,
+                             _get_stack( $self, 2 ),
+                             context   => _context( $tree ),
+                             index     => $scope_id,
+                             flags     => $flags,
+                             to        => $repl );
+
+            $self->_current_basic_block->add_successor( $repl );
 
             return;
         }
@@ -1083,41 +1427,47 @@ sub _binary_op {
         my $flags = $tree->right->flags &
                     (FLAG_RX_GLOBAL|FLAG_RX_KEEP);
 
-        _add_bytecode $self,
-            opcode_npm( OP_MATCH, $tree->pos,
-                        context   => _context( $tree ),
-                        flags     => $flags,
-                        index     => $scope_id );
+        _add_value $self,
+            opcode_npam( OP_MATCH, $tree->pos,
+                         _get_stack( $self, 2 ),
+                         context   => _context( $tree ),
+                         flags     => $flags,
+                         index     => $scope_id );
         # maybe perform the transformation during parsing, but remember
         # to correctly propagate context
         if( $tree->op == OP_NOT_MATCH ) {
-            _add_bytecode $self,
-                opcode_npm( OP_LOG_NOT, $tree->pos,
-                            context   => _context( $tree ) );
+            _add_value $self,
+                opcode_npam( OP_LOG_NOT, $tree->pos,
+                             _get_stack( $self, 1 ),
+                             context   => _context( $tree ) );
         }
     } elsif( $tree->op == OP_REPEAT ) {
         my $op;
         $self->dispatch( $tree->left );
         if( $tree->left->isa( 'Language::P::ParseTree::Parentheses' ) ) {
             $op = OP_REPEAT_ARRAY;
-            _add_bytecode $self,
-                opcode_nm( OP_MAKE_LIST, arg_count => 1, context => CXT_LIST );
+            _add_value $self,
+                opcode_nam( OP_MAKE_LIST,
+                            _get_stack( $self, 1 ),
+                            context => CXT_LIST );
         } else {
             $op = OP_REPEAT_SCALAR;
         }
 
         $self->dispatch( $tree->right );
 
-        _add_bytecode $self,
-            opcode_npm( $op, $tree->pos,
-                        context   => _context( $tree ) );
+        _add_value $self,
+            opcode_npam( $op, $tree->pos,
+                         _get_stack( $self, 2 ),
+                         context   => _context( $tree ) );
     } else {
         $self->dispatch( $tree->left );
         $self->dispatch( $tree->right );
 
-        _add_bytecode $self,
-            opcode_npm( $tree->op, $tree->pos,
-                        context   => _context( $tree ) );
+        _add_value $self,
+            opcode_npam( $tree->op, $tree->pos,
+                         _get_stack( $self, 2 ),
+                         context => _context( $tree ) );
     }
 }
 
@@ -1149,8 +1499,9 @@ sub _binary_op_cond {
     $self->dispatch( $tree->right );
 
     _add_jump $self,
-        opcode_npm( $conditionals{$tree->op}, $tree->pos,
-                    true => $true, false => $false ), $true, $false;
+        opcode_npam( $conditionals{$tree->op}, $tree->pos,
+                     _get_stack( $self, 2 ),
+                     true => $true, false => $false ), $true, $false;
 }
 
 sub _anything_cond {
@@ -1159,8 +1510,9 @@ sub _anything_cond {
     $self->dispatch( $tree );
 
     _add_jump $self,
-        opcode_npm( OP_JUMP_IF_TRUE, $tree->pos,
-                    true => $true, false => $false ), $true, $false;
+        opcode_npam( OP_JUMP_IF_TRUE, $tree->pos,
+                     _get_stack( $self, 1 ),
+                     true => $true, false => $false ), $true, $false;
 }
 
 sub _constant {
@@ -1170,28 +1522,28 @@ sub _constant {
 
     if( $tree->is_number ) {
         if( $tree->flags & NUM_INTEGER ) {
-            _add_bytecode $self,
+            _add_value $self,
                  opcode_nm( OP_CONSTANT_INTEGER, value => $tree->value );
         } elsif( $tree->flags & NUM_FLOAT ) {
-            _add_bytecode $self,
+            _add_value $self,
                  opcode_nm( OP_CONSTANT_FLOAT, value => $tree->value );
         } elsif( $tree->flags & NUM_OCTAL ) {
-            _add_bytecode $self,
+            _add_value $self,
                  opcode_nm( OP_CONSTANT_INTEGER,
                             value => oct '0' . $tree->value );
         } elsif( $tree->flags & NUM_HEXADECIMAL ) {
-            _add_bytecode $self,
+            _add_value $self,
                  opcode_nm( OP_CONSTANT_INTEGER,
                             value => oct '0x' . $tree->value );
         } elsif( $tree->flags & NUM_BINARY ) {
-            _add_bytecode $self,
+            _add_value $self,
                  opcode_nm( OP_CONSTANT_INTEGER,
                             value => oct '0b' . $tree->value );
         } else {
             die "Unhandled flags value";
         }
     } elsif( $tree->is_string ) {
-        _add_bytecode $self,
+        _add_value $self,
              opcode_nm( OP_CONSTANT_STRING, value => $tree->value );
     } else {
         die "Neither number nor string";
@@ -1202,12 +1554,12 @@ sub _symbol {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
-    _add_bytecode $self,
-         opcode_npm( OP_GLOBAL, $tree->pos,
-                     name    => $tree->name,
-                     slot    => $tree->sigil,
-                     context => _context_lvalue( $tree ),
-                     );
+    _add_value $self,
+        opcode_npm( OP_GLOBAL, $tree->pos,
+                    name    => $tree->name,
+                    slot    => $tree->sigil,
+                    context => _context_lvalue( $tree ),
+                    );
 }
 
 sub _lexical_symbol {
@@ -1306,11 +1658,11 @@ sub _do_lexical_access {
                                        $tree, $level );
     }
 
-    _add_bytecode $self,
-         opcode_nm( $lex_info->in_pad ? OP_LEXICAL_PAD : OP_LEXICAL,
-                    index => $lex_info->index,
-                    slot  => $tree->sigil,
-                    );
+    _add_value $self,
+        opcode_nm( $lex_info->in_pad ? OP_LEXICAL_PAD : OP_LEXICAL,
+                   index => $lex_info->index,
+                   slot  => $tree->sigil,
+                   );
 
     if( $is_decl ) {
         $lex_info->set_declaration( 1 );
@@ -1337,7 +1689,7 @@ sub _cond_loop {
     $tree->set_attribute( 'lbl_redo', $start_loop );
 
     _add_jump $self,
-         opcode_nm( OP_JUMP, to => $start_cond ), $start_cond;
+        opcode_nm( OP_JUMP, to => $start_cond ), $start_cond;
     _add_blocks $self, $start_cond;
 
     if( $tree->block->isa( 'Language::P::ParseTree::Block' ) ) {
@@ -1354,7 +1706,8 @@ sub _cond_loop {
     _discard_if_void( $self, $tree->block );
 
     if( $tree->continue ) {
-        _add_jump $self, opcode_nm( OP_JUMP, to => $start_continue ), $start_continue;
+        _add_jump $self,
+            opcode_nm( OP_JUMP, to => $start_continue ), $start_continue;
 
         _add_blocks $self, $start_continue;
         $self->dispatch( $tree->continue );
@@ -1382,17 +1735,20 @@ sub _setup_list_iteration {
         _start_bb( $self );
         $self->push_block( 0, $tree->pos_s, $tree->pos_e );
     }
-
     $self->dispatch( $list );
-    _add_bytecode $self, opcode_nm( OP_MAKE_LIST, arg_count => 1, context => CXT_LIST );
+    _add_value $self,
+        opcode_nam( OP_MAKE_LIST,
+                    _get_stack( $self, 1 ),
+                    context => CXT_LIST );
 
     my $iterator = $self->{_temporary_count}++;
     my( $glob );
     _add_bytecode $self,
-        opcode_npm( OP_ITERATOR, $tree->pos ),
-        opcode_nm( OP_TEMPORARY_SET,
-                   index => $iterator,
-                   slot  => VALUE_ITERATOR );
+        opcode_nam( OP_TEMPORARY_SET,
+                    [ opcode_npam( OP_ITERATOR, $tree->pos,
+                                   _get_stack( $self, 1 ) ) ],
+                    index => $iterator,
+                    slot  => VALUE_ITERATOR );
 
     if( $is_lexical_declaration ) {
         _allocate_lexical( $self, $self->_code_segments->[0], $iter_var, 0 );
@@ -1406,19 +1762,20 @@ sub _setup_list_iteration {
         my $slot = $self->{_temporary_count}++;
 
         _add_bytecode $self,
-            opcode_nm( OP_GLOBAL,
-                       name    => $iter_var->name,
-                       slot    => VALUE_GLOB,
-                       context => CXT_SCALAR ),
-            opcode_nm( OP_TEMPORARY_SET,
-                       index => $glob,
-                       slot  => VALUE_GLOB ),
+            opcode_nam( OP_TEMPORARY_SET,
+                        [ opcode_nm( OP_GLOBAL,
+                                     name    => $iter_var->name,
+                                     slot    => VALUE_GLOB,
+                                     context => CXT_SCALAR ) ],
+                        index => $glob,
+                        slot  => VALUE_GLOB );
+        _add_value $self,
             opcode_npm( OP_LOCALIZE_GLOB_SLOT, $tree->pos,
                         name  => $iter_var->name,
                         slot  => VALUE_SCALAR,
                         index => $slot,
-                        ),
-            opcode_n( OP_POP );
+                        );
+        _discard_value( $self );
 
         push @{$self->_current_block->bytecode},
              [ opcode_nm( OP_TEMPORARY_CLEAR,
@@ -1452,36 +1809,30 @@ sub _setup_list_iteration {
     _add_jump $self, opcode_nm( OP_JUMP, to => $start_step ), $start_step;
     _add_blocks $self, $start_step;
 
+    _add_value $self,
+        opcode_npam( OP_ITERATOR_NEXT, $tree->pos,
+                     [ opcode_nm( OP_TEMPORARY,
+                                  index => $iterator,
+                                  slot  => VALUE_ITERATOR ) ] );
+    _dump_out_stack( $self );
+    _dup( $self );
+    _add_jump $self,
+        opcode_npam( OP_JUMP_IF_NULL, $tree->pos,
+                     _get_stack( $self, 1 ),
+                     true => $exit_loop, false => $start_loop ),
+        $exit_loop, $start_loop;
+
     if( !$is_lexical ) {
-        _add_bytecode $self,
-            opcode_nm( OP_TEMPORARY,
-                       index => $iterator,
-                       slot  => VALUE_ITERATOR ),
-            opcode_npm( OP_ITERATOR_NEXT, $tree->pos ),
-            opcode_n( OP_DUP );
-        _add_jump $self,
-            opcode_npm( OP_JUMP_IF_NULL, $tree->pos,
-                        true => $exit_loop, false => $start_loop ),
-            $exit_loop, $start_loop;
-
         _add_blocks $self, $start_loop;
+        my $scalar = _get_stack( $self, 1 );
         _add_bytecode $self,
-            opcode_nm( OP_TEMPORARY,
-                       index => $glob,
-                       slot  => VALUE_GLOB ),
-            opcode_nm( OP_SWAP_GLOB_SLOT_SET, slot  => VALUE_SCALAR );
+            opcode_nam( OP_SWAP_GLOB_SLOT_SET,
+                        [ $scalar->[0],
+                          opcode_nm( OP_TEMPORARY,
+                                     index => $glob,
+                                     slot  => VALUE_GLOB ) ],
+                        slot => VALUE_SCALAR );
     } else {
-        _add_bytecode $self,
-            opcode_nm( OP_TEMPORARY,
-                       index => $iterator,
-                       slot  => VALUE_ITERATOR ),
-            opcode_np( OP_ITERATOR_NEXT, $tree->pos ),
-            opcode_n( OP_DUP );
-        _add_jump $self,
-            opcode_npm( OP_JUMP_IF_NULL, $tree->pos,
-                        true => $exit_loop, false => $start_loop ),
-            $exit_loop, $start_loop;
-
         _add_blocks $self, $start_loop;
         my $lex_info;
         if( $is_lexical_declaration ) {
@@ -1491,9 +1842,10 @@ sub _setup_list_iteration {
         }
 
         _add_bytecode $self,
-            opcode_nm( $lex_info->in_pad ? OP_LEXICAL_PAD_SET : OP_LEXICAL_SET,
-                       index => $lex_info->index,
-                       );
+            opcode_nam( $lex_info->in_pad ? OP_LEXICAL_PAD_SET : OP_LEXICAL_SET,
+                        _get_stack( $self, 1 ),
+                        index => $lex_info->index,
+                        );
     }
 
     return ( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop );
@@ -1503,9 +1855,8 @@ sub _end_list_iteration {
     my( $self, $tree, $enter_block, $start_step, $exit_loop, $end_loop ) = @_;
 
     _add_jump $self, opcode_nm( OP_JUMP, to => $start_step ), $start_step;
-
     _add_blocks $self, $exit_loop;
-    _add_bytecode $self, opcode_n( OP_POP );
+    _pop( $self );
     _add_jump $self, opcode_nm( OP_JUMP, to => $end_loop ), $end_loop;
     _add_blocks $self, $end_loop;
 
@@ -1535,7 +1886,8 @@ sub _foreach {
     _discard_if_void( $self, $tree->block );
 
     if( $tree->continue ) {
-        _add_jump $self, opcode_nm( OP_JUMP, to => $start_continue ), $start_continue;
+        _add_jump $self,
+            opcode_nm( OP_JUMP, to => $start_continue ), $start_continue;
 
         _add_blocks $self, $start_continue;
         $self->dispatch( $tree->continue );
@@ -1564,25 +1916,28 @@ sub _map {
     # result value
     my $result = $self->{_temporary_count}++;
     _add_bytecode $self,
-        opcode_nm( OP_MAKE_LIST, arg_count => 0, context => CXT_LIST ),
-        opcode_nm( OP_TEMPORARY_SET, index => $result, slot => VALUE_ARRAY );
+        opcode_nam( OP_TEMPORARY_SET,
+                    [ opcode_nm( OP_MAKE_LIST, context => CXT_LIST ) ],
+                    index => $result, slot => VALUE_ARRAY );
 
     my( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop ) =
         _setup_list_iteration( $self, $tree, $iter_var, $list, 0 );
 
     # call expresssion and add it to the result
-    _add_bytecode $self,
+    _add_value $self,
         opcode_nm( OP_TEMPORARY, index => $result, slot => VALUE_ARRAY );
     $self->dispatch( $expression );
     _add_bytecode $self,
-        opcode_n( OP_PUSH_ELEMENT );
+        opcode_nam( OP_PUSH_ELEMENT, _get_stack( $self, 2 ) );
 
     _end_list_iteration( $self, $tree, 0, $start_step,
                          $exit_loop, $end_loop );
 
     # return the result
+    _add_value $self,
+        opcode_nm( OP_TEMPORARY, index => $result, slot => VALUE_ARRAY );
+    _dump_out_stack( $self );
     _add_bytecode $self,
-        opcode_nm( OP_TEMPORARY, index => $result, slot => VALUE_ARRAY ),
         opcode_nm( OP_TEMPORARY_CLEAR, index => $result, slot => VALUE_ARRAY );
 }
 
@@ -1605,8 +1960,9 @@ sub _grep {
     # result value
     my $result = $self->{_temporary_count}++;
     _add_bytecode $self,
-        opcode_nm( OP_MAKE_LIST, arg_count => 0, context => CXT_LIST ),
-        opcode_nm( OP_TEMPORARY_SET, index => $result, slot => VALUE_ARRAY );
+        opcode_nam( OP_TEMPORARY_SET,
+                    [ opcode_nm( OP_MAKE_LIST, context => CXT_LIST ) ],
+                    index => $result, slot => VALUE_ARRAY );
 
     my( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop ) =
         _setup_list_iteration( $self, $tree, $iter_var, $list, 0 );
@@ -1616,13 +1972,21 @@ sub _grep {
 
     my( $iftrue, $iffalse ) = _new_blocks( $self, 2 );
     _add_jump $self,
-        opcode_nm( OP_JUMP_IF_TRUE, true => $iftrue, false => $iffalse ),
+        opcode_nam( OP_JUMP_IF_TRUE,
+                    _get_stack( $self, 1 ),
+                    true => $iftrue, false => $iffalse ),
         $iftrue, $iffalse;
     _add_blocks $self, $iftrue;
     _add_bytecode $self,
-        opcode_nm( OP_TEMPORARY, index => $result, slot => VALUE_ARRAY ),
-        opcode_nm( OP_GLOBAL, name => '_', slot => VALUE_SCALAR, context => CXT_SCALAR ),
-        opcode_n( OP_PUSH_ELEMENT );
+        opcode_nam( OP_PUSH_ELEMENT,
+                    [ opcode_nm( OP_TEMPORARY,
+                                 index => $result,
+                                 slot  => VALUE_ARRAY ),
+                      opcode_nm( OP_GLOBAL,
+                                 name    => '_',
+                                 slot    => VALUE_SCALAR,
+                                 context => CXT_SCALAR ) ],
+                    );
     _add_jump $self,
         opcode_nm( OP_JUMP, to => $iffalse ),
         $iffalse;
@@ -1632,8 +1996,10 @@ sub _grep {
                          $exit_loop, $end_loop );
 
     # return the result
+    _add_value $self,
+        opcode_nm( OP_TEMPORARY, index => $result, slot => VALUE_ARRAY );
+    _dump_out_stack( $self );
     _add_bytecode $self,
-        opcode_nm( OP_TEMPORARY, index => $result, slot => VALUE_ARRAY ),
         opcode_nm( OP_TEMPORARY_CLEAR, index => $result, slot => VALUE_ARRAY );
 }
 
@@ -1648,8 +2014,10 @@ sub _sort {
     $self->dispatch( $list );
 
     die 'Unsupported custom sort comparison' if $tree->indirect;
-    _add_bytecode $self,
-        opcode_npm( OP_SORT, $tree->pos, context => _context( $tree ) );
+    _add_value $self,
+        opcode_npam( OP_SORT, $tree->pos,
+                     _get_stack( $self, 1 ),
+                     context => _context( $tree ) );
 }
 
 sub _for {
@@ -1755,14 +2123,18 @@ sub _ternary {
 
     _add_blocks $self, $true;
     $self->dispatch( $tree->iftrue );
-    _add_bytecode $self, opcode_n( OP_POP )
-        if _context( $tree ) == CXT_VOID && !$tree->iftrue->always_void;
+    _discard_value( $self )
+        if    $self->is_stack
+           && _context( $tree ) == CXT_VOID
+           && !$tree->iftrue->always_void;
     _add_jump $self, opcode_nm( OP_JUMP, to => $end ), $end;
 
     _add_blocks $self, $false;
     $self->dispatch( $tree->iffalse );
-    _add_bytecode $self, opcode_n( OP_POP )
-        if _context( $tree ) == CXT_VOID && !$tree->iffalse->always_void;
+    _discard_value( $self )
+        if    $self->is_stack
+           && _context( $tree ) == CXT_VOID
+           && !$tree->iffalse->always_void;
     _add_jump $self, opcode_nm( OP_JUMP, to => $end ), $end;
 
     _add_blocks $self, $end;
@@ -1794,8 +2166,11 @@ sub _block {
     # clear $@ when entering eval scope
     if( $is_eval ) {
         _add_bytecode $self,
-            opcode_nm( OP_GLOBAL, name => '@', slot => VALUE_SCALAR, context => CXT_SCALAR ),
-            opcode_nm( OP_UNDEF );
+            opcode_nam( OP_UNDEF,
+                        [ opcode_nm( OP_GLOBAL,
+                                     name    => '@',
+                                     slot    => VALUE_SCALAR,
+                                     context => CXT_SCALAR ) ] );
     }
 
     foreach my $line ( @{$tree->lines} ) {
@@ -1806,14 +2181,19 @@ sub _block {
     _exit_scope( $self, $self->_current_block );
     # clear $@ when exiting eval scope
     if( $is_eval ) {
+        _leave_current_basic_block( $self );
         _add_bytecode $self,
-            opcode_nm( OP_GLOBAL, name => '@', slot => VALUE_SCALAR, context => CXT_SCALAR ),
-            opcode_nm( OP_UNDEF );
+            opcode_nam( OP_UNDEF,
+                        [ opcode_nm( OP_GLOBAL,
+                                     name    => '@',
+                                     slot    => VALUE_SCALAR,
+                                     context => CXT_SCALAR ) ] );
     }
     my $block = $self->pop_block;
     # emit landing point for eval
     if( $is_eval ) {
         my( $except, $resume ) = _new_blocks( $self, 2 );
+        my $current = $self->_current_basic_block;
 
         $self->_code_segments->[0]->scopes->[$block->id]->set_exception( $except );
 
@@ -1822,8 +2202,13 @@ sub _block {
 
         # landing point for exceptions
         _add_blocks $self, $except;
-        _add_bytecode $self, opcode_n( OP_CONSTANT_UNDEF )
-            if _context( $tree ) != CXT_VOID;
+        if( !$self->is_stack && _context( $tree ) != CXT_VOID ) {
+            my $stack = _create_in_stack( $self, $self->_in_args_map->{$current} );
+            $stack->[-1] = opcode_n( OP_CONSTANT_UNDEF );
+            $self->_stack( $stack );
+        } elsif( _context( $tree ) != CXT_VOID ) {
+            _add_value $self, opcode_n( OP_CONSTANT_UNDEF );
+        }
         _add_jump $self, opcode_nm( OP_JUMP, to => $resume ), $resume;
 
         # add the resume block
@@ -1841,7 +2226,7 @@ sub _bare_block {
     $tree->set_attribute( 'lbl_redo', $start_loop );
 
     _add_jump $self,
-         opcode_nm( OP_JUMP, to => $start_loop ), $start_loop;
+        opcode_nm( OP_JUMP, to => $start_loop ), $start_loop;
     _add_blocks $self, $start_loop;
 
     $self->push_block( 0, $tree->pos_s, $tree->pos_e );
@@ -1856,14 +2241,15 @@ sub _bare_block {
     $self->pop_block;
 
     if( $tree->continue ) {
-        _add_jump $self, opcode_nm( OP_JUMP, to => $start_continue ), $start_continue;
+        _add_jump $self,
+            opcode_nm( OP_JUMP, to => $start_continue ), $start_continue;
 
         _add_blocks $self, $start_continue;
         $self->dispatch( $tree->continue );
     }
 
     _add_jump $self,
-         opcode_nm( OP_JUMP, to => $end_loop ), $end_loop;
+        opcode_nm( OP_JUMP, to => $end_loop ), $end_loop;
     _add_blocks $self, $end_loop;
 }
 
@@ -1877,9 +2263,9 @@ sub _anon_subroutine {
     my( $self, $tree ) = @_;
     my $sub = _subroutine( $self, $tree );
 
-    _add_bytecode $self,
-        opcode_nm( OP_CONSTANT_SUB, value => $sub ),
-        opcode_n( OP_MAKE_CLOSURE );
+    _add_value $self,
+        opcode_nam( OP_MAKE_CLOSURE,
+                    [ opcode_nm( OP_CONSTANT_SUB, value => $sub ) ] );
 }
 
 sub _subroutine {
@@ -1891,6 +2277,7 @@ sub _subroutine {
                                           # performed by caller
                                           'dump-ir' => 0,
                                           },
+                            is_stack => $self->is_stack,
                             } );
     my $code_segments =
       _generate_bytecode( $generator, 1, $tree->name, $tree->prototype,
@@ -1909,6 +2296,7 @@ sub _use {
                                           # performed by caller
                                           'dump-ir' => 0,
                                           },
+                            is_stack => $self->is_stack,
                             } );
     my $code_segments = $generator->generate_use( $tree );
     push @{$self->_code_segments}, @$code_segments;
@@ -1925,42 +2313,55 @@ sub _quoted_string {
         if(    ( $c->is_symbol && $c->sigil == VALUE_ARRAY )
             || (    $c->isa( 'Language::P::ParseTree::Dereference' )
                  && $c->op == OP_DEREFERENCE_ARRAY ) ) {
-            _add_bytecode $self,
+            _add_value $self,
                 opcode_npm( OP_GLOBAL, $tree->pos,
-                            name => '"', slot => VALUE_SCALAR, context => CXT_SCALAR );
+                            name    => '"',
+                            slot    => VALUE_SCALAR,
+                            context => CXT_SCALAR );
             $self->dispatch( $c );
-            _add_bytecode $self,
-                opcode_nm( OP_MAKE_LIST, arg_count => 2, context => CXT_LIST ),
-                opcode_npm( OP_JOIN, $tree->pos, context => _context( $tree ) );
+            _add_value $self,
+                opcode_npam( OP_JOIN, $tree->pos,
+                             [ opcode_nam( OP_MAKE_LIST,
+                                           _get_stack( $self, 2 ),
+                                           context => CXT_LIST ) ],
+                             context => _context( $tree ) );
         } else {
             $self->dispatch( $c );
-            _add_bytecode $self,
-                opcode_npm( OP_STRINGIFY, $tree->pos,
-                            context   => _context( $tree ) );
+            _add_value $self,
+                opcode_npam( OP_STRINGIFY, $tree->pos,
+                             _get_stack( $self, 1 ),
+                             context => _context( $tree ) );
         }
 
         return;
     }
 
-    _add_bytecode $self, opcode_nm( OP_FRESH_STRING, value => '' );
+    _add_value $self, opcode_nm( OP_FRESH_STRING, value => '' );
     for( my $i = 0; $i < @{$tree->components}; ++$i ) {
         my $c = $tree->components->[$i];
         if(    ( $c->is_symbol && $c->sigil == VALUE_ARRAY )
             || (    $c->isa( 'Language::P::ParseTree::Dereference' )
                  && $c->op == OP_DEREFERENCE_ARRAY ) ) {
-            _add_bytecode $self,
+            _add_value $self,
                 opcode_npm( OP_GLOBAL, $tree->pos,
-                            name => '"', slot => VALUE_SCALAR, context => CXT_SCALAR );
+                            name    => '"',
+                            slot    => VALUE_SCALAR,
+                            context => CXT_SCALAR );
             $self->dispatch( $c );
-            _add_bytecode $self,
-                opcode_nm( OP_MAKE_LIST, arg_count => 2, context => CXT_LIST ),
-                opcode_npm( OP_JOIN, $tree->pos, context => _context( $tree ) );
+            _add_value $self,
+                opcode_npam( OP_JOIN, $tree->pos,
+                             [ opcode_nam( OP_MAKE_LIST,
+                                           _get_stack( $self, 2 ),
+                                           context => CXT_LIST ) ],
+                             context => _context( $tree ) );
         } else {
             $self->dispatch( $c );
         }
 
-        _add_bytecode $self, opcode_npm( OP_CONCATENATE_ASSIGN, $tree->pos,
-                                         context => CXT_SCALAR );
+        _add_value $self,
+            opcode_npam( OP_CONCATENATE_ASSIGN, $tree->pos,
+                         _get_stack( $self, 2 ),
+                         context => CXT_SCALAR );
     }
 }
 
@@ -1973,26 +2374,32 @@ sub _subscript {
 
     my $lvalue = $tree->get_attribute( 'context' ) & (CXT_LVALUE|CXT_VIVIFY);
     if( $tree->type == VALUE_ARRAY ) {
-        _add_bytecode $self, opcode_npm( OP_VIVIFY_ARRAY, $tree->pos,
-                                         context   => CXT_SCALAR )
+        _add_value $self, opcode_npam( OP_VIVIFY_ARRAY, $tree->pos,
+                                       _get_stack( $self, 1 ),
+                                       context   => CXT_SCALAR )
           if $tree->reference;
-        _add_bytecode $self, opcode_npm( OP_ARRAY_ELEMENT, $tree->pos,
-                                         create    => $lvalue ? 1 : 0,
-                                         context   => _context( $tree ) );
+        _add_value $self, opcode_npam( OP_ARRAY_ELEMENT, $tree->pos,
+                                       _get_stack( $self, 2 ),
+                                       create    => $lvalue ? 1 : 0,
+                                       context   => _context( $tree ) );
     } elsif( $tree->type == VALUE_HASH ) {
-        _add_bytecode $self, opcode_npm( OP_VIVIFY_HASH, $tree->pos,
-                                         context   => CXT_SCALAR )
+        _add_value $self, opcode_npam( OP_VIVIFY_HASH, $tree->pos,
+                                       _get_stack( $self, 1 ),
+                                       context   => CXT_SCALAR )
           if $tree->reference;
-        _add_bytecode $self, opcode_npm( OP_HASH_ELEMENT, $tree->pos,
-                                         create    => $lvalue ? 1 : 0,
-                                         context   => _context( $tree ) );
+        _add_value $self, opcode_npam( OP_HASH_ELEMENT, $tree->pos,
+                                       _get_stack( $self, 2 ),
+                                       create    => $lvalue ? 1 : 0,
+                                       context   => _context( $tree ) );
     } elsif( $tree->type == VALUE_GLOB ) {
-        _add_bytecode $self, opcode_npm( OP_DEREFERENCE_GLOB, $tree->pos,
-                                         context   => CXT_SCALAR )
+        _add_value $self, opcode_npam( OP_DEREFERENCE_GLOB, $tree->pos,
+                                       _get_stack( $self, 1 ),
+                                       context   => CXT_SCALAR )
           if $tree->reference;
-        _add_bytecode $self, opcode_npm( OP_GLOB_ELEMENT, $tree->pos,
-                                         create    => $lvalue ? 1 : 0,
-                                         context   => _context( $tree ) );
+        _add_value $self, opcode_npam( OP_GLOB_ELEMENT, $tree->pos,
+                                       _get_stack( $self, 2 ),
+                                       create    => $lvalue ? 1 : 0,
+                                       context   => _context( $tree ) );
     } else {
         die $tree->type;
     }
@@ -2007,22 +2414,27 @@ sub _slice {
 
     my $lvalue = $tree->get_attribute( 'context' ) & (CXT_LVALUE|CXT_VIVIFY);
     if( $tree->type == VALUE_ARRAY ) {
-        _add_bytecode $self, opcode_npm( OP_VIVIFY_ARRAY, $tree->pos,
-                                         context   => CXT_SCALAR )
+        _add_value $self, opcode_npam( OP_VIVIFY_ARRAY, $tree->pos,
+                                       _get_stack( $self, 1 ),
+                                       context   => CXT_SCALAR )
           if $tree->reference;
-        _add_bytecode $self, opcode_npm( OP_ARRAY_SLICE, $tree->pos,
-                                         create    => $lvalue ? 1 : 0,
-                                         context   => _context( $tree ) );
+        _add_value $self, opcode_npam( OP_ARRAY_SLICE, $tree->pos,
+                                       _get_stack( $self, 2 ),
+                                       create    => $lvalue ? 1 : 0,
+                                       context   => _context( $tree ) );
     } elsif( $tree->type == VALUE_HASH ) {
-        _add_bytecode $self, opcode_npm( OP_VIVIFY_HASH, $tree->pos,
-                                         context   => CXT_SCALAR )
+        _add_value $self, opcode_npam( OP_VIVIFY_HASH, $tree->pos,
+                                       _get_stack( $self, 1 ),
+                                       context   => CXT_SCALAR )
           if $tree->reference;
-        _add_bytecode $self, opcode_npm( OP_HASH_SLICE, $tree->pos,
-                                         create    => $lvalue ? 1 : 0,
-                                         context   => _context( $tree ) );
+        _add_value $self, opcode_npam( OP_HASH_SLICE, $tree->pos,
+                                       _get_stack( $self, 2 ),
+                                       create    => $lvalue ? 1 : 0,
+                                       context   => _context( $tree ) );
     } elsif( $tree->type == VALUE_LIST ) {
-        _add_bytecode $self, opcode_npm( OP_LIST_SLICE, $tree->pos,
-                                         context   => _context( $tree ) );
+        _add_value $self, opcode_npam( OP_LIST_SLICE, $tree->pos,
+                                       _get_stack( $self, 2 ),
+                                       context   => _context( $tree ) );
     } else {
         die $tree->type;
     }
@@ -2036,13 +2448,13 @@ sub _ref_constructor {
     if( $tree->expression ) {
         $self->dispatch( $tree->expression );
     } else {
-        _add_bytecode $self, opcode_nm( OP_MAKE_LIST, arg_count => 0, context => CXT_LIST );
+        _add_value $self, opcode_nm( OP_MAKE_LIST, context => CXT_LIST );
     }
 
     if( $tree->type == VALUE_ARRAY ) {
-        _add_bytecode $self, opcode_np( OP_ANONYMOUS_ARRAY, $tree->pos );
+        _add_value $self, opcode_npam( OP_ANONYMOUS_ARRAY, $tree->pos, _get_stack( $self, 1 ) );
     } elsif( $tree->type == VALUE_HASH ) {
-        _add_bytecode $self, opcode_np( OP_ANONYMOUS_HASH, $tree->pos );
+        _add_value $self, opcode_npam( OP_ANONYMOUS_HASH, $tree->pos, _get_stack( $self, 1 ) );
     } else {
         die $tree->type;
     }
@@ -2108,10 +2520,11 @@ sub _find_ancestor {
 sub _jump {
     my( $self, $tree ) = @_;
     my $target = _find_jump_target( $self, $tree );
+    my $stack_count = @{$self->_stack};
 
     # discard temporaries present on the stack before jumping; it is a
     # no-op when the jump is a statement
-    _add_bytecode $self, opcode_n( OP_DISCARD_STACK );
+    _discard_stack( $self );
 
     my $unwind_to = $tree->op == OP_GOTO ?
                         _find_ancestor( $self, $tree, $target ) :
@@ -2127,7 +2540,8 @@ sub _jump {
     my $label_to;
     if( $tree->op == OP_GOTO ) {
         $label_to = $target->get_attribute( 'lbl_label' );
-        if( !$label_to ) {
+        # the check on successors is required during bytecode dump
+        if( !$label_to || @{$label_to->successors} ) {
             $target->set_attribute( 'lbl_label', $label_to = _new_block( $self ) );
         }
     } else {
@@ -2139,20 +2553,43 @@ sub _jump {
     }
 
     _add_jump $self, opcode_nm( OP_JUMP, to => $label_to ), $label_to;
-    _add_blocks( $self, _new_block( $self ) );
+    $self->_stack( _fake_stack( $stack_count ) );
+    _add_blocks( $self, _new_fake_block( $self ) );
 }
 
 sub _emit_label {
     my( $self, $tree ) = @_;
     return unless $tree->has_attribute( 'label' );
 
-    if( !$tree->has_attribute( 'lbl_label' ) ) {
-        $tree->set_attribute( 'lbl_label', _new_block( $self ) );
+    my $to = $tree->get_attribute( 'lbl_label' );
+    # the check on successors is required during bytecode dump
+    if( !$to || @{$to->successors} ) {
+        $tree->set_attribute( 'lbl_label', $to = _new_block( $self ) );
     }
 
-    my $to = $tree->get_attribute( 'lbl_label' );
     _add_jump $self, opcode_nm( OP_JUMP, to => $to ), $to;
     _add_blocks $self, $tree->get_attribute( 'lbl_label' );
+}
+
+sub _discard_stack {
+    my( $self ) = @_;
+    my $need_discard = @{$self->_stack};
+
+    while( @{$self->_stack} ) {
+        my $op = pop @{$self->_stack};
+        _add_bytecode $self, $op if    $op->{opcode_n} != OP_PHI
+                                    && $op->{opcode_n} != OP_GET;
+    }
+    _add_bytecode $self, opcode_n( OP_DISCARD_STACK )
+        if $self->is_stack && $need_discard;
+}
+
+sub _discard_value {
+    my( $self ) = @_;
+    my $top = $self->_stack->[-1];
+
+    return if $top->{opcode_n} == OP_PHI;
+    _pop( $self );
 }
 
 sub _discard_if_void {
@@ -2161,18 +2598,22 @@ sub _discard_if_void {
     my $context = ( $tree->get_attribute( 'context' ) || 0 ) & CXT_CALL_MASK;
     return if $context != CXT_VOID;
 
-    _add_bytecode $self, opcode_n( OP_POP );
+    my $top = $self->_stack->[-1];
+    return if    $top->{opcode_n} == OP_PHI
+              || $top->{opcode_n} == OP_GET;
+    _pop( $self );
 }
 
 sub _pattern {
     my( $self, $tree ) = @_;
     my $generator = Language::P::Intermediate::Generator->new
                         ( { _options => $self->{_options},
+                            is_stack => $self->is_stack,
                             } );
 
     my $re = $generator->_generate_regex( $tree, $self->_code_segments->[0] );
-    _add_bytecode $self, opcode_nm( OP_CONSTANT_REGEX, value => $re->[0] );
-    _add_bytecode $self, opcode_n( OP_MAKE_QR )
+    _add_value $self, opcode_nm( OP_CONSTANT_REGEX, value => $re->[0] );
+    _add_value $self, opcode_nam( OP_MAKE_QR, _get_stack( $self, 1 ) )
         if $tree->op == OP_QL_QR;
 }
 
@@ -2181,16 +2622,20 @@ sub _interpolated_pattern {
 
     $self->dispatch( $tree->string );
 
-    _add_bytecode $self, opcode_npm( OP_EVAL_REGEX, $tree->pos,
-                                     context => _context( $tree ),
-                                     flags   => $tree->flags,
-                                     );
-    _add_bytecode $self, opcode_n( OP_MAKE_QR )
+    _add_value $self,
+        opcode_npam( OP_EVAL_REGEX, $tree->pos,
+                     _get_stack( $self, 1 ),
+                     context => _context( $tree ),
+                     flags   => $tree->flags,
+                     );
+    _add_value $self, opcode_nam( OP_MAKE_QR, _get_stack( $self, 1 ) )
         if $tree->op == OP_QL_QR;
 }
 
 sub _exit_scope {
     my( $self, $block ) = @_;
+
+    _dump_out_stack( $self ) if @{$block->bytecode};
 
     foreach my $code ( reverse @{$block->bytecode} ) {
         _add_bytecode $self, @$code;

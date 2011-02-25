@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Exporter 'import';
 
-our @EXPORT = qw(write_opcodes write_perl_serializer parse_opdesc write_toy_opclasses);
+our @EXPORT = qw(write_opcodes write_perl_serializer parse_opdesc write_toy_opclasses group_opcode_numbers group_opcode_attributes);
 
 use Language::P::Constants qw(:all);
 use Language::P::Keywords qw(:all);
@@ -61,19 +61,40 @@ sub parse_opdesc {
     return \%op;
 }
 
-sub write_toy_opclasses {
-    my( $file ) = @ARGV;
-
-    my %op = %{parse_opdesc()};
-
-    open my $out, '>', $file;
+sub group_opcode_numbers {
+    my( $op ) = @_;
 
     my %classes;
-    while( my( $k, $v ) = each %op ) {
+    while( my( $k, $v ) = each %$op ) {
         my( $attrs, $class ) = ( $v->[3][0], $v->[5] );
         next unless $class;
         push @{$classes{$class} ||= []}, $k;
     }
+
+    return \%classes;
+}
+
+sub group_opcode_attributes {
+    my( $op ) = @_;
+
+    my %classes;
+    while( my( $k, $v ) = each %$op ) {
+        my( $attrs, $class ) = ( $v->[3][0], $v->[5] );
+        next unless $class;
+        next if $classes{$class};
+        $classes{$class} = $attrs;
+    }
+
+    return \%classes;
+}
+
+sub write_toy_opclasses {
+    my( $file ) = @ARGV;
+
+    my %op = %{parse_opdesc()};
+    my %classes = %{group_opcode_numbers( \%op )};
+
+    open my $out, '>', $file;
 
     print $out <<'EOT';
 package Language::P::Assembly;
@@ -496,7 +517,7 @@ bit_or              0       same                 2   1  context=i1
 bit_or_assign       0       same                 2   1  context=i1
 bit_xor             0       same                 2   1  context=i1
 bit_xor_assign      0       same                 2   1  context=i1
-bless               u       same                 2   1  context=i1
+bless               v       same                 2   1  context=i1
 call                0       same                 2   1  context=i1
 call_method         0       same                 1   1  context=i1,method=s,class=CallMethod
 call_method_indirect 0      same                 2   1  context=i1
@@ -725,7 +746,7 @@ vec                 u       same                 3   1  context=i1
 vivify_array        0       same                 1   1  context=i1
 vivify_hash         0       same                 1   1  context=i1
 vivify_scalar       0       same                 1   1  context=i1
-wantarray           u       want                 0   1  context=i1
+wantarray           v       want                 0   1  context=i1
 warn                0       same                 1   1  context=i1
 
 rx_accept           0       same                 0   0  groups=i,class=RegexAccept

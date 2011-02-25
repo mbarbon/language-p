@@ -17,9 +17,9 @@ L1: # scope=1
 L10: # scope=1
   jump to=L11
 L11: # scope=1
-  set index=5, slot=VALUE_ARRAY (temporary index=4, slot=2)
+  set index=4, slot=VALUE_ARRAY (temporary index=4, slot=2)
   temporary_clear index=4, slot=2
-  assign context=2 (make_list context=8 (get index=4, slot=VALUE_ARRAY), (get index=5, slot=VALUE_ARRAY)), (global context=24, name="r", slot=2)
+  assign context=2 (make_list context=8 (get index=2, slot=VALUE_ARRAY), (get index=4, slot=VALUE_ARRAY)), (global context=24, name="r", slot=2)
   jump to=L12
 L12: # scope=0
   end
@@ -40,7 +40,6 @@ L6: # scope=1
   temporary_set index=5, slot=9 (iterator (make_list context=8 (make_list context=8 (global context=8, name="z", slot=2))))
   temporary_set index=6, slot=5 (global context=4, name="_", slot=5)
   localize_glob_slot index=7, name="_", slot=1
-  set index=4, slot=VALUE_ARRAY (get index=2, slot=VALUE_ARRAY)
   jump to=L7
 L7: # scope=1
   set index=3, slot=VALUE_SCALAR (iterator_next (temporary index=5, slot=9))

@@ -58,8 +58,7 @@ L1: # scope=1
 L2: # scope=1
   end
 L3: # scope=1
-  jump_if_true to=L4 (global context=4, name="a", slot=1)
-  jump to=L2
+  jump_if_true false=L2, true=L4 (global context=4, name="a", slot=1)
 L4: # scope=1
   dynamic_goto context=1 (reference context=4 (global context=4, name="foo", slot=4))
 EOI

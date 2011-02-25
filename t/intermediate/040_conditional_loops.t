@@ -30,11 +30,9 @@ EOP
 L1: # scope=1
   lexical_state_set index=0
   jump to=L2
-L10: # scope=1
-  jump to=L5
 L2: # scope=1
   constant_integer value=1
-  jump_if_true false=L10, true=L3
+  jump_if_true false=L9, true=L3
 L3: # scope=1
   constant_integer value=2
   dup
@@ -43,11 +41,12 @@ L5: # scope=1
   end
 L6: # scope=1
   pop
-  discard_stack
   jump to=L5
 L8: # scope=1
   pop
   jump to=L2
+L9: # scope=1
+  jump to=L5
 EOI
 
 generate_linear_and_diff( <<'EOP', <<'EOI' );
@@ -77,11 +76,9 @@ EOP
 L1: # scope=1
   lexical_state_set index=0
   jump to=L2
-L10: # scope=1
-  jump to=L5
 L2: # scope=1
   constant_integer value=1
-  jump_if_true false=L10, true=L3
+  jump_if_true false=L9, true=L3
 L3: # scope=1
   constant_integer value=2
   dup
@@ -90,9 +87,10 @@ L5: # scope=1
   end
 L6: # scope=1
   pop
-  discard_stack
   jump to=L5
 L8: # scope=1
   pop
   jump to=L2
+L9: # scope=1
+  jump to=L5
 EOI

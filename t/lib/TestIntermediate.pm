@@ -21,10 +21,12 @@ our %EXPORT_TAGS =
 sub generate_main_linear {
     my( $code ) = @_;
     my $parsetree = parse_string( $code );
-    my $gen = Language::P::Intermediate::Generator->new;
+    my $gen = Language::P::Intermediate::Generator->new( { is_stack => 1 } );
     my $segments = $gen->generate_bytecode( $parsetree );
+    my $trans = Language::P::Intermediate::Transform->new;
+    my $linear = $trans->all_to_linear( $segments );
 
-    return $segments;
+    return $linear;
 }
 
 sub generate_main_tree {
@@ -43,10 +45,8 @@ sub generate_main_ssa {
     my $parsetree = parse_string( $code );
     my $gen = Language::P::Intermediate::Generator->new;
     my $segments = $gen->generate_bytecode( $parsetree );
-    my $trans = Language::P::Intermediate::Transform->new;
-    my $trees = $trans->all_to_ssa( $segments );
 
-    return $trees;
+    return $segments;
 }
 
 my $op_map = \%Language::P::Opcodes::NUMBER_TO_NAME;

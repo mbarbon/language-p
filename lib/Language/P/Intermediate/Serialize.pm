@@ -143,6 +143,15 @@ sub _write_bb {
     my( $self, $out, $bb ) = @_;
     my $ops = $bb->bytecode;
 
+    if( $bb->dead ) {
+        print $out pack 'V', 0;
+        print $out pack 'V', 0;
+
+        return;
+    } elsif( !@$ops ) {
+        die "Empty alive block";
+    }
+
     print $out pack 'V', $bb->scope;
     print $out pack 'V', scalar( @$ops );
 

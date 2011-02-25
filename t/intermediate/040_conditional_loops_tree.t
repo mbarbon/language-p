@@ -29,11 +29,9 @@ EOP
 L1: # scope=1
   lexical_state_set index=0
   jump to=L2
-L10: # scope=1
-  jump to=L5
 L2: # scope=1
   jump_if_true to=L3 (constant_integer value=1)
-  jump to=L10
+  jump to=L9
 L3: # scope=1
   set index=1, slot=VALUE_SCALAR (constant_integer value=2)
   jump_if_true to=L6 (get index=1, slot=VALUE_SCALAR)
@@ -44,6 +42,8 @@ L6: # scope=1
   jump to=L5
 L8: # scope=1
   jump to=L2
+L9: # scope=1
+  jump to=L5
 EOI
 
 generate_tree_and_diff( <<'EOP', <<'EOI' );

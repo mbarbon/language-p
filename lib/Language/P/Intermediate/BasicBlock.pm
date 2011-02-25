@@ -8,6 +8,7 @@ __PACKAGE__->mk_ro_accessors( qw(bytecode start_label scope
                                  predecessors successors dead) );
 
 sub set_scope { $_[0]->{scope} = $_[1] }
+sub set_bytecode { $_[0]->{bytecode} = $_[1] }
 
 use Language::P::Opcodes qw(OP_JUMP);
 
@@ -70,7 +71,8 @@ sub add_jump {
     my( $self, $op, @to ) = @_;
 
     if(    $op->{opcode_n} == OP_JUMP && @{$self->bytecode} == 0
-        && @{$self->predecessors} ) {
+        && @{$self->predecessors} && $to[0] != $self ) {
+        Carp::confess( "Can't happen" ) if @{$self->successors};
         $to[0] = $to[0]->successors->[0] while    @{$to[0]->successors}
                                                && !@{$to[0]->bytecode};
 

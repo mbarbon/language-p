@@ -322,6 +322,7 @@ sub _find_eval_scope {
     my $scope;
 
     foreach my $s ( @{$code->scopes} ) {
+        next unless $s;
         if( $s->{start} <= $pc && $s->{end} > $pc ) {
             $scope = $s;
         }
