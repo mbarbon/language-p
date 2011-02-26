@@ -44,7 +44,7 @@ sub set_option {
 # determine the slot type for the result value of an opcode
 sub _slot_type {
     my( $sub, $op ) = @_;
-    my $opn = $op->{opcode_n};
+    my $opn = $op->opcode_n;
 
     if(    $opn == OP_GLOB_SLOT
         || $opn == OP_GLOBAL
@@ -257,14 +257,14 @@ sub _get_stack {
     return \@values if $self->is_stack;
 
     foreach my $value ( @values ) {
-        next if $value->{opcode_n} != OP_PHI;
+        next if $value->opcode_n != OP_PHI;
         my $name = _local_name( $self );
         my $slot = _slot_type( $self->_current_subroutine, $value );
         _add_bytecode $self,
-            opcode_npam( OP_SET, $value->{pos}, [ $value ],
+            opcode_npam( OP_SET, $value->pos, [ $value ],
                          index => $name,
                          slot  => $slot );
-        $value = opcode_npm( OP_GET, $value->{pos},
+        $value = opcode_npm( OP_GET, $value->pos,
                              index => $name,
                              slot  => $slot );
     }
@@ -314,7 +314,7 @@ sub _emit_out_stack {
 
     my @out_names;
     foreach my $op ( @{$stack} ) {
-        if( $op->{opcode_n} == OP_GET ) {
+        if( $op->opcode_n == OP_GET ) {
             push @out_names, [ $op->index, $op->slot ];
         } else {
             my $index = _local_name( $self );
@@ -324,7 +324,7 @@ sub _emit_out_stack {
                 _add_bytecode $self, $op;
             } else {
                 _add_bytecode $self,
-                    opcode_npam( OP_SET, $op->{pos}, [ $op ],
+                    opcode_npam( OP_SET, $op->pos, [ $op ],
                                  index => $index,
                                  slot  => $slot );
             }
@@ -2577,8 +2577,8 @@ sub _discard_stack {
 
     while( @{$self->_stack} ) {
         my $op = pop @{$self->_stack};
-        _add_bytecode $self, $op if    $op->{opcode_n} != OP_PHI
-                                    && $op->{opcode_n} != OP_GET;
+        _add_bytecode $self, $op if    $op->opcode_n != OP_PHI
+                                    && $op->opcode_n != OP_GET;
     }
     _add_bytecode $self, opcode_n( OP_DISCARD_STACK )
         if $self->is_stack && $need_discard;
@@ -2588,7 +2588,7 @@ sub _discard_value {
     my( $self ) = @_;
     my $top = $self->_stack->[-1];
 
-    return if $top->{opcode_n} == OP_PHI;
+    return if $top->opcode_n == OP_PHI;
     _pop( $self );
 }
 
@@ -2599,8 +2599,8 @@ sub _discard_if_void {
     return if $context != CXT_VOID;
 
     my $top = $self->_stack->[-1];
-    return if    $top->{opcode_n} == OP_PHI
-              || $top->{opcode_n} == OP_GET;
+    return if    $top->opcode_n == OP_PHI
+              || $top->opcode_n == OP_GET;
     _pop( $self );
 }
 

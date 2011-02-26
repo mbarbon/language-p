@@ -130,6 +130,7 @@ sub     context { $_[0]->{attributes}{context} }
 sub     parameters { $_[0]->{parameters} }
 sub set_parameters { $_[0]->{parameters} = $_[1] }
 sub     arg_count  { $_[0]->{attributes}{arg_count} }
+sub     pos        { $_[0]->{pos} }
 sub is_jump { 0 }
 
 sub clone {
@@ -409,7 +410,7 @@ sub _write_op {
     my $opn = $op->{opcode_n};
 
     print $out pack 'v', $opn;
-    _write_pos( $self, $out, $op->{pos} );
+    _write_pos( $self, $out, $op->pos );
 
     if( 0 ) {
         # simplifies code generation below

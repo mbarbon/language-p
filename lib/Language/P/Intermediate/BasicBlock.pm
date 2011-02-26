@@ -43,7 +43,7 @@ sub _change_successor {
 
     # patch jump target to $to
     my $jump = $self->bytecode->[-1];
-    if( $jump->{opcode_n} == OP_JUMP && $jump->to == $from ) {
+    if( $jump->opcode_n == OP_JUMP && $jump->to == $from ) {
         $jump->set_to( $to );
     } elsif( $jump->true == $from ) {
         $jump->set_true( $to );
@@ -70,7 +70,7 @@ sub _change_successor {
 sub add_jump {
     my( $self, $op, @to ) = @_;
 
-    if(    $op->{opcode_n} == OP_JUMP && @{$self->bytecode} == 0
+    if(    $op->opcode_n == OP_JUMP && @{$self->bytecode} == 0
         && @{$self->predecessors} && $to[0] != $self ) {
         Carp::confess( "Can't happen" ) if @{$self->successors};
         $to[0] = $to[0]->successors->[0] while    @{$to[0]->successors}

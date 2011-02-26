@@ -20,11 +20,11 @@ sub all_to_linear {
 
 sub _linearize {
     my( $bytecode, $op ) = @_;
-    my $op_flags = $OP_ATTRIBUTES{$op->{opcode_n}}->{flags};
+    my $op_flags = $OP_ATTRIBUTES{$op->opcode_n}->{flags};
 
-    if(    $op->{opcode_n} == OP_GET
-        || $op->{opcode_n} == OP_SET
-        || $op->{opcode_n} == OP_PHI ) {
+    if(    $op->opcode_n == OP_GET
+        || $op->opcode_n == OP_SET
+        || $op->opcode_n == OP_PHI ) {
         return;
     } elsif( $op->parameters ) {
         foreach my $parm ( @{$op->parameters} ) {
@@ -89,15 +89,15 @@ sub _ssa_to_tree {
         next if $block->dead && !$ssa->is_regex;
         my $jump = $block->bytecode->[-1];
         if(    $jump->is_jump
-            && $jump->{opcode_n} != OP_JUMP ) {
-            my $new_cond = opcode_npam( $jump->{opcode_n}, undef,
-                                        $jump->{parameters},
+            && $jump->opcode_n != OP_JUMP ) {
+            my $new_cond = opcode_npam( $jump->opcode_n, undef,
+                                        $jump->parameters,
                                         to => $jump->true );
             my $new_jump = opcode_nm( OP_JUMP, to => $jump->false );
 
             $block->bytecode->[-1] = $new_cond;
             push @{$block->bytecode}, $new_jump;
-        } elsif( $jump->{opcode_n} == OP_RX_QUANTIFIER ) {
+        } elsif( $jump->opcode_n == OP_RX_QUANTIFIER ) {
             my $new_quant = # TODO clone
                 opcode_nm( OP_RX_QUANTIFIER,
                            min => $jump->min, max => $jump->max,
@@ -116,8 +116,8 @@ sub _ssa_to_tree {
         while( $op_off <= $#{$block->bytecode} ) {
             my $op = $block->bytecode->[$op_off];
             ++$op_off;
-            next if    $op->{opcode_n} != OP_SET
-                    || $op->parameters->[0]->{opcode_n} != OP_PHI;
+            next if    $op->opcode_n != OP_SET
+                    || $op->parameters->[0]->opcode_n != OP_PHI;
 
             my $parameters = $op->parameters->[0]->parameters;
             my $result_slot = $op->slot;
@@ -142,8 +142,8 @@ sub _ssa_to_tree {
 
                 # add SET nodes to rename the variables
                 splice @{$block_from->bytecode}, $op_from_off, 0,
-                       opcode_npam( OP_SET, $op->{pos},
-                                    [ opcode_npm( OP_GET, $op->{pos},
+                       opcode_npam( OP_SET, $op->pos,
+                                    [ opcode_npm( OP_GET, $op->pos,
                                                   index => $variable,
                                                   slot  => $slot ) ],
                                     index => $op->index,
