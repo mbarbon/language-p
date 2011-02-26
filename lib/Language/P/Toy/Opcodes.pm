@@ -1584,13 +1584,26 @@ sub o_quotemeta {
     return $pc + 1;
 }
 
-sub o_assign {
+sub o_swap_assign {
     my( $op, $runtime, $pc ) = @_;
     my $vr = pop @{$runtime->{_stack}};
     my $vl = pop @{$runtime->{_stack}};
 
-    if(    $vl->isa( 'Language::P::Toy::Value::Array' )
-        || $vl->isa( 'Language::P::Toy::Value::Hash' ) ) {
+    _do_assign( $op, $runtime, $pc, $vl, $vr );
+}
+
+sub o_assign {
+    my( $op, $runtime, $pc ) = @_;
+    my $vl = pop @{$runtime->{_stack}};
+    my $vr = pop @{$runtime->{_stack}};
+
+    _do_assign( $op, $runtime, $pc, $vl, $vr );
+}
+
+sub _do_assign {
+    my( $op, $runtime, $pc, $vl, $vr ) = @_;
+
+    if( $vl->isa( 'Language::P::Toy::Value::Array' ) ) {
         my $count = $vl->assign_array( $runtime, $vr );
 
         if( _context( $op, $runtime ) == CXT_SCALAR ) {
@@ -1776,11 +1789,11 @@ sub o_glob_slot {
     return $pc + 1;
 }
 
-sub o_glob_slot_set {
+sub o_swap_glob_slot_set {
     my( $op, $runtime, $pc ) = @_;
 
-    my $value = pop @{$runtime->{_stack}};
     my $glob = pop @{$runtime->{_stack}};
+    my $value = pop @{$runtime->{_stack}};
     my $slot = $op->{slot};
 
     $glob->set_slot( $runtime, $slot, $value );

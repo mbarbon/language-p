@@ -64,6 +64,8 @@ sub _noop {
 sub _noisy_noop {
     my( $self, $tree, $cxt ) = @_;
 
+    require Carp;
+
     Carp::confess( "Unhandled context for ", ref( $tree ) || $tree, "\n" );
 }
 

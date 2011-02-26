@@ -12,8 +12,6 @@ use strict;
 use warnings;
 use parent qw(Language::P::Object);
 
-use Scalar::Util; # weaken
-
 sub new {
     my( $class, $args ) = @_;
     my $self = $class->SUPER::new( $args );
@@ -44,7 +42,6 @@ sub set_parent {
     my( $self, $parent ) = @_;
 
     $_[0]->{parent} = $parent;
-    Scalar::Util::weaken( $_[0]->{parent} );
 }
 
 sub _fields {
@@ -82,10 +79,9 @@ sub has_attribute  { $_[0]->{attributes} && exists $_[0]->{attributes}->{$_[1]} 
 sub get_attribute  { $_[0]->{attributes} && $_[0]->{attributes}->{$_[1]} }
 sub get_attributes { $_[0]->{attributes} }
 sub set_attribute  {
-    my( $self, $name, $value, $weak ) = @_;
+    my( $self, $name, $value ) = @_;
 
     $self->{attributes}->{$name} = $value;
-    Scalar::Util::weaken( $self->{attributes}->{$name} ) if $weak;
 }
 
 package Language::P::ParseTree::LexicalState;
@@ -529,7 +525,11 @@ sub lvalue_context {
     my $l = $self->iftrue->lvalue_context;
     my $r = $self->iffalse->lvalue_context;
 
-    Carp::confess( "Assigning to both scalar and array" ) unless $r == $l;
+    unless( $r == $l ) {
+        require Carp;
+
+        Carp::confess( "Assigning to both scalar and array" );
+    }
 
     return $r;
 }

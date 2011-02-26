@@ -3,7 +3,7 @@
 use strict;
 use t::lib::TestIntermediate tests => 1;
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 sub foo {
     print "ok $_[0]\n";
 }

@@ -12,6 +12,7 @@ __PACKAGE__->mk_accessors( qw(_code _pending _block_map _index_map
 
 use Language::P::Intermediate::Code qw(:all);
 use Language::P::Intermediate::Generator;
+use Language::P::Intermediate::Transform;
 use Language::P::Opcodes qw(:all);
 use Language::P::Toy::Assembly;
 use Language::P::Toy::Opcodes qw(o);
@@ -45,7 +46,8 @@ sub new {
     $self->_options( {} ) unless $self->_options;
     $self->_intermediate( Language::P::Intermediate::Generator->new
                               ( { file_name => 'a.ir',
-                                   } ) );
+                                  is_stack  => 1,
+                                  } ) );
 
     return $self;
 }
@@ -77,6 +79,31 @@ sub set_option {
     return 0;
 }
 
+sub _tree_generator {
+    my( $self ) = @_;
+    return $self->{_tree_generator} if $self->{_tree_generator};
+
+    $self->{_tree_generator} = Language::P::Intermediate::Generator->new
+                                   ( { file_name => 'a.ir',
+                                       is_stack  => 0,
+                                       } );
+}
+
+sub _find_regexes {
+    my( $self, $subs ) = @_;
+    my @regexes;
+
+    foreach my $sub ( @$subs ) {
+        if( $sub->is_regex ) {
+            push @regexes, $sub;
+        } else {
+            push @regexes, _find_regexes( $self, $sub->inner );
+        }
+    }
+
+    return @regexes;
+}
+
 sub process {
     my( $self, $tree ) = @_;
 
@@ -86,7 +113,8 @@ sub process {
         my $sub_int = $self->_intermediate->generate_use( $tree );
 
         if( $self->_options->{'dump-bytecode'} ) {
-            push @{$self->{_saved_subs} ||= []}, @$sub_int;
+            push @{$self->{_saved_subs} ||= []},
+                 @{$self->_tree_generator->generate_use( $tree )};
         }
 
         my $sub = _generate_segment( $self, $sub_int->[0] );
@@ -100,7 +128,8 @@ sub process {
         my $sub_int = $self->_intermediate->generate_subroutine( $tree );
 
         if( $self->_options->{'dump-bytecode'} ) {
-            push @{$self->{_saved_subs} ||= []}, @$sub_int;
+            push @{$self->{_saved_subs} ||= []},
+                 @{$self->_tree_generator->generate_subroutine( $tree )};
         }
 
         my $sub = _generate_segment( $self, $sub_int->[0] );
@@ -212,34 +241,31 @@ sub _qualify {
 }
 
 sub _convert_bytecode {
-    my( $self, $bytecode ) = @_;
-    my @bytecode;
+    my( $self, $bytecode, $result ) = @_;
 
     foreach my $ins ( @$bytecode ) {
-        next if $ins->{label};
         my $name = $NUMBER_TO_NAME{$ins->{opcode_n}};
 
         die "Invalid $ins->{opcode}/$ins->{opcode_n}" unless $name;
 
         if( my $sub = $opcode_map{$ins->{opcode_n}} ) {
-            $sub->( $self, \@bytecode, $ins );
+            $sub->( $self, $result, $ins );
         } else {
             my %p = $ins->{attributes} ? %{$ins->{attributes}} : ();
             $p{slot} = $sigil_to_slot{$p{slot}} if $p{slot};
             $p{pos} = $ins->{pos} if $ins->{pos};
-            push @bytecode, o( $name, %p );
+            push @$result, o( $name, %p );
         }
     }
 
-    return \@bytecode;
+    return $result;
 }
 
 sub _generate_block {
     my( $self, $block, $converted ) = @_;
     my $start = @{$self->_code->bytecode};
 
-    my $bytecode = _convert_bytecode( $self, $block->bytecode );
-    push @{$self->_code->bytecode}, @$bytecode;
+    _convert_bytecode( $self, $block->bytecode, $self->_code->bytecode );
 
     push @$converted, [ $block, $start ];
 }
@@ -271,7 +297,7 @@ sub _generate_scope {
           };
 
     foreach my $chunk ( reverse @{$scope->{bytecode}} ) {
-        push @exit_bytecode, @{$self->_convert_bytecode( $chunk )};
+        $self->_convert_bytecode( $chunk, \@exit_bytecode );
     }
     push @exit_bytecode, o( 'end' );
 
@@ -293,9 +319,12 @@ sub _generate_scope {
 
 sub _generate_segment {
     my( $self, $segment, $target ) = @_;
+    my $transform = Language::P::Intermediate::Transform->new;
     my $is_sub = $segment->is_sub;
     my $is_regex = $segment->is_regex;
     my $pad = Language::P::Toy::Value::ScratchPad->new( $self->runtime );
+
+    $transform->to_linear( $segment );
 
     my $code = $target;
     if( $is_sub && !$code ) {
@@ -345,7 +374,6 @@ sub _generate_segment {
     if( $is_regex ) {
         _generate_block( $self, $_, \@converted )
             foreach @{$segment->basic_blocks};
-        push @{$self->{_saved_subs} ||= []}, $segment;
     } else {
         _generate_scope( $self, $segment->scopes->[0]->{id}, \@converted );
     }
@@ -432,17 +460,16 @@ sub finished {
     my $head = pop @{$self->{_processing}};
 
     my $res = _generate_segment( $self, $main_int->[0], $head );
-    $main_int->[0]->weaken; # allow GC to happen
-    $self->_cleanup;
 
     if( $self->_options->{'dump-bytecode'} && !$main_int->[0]->is_eval ) {
-        require Language::P::Intermediate::Transform;
         require Language::P::Intermediate::Serialize;
 
+        my $main_int_tree = $self->_tree_generator->generate_bytecode( $self->_pending );
+        my $all_subs = [ @$main_int_tree, @{$self->_saved_subs || []} ];
         my $transform = Language::P::Intermediate::Transform->new;
         my $serialize = Language::P::Intermediate::Serialize->new;
-        my $tree = $transform->all_to_tree( [ @$main_int,
-                                              @{$self->_saved_subs || []} ] );
+        my $tree = $transform->all_to_tree( [ @$all_subs,
+                                              _find_regexes( $self, $all_subs ) ] );
         my $outfile = _dump_path( $self->runtime,
                                   $self->_intermediate->file_name . '.pb' );
 
@@ -452,9 +479,10 @@ sub finished {
         File::Path::mkpath( File::Basename::dirname( $outfile ) );
 
         $serialize->serialize( $tree, $outfile, $data_handle );
-        $tree->[0]->weaken; # allow GC to happen
         $self->_saved_subs( undef );
     }
+
+    $self->_cleanup;
 
     return $res;
 }
@@ -493,6 +521,9 @@ sub start_code_generation {
       if $args && $args->{file_name};
     $self->_intermediate->create_main( $outer_int, $outer_int ? 1 : 0 );
     $self->_pending( [] );
+    if( $self->_options->{'dump-bytecode'} ) {
+        $self->_tree_generator->create_main( $outer_int, $outer_int ? 1 : 0 );
+    }
 }
 
 sub end_code_generation {

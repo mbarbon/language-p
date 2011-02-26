@@ -3,7 +3,7 @@
 use strict;
 use t::lib::TestIntermediate tests => 5;
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 0;
 unless( $a < 2 ) {
     1;
@@ -25,11 +25,11 @@ L5: # scope=3
   constant_integer value=1
   pop
   jump to=L2
-L7: # scope=0
+L7: # scope=2
   jump to=L2
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 0;
 if( $a < 11 ) {
     1
@@ -74,7 +74,7 @@ L9: # scope=0
   end
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 0;
 if( $a - 1 ) {
     1
@@ -90,23 +90,23 @@ L1: # scope=1
 L2: # scope=1
   constant_integer value=2
   pop
-  jump to=L7
+  jump to=L8
 L4: # scope=2
   global context=4, name="a", slot=1
   constant_integer value=1
   subtract context=4
-  jump_if_true false=L8, true=L5
+  jump_if_true false=L7, true=L5
 L5: # scope=3
   constant_integer value=1
   pop
   jump to=L2
-L7: # scope=0
-  end
-L8: # scope=0
+L7: # scope=2
   jump to=L2
+L8: # scope=0
+  end
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 0;
 if( $a && $b ) {
     1
@@ -120,28 +120,28 @@ L1: # scope=1
   pop
   jump to=L4
 L10: # scope=0
-  jump to=L2
+  end
 L2: # scope=1
   constant_integer value=2
   pop
-  jump to=L8
+  jump to=L10
 L4: # scope=2
   global context=4, name="a", slot=1
-  jump_if_true false=L9, true=L7
+  jump_if_true false=L8, true=L7
 L5: # scope=3
   constant_integer value=1
   pop
   jump to=L2
 L7: # scope=2
   global context=4, name="b", slot=1
-  jump_if_true false=L10, true=L5
-L8: # scope=0
-  end
-L9: # scope=0
+  jump_if_true false=L9, true=L5
+L8: # scope=2
+  jump to=L2
+L9: # scope=2
   jump to=L2
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 if( $y eq '' ) {
     3 unless $z;
 }
@@ -150,19 +150,19 @@ EOP
 L1: # scope=1
   lexical_state_set index=0
   jump to=L4
-L11: # scope=0
+L11: # scope=3
   jump to=L2
-L12: # scope=0
+L12: # scope=2
   jump to=L2
 L2: # scope=1
   end
 L4: # scope=2
   global context=4, name="y", slot=1
   constant_string value=""
-  jump_if_s_eq false=L11, true=L8
+  jump_if_s_eq false=L12, true=L8
 L8: # scope=3
   global context=4, name="z", slot=1
-  jump_if_true false=L9, true=L12
+  jump_if_true false=L9, true=L11
 L9: # scope=3
   constant_integer value=3
   pop

@@ -112,11 +112,15 @@ support/dotnet/dotnet.sln
 support/toy/lib/Scalar/Util.pm
 support/toy/lib/overload.pm
 t/intermediate/002_base.t
+t/intermediate/002_base_ssa.t
 t/intermediate/002_base_tree.t
 t/intermediate/005_lexicals_ssa.t
 t/intermediate/005_lexicals_tree.t
 t/intermediate/011_call.t
 t/intermediate/011_call_tree.t
+t/intermediate/013_anonarrayhash_ssa.t
+t/intermediate/021_replace_ssa.t
+t/intermediate/021_transliterate_ssa.t
 t/intermediate/030_if.t
 t/intermediate/031_eval.t
 t/intermediate/031_eval_ssa.t
@@ -143,6 +147,8 @@ t/intermediate/085_closure_ssa.t
 t/intermediate/100_begin.t
 t/intermediate/110_prototypes.t
 t/intermediate/120_builtins.t
+t/intermediate/121_bless_ssa.t
+t/intermediate/125_dynamic_goto_ssa.t
 t/intermediate/165_split.t
 t/lib/TestIntermediate.pm
 t/lib/TestParser.pm
@@ -294,6 +300,8 @@ t/run/010_arithmetic.t
 t/run/010_bitshift.t
 t/run/010_bitwise.t
 t/run/010_compare_value.t
+t/run/010_force_scalar.t
+t/run/010_logical.t
 t/run/010_repeat.t
 t/run/011_call.t
 t/run/015_array_ops.t
@@ -304,6 +312,7 @@ t/run/015_pos.t
 t/run/015_quoting.t
 t/run/015_range.t
 t/run/015_scalar.t
+t/run/017_aliasing.t
 t/run/017_ref.t
 t/run/017_reference_id.t
 t/run/017_references.t
@@ -334,6 +343,7 @@ t/run/045_splice.t
 t/run/045_sprintf.t
 t/run/045_substr.t
 t/run/045_uclc.t
+t/run/069_ref_string.t
 t/run/070_objects.t
 t/run/073_super.t
 t/run/080_recursion.t
@@ -356,6 +366,7 @@ t/run/705_vec.t
 t/run/900_corelibs.t
 t/run/920_constant.t
 t/run/923_exporter.t
+t/run/927_exporter_heavy.t
 t/run/950_p_object.t
 t/run/files/Bar.pm
 t/run/files/Foo.pm

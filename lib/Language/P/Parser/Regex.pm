@@ -259,13 +259,17 @@ sub _parse {
                     push @$st, _constant( chr( oct '0' . $digits ), $flags );
                 }
             } else {
+                require Carp;
+
                 Carp::confess( $value->[O_TYPE], ' ', $value->[O_VALUE], ' ',
                                $value->[O_RX_REST]->[0] );
             }
         } elsif( $value->[O_TYPE] == T_EOF ) {
             last;
         } elsif( $value->[O_TYPE] == T_DOLLAR || $value->[O_TYPE] == T_AT ) {
-                Carp::confess( $value->[O_TYPE], ' ', $value->[O_VALUE] );
+            require Carp;
+
+            Carp::confess( $value->[O_TYPE], ' ', $value->[O_VALUE] );
         }
     }
 

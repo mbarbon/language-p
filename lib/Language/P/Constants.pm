@@ -24,7 +24,7 @@ our @EXPORT_OK =
        FLAG_RX_QR_ALL
 
        VALUE_SCALAR VALUE_ARRAY VALUE_HASH VALUE_SUB VALUE_GLOB VALUE_HANDLE
-       VALUE_ARRAY_LENGTH VALUE_LIST VALUE_ITERATOR VALUE_STASH
+       VALUE_ARRAY_LENGTH VALUE_LIST VALUE_ITERATOR VALUE_STASH VALUE_INDEXABLE
 
        DECLARATION_MY DECLARATION_OUR DECLARATION_STATE
        DECLARATION_CLOSED_OVER
@@ -96,7 +96,7 @@ use constant
 
     # sigils, anonymous array/hash constructors, dereferences
     VALUE_SCALAR       => 1,
-    VALUE_ARRAY        => 2,
+    VALUE_ARRAY        => 2, # Perl array
     VALUE_HASH         => 3,
     VALUE_SUB          => 4,
     VALUE_GLOB         => 5,
@@ -105,6 +105,7 @@ use constant
     VALUE_LIST         => 8, # for list slices only
     VALUE_ITERATOR     => 9, # used as a marker by the IR generator
     VALUE_STASH        => 10,
+    VALUE_INDEXABLE    => 11,# array-like value
 
     # function calls
     FLAG_IMPLICITARGUMENTS => 1,

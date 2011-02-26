@@ -3,7 +3,7 @@
 use strict;
 use t::lib::TestIntermediate tests => 2;
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 @r = map 1, @y
 EOP
 # main
@@ -28,8 +28,7 @@ L2: # scope=1
   jump_if_null false=L3, true=L5
 L3: # scope=1
   temporary index=2, slot=5
-  swap
-  glob_slot_set slot=1
+  swap_glob_slot_set slot=1
   temporary index=0, slot=2
   constant_integer value=1
   push_element
@@ -41,7 +40,6 @@ L6: # scope=1
   temporary index=0, slot=2
   temporary_clear index=0, slot=2
   global context=24, name="r", slot=2
-  swap
   assign context=2
   pop
   jump to=L7
@@ -49,7 +47,7 @@ L7: # scope=0
   end
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 @r = ( ( map 1, @y ), ( map 2, @z ) )
 EOP
 # main
@@ -75,7 +73,6 @@ L11: # scope=1
   temporary_clear index=4, slot=2
   make_list arg_count=2, context=8
   global context=24, name="r", slot=2
-  swap
   assign context=2
   pop
   jump to=L12
@@ -88,8 +85,7 @@ L2: # scope=1
   jump_if_null false=L3, true=L5
 L3: # scope=1
   temporary index=2, slot=5
-  swap
-  glob_slot_set slot=1
+  swap_glob_slot_set slot=1
   temporary index=0, slot=2
   constant_integer value=1
   push_element
@@ -119,8 +115,7 @@ L7: # scope=1
   jump_if_null false=L8, true=L10
 L8: # scope=1
   temporary index=6, slot=5
-  swap
-  glob_slot_set slot=1
+  swap_glob_slot_set slot=1
   temporary index=4, slot=2
   constant_integer value=2
   push_element

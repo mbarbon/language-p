@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
-use strict;
-use t::lib::TestParser tests => 20;
+use t::lib::TestParser tests => 25;
+use Language::P::Constants qw(VALUE_SUB);
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 print defined 1, 2
@@ -287,6 +287,19 @@ indirect: ~
 EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print FILE ();
+EOP
+--- !parsetree:BuiltinIndirect
+arguments: []
+context: CXT_VOID
+function: OP_PRINT
+indirect: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: FILE
+  sigil: VALUE_GLOB
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
 print FILE (), 1;
 EOP
 --- !parsetree:BuiltinIndirect
@@ -395,4 +408,83 @@ arguments:
 context: CXT_VOID
 function: OP_PRINT
 indirect: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE', [ [ 'foo::bar' => VALUE_SUB ] ] );
+print foo::bar()
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:FunctionCall
+    arguments: ~
+    context: CXT_LIST
+    function: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: foo::bar
+      sigil: VALUE_SUB
+context: CXT_VOID
+function: OP_PRINT
+indirect: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE', [ [ 'foo::bar' => VALUE_SUB ] ] );
+print foo::bar( 1 )
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:FunctionCall
+    arguments:
+      - !parsetree:Constant
+        context: CXT_LIST
+        flags: CONST_NUMBER|NUM_INTEGER
+        value: VALUE_SCALAR
+    context: CXT_LIST
+    function: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: foo::bar
+      sigil: VALUE_SUB
+context: CXT_VOID
+function: OP_PRINT
+indirect: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print foo::bar( 1 )
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:FunctionCall
+    arguments:
+      - !parsetree:Constant
+        context: CXT_LIST
+        flags: CONST_NUMBER|NUM_INTEGER
+        value: VALUE_SCALAR
+    context: CXT_LIST
+    function: !parsetree:Symbol
+      context: CXT_SCALAR
+      name: foo::bar
+      sigil: VALUE_SUB
+context: CXT_VOID
+function: OP_PRINT
+indirect: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+print foo::bar ( 1 )
+EOP
+--- !parsetree:BuiltinIndirect
+arguments:
+  - !parsetree:Parentheses
+    context: CXT_LIST
+    left: !parsetree:Constant
+      context: CXT_LIST
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: VALUE_SCALAR
+    op: OP_PARENTHESES
+context: CXT_VOID
+function: OP_PRINT
+indirect: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: foo::bar
+  sigil: VALUE_GLOB
 EOE

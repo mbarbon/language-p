@@ -14,10 +14,9 @@ L1: # scope=1
   jump to=L7
 L2: # scope=1
   set index=1, slot=VALUE_SCALAR (iterator_next (temporary index=0, slot=9))
-  jump_if_null to=L5 (get index=1, slot=VALUE_SCALAR)
-  jump to=L3
+  jump_if_null false=L3, true=L5 (get index=1, slot=VALUE_SCALAR)
 L3: # scope=1
-  glob_slot_set slot=1 (temporary index=1, slot=5), (get index=1, slot=VALUE_SCALAR)
+  swap_glob_slot_set slot=1 (get index=1, slot=VALUE_SCALAR), (temporary index=1, slot=5)
   jump to=L8
 L5: # scope=1
   jump to=L6
@@ -48,8 +47,7 @@ L1: # scope=1
   jump to=L7
 L2: # scope=1
   set index=1, slot=VALUE_SCALAR (iterator_next (temporary index=0, slot=9))
-  jump_if_null to=L5 (get index=1, slot=VALUE_SCALAR)
-  jump to=L3
+  jump_if_null false=L3, true=L5 (get index=1, slot=VALUE_SCALAR)
 L3: # scope=1
   lexical_set index=0 (get index=1, slot=VALUE_SCALAR)
   jump to=L8
@@ -78,8 +76,7 @@ L1: # scope=1
   jump to=L7
 L2: # scope=1
   set index=1, slot=VALUE_SCALAR (iterator_next (temporary index=0, slot=9))
-  jump_if_null to=L5 (get index=1, slot=VALUE_SCALAR)
-  jump to=L3
+  jump_if_null false=L3, true=L5 (get index=1, slot=VALUE_SCALAR)
 L3: # scope=1
   lexical_pad_set index=0 (get index=1, slot=VALUE_SCALAR)
   jump to=L8

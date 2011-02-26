@@ -8,9 +8,8 @@ __PACKAGE__->mk_ro_accessors( qw(bytecode start_label scope
                                  predecessors successors dead) );
 
 sub set_scope { $_[0]->{scope} = $_[1] }
+sub set_bytecode { $_[0]->{bytecode} = $_[1] }
 
-use Scalar::Util; # weaken
-use Language::P::Assembly qw(label);
 use Language::P::Opcodes qw(OP_JUMP);
 
 sub new {
@@ -20,9 +19,6 @@ sub new {
     $self->{predecessors} ||= [];
     $self->{successors} ||= [];
     $self->{bytecode} ||= [];
-    $self->{dead} = 1 unless defined $self->{dead};
-    push @{$self->bytecode}, label( $self->start_label )
-      unless @{$self->bytecode};
 
     return $self;
 }
@@ -41,29 +37,31 @@ sub _change_successor {
     foreach my $succ ( @{$self->successors} ) {
         if( $succ == $from ) {
             $succ = $to;
-            Scalar::Util::weaken( $succ );
             last;
         }
     }
 
     # patch jump target to $to
     my $jump = $self->bytecode->[-1];
-    if( $jump->{opcode_n} == OP_JUMP ) {
+    if( $jump->opcode_n == OP_JUMP && $jump->to == $from ) {
         $jump->set_to( $to );
     } elsif( $jump->true == $from ) {
         $jump->set_true( $to );
     } elsif( $jump->false == $from ) {
         $jump->set_false( $to );
     } else {
-        die "Could not backpatch jump target";
+        require Carp;
+
+        Carp::confess( "Could not backpatch jump target ", $from->start_label,
+                       " for block ", $self->start_label );
     }
 
     # fix up predecessors
     $to->add_predecessor( $self );
-    # remove $sel from $from predecessors
+    # remove $self from $from predecessors
     foreach my $i ( 0 .. $#{$from->{predecessors}} ) {
         if( $from->{predecessors}[$i] == $self ) {
-            splice @{$from->{predecessors}}, $i, 0;
+            splice @{$from->{predecessors}}, $i, 1;
             last;
         }
     }
@@ -72,28 +70,36 @@ sub _change_successor {
 sub add_jump {
     my( $self, $op, @to ) = @_;
 
-    if(    $op->{opcode_n} == OP_JUMP && @{$self->bytecode} == 1
-        && @{$self->predecessors} ) {
-        $to[0] = $to[0]->successors->[0] until @{$to[0]->bytecode};
-        foreach my $pred ( @{$self->predecessors} ) {
+    if(    $op->opcode_n == OP_JUMP && @{$self->bytecode} == 0
+        && @{$self->predecessors} && $to[0] != $self ) {
+        Carp::confess( "Can't happen" ) if @{$self->successors};
+        $to[0] = $to[0]->successors->[0] while    @{$to[0]->successors}
+                                               && !@{$to[0]->bytecode};
+
+        my @pred = @{$self->predecessors};
+        foreach my $pred ( @pred ) {
             _change_successor( $pred, $self, $to[0] );
         }
 
         # keep track where this block goes
         $self->add_successor( $to[0] );
-        undef @{$self->bytecode};
-
-        return;
+    } else {
+        add_jump_unoptimized( $self, $op, @to );
     }
+}
+
+sub add_jump_unoptimized {
+    my( $self, $op, @to ) = @_;
 
     push @{$self->bytecode}, $op;
+    return if $self->dead == 2;
     foreach my $to ( @to ) {
         $self->add_successor( $to );
         $to->add_predecessor( $self );
         # FIXME either move empty-block optimization later
         #       or backpatch goto/redo/last/... labels in parse tree!
         _change_successor( $self, $to, $to->successors->[0] )
-            unless @{$to->bytecode};
+            if !@{$to->bytecode} && @{$to->successors};
     }
 }
 
@@ -102,7 +108,6 @@ sub add_predecessor {
     return if grep $block == $_, @{$self->predecessors};
 
     push @{$self->predecessors}, $block;
-    Scalar::Util::weaken( $self->predecessors->[-1] );
 }
 
 sub add_successor {
@@ -110,7 +115,6 @@ sub add_successor {
     return if grep $block == $_, @{$self->successors};
 
     push @{$self->successors}, $block;
-    Scalar::Util::weaken( $self->successors->[-1] );
 }
 
 1;

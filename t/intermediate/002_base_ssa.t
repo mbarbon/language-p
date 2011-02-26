@@ -3,7 +3,7 @@
 use strict;
 use t::lib::TestIntermediate tests => 3;
 
-generate_tree_and_diff( <<'EOP', <<'EOI' );
+generate_ssa_and_diff( <<'EOP', <<'EOI' );
 $x = $a + 2;
 print !$a
 EOP
@@ -17,7 +17,7 @@ L2: # scope=0
   end
 EOI
 
-generate_tree_and_diff( <<'EOP', <<'EOI' );
+generate_ssa_and_diff( <<'EOP', <<'EOI' );
 $x = abs $t;
 EOP
 # main
@@ -29,7 +29,7 @@ L2: # scope=0
   end
 EOI
 
-generate_tree_and_diff( <<'EOP', <<'EOI' );
+generate_ssa_and_diff( <<'EOP', <<'EOI' );
 $x = "$a\n";
 EOP
 # main

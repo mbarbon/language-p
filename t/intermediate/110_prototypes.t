@@ -3,7 +3,7 @@
 use strict;
 use t::lib::TestIntermediate tests => 3;
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 push @foo, 1, 2;
 EOP
 # main
@@ -20,7 +20,7 @@ L2: # scope=0
   end
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 pop @foo;
 EOP
 # main
@@ -34,7 +34,7 @@ L2: # scope=0
   end
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 sub mypush(\@@);
 
 mypush @foo, 1, 2;

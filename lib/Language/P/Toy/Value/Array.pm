@@ -87,7 +87,7 @@ sub push_value {
 sub push_list {
     my( $self, $runtime, $list ) = @_;
 
-    push @{$self->{array}}, map $_->as_scalar( $runtime ), @{$list->array};
+    push @{$self->{array}}, map $_->clone( $runtime, 0 ), @{$list->array};
 
     return Language::P::Toy::Value::StringNumber->new
                ( $runtime, { integer => scalar @{$self->array} } );
@@ -120,7 +120,7 @@ sub pop_value {
 sub unshift_list {
     my( $self, $runtime, $list ) = @_;
 
-    unshift @{$self->{array}}, @{$list->array};
+    unshift @{$self->{array}}, map $_->clone( $runtime, 0 ), @{$list->array};
 
     return Language::P::Toy::Value::StringNumber->new
                ( $runtime, { integer => scalar @{$self->array} } );

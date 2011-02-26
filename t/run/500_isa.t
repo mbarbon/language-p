@@ -3,7 +3,7 @@
 print "1..11\n";
 
 package A;
-package B;
+package B; @ISA = qw();
 package C; @ISA = qw(A B);
 package D; @ISA = qw(C);
 

@@ -3,7 +3,7 @@
 use strict;
 use t::lib::TestIntermediate tests => 4;
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 split /aa/, $_
 EOP
 # main
@@ -18,7 +18,7 @@ L2: # scope=0
   end
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 split "aa", $_
 EOP
 # main
@@ -33,7 +33,7 @@ L2: # scope=0
   end
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 split / /, $_
 EOP
 # main
@@ -48,7 +48,7 @@ L2: # scope=0
   end
 EOI
 
-generate_and_diff( <<'EOP', <<'EOI' );
+generate_linear_and_diff( <<'EOP', <<'EOI' );
 split ' ', $_
 EOP
 # main

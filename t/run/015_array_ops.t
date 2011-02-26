@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..11\n";
+print "1..13\n";
 
 push @x, 1, 2;
 print $#x == 1 ? "ok 1\n" : "not ok 1\n";
@@ -17,3 +17,18 @@ print shift @x == 1 ? "ok 9\n" : "not ok 9\n";
 print $#x == 4 ? "ok 10\n" : "not ok 10\n";
 
 print !!@x ? "ok\n" : "not ok\n";
+
+# check that push/unshift copy their arguments
+@y = ( 3 );
+
+$x = 2;
+push @y, $x;
+
+$x = 3;
+unshift @y, $x;
+
+$x = 4;
+
+print $y[0] == 3 ? "ok\n" : "not ok - $y[0]\n";
+print $y[2] == 2 ? "ok\n" : "not ok - $y[2]\n";
+

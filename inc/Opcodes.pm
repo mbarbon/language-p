@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Exporter 'import';
 
-our @EXPORT = qw(write_opcodes write_perl_serializer parse_opdesc write_toy_opclasses);
+our @EXPORT = qw(write_opcodes write_perl_serializer parse_opdesc write_toy_opclasses group_opcode_numbers group_opcode_attributes);
 
 use Language::P::Constants qw(:all);
 use Language::P::Keywords qw(:all);
@@ -61,19 +61,40 @@ sub parse_opdesc {
     return \%op;
 }
 
-sub write_toy_opclasses {
-    my( $file ) = @ARGV;
-
-    my %op = %{parse_opdesc()};
-
-    open my $out, '>', $file;
+sub group_opcode_numbers {
+    my( $op ) = @_;
 
     my %classes;
-    while( my( $k, $v ) = each %op ) {
+    while( my( $k, $v ) = each %$op ) {
         my( $attrs, $class ) = ( $v->[3][0], $v->[5] );
         next unless $class;
         push @{$classes{$class} ||= []}, $k;
     }
+
+    return \%classes;
+}
+
+sub group_opcode_attributes {
+    my( $op ) = @_;
+
+    my %classes;
+    while( my( $k, $v ) = each %$op ) {
+        my( $attrs, $class ) = ( $v->[3][0], $v->[5] );
+        next unless $class;
+        next if $classes{$class};
+        $classes{$class} = $attrs;
+    }
+
+    return \%classes;
+}
+
+sub write_toy_opclasses {
+    my( $file ) = @ARGV;
+
+    my %op = %{parse_opdesc()};
+    my %classes = %{group_opcode_numbers( \%op )};
+
+    open my $out, '>', $file;
 
     print $out <<'EOT';
 package Language::P::Assembly;
@@ -109,6 +130,7 @@ sub     context { $_[0]->{attributes}{context} }
 sub     parameters { $_[0]->{parameters} }
 sub set_parameters { $_[0]->{parameters} = $_[1] }
 sub     arg_count  { $_[0]->{attributes}{arg_count} }
+sub     pos        { $_[0]->{pos} }
 sub is_jump { 0 }
 
 sub clone {
@@ -385,12 +407,10 @@ use warnings;
 
 sub _write_op {
     my( $self, $out, $op ) = @_;
-    return if $op->{label}; # skip label
-
     my $opn = $op->{opcode_n};
 
     print $out pack 'v', $opn;
-    _write_pos( $self, $out, $op->{pos} );
+    _write_pos( $self, $out, $op->pos );
 
     if( 0 ) {
         # simplifies code generation below
@@ -498,7 +518,7 @@ bit_or              0       same                 2   1  context=i1
 bit_or_assign       0       same                 2   1  context=i1
 bit_xor             0       same                 2   1  context=i1
 bit_xor_assign      0       same                 2   1  context=i1
-bless               u       same                 2   1  context=i1
+bless               v       same                 2   1  context=i1
 call                0       same                 2   1  context=i1
 call_method         0       same                 1   1  context=i1,method=s,class=CallMethod
 call_method_indirect 0      same                 2   1  context=i1
@@ -574,7 +594,7 @@ get                 0       same                 0   1  index=i,slot=i_sigil,cla
 glob                0       same                 1   1  context=i1
 glob_element        0       same                 2   1  context=i1
 glob_slot           0       same                 1   1  slot=i_sigil,class=GlobSlot
-glob_slot_set       0       same                 2   0  slot=i_sigil,class=GlobSlot
+swap_glob_slot_set  0       same                 2   0  slot=i_sigil,class=GlobSlot
 global              0       same                 0   1  name=s,slot=i_sigil,context=i1,class=Global
 grep                0       same                 1   1  context=i1
 hash_element        0       same                 2   1  context=i1,create=i1,class=ElementAccess
@@ -713,7 +733,7 @@ stringify           0       same                 1   1  context=i1
 substr              v       same                -1   1  context=i1,arg_count=i1
 subtract            0       same                 2   1  context=i1
 subtract_assign     0       same                 2   1  context=i1
-swap                0       same                 2   2  noattr
+swap_assign         0       same                 2   1  context=i1
 temporary           0       same                 0   1  index=i,slot=i_sigil,class=Temporary
 temporary_clear     0       same                 0   0  index=i,slot=i_sigil,class=Temporary
 temporary_set       0       same                 1   0  index=i,slot=i_sigil,class=Temporary
@@ -727,7 +747,7 @@ vec                 u       same                 3   1  context=i1
 vivify_array        0       same                 1   1  context=i1
 vivify_hash         0       same                 1   1  context=i1
 vivify_scalar       0       same                 1   1  context=i1
-wantarray           u       want                 0   1  context=i1
+wantarray           v       want                 0   1  context=i1
 warn                0       same                 1   1  context=i1
 
 rx_accept           0       same                 0   0  groups=i,class=RegexAccept

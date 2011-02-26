@@ -338,7 +338,7 @@ sub _patch_gotos {
 
     foreach my $goto ( @{$state->{sub}{jumps}} ) {
         if( $labels->{$goto->left} ) {
-            $goto->set_attribute( 'target', $labels->{$goto->left}, 1 );
+            $goto->set_attribute( 'target', $labels->{$goto->left} );
         }
     }
 }
@@ -2178,6 +2178,8 @@ sub _add_implicit_return {
     } elsif( $line->isa( 'Language::P::ParseTree::ConditionalBlock' ) ) {
         $line->{block} = _add_implicit_return( $line->block )
     } else {
+        require Carp;
+
         Carp::confess( "Unhandled statement type: ", ref( $line ) );
     }
 
@@ -2296,7 +2298,7 @@ sub _declared_id {
     my $ov = is_overridable( $opidt ) && $self->runtime->is_declared( _qualify( $self, $op->[O_VALUE], $opidt ), VALUE_SUB );
 
     if(    is_overridable( $opidt )
-        && ( $op->[O_ID_FLAGS] || !$ov )
+        && ( ( $op->[O_ID_FLAGS] & T_ID_CORE ) || !$ov )
         && !$cg ) {
         # all other overridable builtins
         if( $opidt == KEY_GLOB ) {
@@ -2417,8 +2419,11 @@ sub _parse_listop_like {
     } elsif( $proto->[1] == 1 ) {
         ( $args, undef ) = _parse_arglist( $self, PREC_NAMED_UNOP, 1, $proto->[2] );
     } elsif( $proto->[1] != 0 ) {
-        Carp::confess( "Undeclared identifier '" . $op->[O_VALUE] . "'" )
-            unless $declared;
+        unless( $declared ) {
+            require Carp;
+
+            Carp::confess( "Undeclared identifier '" . $op->[O_VALUE] . "'" );
+        }
         ( $args, $fh ) = _parse_arglist( $self, PREC_COMMA, 0, $proto->[2] );
     }
 
@@ -2571,6 +2576,7 @@ sub _parse_arglist {
             $term = _parse_indirobj( $self, 0 );
         } elsif(    ( $proto_char & PROTO_FILEHANDLE )
                  && $la->[O_TYPE] == T_ID
+                 && !( $la->[O_ID_FLAGS] & T_ID_SUB )
                  && (    $la->[O_ID_TYPE] == T_ID
                       || $la->[O_ID_TYPE] == T_FQ_ID ) ) {
             # check if it is a declared id

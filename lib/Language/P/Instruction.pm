@@ -54,12 +54,7 @@ sub as_string {
 
     return $self->{literal} . "\n" if defined $self->{literal};
 
-    my $str = defined $self->{label} ? $self->{label} . ':' : ' ';
-
-    return $str . "\n" unless    defined $self->{opcode}
-                              || defined $self->{opcode_n};
-    $str .= ' ';
-
+    my $str = '  ';
     if( defined $self->{opcode} ) {
         $str .= $self->{opcode};
     } elsif( defined $self->{opcode_n} ) {
@@ -67,14 +62,14 @@ sub as_string {
     }
 
     if( $self->{attributes} ) {
-        die "Can't happen" unless %{$self->{attributes}};
+        die "Can't happen ", $self->{opcode_n} unless %{$self->{attributes}};
         $str .= ' ' . join ', ',
                       map  { "$_=" . _p( $self, $self->{attributes}{$_}, $_, $number_to_name, $attributes ) }
                            sort keys %{$self->{attributes}};
     }
 
     if( $self->{parameters} ) {
-        die "Can't happen" unless @{$self->{parameters}};
+        die "Can't happen ", $self->{opcode_n} unless @{$self->{parameters}};
         $str .= ' ' . join ', ', map _p( $self, $_, undef, $number_to_name, $attributes ),
                                      @{$self->{parameters}};
     }
