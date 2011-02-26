@@ -707,6 +707,8 @@ namespace org.mbarbon.p.runtime
             for (int i = 0; i < sub.BasicBlocks.Length; ++i)
             {
                 var block = sub.BasicBlocks[i];
+                if (block == null)
+                    continue;
                 if (block.Scope != scope.Id)
                 {
                     if (GeneratedScopes.ContainsKey(block.Scope))
@@ -998,7 +1000,7 @@ namespace org.mbarbon.p.runtime
                     ModuleGenerator.InitRuntime));
         }
 
-        private Expression BinaryOperator<Result>(Subroutine sub, Opcode op, Expression binder)
+        private Expression BinaryOperator<Result>(Subroutine sub, Expression left, Expression right, Expression binder)
         {
             var delegateType = typeof(Func<CallSite, object, object, Result>);
             var siteType = typeof(CallSite<Func<CallSite, object, object, Result>>);
@@ -1015,13 +1017,21 @@ namespace org.mbarbon.p.runtime
                         ),
                     delegateType.GetMethod("Invoke"),
                     Expression.Field(null, staticField),
-                    Generate(sub, op.Childs[0]),
-                    Generate(sub, op.Childs[1]));
+                    left,
+                    right);
 
             if (res.Type == typeof(object))
                 return Expression.Convert(res, typeof(IP5Any));
             else
                 return res;
+        }
+
+        private Expression BinaryOperator<Result>(Subroutine sub, Opcode op, Expression binder)
+        {
+            var left = Generate(sub, op.Childs[0]);
+            var right = Generate(sub, op.Childs[1]);
+
+            return BinaryOperator<Result>(sub, left, right, binder);
         }
 
         private Expression BinaryOperator(Subroutine sub, Opcode op, ExpressionType operation)
@@ -1052,6 +1062,24 @@ namespace org.mbarbon.p.runtime
                     typeof(P5StringCompareBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
                     Expression.Constant(operation),
                     ModuleGenerator.InitRuntime));
+        }
+
+        private Expression Assign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue)
+        {
+                if (   typeof(IP5Array).IsAssignableFrom(lvalue.Type)
+                    || typeof(P5Hash).IsAssignableFrom(lvalue.Type))
+                    return BinaryOperator<object>(
+                        sub, lvalue, rvalue,
+                        Expression.New(
+                            typeof(P5ArrayAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime), typeof(Opcode.ContextValues) }),
+                            ModuleGenerator.InitRuntime,
+                            Expression.Constant(cxt)));
+                else
+                    return BinaryOperator<P5Scalar>(
+                        sub, lvalue, rvalue,
+                        Expression.New(
+                            typeof(P5ScalarAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime) }),
+                            ModuleGenerator.InitRuntime));
         }
 
         private Expression ForceScalar(Expression e)
@@ -1171,14 +1199,14 @@ namespace org.mbarbon.p.runtime
                             typeof(P5Typeglob)),
                         name);
             }
-            case Opcode.OpNumber.OP_GLOB_SLOT_SET:
+            case Opcode.OpNumber.OP_SWAP_GLOB_SLOT_SET:
             {
                 GlobSlot gop = (GlobSlot)op;
                 string name = PropertyForSlot(gop.Slot);
                 var property =
                     Expression.Property(
                         Expression.Convert(
-                            Generate(sub, op.Childs[0]),
+                            Generate(sub, op.Childs[1]),
                             typeof(P5Typeglob)),
                         name);
 
@@ -1186,7 +1214,7 @@ namespace org.mbarbon.p.runtime
                     Expression.Assign(
                         property,
                         Expression.Convert(
-                            Generate(sub, op.Childs[1]),
+                            Generate(sub, op.Childs[0]),
                             property.Type));
             }
             case Opcode.OpNumber.OP_MAKE_LIST:
@@ -1410,26 +1438,23 @@ namespace org.mbarbon.p.runtime
                             Context,
                             Arguments)));
 
-                return Expression.Block(typeof(void), new[] { value }, exit_scope);
+                return Expression.Block(typeof(IP5Any), new[] { value }, exit_scope);
             }
             case Opcode.OpNumber.OP_ASSIGN:
             {
-                var le = Generate(sub, op.Childs[0]);
+                var lvalue = Generate(sub, op.Childs[1]);
+                var rvalue = Generate(sub, op.Childs[0]);
 
-                if (   typeof(IP5Array).IsAssignableFrom(le.Type)
-                    || typeof(P5Hash).IsAssignableFrom(le.Type))
-                    return BinaryOperator<object>(
-                        sub, op,
-                        Expression.New(
-                            typeof(P5ArrayAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime), typeof(Opcode.ContextValues) }),
-                            ModuleGenerator.InitRuntime,
-                            Expression.Constant((Opcode.ContextValues)op.Context)));
-                else
-                    return BinaryOperator<P5Scalar>(
-                        sub, op,
-                        Expression.New(
-                            typeof(P5ScalarAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime) }),
-                            ModuleGenerator.InitRuntime));
+                return Assign(sub, (Opcode.ContextValues)op.Context,
+                              lvalue, rvalue);
+            }
+            case Opcode.OpNumber.OP_SWAP_ASSIGN:
+            {
+                var lvalue = Generate(sub, op.Childs[0]);
+                var rvalue = Generate(sub, op.Childs[1]);
+
+                return Assign(sub, (Opcode.ContextValues)op.Context,
+                              lvalue, rvalue);
             }
             case Opcode.OpNumber.OP_GET:
             {

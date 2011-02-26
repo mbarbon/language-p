@@ -144,6 +144,10 @@ namespace org.mbarbon.p.runtime
         {
             int scope = reader.ReadInt32();
             int count = reader.ReadInt32();
+
+            if (count == 0)
+                return null;
+
             var bb = new BasicBlock(count);
 
             bb.Scope = scope;
