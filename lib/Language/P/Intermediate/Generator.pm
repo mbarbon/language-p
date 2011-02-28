@@ -184,7 +184,7 @@ sub _fake_stack {
 
     # fake stack; since the block is dead code, there is no need for
     # real values
-    return [ map opcode_n( OP_GET ), 0 .. $count ];
+    return [ map opcode_nm( OP_GET, index => -1, slot => 0 ), 0 .. $count ];
 }
 
 sub _create_in_stack {
