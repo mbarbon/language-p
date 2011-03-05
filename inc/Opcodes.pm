@@ -105,10 +105,14 @@ EOT
 
 package Language::P::Instruction::Jump;
 
-sub set_false { $_[0]->{attributes}{false} = $_[1] }
-sub     false { $_[0]->{attributes}{false} }
-sub set_true { $_[0]->{attributes}{true} = $_[1] }
-sub     true { $_[0]->{attributes}{true} }
+sub is_jump  { 1 }
+
+package Language::P::Instruction::CondJump;
+
+sub set_to_false { $_[0]->{attributes}{false} = $_[1] }
+sub     to_false { $_[0]->{attributes}{false} }
+sub set_to_true { $_[0]->{attributes}{true} = $_[1] }
+sub     to_true { $_[0]->{attributes}{true} }
 sub is_jump  { 1 }
 
 package Language::P::Instruction::Phi;
@@ -117,8 +121,8 @@ package Language::P::Instruction::Phi;
 
 package Language::P::Instruction::RegexQuantifier;
 
-sub     false { $_[0]->{attributes}{false} }
-sub     true { $_[0]->{attributes}{true} }
+sub     to_false { $_[0]->{attributes}{false} }
+sub     to_true { $_[0]->{attributes}{true} }
 
 1;
 EOT

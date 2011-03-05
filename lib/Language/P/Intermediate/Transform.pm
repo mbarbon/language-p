@@ -92,8 +92,8 @@ sub _ssa_to_tree {
             && $jump->opcode_n != OP_JUMP ) {
             my $new_cond = opcode_npam( $jump->opcode_n, undef,
                                         $jump->parameters,
-                                        to => $jump->true );
-            my $new_jump = opcode_nm( OP_JUMP, to => $jump->false );
+                                        to => $jump->to_true );
+            my $new_jump = opcode_nm( OP_JUMP, to => $jump->to_false );
 
             $block->bytecode->[-1] = $new_cond;
             push @{$block->bytecode}, $new_jump;
@@ -103,10 +103,10 @@ sub _ssa_to_tree {
                            min => $jump->min, max => $jump->max,
                            greedy => $jump->greedy,
                            group => $jump->group,
-                           to => $jump->true,
+                           to => $jump->to_true,
                            subgroups_start => $jump->subgroups_start,
                            subgroups_end => $jump->subgroups_end );
-            my $new_jump = opcode_nm( OP_JUMP, to => $jump->false );
+            my $new_jump = opcode_nm( OP_JUMP, to => $jump->to_false );
 
             $block->bytecode->[-1] = $new_quant;
             push @{$block->bytecode}, $new_jump;

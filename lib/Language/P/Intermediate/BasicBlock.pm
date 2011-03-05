@@ -45,10 +45,10 @@ sub _change_successor {
     my $jump = $self->bytecode->[-1];
     if( $jump->opcode_n == OP_JUMP && $jump->to == $from ) {
         $jump->set_to( $to );
-    } elsif( $jump->true == $from ) {
-        $jump->set_true( $to );
-    } elsif( $jump->false == $from ) {
-        $jump->set_false( $to );
+    } elsif( $jump->to_true == $from ) {
+        $jump->set_to_true( $to );
+    } elsif( $jump->to_false == $from ) {
+        $jump->set_to_false( $to );
     } else {
         require Carp;
 

@@ -758,8 +758,8 @@ sub _cond_jump_simple {
     push @$bytecode,
          o( $NUMBER_TO_NAME{$op->{opcode_n}}, pos => $op->{pos} ),
          o( 'jump' );
-    push @{$self->_block_map->{$op->true}}, $bytecode->[-2];
-    push @{$self->_block_map->{$op->false}}, $bytecode->[-1];
+    push @{$self->_block_map->{$op->to_true}}, $bytecode->[-2];
+    push @{$self->_block_map->{$op->to_false}}, $bytecode->[-1];
 }
 
 sub _match {
@@ -794,8 +794,8 @@ sub _rx_quantifier {
     push @$bytecode,
          o( 'rx_quantifier', %params ),
          o( 'jump' );
-    push @{$self->_block_map->{$op->true}}, $bytecode->[-2];
-    push @{$self->_block_map->{$op->false}}, $bytecode->[-1];
+    push @{$self->_block_map->{$op->to_true}}, $bytecode->[-2];
+    push @{$self->_block_map->{$op->to_false}}, $bytecode->[-1];
 }
 
 sub _rx_state_restore {
