@@ -490,9 +490,9 @@ sub o_rx_exact {
     my( $op, $runtime, $pc ) = @_;
     my $cxt = $runtime->{_stack}->[-1];
 
-    v "Exact '$op->{string}' at $cxt->{pos}\n";
+    v "Exact '$op->{characters}' at $cxt->{pos}\n";
     if(    substr( $cxt->{string}, $cxt->{pos}, $op->{length} )
-        ne $op->{string} ) {
+        ne $op->{characters} ) {
         return _backtrack( $runtime, $cxt );
     }
     $cxt->{pos} += $op->{length};
@@ -504,9 +504,9 @@ sub o_rx_exact_i {
     my( $op, $runtime, $pc ) = @_;
     my $cxt = $runtime->{_stack}->[-1];
 
-    v "Exact (i) '$op->{string}' at $cxt->{pos}\n";
+    v "Exact (i) '$op->{characters}' at $cxt->{pos}\n";
     if(    lc substr( $cxt->{string}, $cxt->{pos}, $op->{length} )
-        ne lc $op->{string} ) {
+        ne lc $op->{characters} ) {
         return _backtrack( $runtime, $cxt );
     }
     $cxt->{pos} += $op->{length};

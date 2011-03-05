@@ -2747,11 +2747,11 @@ sub _regex_exact {
 
     if( $tree->insensitive ) {
         _add_bytecode $self,
-            opcode_nm( OP_RX_EXACT_I, string => $tree->value,
+            opcode_nm( OP_RX_EXACT_I, characters => $tree->value,
                        length => length( $tree->value ) );
     } else {
         _add_bytecode $self,
-            opcode_nm( OP_RX_EXACT, string => $tree->value,
+            opcode_nm( OP_RX_EXACT, characters => $tree->value,
                        length => length( $tree->value ) );
     }
 }

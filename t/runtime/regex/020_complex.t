@@ -16,19 +16,19 @@ my @re4 =
   ( o( 'rx_start_match' ),
     # start quantifier
     o( 'rx_start_group', to       => 3 ), # 1
-    o( 'rx_exact',       string   => 'a', length => 1 ),
+    o( 'rx_exact',       characters => 'a', length => 1 ),
     o( 'rx_quantifier',  to       => 2, min => 0, max => -1, greedy => 1,
                          group    => -1,
                          subgroups_start => 0, subgroups_end => 0 ), # 3
     # end quantifier
     # start alternation
     o( 'rx_try',         to       => 7 ), # 4
-    o( 'rx_exact',       string   => 'a', length => 1 ),
+    o( 'rx_exact',       characters => 'a', length => 1 ),
     o( 'jump',           to       => 11 ),
     o( 'rx_try',         to       => 10 ), # 7
-    o( 'rx_exact',       string   => 'b', length => 1 ),
+    o( 'rx_exact',       characters => 'b', length => 1 ),
     o( 'jump',           to       => 11 ),
-    o( 'rx_exact',       string   => 'c', length => 1 ), # 10
+    o( 'rx_exact',       characters => 'c', length => 1 ), # 10
     # end alternation
     o( 'rx_accept',      groups   => 0 ), # 11
     );
@@ -43,7 +43,7 @@ my @re6 =
   ( o( 'rx_start_match' ),
     # start quantifier
     o( 'rx_start_group', to       => 3 ),
-    o( 'rx_exact',       string   => 'a', length => 1 ),
+    o( 'rx_exact',       characters => 'a', length => 1 ),
     o( 'rx_quantifier',  to       => 2, min => 0, max => -1, greedy => 1,
                          group    => -1,
                          subgroups_start => 0, subgroups_end => 0 ),
@@ -52,12 +52,12 @@ my @re6 =
     o( 'rx_capture_start', group  => 0 ),
     # start alternation
     o( 'rx_try',         to       => 8 ), # 5
-    o( 'rx_exact',       string   => 'x', length => 1 ),
+    o( 'rx_exact',       characters => 'x', length => 1 ),
     o( 'jump',           to       => 12 ),
     o( 'rx_try',         to       => 11 ), # 8
-    o( 'rx_exact',       string   => 'b', length => 1 ),
+    o( 'rx_exact',       characters => 'b', length => 1 ),
     o( 'jump',           to       => 12 ),
-    o( 'rx_exact',       string   => 'c', length => 1 ), # 11
+    o( 'rx_exact',       characters => 'c', length => 1 ), # 11
     # end alternation
     o( 'rx_capture_end', group    => 0 ), # 12
     # end capture
@@ -79,7 +79,7 @@ my @re8 =
                          subgroups_start => 1, subgroups_end => 2 ),
     # start quantifier
     o( 'rx_start_group', to       => 5 ), # 3
-    o( 'rx_exact',       string   => 'b', length => 1 ),
+    o( 'rx_exact',       characters => 'b', length => 1 ),
     o( 'rx_quantifier',  to       => 4, min => 0, max => -1, greedy => 1, # 5
                          group    => 1,
                          subgroups_start => 1, subgroups_end => 2 ),
@@ -87,7 +87,7 @@ my @re8 =
     # end quantifier
     # start quantifier
     o( 'rx_start_group', to       => 9 ), # 7
-    o( 'rx_exact',       string   => 'a', length => 1 ),
+    o( 'rx_exact',       characters => 'a', length => 1 ),
     o( 'rx_quantifier',  to       => 8, min => 0, max => -1, greedy => 1, # 9
                          group    => 2,
                          subgroups_start => 2, subgroups_end => 3 ),
@@ -97,7 +97,7 @@ my @re8 =
                          group    => 0,
                          subgroups_start => 0, subgroups_end => 3 ),
     # end quantifier
-    o( 'rx_exact',       string   => 'w', length => 1 ), # 11
+    o( 'rx_exact',       characters => 'w', length => 1 ), # 11
     o( 'rx_accept',      groups   => 3 ),
     );
 my $re8 = Language::P::Toy::Value::Regex->new

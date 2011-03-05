@@ -18,17 +18,17 @@ my @re1 =
     # start alternation
     # first
     o( 'rx_try',         to       => 5 ), # 2
-    o( 'rx_exact',       string   => 'a', length => 1 ),
+    o( 'rx_exact',       characters => 'a', length => 1 ),
     o( 'jump',           to       => 9 ),
     # second
     o( 'rx_try',         to       => 8 ), # 5
-    o( 'rx_exact',       string   => 'b', length => 1 ),
+    o( 'rx_exact',       characters => 'b', length => 1 ),
     o( 'jump',           to       => 9 ),
     # last
-    o( 'rx_exact',       string   => 'c', length => 1 ), # 8
+    o( 'rx_exact',       characters => 'c', length => 1 ), # 8
     # end alternation
     o( 'rx_capture_end', group    => 0 ), # 9
-    o( 'rx_exact',       string   => 'x', length => 1 ),
+    o( 'rx_exact',       characters => 'x', length => 1 ),
     o( 'rx_accept',      groups   => 0 ),
     );
 my $re1 = Language::P::Toy::Value::Regex->new

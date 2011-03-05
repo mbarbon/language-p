@@ -17,14 +17,14 @@ my @re3 =
     # start quantifier
     o( 'rx_start_group', to       => 5 ),
     o( 'rx_capture_start', group  => 0 ),
-    o( 'rx_exact',       string   => 'a', length => 1 ),
+    o( 'rx_exact',       characters => 'a', length => 1 ),
     o( 'rx_capture_end', group    => 0 ),
     o( 'rx_quantifier',  to       => 2, min => 2, max => 3, greedy => 1,
                          subgroups_start => 0, subgroups_end => 1,
                          group    => -1 ),
     # end quantifier
     o( 'rx_capture_start', group  => 1 ), # 4
-    o( 'rx_exact',       string   => 'a', length => 1 ),
+    o( 'rx_exact',       characters => 'a', length => 1 ),
     o( 'rx_capture_end', group    => 1 ),
     o( 'rx_accept',      groups   => 2 ),
     );
@@ -39,13 +39,13 @@ my @re7 =
   ( o( 'rx_start_match' ),
     # start quantifier
     o( 'rx_start_group', to       => 3 ), # 1
-    o( 'rx_exact',       string   => 'a', length => 1 ),
+    o( 'rx_exact',       characters => 'a', length => 1 ),
     o( 'rx_quantifier',  to       => 2, min => 0, max => 1, greedy => 1, # 3
                          group    => 0,
                          subgroups_start => 0, subgroups_end => 1 ),
     # end quantifier
     o( 'rx_capture_start', group  => 1 ), # 4
-    o( 'rx_exact',       string   => 'a', length => 1 ),
+    o( 'rx_exact',       characters => 'a', length => 1 ),
     o( 'rx_capture_end', group    => 1 ),
     o( 'rx_accept',      groups   => 2 ),
     );
