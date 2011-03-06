@@ -21,7 +21,7 @@ L1: # scope=1
   set index=1, slot=VALUE_HANDLE (global context=4, name="STDOUT", slot=VALUE_HANDLE)
   jump_if_true false=L6, true=L5 (defined context=4 (want context=4))
 L2: # scope=1
-  set index=4, slot=VALUE_SCALAR (phi L3, 2, VALUE_SCALAR, L4, 3, VALUE_SCALAR)
+  set index=4, slot=VALUE_SCALAR (phi blocks=[L3, L4], indices=[2, 3], slots=[VALUE_SCALAR, VALUE_SCALAR])
   print context=2 (get index=1, slot=VALUE_HANDLE), (make_array context=8 (get index=4, slot=VALUE_SCALAR))
   return context=1 (make_list context=8)
 L3: # scope=1

@@ -269,7 +269,7 @@ oct                 u       same                 1   1  context=i1
 open                0       same                 1   1  context=i1
 ord                 u       same                 1   1  context=i1
 parentheses         0       same                -1  -1  noattr
-phi                 0       same                -1  -1  noattr,class=Phi
+phi                 0       same                -1  -1  slots=i_sigil_a,indices=i_a,blocks=b_a,class=Phi
 pipe                0       same                 2   1  context=i1
 plus                0       same                 1   1  noattr
 pop                 0       same                 1   0  noattr

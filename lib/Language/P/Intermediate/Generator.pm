@@ -95,13 +95,12 @@ sub _slot_type {
         return VALUE_SUB;
     }
     if( $opn == OP_PHI ) {
-        my $params = $op->parameters;
-        my $slot = $params->[2];
+        my $slot = $op->slots->[0];
         die "Undefined slot for OP_PHI" unless $slot;
 
         # unify the values coming from the different basic blocks
-        for( my $i = 5; $i <= $#$params; $i += 3 ) {
-            $slot = _unify_slot_types( $slot, $params->[$i] );
+        foreach my $s ( @{$op->slots} ) {
+            $slot = _unify_slot_types( $slot, $s );
         }
 
         return $slot;
@@ -210,21 +209,26 @@ sub _add_blocks {
         && exists $self->_in_args_map->{$block->predecessors->[0]} ) {
         my @stack;
         foreach my $i ( 0 .. $#{$self->_in_args_map->{$block->predecessors->[0]}} ) {
-            my( @phi, $slot, $diff );
+            my( @slots, @blocks, @vars, $slot, $diff );
             foreach my $pred ( @{$block->predecessors} ) {
                 my $val = $self->_in_args_map->{$pred}[$i];
-                push @phi, $pred, $val->[0], $val->[1];
-                $diff ||= $phi[1] != $phi[-2];
+                push @blocks, $pred;
+                push @vars, $val->[0];
+                push @slots, $val->[1];
+                $diff ||= $vars[0] != $vars[-1];
                 $slot = $slot ? _unify_slot_types( $slot, $val->[1] ) : $val->[1];
             }
 
             if( $diff && !$self->is_stack ) {
                 push @stack,
-                     opcode_n( OP_PHI, @phi );
+                     opcode_nm( OP_PHI,
+                                slots   => \@slots,
+                                blocks  => \@blocks,
+                                indices => \@vars );
             } else {
                 push @stack,
                      opcode_nm( OP_GET,
-                                index => $phi[1],
+                                index => $vars[0],
                                 slot  => $slot );
             }
         }

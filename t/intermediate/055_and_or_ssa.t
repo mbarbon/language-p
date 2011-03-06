@@ -15,7 +15,7 @@ L2: # scope=1
   set index=2, slot=VALUE_SCALAR (global context=4, name="b", slot=1)
   jump to=L3
 L3: # scope=1
-  set index=3, slot=VALUE_SCALAR (phi L4, 1, VALUE_SCALAR, L2, 2, VALUE_SCALAR)
+  set index=3, slot=VALUE_SCALAR (phi blocks=[L4, L2], indices=[1, 2], slots=[VALUE_SCALAR, VALUE_SCALAR])
   assign context=2 (get index=3, slot=VALUE_SCALAR), (global context=20, name="x", slot=1)
   jump to=L5
 L4: # scope=1
@@ -53,7 +53,7 @@ L2: # scope=1
   set index=2, slot=VALUE_SCALAR (global context=4, name="b", slot=1)
   jump to=L3
 L3: # scope=1
-  set index=3, slot=VALUE_SCALAR (phi L4, 1, VALUE_SCALAR, L2, 2, VALUE_SCALAR)
+  set index=3, slot=VALUE_SCALAR (phi blocks=[L4, L2], indices=[1, 2], slots=[VALUE_SCALAR, VALUE_SCALAR])
   assign context=2 (get index=3, slot=VALUE_SCALAR), (global context=20, name="x", slot=1)
   jump to=L5
 L4: # scope=1
@@ -91,7 +91,7 @@ L2: # scope=1
   set index=2, slot=VALUE_SCALAR (global context=4, name="b", slot=1)
   jump to=L3
 L3: # scope=1
-  set index=3, slot=VALUE_SCALAR (phi L4, 1, VALUE_SCALAR, L2, 2, VALUE_SCALAR)
+  set index=3, slot=VALUE_SCALAR (phi blocks=[L4, L2], indices=[1, 2], slots=[VALUE_SCALAR, VALUE_SCALAR])
   jump_if_true false=L7, true=L5 (get index=3, slot=VALUE_SCALAR)
 L4: # scope=1
   jump to=L3
@@ -99,7 +99,7 @@ L5: # scope=1
   set index=4, slot=VALUE_SCALAR (global context=4, name="c", slot=1)
   jump to=L6
 L6: # scope=1
-  set index=5, slot=VALUE_SCALAR (phi L7, 3, VALUE_SCALAR, L5, 4, VALUE_SCALAR)
+  set index=5, slot=VALUE_SCALAR (phi blocks=[L7, L5], indices=[3, 4], slots=[VALUE_SCALAR, VALUE_SCALAR])
   assign context=2 (get index=5, slot=VALUE_SCALAR), (global context=20, name="x", slot=1)
   jump to=L8
 L7: # scope=1
@@ -120,7 +120,7 @@ L2: # scope=1
   set index=2, slot=VALUE_SCALAR (global context=4, name="b", slot=1)
   jump to=L3
 L3: # scope=1
-  set index=3, slot=VALUE_SCALAR (phi L4, 1, VALUE_SCALAR, L2, 2, VALUE_SCALAR)
+  set index=3, slot=VALUE_SCALAR (phi blocks=[L4, L2], indices=[1, 2], slots=[VALUE_SCALAR, VALUE_SCALAR])
   jump_if_true false=L7, true=L5 (get index=3, slot=VALUE_SCALAR)
 L4: # scope=1
   jump to=L3
@@ -145,7 +145,7 @@ L2: # scope=1
   set index=2, slot=VALUE_SCALAR (global context=4, name="b", slot=1)
   jump to=L3
 L3: # scope=1
-  set index=3, slot=VALUE_SCALAR (phi L4, 1, VALUE_SCALAR, L2, 2, VALUE_SCALAR)
+  set index=3, slot=VALUE_SCALAR (phi blocks=[L4, L2], indices=[1, 2], slots=[VALUE_SCALAR, VALUE_SCALAR])
   jump_if_true false=L5, true=L7 (get index=3, slot=VALUE_SCALAR)
 L4: # scope=1
   jump to=L3
@@ -153,7 +153,7 @@ L5: # scope=1
   set index=4, slot=VALUE_SCALAR (global context=4, name="c", slot=1)
   jump to=L6
 L6: # scope=1
-  set index=5, slot=VALUE_SCALAR (phi L7, 3, VALUE_SCALAR, L5, 4, VALUE_SCALAR)
+  set index=5, slot=VALUE_SCALAR (phi blocks=[L7, L5], indices=[3, 4], slots=[VALUE_SCALAR, VALUE_SCALAR])
   assign context=2 (get index=5, slot=VALUE_SCALAR), (global context=20, name="x", slot=1)
   jump to=L8
 L7: # scope=1
@@ -175,7 +175,7 @@ L2: # scope=1
   set index=3, slot=VALUE_SCALAR (global context=4, name="b", slot=1)
   jump to=L3
 L3: # scope=1
-  set index=4, slot=VALUE_SCALAR (phi L4, 2, VALUE_SCALAR, L2, 3, VALUE_SCALAR)
+  set index=4, slot=VALUE_SCALAR (phi blocks=[L4, L2], indices=[2, 3], slots=[VALUE_SCALAR, VALUE_SCALAR])
   print context=2 (get index=1, slot=VALUE_HANDLE), (make_array context=8 (get index=4, slot=VALUE_SCALAR))
   jump to=L5
 L4: # scope=1

@@ -110,7 +110,7 @@ sub generate_ssa_and_diff {
     my $blocks = generate_main_ssa( $code );
     my $asm_string = blocks_as_string( $blocks );
 
-    $assembly =~ s{([= ])((?:NUM|CXT|FLAG|CONST|STRING|VALUE|OP|DECLARATION|PROTO|CHANGED|RX_CLASS|RX_GROUP|RX_POSIX|RX_ASSERTION)_[A-Z_\|]+)}
+    $assembly =~ s{([[= ])((?:NUM|CXT|FLAG|CONST|STRING|VALUE|OP|DECLARATION|PROTO|CHANGED|RX_CLASS|RX_GROUP|RX_POSIX|RX_ASSERTION)_[A-Z_\|]+)}
                   {$1 . ( eval $2 or die $@ )}eg;
 
     require Test::Differences;

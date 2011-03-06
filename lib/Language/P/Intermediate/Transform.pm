@@ -119,13 +119,12 @@ sub _ssa_to_tree {
             next if    $op->opcode_n != OP_SET
                     || $op->parameters->[0]->opcode_n != OP_PHI;
 
-            my $parameters = $op->parameters->[0]->parameters;
+            my $phi = $op->parameters->[0];
+            my $count = @{$phi->slots};
             my $result_slot = $op->slot;
 
-            for( my $i = 0; $i < @$parameters; $i += 3 ) {
-                my( $label, $variable, $slot ) = @{$parameters}[ $i, $i + 1, $i + 2];
-                my( $block_from ) = grep $_ eq $label,
-                                         @{$ssa->basic_blocks};
+            for( my $i = 0; $i < $count; ++$i ) {
+                my $block_from = $phi->blocks->[$i];
                 my $op_from_off = $#{$block_from->bytecode};
 
                 # find the jump coming to this block
@@ -144,11 +143,11 @@ sub _ssa_to_tree {
                 splice @{$block_from->bytecode}, $op_from_off, 0,
                        opcode_npam( OP_SET, $op->pos,
                                     [ opcode_npm( OP_GET, $op->pos,
-                                                  index => $variable,
-                                                  slot  => $slot ) ],
+                                                  index => $phi->indices->[$i],
+                                                  slot  => $phi->slots->[$i] ) ],
                                     index => $op->index,
                                     slot  => $result_slot )
-                    if $op->index != $variable;
+                    if $op->index != $phi->indices->[$i];
             }
 
             --$op_off;

@@ -35,6 +35,9 @@ sub _p {
         return '{' . join( ', ', map "$_ => $arg->{$_}",
                                  sort keys %$arg ) . '}';
     }
+    if( ref( $arg ) eq 'ARRAY' ) {
+        return '[' . join( ', ', map _p( $self, $_ ), @$arg ) . ']';
+    }
     if(    $self->{opcode_n} && defined $name && $attributes
         && (my $named = $attributes->{$self->{opcode_n}}{named}) ) {
         my $type = $named->{$name};

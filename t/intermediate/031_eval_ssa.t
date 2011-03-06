@@ -41,7 +41,7 @@ L3: # scope=1
   set index=2, slot=VALUE_SCALAR (constant_undef)
   jump to=L4
 L4: # scope=1
-  set index=3, slot=VALUE_SCALAR (phi L2, 1, VALUE_SCALAR, L3, 2, VALUE_SCALAR)
+  set index=3, slot=VALUE_SCALAR (phi blocks=[L2, L3], indices=[1, 2], slots=[VALUE_SCALAR, VALUE_SCALAR])
   assign context=2 (get index=3, slot=VALUE_SCALAR), (global context=20, name="x", slot=1)
   jump to=L5
 L5: # scope=0
