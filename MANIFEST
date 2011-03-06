@@ -245,6 +245,7 @@ t/parser/terms/140_prototypes.t
 t/parser/terms/150_closure.t
 t/parser/z00_selfparse.t
 t/run/001_hello.t
+t/run/002_conditional.t
 t/run/005_assignment.t
 t/run/005_glob_assignment.t
 t/run/006_brackets.t
