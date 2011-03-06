@@ -50,14 +50,14 @@ from the files under F<inc>.
 sub ACTION_code {
     my( $self ) = @_;
 
-    if( !$self->up_to_date( [ 'inc/Keywords.pm' ],
+    if( !$self->up_to_date( [ 'inc/Keywords.pm', 'lib/Language/P/Parser/KeywordList.pm' ],
                             [ 'lib/Language/P/Keywords.pm' ] ) ) {
         $self->do_system( $^X, '-Iinc', '-Ilib',
                           '-MKeywords', '-e', 'write_keywords',
                           '--', 'lib/Language/P/Keywords.pm' );
         $self->add_to_cleanup( 'lib/Language/P/Keywords.pm' );
     }
-    if( !$self->up_to_date( [ 'inc/Opcodes.pm', 'inc/Keywords.pm',
+    if( !$self->up_to_date( [ 'inc/Opcodes.pm', 'lib/Language/P/Parser/OpcodeList.pm',
                               'lib/Language/P/Keywords.pm' ],
                             [ 'lib/Language/P/Opcodes.pm', 'lib/Language/P/Toy/Assembly.pm' ] ) ) {
         $self->do_system( $^X, '-Iinc', '-Ilib',
