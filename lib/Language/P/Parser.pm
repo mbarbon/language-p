@@ -2340,7 +2340,7 @@ sub _declared_id {
                         pos       => $op->[O_POS],
                         } );
 
-        if( my $decl = $self->runtime->get_symbol( $fqname, '&' ) ) {
+        if( my $decl = $self->runtime->get_symbol( $fqname, VALUE_SUB ) ) {
             # FIXME accessor
             $call->{prototype} = $decl->prototype;
             return ( $call, 1 );
@@ -2581,7 +2581,7 @@ sub _parse_arglist {
                       || $la->[O_ID_TYPE] == T_FQ_ID ) ) {
             # check if it is a declared id
             my $declared = $self->runtime
-                ->get_symbol( _qualify( $self, $la->[O_VALUE], $la->[O_ID_TYPE] ), '&' );
+                ->get_symbol( _qualify( $self, $la->[O_VALUE], $la->[O_ID_TYPE] ), VALUE_SUB );
             # look ahead one more token
             _lex_token( $self );
             my $la2 = $self->lexer->peek( X_TERM );

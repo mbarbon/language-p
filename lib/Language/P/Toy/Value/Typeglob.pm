@@ -205,7 +205,7 @@ my %types =
 sub set_slot {
     my( $self, $runtime, $slot, $value ) = @_;
 
-    die unless $self->can( $slot );
+    Carp::confess( "Wrong slot name: '$slot'" ) unless $self->can( $slot );
 
     $self->{$slot} = $value;
 }

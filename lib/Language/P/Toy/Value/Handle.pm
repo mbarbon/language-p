@@ -6,6 +6,8 @@ use parent qw(Language::P::Toy::Value::Any);
 
 __PACKAGE__->mk_ro_accessors( qw(handle) );
 
+use Language::P::Constants qw(:all);
+
 sub type { 4 }
 
 sub as_handle {
@@ -54,7 +56,7 @@ sub _irs_value {
 
 sub read_line {
     my( $self, $runtime ) = @_;
-    my $irs = $runtime->symbol_table->get_symbol( $runtime, '/', '$', 1 );
+    my $irs = $runtime->symbol_table->get_symbol( $runtime, '/', VALUE_SCALAR, 1 );
     local $/ = _irs_value( $runtime, $irs );
 
     return scalar readline $self->handle;
@@ -62,7 +64,7 @@ sub read_line {
 
 sub read_lines {
     my( $self, $runtime ) = @_;
-    my $irs = $runtime->symbol_table->get_symbol( $runtime, '/', '$', 1 );
+    my $irs = $runtime->symbol_table->get_symbol( $runtime, '/', VALUE_SCALAR, 1 );
     local $/ = _irs_value( $runtime, $irs );
 
     return [ readline $self->handle ];

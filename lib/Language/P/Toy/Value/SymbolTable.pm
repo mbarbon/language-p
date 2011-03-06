@@ -6,6 +6,7 @@ use parent qw(Language::P::Toy::Value::Hash);
 
 __PACKAGE__->mk_ro_accessors( qw(name) );
 
+use Language::P::Constants qw(:all);
 use Language::P::Toy::Value::Typeglob;
 
 sub type { 7 }
@@ -23,7 +24,7 @@ sub new {
 
 sub get_package {
     my( $self, $runtime, $package, $create ) = @_;
-    my( $pack ) = $self->get_symbol( $runtime, $package . '::', '::', $create );
+    my( $pack ) = $self->get_symbol( $runtime, $package . '::', VALUE_STASH, $create );
 
     return $pack;
 }
@@ -56,14 +57,13 @@ sub _apply_magic {
 }
 
 our %sigils =
-  ( '$'  => [ 'scalar',     'Language::P::Toy::Value::Scalar' ],
-    '@'  => [ 'array',      'Language::P::Toy::Value::Array' ],
-    '%'  => [ 'hash',       'Language::P::Toy::Value::Hash' ],
-    '&'  => [ 'subroutine', 'Language::P::Toy::Value::Subroutine' ],
-    '*'  => [ undef,        'Language::P::Toy::Value::Typeglob' ],
-    'I'  => [ 'io',         'Language::P::Toy::Value::Handle' ],
-    'F'  => [ 'format',     'Language::P::Toy::Value::Format' ],
-    '::' => [ 'hash',       'language::P::Toy::Value::SymbolTable' ],
+  ( VALUE_SCALAR()  => [ 'scalar',     'Language::P::Toy::Value::Scalar' ],
+    VALUE_ARRAY()   => [ 'array',      'Language::P::Toy::Value::Array' ],
+    VALUE_HASH()    => [ 'hash',       'Language::P::Toy::Value::Hash' ],
+    VALUE_SUB()     => [ 'subroutine', 'Language::P::Toy::Value::Subroutine' ],
+    VALUE_GLOB()    => [ undef,        'Language::P::Toy::Value::Typeglob' ],
+    VALUE_HANDLE()  => [ 'io',         'Language::P::Toy::Value::Handle' ],
+    VALUE_STASH()   => [ 'hash',       'language::P::Toy::Value::SymbolTable' ],
     );
 
 sub get_symbol {
@@ -74,12 +74,12 @@ sub get_symbol {
 
     $self->_apply_magic( $runtime, $name, $symbol ) if $created;
 
-    return $symbol if $sigil eq '*';
+    return $symbol if $sigil == VALUE_GLOB;
 
     my $value = $symbol->get_slot( $runtime, $sigils{$sigil}[0] );
     return $value if $value || !$create;
 
-    if( $sigil eq '::' ) {
+    if( $sigil == VALUE_STASH ) {
         $value = Language::P::Toy::Value::SymbolTable->new
                      ( $runtime, { name => substr $name, 0, -2 } );
         $symbol->set_slot( $runtime, 'hash', $value );
@@ -133,7 +133,7 @@ sub _get_glob {
 
 sub set_symbol {
     my( $self, $runtime, $name, $sigil, $value ) = @_;
-    my $glob = $self->get_symbol( $runtime, $name, '*', 1 );
+    my $glob = $self->get_symbol( $runtime, $name, VALUE_GLOB, 1 );
 
     $glob->set_slot( $runtime, $sigils{$sigil}[0], $value );
 

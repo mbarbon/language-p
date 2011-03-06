@@ -6,6 +6,7 @@ use parent qw(Language::P::Object);
 
 __PACKAGE__->mk_ro_accessors( qw(stash) );
 
+use Language::P::Constants qw(:all);
 use Carp;
 
 our @METHODS = qw(as_integer as_float as_string as_scalar as_boolean_int
@@ -65,7 +66,7 @@ sub _symbolic_reference {
         $name = $runtime->{_lex}{package} . '::' . $name;
     }
     if( $name =~ /::$/ ) {
-        $sigil = '::';
+        $sigil = VALUE_STASH;
     }
 
     # TODO must handle punctuation variables and other special cases
@@ -78,55 +79,55 @@ sub _symbolic_reference {
 sub dereference_scalar {
     my( $self, $runtime, $create ) = @_;
 
-    return _symbolic_reference( $self, $runtime, '$', $create );
+    return _symbolic_reference( $self, $runtime, VALUE_SCALAR, $create );
 }
 
 sub dereference_hash {
     my( $self, $runtime, $create ) = @_;
 
-    return _symbolic_reference( $self, $runtime, '%', $create );
+    return _symbolic_reference( $self, $runtime, VALUE_HASH, $create );
 }
 
 sub dereference_array {
     my( $self, $runtime, $create ) = @_;
 
-    return _symbolic_reference( $self, $runtime, '@', $create );
+    return _symbolic_reference( $self, $runtime, VALUE_ARRAY, $create );
 }
 
 sub dereference_glob {
     my( $self, $runtime, $create ) = @_;
 
-    return _symbolic_reference( $self, $runtime, '*', $create );
+    return _symbolic_reference( $self, $runtime, VALUE_GLOB, $create );
 }
 
 sub dereference_subroutine {
     my( $self, $runtime ) = @_;
 
-    return _symbolic_reference( $self, $runtime, '&' );
+    return _symbolic_reference( $self, $runtime, VALUE_SUB );
 }
 
 sub dereference_io {
     my( $self, $runtime ) = @_;
 
-    return _symbolic_reference( $self, $runtime, 'I' );
+    return _symbolic_reference( $self, $runtime, VALUE_HANDLE );
 }
 
 sub vivify_scalar {
     my( $self, $runtime ) = @_;
 
-    return _symbolic_reference( $self, $runtime, '$', 1 );
+    return _symbolic_reference( $self, $runtime, VALUE_SCALAR, 1 );
 }
 
 sub vivify_array {
     my( $self, $runtime ) = @_;
 
-    return _symbolic_reference( $self, $runtime, '@', 1 );
+    return _symbolic_reference( $self, $runtime, VALUE_ARRAY, 1 );
 }
 
 sub vivify_hash {
     my( $self, $runtime ) = @_;
 
-    return _symbolic_reference( $self, $runtime, '%', 1 );
+    return _symbolic_reference( $self, $runtime, VALUE_HASH, 1 );
 }
 
 sub unimplemented {

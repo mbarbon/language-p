@@ -729,7 +729,7 @@ sub o_reverse {
         my $value;
 
         if( $args->get_count == 0 ) {
-            my $def = $runtime->symbol_table->get_symbol( $runtime, '_', '$' );
+            my $def = $runtime->symbol_table->get_symbol( $runtime, '_', VALUE_SCALAR );
 
             $value = reverse $def->as_string( $runtime );
         } else {
@@ -991,7 +991,7 @@ sub o_return {
 
 sub o_glob {
     my( $op, $runtime, $pc ) = @_;
-    my $value = $runtime->symbol_table->get_symbol( $runtime, $op->{name}, '*',
+    my $value = $runtime->symbol_table->get_symbol( $runtime, $op->{name}, VALUE_GLOB,
                                                     $op->{create} );
     $value ||= Language::P::Toy::Value::Undef->new( $runtime );
 
@@ -1887,7 +1887,7 @@ sub o_die {
 
     my $message = '';
     if( $args->get_count == 0 ) {
-        my $exc = $runtime->symbol_table->get_symbol( $runtime, '@', '$', 1 );
+        my $exc = $runtime->symbol_table->get_symbol( $runtime, '@', VALUE_SCALAR, 1 );
 
         if( $exc->is_defined( $runtime ) ) {
             $message .= $exc->as_string( $runtime ) . "\t...propagated";
@@ -1924,7 +1924,7 @@ sub o_warn {
         $message .= " at $info->{file} line $info->{line}.\n";
     }
 
-    my $stderr = $runtime->symbol_table->get_symbol( $runtime, 'STDERR', 'I' );
+    my $stderr = $runtime->symbol_table->get_symbol( $runtime, 'STDERR', VALUE_HANDLE );
 
     $stderr->write_string( $runtime, $message );
 
@@ -2495,7 +2495,7 @@ sub o_restore_hash_element {
 
 sub o_localize_glob_slot {
     my( $op, $runtime, $pc ) = @_;
-    my $glob = $runtime->symbol_table->get_symbol( $runtime, $op->{name}, '*', 1 );
+    my $glob = $runtime->symbol_table->get_symbol( $runtime, $op->{name}, VALUE_GLOB, 1 );
     my $to_save = $glob->get_or_create_slot( $runtime, $op->{slot} );
     my $saved = $to_save->localize( $runtime );
 
@@ -2508,7 +2508,7 @@ sub o_localize_glob_slot {
 
 sub o_restore_glob_slot {
     my( $op, $runtime, $pc ) = @_;
-    my $glob = $runtime->symbol_table->get_symbol( $runtime, $op->{name}, '*', 1 );
+    my $glob = $runtime->symbol_table->get_symbol( $runtime, $op->{name}, VALUE_GLOB, 1 );
     my $saved = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
 
     $glob->set_slot( $runtime, $op->{slot}, $saved ) if $saved;
@@ -2549,7 +2549,7 @@ sub o_do_file {
     };
     $runtime->throw_exception( $@ ) unless $ok;
 
-    my $inc = $runtime->symbol_table->get_symbol( $runtime, 'INC', '%', 1 );
+    my $inc = $runtime->symbol_table->get_symbol( $runtime, 'INC', VALUE_HASH, 1 );
     $inc->set_item( $runtime, $file_str, $real_path );
 
     return $pc + 1;
@@ -2561,7 +2561,7 @@ sub o_require_file {
 
     if( $file->is_integer( $runtime ) || $file->is_float( $runtime ) ) {
         my $value = $file->as_float( $runtime );
-        my $version = $runtime->symbol_table->get_symbol( $runtime, ']', '$' );
+        my $version = $runtime->symbol_table->get_symbol( $runtime, ']', VALUE_SCALAR );
         my $v = $version->as_float( $runtime );
 
         if( $v >= $value ) {
@@ -2580,7 +2580,7 @@ sub o_require_file {
     }
 
     my $file_str = $file->as_string( $runtime );
-    my $inc = $runtime->symbol_table->get_symbol( $runtime, 'INC', '%', 1 );
+    my $inc = $runtime->symbol_table->get_symbol( $runtime, 'INC', VALUE_HASH, 1 );
 
     if( $inc->has_item( $runtime, $file_str ) ) {
         push @{$runtime->{_stack}}, Language::P::Toy::Value::StringNumber->new

@@ -26,6 +26,8 @@ my @lines;
 {
     package TestParserGenerator;
 
+    use Language::P::Constants qw(VALUE_SUB);
+
     sub new {
         @lines = ();
         $_[1]->{_propagate_context} = Language::P::ParseTree::PropagateContext->new;
@@ -52,7 +54,7 @@ my @lines;
                           prototype=> $prototype,
                           } );
         $self->runtime->_symbol_table->set_symbol( $self->runtime,
-                                                   $name, '&', $sub );
+                                                   $name, VALUE_SUB, $sub );
     }
 
     package TestParserRuntime;
@@ -80,7 +82,7 @@ my @lines;
                             { name     => $dec->[0],
                               prototype=> undef,
                               } );
-            $self->_symbol_table->set_symbol( $self, $dec->[0], '&', $sub );
+            $self->_symbol_table->set_symbol( $self, $dec->[0], VALUE_SUB, $sub );
         }
     }
 

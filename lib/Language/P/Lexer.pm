@@ -1201,7 +1201,7 @@ sub lex {
         if( $$_ =~ /^=>/ ) {
             # fully qualified name (foo::moo) is quoted only if not declared
             if(    $type == T_FQ_ID
-                && $self->runtime->get_symbol( $ids, '*' ) ) {
+                && $self->runtime->get_symbol( $ids, VALUE_GLOB ) ) {
                 return [ $pos, T_ID, $ids, $type, $flag ];
             } else {
                 return [ $pos, T_STRING, $ids ];

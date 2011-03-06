@@ -161,7 +161,7 @@ sub add_declaration {
                     { name      => _qualify( $name ),
                       prototype => $prototype,
                       } );
-    my $slot = $self->runtime->symbol_table->get_symbol( $self->runtime, $name, '&' );
+    my $slot = $self->runtime->symbol_table->get_symbol( $self->runtime, $name, VALUE_SUB );
 
     if( $slot && $slot->is_defined ) {
         # TODO warn about prototype mismatch
@@ -169,7 +169,7 @@ sub add_declaration {
         # TODO warn about prototype mismatch
         $slot->assign( $self->runtime, $sub );
     } else {
-        $self->runtime->symbol_table->set_symbol( $self->runtime, $name, '&', $sub );
+        $self->runtime->symbol_table->set_symbol( $self->runtime, $name, VALUE_SUB, $sub );
     }
 }
 
@@ -390,7 +390,7 @@ sub _generate_segment {
     # install into the symbol table; use assignment in case something
     # took a reference
     if( defined $segment->name && $segment->name ne 'BEGIN' ) {
-        my $slot = $self->runtime->symbol_table->get_symbol( $self->runtime, $segment->name, '&' );
+        my $slot = $self->runtime->symbol_table->get_symbol( $self->runtime, $segment->name, VALUE_SUB );
 
         # TODO warn redefinition
         $slot->assign( $self->runtime, $code );
@@ -433,7 +433,7 @@ sub _dump_path {
     require File::Spec;
 
     if( $prefix && File::Spec->file_name_is_absolute( $path ) ) {
-        my $inc = $runtime->symbol_table->get_symbol( $runtime, 'INC', '@', 1 );
+        my $inc = $runtime->symbol_table->get_symbol( $runtime, 'INC', VALUE_ARRAY, 1 );
 
         for( my $it = $inc->iterator( $runtime ); $it->next( $runtime ); ) {
             my $incpath = $it->item->as_string( $runtime );

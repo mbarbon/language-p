@@ -6,6 +6,7 @@ use parent qw(Language::P::Toy::Value::SymbolTable);
 
 use Config;
 
+use Language::P::Constants qw(:all);
 use Language::P::Toy::Value::ActiveScalar;
 use Language::P::Toy::Value::StringNumber;
 
@@ -26,31 +27,31 @@ sub new {
     my $self = $class->SUPER::new( $runtime, $args );
 
     my $irs = Language::P::Toy::Value::Scalar->new_string( $runtime, "\n" );
-    $self->set_symbol( $runtime, '/', '$', $irs );
+    $self->set_symbol( $runtime, '/', VALUE_SCALAR, $irs );
 
     my $ais = Language::P::Toy::Value::Scalar->new_string( $runtime, " " );
-    $self->set_symbol( $runtime, '"', '$', $ais );
+    $self->set_symbol( $runtime, '"', VALUE_SCALAR, $ais );
 
     my $out = Language::P::Toy::Value::Handle->new( $runtime, { handle => \*STDOUT } );
-    $self->set_symbol( $runtime, 'STDOUT', 'I', $out );
+    $self->set_symbol( $runtime, 'STDOUT', VALUE_HANDLE, $out );
 
     my $err = Language::P::Toy::Value::Handle->new( $runtime, { handle => \*STDERR } );
-    $self->set_symbol( $runtime, 'STDERR', 'I', $err );
+    $self->set_symbol( $runtime, 'STDERR', VALUE_HANDLE, $err );
 
     my $interpreter = Language::P::Toy::Value::Scalar->new_string( $runtime, $^X );
-    $self->set_symbol( $runtime, "\030", '$', $interpreter );
+    $self->set_symbol( $runtime, "\030", VALUE_SCALAR, $interpreter );
 
     # TODO make readonly
     my $version = Language::P::Toy::Value::Scalar->new_float( $runtime, 5.008009 );
-    $self->set_symbol( $runtime, ']', '$', $version );
+    $self->set_symbol( $runtime, ']', VALUE_SCALAR, $version );
 
     my $inc = Language::P::Toy::Value::Array->new( $runtime );
     $inc->push_value( $runtime, Language::P::Toy::Value::Scalar->new_string( $runtime, $_ ) )
         foreach 'support/toy/lib', grep !m{/$Config{archname}$}, @INC;
-    $self->set_symbol( $runtime, 'INC', '@', $inc );
-    $self->set_symbol( $runtime, 'Internals::add_overload', '&',
+    $self->set_symbol( $runtime, 'INC', VALUE_ARRAY, $inc );
+    $self->set_symbol( $runtime, 'Internals::add_overload', VALUE_SUB,
                        $runtime->wrap_method( $runtime, 'add_overload' ) );
-    $self->set_symbol( $runtime, 'UNIVERSAL::isa', '&',
+    $self->set_symbol( $runtime, 'UNIVERSAL::isa', VALUE_SUB,
                        $runtime->wrap_method( $runtime, 'derived_from' ) );
 
     return $self;
@@ -114,7 +115,7 @@ sub _apply_magic {
 
 sub get_symbol {
     my( $self, $runtime, $name, $sigil, $create ) = @_;
-    return $self if $name eq 'main::' && $sigil eq '::';
+    return $self if $name eq 'main::' && $sigil == VALUE_STASH;
 
     return $self->SUPER::get_symbol( $runtime, $name, $sigil, $create );
 }

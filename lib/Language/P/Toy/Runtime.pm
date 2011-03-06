@@ -47,7 +47,7 @@ sub reset {
 sub set_data_handle {
     my( $self, $package, $handle ) = @_;
     my $data = $self->symbol_table->get_package( $self, $package )
-                    ->get_symbol( $self, 'DATA', '*', 1 );
+                    ->get_symbol( $self, 'DATA', VALUE_GLOB, 1 );
 
     $data->set_slot( $self, 'io', Language::P::Toy::Value::Handle->new
                                       ( $self, { handle => $handle } ) );
@@ -193,7 +193,7 @@ sub compile_regex {
 
 sub search_file {
     my( $self, $file_str ) = @_;
-    my $inc = $self->symbol_table->get_symbol( $self, 'INC', '@', 1 );
+    my $inc = $self->symbol_table->get_symbol( $self, 'INC', VALUE_ARRAY, 1 );
 
     for( my $it = $inc->iterator( $self ); $it->next( $self ); ) {
         my $path = $it->item->as_string( $self ) . '/' . $file_str;
@@ -447,7 +447,7 @@ sub set_exception {
 
     my $scalar = Language::P::Toy::Value::Scalar->new_string
                      ( $self, $exc->full_message );
-    $self->symbol_table->set_symbol( $self, '@', '$', $scalar );
+    $self->symbol_table->set_symbol( $self, '@', VALUE_SCALAR, $scalar );
 }
 
 sub throw_exception {
@@ -542,7 +542,7 @@ sub get_package {
 
 sub is_declared {
     my( $self, $name, $sigil ) = @_;
-    my $glob = $self->symbol_table->get_symbol( $self, $name, '*', 0 );
+    my $glob = $self->symbol_table->get_symbol( $self, $name, VALUE_GLOB, 0 );
 
     return $glob && ( $glob->imported & ( 1 << $sigil - 1 ) );
 }
