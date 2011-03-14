@@ -13,7 +13,7 @@ EOP
 --- !parsetree:UnOp
 context: CXT_VOID
 left: !parsetree:Symbol
-  context: CXT_SCALAR
+  context: CXT_SCALAR|CXT_LVALUE
   name: a
   sigil: VALUE_SCALAR
 op: OP_PREINC
@@ -25,7 +25,7 @@ EOP
 --- !parsetree:UnOp
 context: CXT_VOID
 left: !parsetree:Symbol
-  context: CXT_SCALAR
+  context: CXT_SCALAR|CXT_LVALUE
   name: a
   sigil: VALUE_SCALAR
 op: OP_POSTINC
@@ -37,7 +37,7 @@ EOP
 --- !parsetree:UnOp
 context: CXT_VOID
 left: !parsetree:Symbol
-  context: CXT_SCALAR
+  context: CXT_SCALAR|CXT_LVALUE
   name: a
   sigil: VALUE_SCALAR
 op: OP_PREDEC
@@ -49,7 +49,7 @@ EOP
 --- !parsetree:UnOp
 context: CXT_VOID
 left: !parsetree:Symbol
-  context: CXT_SCALAR
+  context: CXT_SCALAR|CXT_LVALUE
   name: a
   sigil: VALUE_SCALAR
 op: OP_POSTDEC
@@ -63,7 +63,7 @@ context: CXT_VOID
 left: !parsetree:UnOp
   context: CXT_SCALAR
   left: !parsetree:Symbol
-    context: CXT_SCALAR
+    context: CXT_SCALAR|CXT_LVALUE
     name: a
     sigil: VALUE_SCALAR
   op: OP_POSTDEC
@@ -82,7 +82,7 @@ arguments:
   - !parsetree:UnOp
     context: CXT_LIST
     left: !parsetree:Symbol
-      context: CXT_SCALAR
+      context: CXT_SCALAR|CXT_LVALUE
       name: a
       sigil: VALUE_SCALAR
     op: OP_PREINC
@@ -99,7 +99,7 @@ arguments:
   - !parsetree:UnOp
     context: CXT_LIST
     left: !parsetree:Symbol
-      context: CXT_SCALAR
+      context: CXT_SCALAR|CXT_LVALUE
       name: b
       sigil: VALUE_SCALAR
     op: OP_POSTINC
@@ -116,7 +116,7 @@ context: CXT_VOID
 left: !parsetree:UnOp
   context: CXT_SCALAR
   left: !parsetree:Symbol
-    context: CXT_SCALAR
+    context: CXT_SCALAR|CXT_LVALUE
     name: a
     sigil: VALUE_SCALAR
   op: OP_POSTINC

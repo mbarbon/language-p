@@ -251,7 +251,14 @@ sub _unary_op {
     my( $self, $tree, $cxt ) = @_;
 
     $tree->set_attribute( 'context', $cxt );
-    $self->visit( $tree->left, CXT_SCALAR );
+    if(    $tree->op == OP_PREINC
+        || $tree->op == OP_PREDEC
+        || $tree->op == OP_POSTINC
+        || $tree->op == OP_POSTDEC ) {
+        $self->visit( $tree->left, CXT_SCALAR|CXT_LVALUE );
+    } else {
+        $self->visit( $tree->left, CXT_SCALAR );
+    }
 }
 
 sub _parentheses {
