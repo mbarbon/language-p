@@ -203,7 +203,7 @@ sub _parse {
 
                 if(    $st->[-1]->isa( 'Language::P::ParseTree::RXConstant' )
                     && length( $st->[-1]->value ) > 1 ) {
-                    my $last = chop $st->[-1]->{value}; # XXX
+                    my $last = substr $st->[-1]->{value}, -1, 1, '';
 
                     push @$st, _constant( $last, $flags );
                 }
