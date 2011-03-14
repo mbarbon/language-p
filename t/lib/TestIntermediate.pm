@@ -23,6 +23,9 @@ sub generate_main_linear {
     my( $code ) = @_;
     my $parsetree = parse_string( $code );
     my $gen = Language::P::Intermediate::Generator->new( { is_stack => 1 } );
+
+    $gen->create_main( undef, 0 );
+
     my $segments = $gen->generate_bytecode( $parsetree );
     my $trans = Language::P::Intermediate::Transform->new;
     my $linear = $trans->all_to_linear( $segments );
@@ -34,6 +37,9 @@ sub generate_main_tree {
     my( $code ) = @_;
     my $parsetree = parse_string( $code );
     my $gen = Language::P::Intermediate::Generator->new;
+
+    $gen->create_main( undef, 0 );
+
     my $segments = $gen->generate_bytecode( $parsetree );
     my $trans = Language::P::Intermediate::Transform->new;
     my $trees = $trans->all_to_tree( $segments );
@@ -45,6 +51,9 @@ sub generate_main_ssa {
     my( $code ) = @_;
     my $parsetree = parse_string( $code );
     my $gen = Language::P::Intermediate::Generator->new;
+
+    $gen->create_main( undef, 0 );
+
     my $segments = $gen->generate_bytecode( $parsetree );
 
     return $segments;
