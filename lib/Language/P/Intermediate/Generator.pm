@@ -2611,6 +2611,8 @@ sub _pattern {
     _add_value $self, opcode_nm( OP_CONSTANT_REGEX, value => $re->[0] );
     _add_value $self, opcode_nam( OP_MAKE_QR, _get_stack( $self, 1 ) )
         if $tree->op == OP_QL_QR;
+
+    push @{$self->_code_segments}, @$re;
 }
 
 sub _interpolated_pattern {

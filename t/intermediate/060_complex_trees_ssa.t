@@ -221,4 +221,8 @@ L8: # scope=1
   end
 L9: # scope=1
   jump to=L8
+# anoncode
+L1: # scope=0
+  rx_start_match
+  rx_accept groups=0
 EOI

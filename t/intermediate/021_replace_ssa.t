@@ -15,6 +15,11 @@ L2: # scope=2
   stop (constant_string value="b")
 L3: # scope=0
   end
+# anoncode
+L1: # scope=0
+  rx_start_match
+  rx_exact characters="a", length=1
+  rx_accept groups=0
 EOI
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
@@ -39,4 +44,9 @@ L5: # scope=2
   stop (constant_string value="b")
 L6: # scope=0
   end
+# anoncode
+L1: # scope=0
+  rx_start_match
+  rx_exact characters="a", length=1
+  rx_accept groups=0
 EOI

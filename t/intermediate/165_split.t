@@ -16,6 +16,11 @@ L1: # scope=1
   jump to=L2
 L2: # scope=0
   end
+# anoncode
+L1: # scope=0
+  rx_start_match
+  rx_exact characters="aa", length=2
+  rx_accept groups=0
 EOI
 
 generate_linear_and_diff( <<'EOP', <<'EOI' );
@@ -31,6 +36,11 @@ L1: # scope=1
   jump to=L2
 L2: # scope=0
   end
+# anoncode
+L1: # scope=0
+  rx_start_match
+  rx_exact characters="aa", length=2
+  rx_accept groups=0
 EOI
 
 generate_linear_and_diff( <<'EOP', <<'EOI' );
@@ -46,6 +56,11 @@ L1: # scope=1
   jump to=L2
 L2: # scope=0
   end
+# anoncode
+L1: # scope=0
+  rx_start_match
+  rx_exact characters=" ", length=1
+  rx_accept groups=0
 EOI
 
 generate_linear_and_diff( <<'EOP', <<'EOI' );
