@@ -121,6 +121,7 @@ call_method         0       same                 1   1  context=i1,method=s,clas
 call_method_indirect 0      same                 2   1  context=i1
 caller              v       same                -1   1  context=i1,arg_count=i1
 chdir               u       same                 1   1  context=i1
+chop                0       same                -1   1  context=i1,arg_count=i1
 chr                 u       same                 1   1  context=i1
 close               u       same                 1   1  context=i1
 concatenate         0       concat               2   1  context=i1

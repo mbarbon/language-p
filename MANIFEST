@@ -167,6 +167,7 @@ t/parser/expressions/020_fat_arrow.t
 t/parser/expressions/020_sequence.t
 t/parser/expressions/021_builtins/binmode.t
 t/parser/expressions/021_builtins/bless.t
+t/parser/expressions/021_builtins/chop.t
 t/parser/expressions/021_builtins/die.t
 t/parser/expressions/021_builtins/filetest.t
 t/parser/expressions/021_builtins/index.t

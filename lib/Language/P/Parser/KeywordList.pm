@@ -158,6 +158,7 @@ scalar              b       same                 1   1  unary_list    any
 sort                b       same                 1  -1  indirect+sub_name  list
 split               b       KEY_RX_SPLIT         0   4  pattern       scalar,scalar,scalar,scalar
 undef               b       same                 0   1  0             any
+chop                b       same                 0  -1  topic         any
 
 abs                 o       same                 1   1  topic         scalar
 binmode             o       same                 1   2  0             make_glob,scalar
