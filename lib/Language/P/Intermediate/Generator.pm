@@ -1112,9 +1112,9 @@ sub _function_call {
     }
 
     _add_value $self,
-        opcode_npam( $tree->function == OP_RETURN ? OP_MAKE_LIST : OP_MAKE_ARRAY,
-                     undef, _get_stack( $self, $argcount ),
-                     context => CXT_LIST );
+        opcode_nam( $tree->function == OP_RETURN ? OP_MAKE_LIST : OP_MAKE_ARRAY,
+                    _get_stack( $self, $argcount ),
+                    context => CXT_LIST );
 
     if( $is_func ) {
         $self->dispatch( $tree->function );
@@ -1238,10 +1238,7 @@ sub _local {
                          index => $index );
 
         push @{$self->_current_block->bytecode},
-             [ opcode_npm( $op_rest, $self->_current_block->pos_e,
-                           index => $index,
-                           ),
-               ];
+             [ opcode_nm( $op_rest, index => $index ) ];
     } elsif( $left->isa( 'Language::P::ParseTree::Slice' ) ) {
         die;
     } elsif( $left->isa( 'Language::P::ParseTree::Symbol' ) ) {
@@ -1253,11 +1250,11 @@ sub _local {
                         index => $index );
 
         push @{$self->_current_block->bytecode},
-             [ opcode_npm( OP_RESTORE_GLOB_SLOT, $self->_current_block->pos_e,
-                           name  => $left->name,
-                           slot  => $left->sigil,
-                           index => $index,
-                           ),
+             [ opcode_nm( OP_RESTORE_GLOB_SLOT,
+                          name  => $left->name,
+                          slot  => $left->sigil,
+                          index => $index,
+                          ),
                ];
     } else {
         die "Internal error, handle localized lvalue expressions";
@@ -1667,8 +1664,7 @@ sub _do_lexical_access {
         $lex_info->set_declaration( 1 );
 
         push @{$self->_current_block->bytecode},
-             [ opcode_npm( $lex_info->in_pad ? OP_LEXICAL_PAD_CLEAR : OP_LEXICAL_CLEAR,
-                           $self->_current_block->pos_e,
+             [ opcode_nm( $lex_info->in_pad ? OP_LEXICAL_PAD_CLEAR : OP_LEXICAL_CLEAR,
                            index => $lex_info->index,
                            slot  => $tree->sigil,
                            ),
@@ -1916,7 +1912,7 @@ sub _map {
     my $result = $self->{_temporary_count}++;
     _add_bytecode $self,
         opcode_nam( OP_TEMPORARY_SET,
-                    [ opcode_nm( OP_MAKE_LIST, context => CXT_LIST ) ],
+                    [ opcode_nam( OP_MAKE_LIST, [], context => CXT_LIST ) ],
                     index => $result, slot => VALUE_ARRAY );
 
     my( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop ) =
@@ -1960,7 +1956,7 @@ sub _grep {
     my $result = $self->{_temporary_count}++;
     _add_bytecode $self,
         opcode_nam( OP_TEMPORARY_SET,
-                    [ opcode_nm( OP_MAKE_LIST, context => CXT_LIST ) ],
+                    [ opcode_nam( OP_MAKE_LIST, [], context => CXT_LIST ) ],
                     index => $result, slot => VALUE_ARRAY );
 
     my( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop ) =
@@ -2447,7 +2443,7 @@ sub _ref_constructor {
     if( $tree->expression ) {
         $self->dispatch( $tree->expression );
     } else {
-        _add_value $self, opcode_nm( OP_MAKE_LIST, context => CXT_LIST );
+        _add_value $self, opcode_nam( OP_MAKE_LIST, [], context => CXT_LIST );
     }
 
     if( $tree->type == VALUE_ARRAY ) {
