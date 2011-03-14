@@ -71,8 +71,7 @@ sub as_string {
                            sort keys %{$self->{attributes}};
     }
 
-    if( $self->{parameters} ) {
-        die "Can't happen ", $self->{opcode_n} unless @{$self->{parameters}};
+    if( $self->{parameters} && @{$self->{parameters}}) {
         $str .= ' ' . join ', ', map _p( $self, $_, undef, $number_to_name, $attributes ),
                                      @{$self->{parameters}};
     }
