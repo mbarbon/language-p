@@ -46,6 +46,8 @@ sub _p {
             ( my $v = $arg ) =~ s/([^\x20-\x7f])/sprintf "\\x%02x", ord $1/eg;
 
             return qq{"$v"};
+        } elsif( $type && ( $type eq 'lp' || $type eq 'ls' ) ) {
+            return sprintf "{index=%d, slot=%d}", $arg->index, $arg->sigil;
         }
     }
 

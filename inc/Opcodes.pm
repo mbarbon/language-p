@@ -124,6 +124,15 @@ package Language::P::Instruction::RegexQuantifier;
 sub     to_false { $_[0]->{attributes}{false} }
 sub     to_true { $_[0]->{attributes}{true} }
 
+package Language::P::Instruction::Lexical;
+
+sub index { $_[0]->{attributes}{lexical_info}{index} }
+sub slot  { $_[0]->{attributes}{lexical_info}{sigil} }
+
+# package Language::P::Instruction::LocalLexical;
+
+# sub index { $_[0]->{attributes}{lexical_info}{index} }
+
 1;
 EOT
 }
@@ -387,11 +396,11 @@ EOT
 EOT
             } elsif( $type eq 'ls' ) {
                 print $out sprintf <<'EOT', $name;
-        print $out pack 'V', $self->{li_map}{$op->{attributes}{%s} . '|0'};
+        print $out pack 'V', $self->{li_map}{$op->{attributes}{%s}};
 EOT
             } elsif( $type eq 'lp' ) {
                 print $out sprintf <<'EOT', $name;
-        print $out pack 'V', $self->{li_map}{$op->{attributes}{%s} . '|1'};
+        print $out pack 'V', $self->{li_map}{$op->{attributes}{%s}};
 EOT
             }
         }

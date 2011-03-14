@@ -1075,7 +1075,7 @@ sub o_localize_lexical {
     my( $op, $runtime, $pc ) = @_;
 
     $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] =
-        $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{lexical}];
+        $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{lexical_info}{index}];
 
     return $pc + 1;
 }
@@ -1084,7 +1084,7 @@ sub o_restore_lexical {
     my( $op, $runtime, $pc ) = @_;
     my $val = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
 
-    $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{lexical}] = $val if $val;
+    $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{lexical_info}{index}] = $val if $val;
     $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = undef;
 
     return $pc + 1;
@@ -1093,7 +1093,7 @@ sub o_restore_lexical {
 sub o_lexical_pad {
     my( $op, $runtime, $pc ) = @_;
     my $pad = $runtime->{_stack}->[$runtime->{_frame} - 1];
-    my $value = $pad->values->[$op->{index}]
+    my $value = $pad->values->[$op->{lexical_info}{index}]
                   ||= Language::P::Toy::Value::Undef->new( $runtime );
 
     push @{$runtime->{_stack}}, $value;
@@ -1106,7 +1106,7 @@ sub o_lexical_pad_set {
     my $pad = $runtime->{_stack}->[$runtime->{_frame} - 1];
     my $value = pop @{$runtime->{_stack}};
 
-    $pad->values->[$op->{index}] = $value;
+    $pad->values->[$op->{lexical_info}{index}] = $value;
 
     return $pc + 1;
 }
@@ -1115,7 +1115,7 @@ sub o_lexical_pad_clear {
     my( $op, $runtime, $pc ) = @_;
     my $pad = $runtime->{_stack}->[$runtime->{_frame} - 1];
 
-    $pad->values->[$op->{index}] = undef;
+    $pad->values->[$op->{lexical_info}{index}] = undef;
 
     return $pc + 1;
 }
@@ -1125,7 +1125,7 @@ sub o_localize_lexical_pad {
     my $pad = $runtime->{_stack}->[$runtime->{_frame} - 1];
 
     $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] =
-        $pad->values->[$op->{lexical}];
+        $pad->values->[$op->{lexical_info}{index}];
 
     return $pc + 1;
 }
@@ -1135,7 +1135,7 @@ sub o_restore_lexical_pad {
     my $pad = $runtime->{_stack}->[$runtime->{_frame} - 1];
     my $val = $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}];
 
-    $pad->values->[$op->{lexical}] = $val if $val;
+    $pad->values->[$op->{lexical_info}{index}] = $val if $val;
     $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] = undef;
 
     return $pc + 1;

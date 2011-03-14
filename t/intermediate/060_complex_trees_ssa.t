@@ -92,7 +92,7 @@ L1: # scope=1
 L2: # scope=1
   end
 L3: # scope=1
-  jump_if_true false=L2, true=L4 (array_element context=4, create=0 (constant_integer value=0), (lexical index=0, slot=2))
+  jump_if_true false=L2, true=L4 (array_element context=4, create=0 (constant_integer value=0), (lexical lexical_info={index=0, slot=VALUE_ARRAY}))
 L4: # scope=1
   return context=1 (make_list context=8 (call context=1 (make_array context=8 (constant_integer value=123)), (global context=4, name="xx", slot=4)))
 EOI
@@ -179,13 +179,13 @@ L1: # scope=1
   lexical_state_set index=0
   jump to=L2
 L2: # scope=2
-  jump_if_true false=L5, true=L3 (assign context=4 (each context=8 (global context=8, name="x", slot=3)), (make_list context=24 (lexical_pad index=0, slot=1), (lexical_pad index=1, slot=1)))
+  jump_if_true false=L5, true=L3 (assign context=4 (each context=8 (global context=8, name="x", slot=3)), (make_list context=24 (lexical_pad lexical_info={index=0, slot=VALUE_SCALAR}), (lexical_pad lexical_info={index=1, slot=VALUE_SCALAR})))
 L3: # scope=3
   constant_integer value=1
   jump to=L2
 L5: # scope=1
-  lexical_pad_clear index=1, slot=1
-  lexical_pad_clear index=0, slot=1
+  lexical_pad_clear lexical_info={index=1, slot=VALUE_SCALAR}
+  lexical_pad_clear lexical_info={index=0, slot=VALUE_SCALAR}
   jump to=L6
 L6: # scope=1
   end

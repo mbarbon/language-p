@@ -214,6 +214,9 @@ my %opcode_map =
     OP_RESTORE_LEXICAL()             => \&_map_lexical_index,
     OP_LOCALIZE_LEXICAL_PAD()        => \&_map_lexical_index,
     OP_RESTORE_LEXICAL_PAD()         => \&_map_lexical_index,
+    OP_LEXICAL()                     => \&_map_lexical,
+    OP_LEXICAL_SET()                 => \&_map_lexical,
+    OP_LEXICAL_CLEAR()               => \&_map_lexical,
     OP_END()                         => \&_end,
     OP_STOP()                        => \&_stop,
     OP_DOT_DOT()                     => \&_dot_dot,
@@ -353,9 +356,13 @@ sub _generate_segment {
 
     # Toy subroutine start with stack_size = 1 (for args), and so does
     # the IR code segment
-    $code->{stack_size} +=   $segment->lexicals->{max_stack}
-                           - ( $code->is_subroutine ? 1 : 0 )
-        if $segment->lexicals;
+    if( $segment->lexicals ) {
+        my $max_size = 0;
+        foreach my $lex_info ( @{$segment->lexicals} ) {
+            ++$max_size unless $lex_info->in_pad;
+        }
+        $code->{stack_size} += $max_size + ( $code->is_subroutine ? 1 : 0 );
+    }
 
     $self->_generated->{$segment} = $code;
 
@@ -739,8 +746,17 @@ sub _map_lexical_index {
 
     push @$bytecode,
          o( $NUMBER_TO_NAME{$op->{opcode_n}},
-            index   => _temporary_index( $self, IDX_TEMPORARY, $op->index ),
-            lexical => $op->lexical,
+            index        => _temporary_index( $self, IDX_TEMPORARY, $op->index ),
+            lexical_info => $op->lexical_info,
+            );
+}
+
+sub _map_lexical {
+    my( $self, $bytecode, $op ) = @_;
+
+    push @$bytecode,
+         o( $NUMBER_TO_NAME{$op->{opcode_n}},
+            index        => $op->lexical_info->index,
             );
 }
 
@@ -862,7 +878,7 @@ sub _allocate_lexicals {
     my $pad = $toy_code->lexicals;
     my $needs_pad = 0;
 
-    foreach my $lex_info ( values %{$ir_code->lexicals->{map}} ) {
+    foreach my $lex_info ( @{$ir_code->lexicals} ) {
         unless( $lex_info->in_pad ) {
             $toy_code->lexical_init->[$lex_info->index] =
               $lex_info->sigil;

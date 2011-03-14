@@ -66,7 +66,7 @@ sub _write_sub {
     print $out pack 'C', $code->type;
     print $out pack 'V', $code->outer ? $self->{sub_map}{$code->outer} : -1;
     if( !$code->is_regex ) {
-        print $out pack 'V', scalar values %{$code->lexicals->{map}};
+        print $out pack 'V', scalar @{$code->lexicals};
     } else {
         print $out pack 'V', 0;
     }
@@ -79,9 +79,9 @@ sub _write_sub {
 
     if( !$code->is_regex ) {
         my $index = 0;
-        foreach my $l ( values %{$code->lexicals->{map}} ) {
+        foreach my $l ( @{$code->lexicals} ) {
             _write_lex_info( $self, $out, $l );
-            $self->{li_map}{$l->index . "|" . $l->in_pad} = $index++;
+            $self->{li_map}{$l} = $index++;
         }
     }
 

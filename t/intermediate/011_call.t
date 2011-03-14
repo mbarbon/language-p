@@ -29,7 +29,7 @@ L1: # scope=1
   constant_string value="ok "
   concat_assign context=4
   constant_integer value=0
-  lexical index=0, slot=2
+  lexical lexical_info={index=0, slot=VALUE_ARRAY}
   array_element context=4, create=0
   concat_assign context=4
   constant_string value="\x0a"

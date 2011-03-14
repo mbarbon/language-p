@@ -8,7 +8,8 @@ __PACKAGE__->mk_accessors( qw(_code_segments _current_basic_block _options
                               _label_count _temporary_count _current_block
                               _current_lexical_state _stack _local_count
                               _current_subroutine _in_args_map _needed
-                              _group_count _pos_count _main file_name) );
+                              _group_count _pos_count _main _lexicals
+                              file_name) );
 __PACKAGE__->mk_ro_accessors( qw(is_stack) );
 
 use Language::P::Opcodes qw(:all);
@@ -38,7 +39,7 @@ sub set_option {
 
 # determine the slot type for the result value of an opcode
 sub _slot_type {
-    my( $sub, $op ) = @_;
+    my( $self, $op ) = @_;
     my $opn = $op->opcode_n;
 
     if(    $opn == OP_GLOB_SLOT
@@ -61,9 +62,9 @@ sub _slot_type {
         my $slot;
 
         if( $opn == OP_LEXICAL ) {
-            $slot = $sub->lexicals->{lex_idx}[$index]->sigil;
+            $slot = $self->_lexicals->{$self->_current_subroutine}{lex_idx}[$index]->sigil;
         } else {
-            $slot = $sub->lexicals->{pad_idx}[$index]->sigil;
+            $slot = $self->_lexicals->{$self->_current_subroutine}{pad_idx}[$index]->sigil;
         }
 
         die "Undefined slot for $opn" unless $slot;
@@ -258,7 +259,7 @@ sub _get_stack {
     foreach my $value ( @values ) {
         next if $value->opcode_n != OP_PHI;
         my $name = _local_name( $self );
-        my $slot = _slot_type( $self->_current_subroutine, $value );
+        my $slot = _slot_type( $self, $value );
         _add_bytecode $self,
             opcode_npam( OP_SET, $value->pos, [ $value ],
                          index => $name,
@@ -317,7 +318,7 @@ sub _emit_out_stack {
             push @out_names, [ $op->index, $op->slot ];
         } else {
             my $index = _local_name( $self );
-            my $slot = _slot_type( $self->_current_subroutine, $op );
+            my $slot = _slot_type( $self, $op );
             push @out_names, [ $index, $slot ];
             if( $self->is_stack ) {
                 _add_bytecode $self, $op;
@@ -441,24 +442,28 @@ sub create_main {
                        name         => undef,
                        basic_blocks => [],
                        outer        => $outer,
-                       lexicals     => { max_stack => 0 },
+                       lexicals     => [],
                        prototype    => undef,
                        } );
+    $self->_lexicals( {} ) unless $is_eval;
+    $self->_lexicals->{$main}{max_stack} = 0,
     $self->_main( $main );
 }
 
 sub create_eval_context {
     my( $self, $indices, $lexicals ) = @_;
-    my( $lex, $lex_idx, $pad_idx ) = ( {}, [], [] );
+    my( $lex, $lex_idx, $pad_idx, $lex_list ) = ( {}, [], [], [] );
     my $cxt = Language::P::Intermediate::Code->new
                   ( { type     => CODE_MAIN,
                       name     => undef,
                       outer    => undef,
-                      lexicals => { map     => $lex,
-                                    lex_idx => $lex_idx,
-                                    pad_idx => $pad_idx,
-                                    },
+                      lexicals => $lex_list,
                       } );
+    $self->_lexicals( {} );
+    $self->_lexicals->{$cxt} = { map     => $lex,
+                                 lex_idx => $lex_idx,
+                                 pad_idx => $pad_idx,
+                                 };
     while( my( $name, $index ) = each %$indices ) {
         my $lexical = $lexicals->names->{$name};
         $lex->{$lexical} = $pad_idx->[$index] =
@@ -471,6 +476,7 @@ sub create_eval_context {
                   level       => 0,
                   in_pad      => 1,
                   } );
+        push @$lex_list, $pad_idx->[$index];
     }
 
     return $cxt;
@@ -498,6 +504,8 @@ sub _generate_regex {
              ( { type         => CODE_REGEX,
                  basic_blocks => [],
                  regex_string => $regex->original,
+                 outer        => undef,
+                 name         => undef,
                  } );
     push @{$outer->inner}, $self->_code_segments->[-1] if $outer;
 
@@ -543,9 +551,10 @@ sub generate_use {
                  name         => 'BEGIN',
                  basic_blocks => [],
                  outer        => undef,
-                 lexicals     => { max_stack => 1 },
+                 lexicals     => [],
                  prototype    => undef,
                  } );
+    $self->_lexicals->{$self->_code_segments->[-1]}{max_stack} = 1;
 
     _add_blocks $self, $head;
     $self->push_block( SCOPE_SUB|SCOPE_MAIN, $tree->pos_s, $tree->pos_e );
@@ -719,9 +728,10 @@ sub _generate_bytecode {
                      name         => $name,
                      basic_blocks => [],
                      outer        => $outer,
-                     lexicals     => { max_stack => $is_sub ? 1 : 0 },
+                     lexicals     => [],
                      prototype    => $prototype,
                      } );
+        $self->_lexicals->{$self->_code_segments->[-1]}{max_stack} = $is_sub ? 1 : 0;
     }
     push @{$outer->inner}, $self->_code_segments->[-1] if $outer;
     $self->_current_subroutine( $self->_code_segments->[-1] );
@@ -1574,13 +1584,13 @@ sub _lexical_declaration {
 }
 
 sub _find_add_value {
-    my( $code, $lexical ) = @_;
-    my $lex = $code->lexicals->{map}{$lexical};
+    my( $self, $code, $lexical ) = @_;
+    my $lex = $self->_lexicals->{$code}{map}{$lexical};
 
     return $lex->index
         if $lex && $lex->index >= 0;
 
-    $lex->set_index( $code->lexicals->{max_pad}++ );
+    $lex->set_index( $self->_lexicals->{$code}{max_pad}++ );
 
     return $lex->index;
 }
@@ -1595,10 +1605,10 @@ sub _uplevel {
 
 sub _allocate_lexical {
     my( $self, $code, $lexical, $level ) = @_;
-    my $lex_info = $code->lexicals->{map}->{$lexical};
+    my $lex_info = $self->_lexicals->{$code}{map}{$lexical};
     return $lex_info if $lex_info && $lex_info->index >= 0;
 
-    $lex_info = $code->lexicals->{map}->{$lexical} =
+    $lex_info = $self->_lexicals->{$code}{map}{$lexical} =
       Language::P::Intermediate::LexicalInfo->new
           ( { level       => $level,
               name        => $lexical->name,
@@ -1609,6 +1619,7 @@ sub _allocate_lexical {
               in_pad      => $lexical->closed_over ? 1 : 0,
               from_main   => 0,
               } );
+    push @{$code->lexicals}, $lex_info;
 
     if(    $lexical->name eq '_'
         && $lexical->sigil == VALUE_ARRAY ) {
@@ -1622,24 +1633,24 @@ sub _allocate_lexical {
             if( $code_from->is_sub ) {
                 my $outer = $code->outer;
                 _allocate_lexical( $self, $outer, $lexical, $level - 1 );
-                $lex_info->set_index( _find_add_value( $code, $lexical ) );
-                $lex_info->set_outer_index( _find_add_value( $outer, $lexical ) );
+                $lex_info->set_index( _find_add_value( $self, $code, $lexical ) );
+                $lex_info->set_outer_index( _find_add_value( $self, $outer, $lexical ) );
             } else {
-                $lex_info->set_index( _find_add_value( $code, $lexical ) );
+                $lex_info->set_index( _find_add_value( $self, $code, $lexical ) );
                 $lex_info->set_outer_index( $val );
                 $lex_info->set_from_main( 1 );
             }
         } else {
-            $lex_info->set_index( _find_add_value( $code, $lexical ) );
+            $lex_info->set_index( _find_add_value( $self, $code, $lexical ) );
         }
     } else {
-        $lex_info->set_index( $code->lexicals->{max_stack}++ );
+        $lex_info->set_index( $self->_lexicals->{$code}{max_stack}++ );
     }
 
     if( $lex_info->in_pad ) {
-        $code->lexicals->{pad_idx}[$lex_info->index] = $lex_info;
+        $self->_lexicals->{$code}{pad_idx}[$lex_info->index] = $lex_info;
     } else {
-        $code->lexicals->{lex_idx}[$lex_info->index] = $lex_info;
+        $self->_lexicals->{$code}{lex_idx}[$lex_info->index] = $lex_info;
     }
 
     return $lex_info;
@@ -1649,7 +1660,7 @@ sub _do_lexical_access {
     my( $self, $tree, $level, $is_decl ) = @_;
 
     # maybe do it while parsing, in _find_symbol/_process_lexical_declaration
-    my $lex_info = $self->_code_segments->[0]->lexicals->{map}->{$tree};
+    my $lex_info = $self->_lexicals->{$self->_code_segments->[0]}{map}{$tree};
     if( !$lex_info || $lex_info->index < 0 ) {
         $lex_info = _allocate_lexical( $self, $self->_code_segments->[0],
                                        $tree, $level );
@@ -1657,8 +1668,7 @@ sub _do_lexical_access {
 
     _add_value $self,
         opcode_nm( $lex_info->in_pad ? OP_LEXICAL_PAD : OP_LEXICAL,
-                   index => $lex_info->index,
-                   slot  => $tree->sigil,
+                   lexical_info => $lex_info,
                    );
 
     if( $is_decl ) {
@@ -1666,9 +1676,8 @@ sub _do_lexical_access {
 
         push @{$self->_current_block->bytecode},
              [ opcode_nm( $lex_info->in_pad ? OP_LEXICAL_PAD_CLEAR : OP_LEXICAL_CLEAR,
-                           index => $lex_info->index,
-                           slot  => $tree->sigil,
-                           ),
+                          lexical_info => $lex_info,
+                          ),
                ];
     }
 }
@@ -1785,19 +1794,19 @@ sub _setup_list_iteration {
                ];
     } elsif( !$is_lexical_declaration ) {
         my $slot = $self->{_temporary_count}++;
-        my $lex_info = $self->_code_segments->[0]->lexicals->{map}->{$iter_var->declaration};
+        my $lex_info = $self->_lexicals->{$self->_code_segments->[0]}{map}{$iter_var->declaration};
         my $in_pad = $lex_info->in_pad;
 
         _add_bytecode $self,
             opcode_nm( $in_pad ? OP_LOCALIZE_LEXICAL_PAD : OP_LOCALIZE_LEXICAL,
-                       lexical => $lex_info->index,
-                       index   => $slot,
+                       index        => $slot,
+                       lexical_info => $lex_info,
                        );
 
         push @{$self->_current_block->bytecode},
              [ opcode_nm( $in_pad ? OP_RESTORE_LEXICAL_PAD : OP_RESTORE_LEXICAL,
-                          lexical => $lex_info->index,
-                          index   => $slot,
+                          index        => $slot,
+                          lexical_info => $lex_info,
                           ),
                ];
     }
@@ -1832,15 +1841,15 @@ sub _setup_list_iteration {
         _add_blocks $self, $start_loop;
         my $lex_info;
         if( $is_lexical_declaration ) {
-            $lex_info = $self->_code_segments->[0]->lexicals->{map}->{$iter_var};
+            $lex_info = $self->_lexicals->{$self->_code_segments->[0]}{map}{$iter_var};
         } else {
-            $lex_info = $self->_code_segments->[0]->lexicals->{map}->{$iter_var->declaration};
+            $lex_info = $self->_lexicals->{$self->_code_segments->[0]}{map}{$iter_var->declaration};
         }
 
         _add_bytecode $self,
             opcode_nam( $lex_info->in_pad ? OP_LEXICAL_PAD_SET : OP_LEXICAL_SET,
                         _get_stack( $self, 1 ),
-                        index => $lex_info->index,
+                        lexical_info => $lex_info,
                         );
     }
 
@@ -2273,6 +2282,7 @@ sub _subroutine {
                                           # performed by caller
                                           'dump-ir' => 0,
                                           },
+                            _lexicals => $self->_lexicals,
                             is_stack => $self->is_stack,
                             } );
     my $code_segments =
@@ -2292,6 +2302,7 @@ sub _use {
                                           # performed by caller
                                           'dump-ir' => 0,
                                           },
+                            _lexicals => $self->_lexicals,
                             is_stack => $self->is_stack,
                             } );
     my $code_segments = $generator->generate_use( $tree );
@@ -2603,8 +2614,9 @@ sub _discard_if_void {
 sub _pattern {
     my( $self, $tree ) = @_;
     my $generator = Language::P::Intermediate::Generator->new
-                        ( { _options => $self->{_options},
-                            is_stack => $self->is_stack,
+                        ( { _options  => $self->{_options},
+                            _lexicals => $self->_lexicals,
+                            is_stack  => $self->is_stack,
                             } );
 
     my $re = $generator->_generate_regex( $tree, $self->_code_segments->[0] );

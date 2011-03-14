@@ -49,7 +49,7 @@ L2: # scope=1
   set index=1, slot=VALUE_SCALAR (iterator_next (temporary index=0, slot=9))
   jump_if_null false=L3, true=L5 (get index=1, slot=VALUE_SCALAR)
 L3: # scope=1
-  lexical_set index=0 (get index=1, slot=VALUE_SCALAR)
+  lexical_set lexical_info={index=0, slot=VALUE_SCALAR} (get index=1, slot=VALUE_SCALAR)
   jump to=L8
 L5: # scope=1
   jump to=L6
@@ -72,22 +72,22 @@ EOP
 # main
 L1: # scope=1
   lexical_state_set index=0
-  lexical_pad index=0, slot=1
+  lexical_pad lexical_info={index=0, slot=VALUE_SCALAR}
   jump to=L7
 L2: # scope=1
   set index=1, slot=VALUE_SCALAR (iterator_next (temporary index=0, slot=9))
   jump_if_null false=L3, true=L5 (get index=1, slot=VALUE_SCALAR)
 L3: # scope=1
-  lexical_pad_set index=0 (get index=1, slot=VALUE_SCALAR)
+  lexical_pad_set lexical_info={index=0, slot=VALUE_SCALAR} (get index=1, slot=VALUE_SCALAR)
   jump to=L8
 L5: # scope=1
   jump to=L6
 L6: # scope=1
-  restore_lexical_pad index=1, lexical=0
+  restore_lexical_pad index=1, lexical_info={index=0, slot=VALUE_SCALAR}
   jump to=L9
 L7: # scope=2
   temporary_set index=0, slot=9 (iterator (make_list context=8 (make_list context=8 (constant_integer value=1), (constant_integer value=2))))
-  localize_lexical_pad index=1, lexical=0
+  localize_lexical_pad index=1, lexical_info={index=0, slot=VALUE_SCALAR}
   jump to=L2
 L8: # scope=3
   constant_integer value=3
