@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use t::lib::TestParser tests => 9;
+use t::lib::TestParser tests => 11;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 sub name {
@@ -61,6 +61,30 @@ EOE
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 sub name {
+  {;
+  }
+}
+EOP
+--- !parsetree:NamedSubroutine
+lines:
+  - !parsetree:LexicalState
+    changed: CHANGED_ALL
+    hints: 0
+    package: main
+    warnings: ~
+  - !parsetree:BareBlock
+    continue: ~
+    lines:
+      - !parsetree:Builtin
+        arguments: []
+        context: CXT_CALLER
+        function: OP_RETURN
+name: name
+prototype: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+sub name {
   3 if 2
 }
 EOP
@@ -83,6 +107,55 @@ lines:
               value: 3
           context: CXT_CALLER
           function: OP_RETURN
+        block_type: if
+        condition: !parsetree:Constant
+          context: CXT_SCALAR
+          flags: CONST_NUMBER|NUM_INTEGER
+          value: 2
+name: name
+prototype: ~
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+sub name {
+  if( 2 ) {
+    3 while 1;
+  } else {
+  }
+}
+EOP
+--- !parsetree:NamedSubroutine
+lines:
+  - !parsetree:LexicalState
+    changed: CHANGED_ALL
+    hints: 0
+    package: main
+    warnings: ~
+  - !parsetree:Conditional
+    iffalse: !parsetree:ConditionalBlock
+      block: !parsetree:Block
+        lines:
+          - !parsetree:Builtin
+            arguments: []
+            context: CXT_CALLER
+            function: OP_RETURN
+      block_type: else
+      condition: ~
+    iftrues:
+      - !parsetree:ConditionalBlock
+        block: !parsetree:Block
+          lines:
+            - !parsetree:ConditionalLoop
+              block: !parsetree:Constant
+                context: CXT_VOID
+                flags: CONST_NUMBER|NUM_INTEGER
+                value: 3
+              block_type: while
+              condition: !parsetree:Constant
+                context: CXT_SCALAR
+                flags: CONST_NUMBER|NUM_INTEGER
+                value: 1
+              continue: ~
         block_type: if
         condition: !parsetree:Constant
           context: CXT_SCALAR
