@@ -41,7 +41,7 @@ L1: # scope=0
   lexical_state_set index=1
   require_file context=2 (constant_string value="Foo.pm")
   set index=1, slot=VALUE_ARRAY (make_array context=8 (constant_string value="Foo"), (constant_integer value=1), (constant_integer value=2))
-  set index=2, slot=VALUE_SUB (find_method method="import" (constant_string value="Foo"))
+  set index=2, slot=VALUE_SUB (find_method context=CXT_SCALAR, method="import" (constant_string value="Foo"))
   jump_if_null false=L3, true=L2 (get index=2, slot=VALUE_SUB)
 L2: # scope=0
   jump to=L4

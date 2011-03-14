@@ -631,6 +631,7 @@ sub generate_use {
         opcode_npam( OP_FIND_METHOD, $tree->pos,
                      [ opcode_nm( OP_CONSTANT_STRING,
                                   value => $tree->package ) ],
+                     context => CXT_SCALAR,
                      method => $tree->is_no ? 'unimport' : 'import' );
     _dump_out_stack( $self );
     _dup( $self );
