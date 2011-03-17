@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..17\n";
+print "1..20\n";
 
 $rs = \$s;
 $ra = \@a;
@@ -47,6 +47,14 @@ $aae = [];
 $ahe = {};
 
 print $#$aae == -1 ? "ok 15\n" : "not ok 15\n";
+print %$ahe ? "not ok\n" : "ok\n";
+
+# constructors force copy
+$aae = [ $aae ];
+$ahe = { a => $ahe };
+
+print $aae != $aae->[0] ? "ok 17\n" : "not ok 17\n";
+print $ahe != $ahe->{a} ? "ok 18\n" : "not ok 18\n";
 
 # symbolic references
 @aae = ( 1, 2, 3 );
