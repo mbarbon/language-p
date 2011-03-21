@@ -567,7 +567,7 @@ sub generate_use {
     # check the Perl version
     if( $tree->version && !$tree->package ) {
         # compare version
-        my $reqver  = opcode_nm( OP_CONSTANT_INTEGER, value => $tree->version );
+        my $reqver  = opcode_nm( OP_CONSTANT_FLOAT, value => $tree->version );
         my $perlver = opcode_npm( OP_GLOBAL, $tree->pos,
                                   name    => ']',
                                   slot    => VALUE_SCALAR,
