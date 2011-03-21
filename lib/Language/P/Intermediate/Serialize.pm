@@ -56,7 +56,8 @@ sub _write_sub {
     my( $self, $out, $code, $name ) = @_;
     my $bb = $code->basic_blocks;
 
-    _write_string( $out, defined $name ? $name : '' );
+    _write_string_undef( $out, $name );
+    _write_string_undef( $out, $code->prototype );
 
     $self->{bb_map} = {};
     for( my $i = 0; $i <= $#$bb; ++$i ) {
@@ -171,7 +172,11 @@ sub _write_string {
 sub _write_string_undef {
     my( $out, $string ) = @_;
 
-    _write_string( $out, defined $string ? $string : '' );
+    if( !defined $string ) {
+        print $out pack 'V', 0xffffffff;
+    } else {
+        _write_string( $out, $string );
+    }
 }
 
 1;
