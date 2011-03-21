@@ -285,6 +285,7 @@ t/run/021_split_space.t
 t/run/021_substitution.t
 t/run/021_transliteration.t
 t/run/025_begin.t
+t/run/025_begin_run.t
 t/run/035_local.t
 t/run/035_local_element.t
 t/run/037_do_block.t
