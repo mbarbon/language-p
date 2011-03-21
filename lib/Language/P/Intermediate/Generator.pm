@@ -627,7 +627,7 @@ sub generate_use {
         }
         _add_value $self,
             opcode_nam( OP_MAKE_ARRAY,
-                        _get_stack( $self, @{$tree->import} + 1 ),
+                        _get_stack( $self, scalar( @{$tree->import} ) + 1 ),
                         context   => CXT_LIST );
     } else {
         _add_value $self,

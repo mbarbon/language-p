@@ -1301,7 +1301,7 @@ sub lex {
                 return [ $self->{pos}, T_OPHASH, '{' ];
             } elsif( $expect == X_OPERATOR || $expect == X_METHOD_SUBSCRIPT ) {
                 # autoquote literal strings in hash subscripts
-                if( $$_ =~ s/^[ \t]*([[:alpha:]_]+)[ \t]*\}// ) {
+                if( $$_ =~ s/^[ \t]*([a-zA-Z_]+)[ \t]*\}// ) {
                     $self->unlex( [ $self->{pos}, T_CLBRK, '}' ] );
                     $self->unlex( [ $self->{pos}, T_STRING, $1 ] );
                 }
