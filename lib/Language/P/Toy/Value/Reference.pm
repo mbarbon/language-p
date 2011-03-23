@@ -97,7 +97,12 @@ sub as_string {
         return $self->{reference}->regex_string;
     }
 
-    return sprintf $REF_FORMAT, _reference_string( $self ), $self->{reference};
+    my $s = sprintf $REF_FORMAT, _reference_string( $self ), $self->{reference};
+    if( $self->{reference}->is_blessed ) {
+        return $self->{reference}->stash->name . '=' . $s;
+    } else {
+        return $s;
+    }
 }
 
 sub as_integer {
@@ -116,10 +121,6 @@ sub _reference_string {
     my( $self ) = @_;
     my $ref = $self->{reference};
 
-    if( $ref->is_blessed ) {
-        return $ref->stash->name;
-    }
-
     return $ref->isa( 'Language::P::Toy::Value::Reference' )  ? 'REF' :
            $ref->isa( 'Language::P::Toy::Value::Scalar' )     ? 'SCALAR' :
            $ref->isa( 'Language::P::Toy::Value::Hash' )       ? 'HASH' :
@@ -131,11 +132,19 @@ sub _reference_string {
 
 sub reference_type {
     my( $self, $runtime ) = @_;
+    my $ref = $self->{reference};
 
-    return Language::P::Toy::Value::StringNumber->new
-               ( $runtime,
-                 { string => _reference_string( $self ),
-                   } );
+    if( $ref->is_blessed ) {
+        return Language::P::Toy::Value::StringNumber->new
+                   ( $runtime,
+                     { string => $ref->stash->name,
+                       } );
+    } else {
+        return Language::P::Toy::Value::StringNumber->new
+                   ( $runtime,
+                     { string => _reference_string( $self ),
+                       } );
+    }
 }
 
 sub bless {
