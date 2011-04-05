@@ -10,7 +10,7 @@ sub ok_7 {
 
 my $x;
 
-print "ok $x - 4\n";
+print $x == 4 ? "ok $x\n" : "not ok - $x\n";
 
 $x = 6;
 
