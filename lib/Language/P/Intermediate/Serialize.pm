@@ -57,7 +57,13 @@ sub _write_sub {
     my $bb = $code->basic_blocks;
 
     _write_string_undef( $out, $name );
-    _write_string_undef( $out, $code->prototype );
+    my $proto = $code->prototype;
+    if( defined $proto ) {
+        print $out pack 'V', scalar @$proto;
+        print $out pack 'V*', @$proto;
+    } else {
+        print $out pack 'V', -1;
+    }
 
     $self->{bb_map} = {};
     for( my $i = 0; $i <= $#$bb; ++$i ) {
@@ -78,8 +84,6 @@ sub _write_sub {
     print $out pack 'V', scalar @{$code->lexical_states};
     print $out pack 'V', scalar @$bb;
     _write_string( $out, $code->regex_string ) if $code->is_regex;
-
-    # TODO serialize prototype
 
     if( !$code->is_regex ) {
         my $index = 0;
