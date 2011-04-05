@@ -260,6 +260,7 @@ t/run/010_force_scalar.t
 t/run/010_logical.t
 t/run/010_repeat.t
 t/run/011_call.t
+t/run/011_call_proto.t
 t/run/015_array_ops.t
 t/run/015_defined.t
 t/run/015_hash_ops.t
