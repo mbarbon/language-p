@@ -70,6 +70,9 @@ sub _write_sub {
         print $out pack 'V', scalar @{$code->lexicals};
     } else {
         print $out pack 'V', 0;
+        for( my $i = 0; $i <= $#$bb; ++$i ) {
+            $bb->[$i]->{dead} = 0;
+        }
     }
     print $out pack 'V', scalar @{$code->scopes};
     print $out pack 'V', scalar @{$code->lexical_states};
