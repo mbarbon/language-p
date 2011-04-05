@@ -540,6 +540,12 @@ sub get_package {
     return $self->symbol_table->get_package( $self, $name );
 }
 
+sub has_package {
+    my( $self, $name ) = @_;
+
+    return $self->symbol_table->get_package( $self, $name ) ? 1 : 0;
+}
+
 sub is_declared {
     my( $self, $name, $sigil ) = @_;
     my $glob = $self->symbol_table->get_symbol( $self, $name, VALUE_GLOB, 0 );

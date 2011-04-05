@@ -87,7 +87,7 @@ my @lines;
     }
 
     sub get_symbol { $_[0]->_symbol_table->get_symbol( $_[0], $_[1], $_[2] ) }
-    sub get_package { $_[0]->_symbol_table->get_package( $_[0], $_[1] ) }
+    sub has_package { $_[0]->_symbol_table->get_package( $_[0], $_[1] ) ? 1 : 0 }
     sub _symbol_table { $_[0]->{symbol_table} }
     sub set_bytecode { }
     sub wrap_method { }

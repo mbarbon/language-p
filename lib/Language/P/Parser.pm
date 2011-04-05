@@ -2396,7 +2396,7 @@ sub _parse_listop_like {
             # try to see if it is some sort of (indirect) method call
             return _parse_maybe_indirect_method_call( $self, $op, $next );
         } elsif(    $next->[O_TYPE] == T_ID
-                 && $self->runtime->get_package( $next->[O_VALUE] ) ) {
+                 && $self->runtime->has_package( $next->[O_VALUE] ) ) {
             # foo Bar:: is always a method call
             return _parse_maybe_indirect_method_call( $self, $op, $next );
         }
