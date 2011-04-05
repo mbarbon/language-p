@@ -172,6 +172,7 @@ sub _make_rtproto {
                  @{$proto}[ 3 .. $#$proto ] ];
 }
 
+sub set_prototype     { $_[0]->{prototype} = $_[1] }
 sub parsing_prototype { return $_[0]->{prototype} || Language::P::Constants::PROTO_DEFAULT }
 sub runtime_context   { return $_[0]->{prototype} ? _make_rtproto( $_[0]->{prototype} ) : undef }
 sub is_plain_function { 1 }

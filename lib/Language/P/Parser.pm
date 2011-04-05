@@ -2341,8 +2341,7 @@ sub _declared_id {
                         } );
 
         if( my $decl = $self->runtime->get_symbol( $fqname, VALUE_SUB ) ) {
-            # FIXME accessor
-            $call->{prototype} = $decl->prototype;
+            $call->set_prototype( $decl->prototype );
             return ( $call, 1 );
         }
     }
