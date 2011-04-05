@@ -529,7 +529,12 @@ sub start_code_generation {
     $self->_intermediate->create_main( $outer_int, $outer_int ? 1 : 0 );
     $self->_pending( [] );
     if( $self->_options->{'dump-bytecode'} ) {
-        $self->_tree_generator->create_main( $outer_int, $outer_int ? 1 : 0 );
+        my $outer_int_tree;
+        if( my $cxt = $self->_eval_context ) {
+            $outer_int_tree = $self->_tree_generator
+                                   ->create_eval_context( $cxt->[0], $cxt->[2] );
+        }
+        $self->_tree_generator->create_main( $outer_int_tree, $outer_int_tree ? 1 : 0 );
     }
 }
 
