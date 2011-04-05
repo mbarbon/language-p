@@ -504,7 +504,7 @@ sub _generate_regex {
              ( { type         => CODE_REGEX,
                  basic_blocks => [],
                  regex_string => $regex->original,
-                 outer        => undef,
+                 outer        => $outer,
                  name         => undef,
                  } );
     push @{$outer->inner}, $self->_code_segments->[-1] if $outer;
