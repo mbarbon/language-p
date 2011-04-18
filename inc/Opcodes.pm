@@ -126,12 +126,7 @@ sub     to_true { $_[0]->{attributes}{true} }
 
 package Language::P::Instruction::Lexical;
 
-sub index { $_[0]->{attributes}{lexical_info}{index} }
-sub slot  { $_[0]->{attributes}{lexical_info}{sigil} }
-
-# package Language::P::Instruction::LocalLexical;
-
-# sub index { $_[0]->{attributes}{lexical_info}{index} }
+sub lex_index { $_[0]->{attributes}{lexical_info}{index} }
 
 1;
 EOT

@@ -58,7 +58,7 @@ sub _slot_type {
     }
     if(    $opn == OP_LEXICAL
         || $opn == OP_LEXICAL_PAD ) {
-        my $index = $op->index;
+        my $index = $op->lex_index;
         my $slot;
 
         if( $opn == OP_LEXICAL ) {
