@@ -10,7 +10,7 @@ EOP
 L1: # scope=1
   lexical_state_set index=0
   temporary_set index=0, slot=2 (make_list context=8)
-  temporary_set index=1, slot=9 (iterator (make_list context=8 (make_list context=8 (global context=8, name="y", slot=2))))
+  temporary_set index=1, slot=9 (iterator (make_list context=8 (global context=8, name="y", slot=2)))
   temporary_set index=2, slot=5 (global context=4, name="_", slot=5)
   localize_glob_slot index=3, name="_", slot=1
   jump to=L2
@@ -39,7 +39,7 @@ EOP
 L1: # scope=1
   lexical_state_set index=0
   temporary_set index=0, slot=2 (make_list context=8)
-  temporary_set index=1, slot=9 (iterator (make_list context=8 (make_list context=8 (global context=8, name="y", slot=2))))
+  temporary_set index=1, slot=9 (iterator (make_list context=8 (global context=8, name="y", slot=2)))
   temporary_set index=2, slot=5 (global context=4, name="_", slot=5)
   localize_glob_slot index=3, name="_", slot=1
   jump to=L2
@@ -72,7 +72,7 @@ EOP
 L1: # scope=1
   lexical_state_set index=0
   temporary_set index=0, slot=2 (make_list context=8)
-  temporary_set index=1, slot=9 (iterator (make_list context=8 (make_list context=8 (global context=8, name="y", slot=2))))
+  temporary_set index=1, slot=9 (iterator (make_list context=8 (global context=8, name="y", slot=2)))
   temporary_set index=2, slot=5 (global context=4, name="_", slot=5)
   localize_glob_slot index=3, name="_", slot=1
   jump to=L2
@@ -98,7 +98,7 @@ L6: # scope=1
   set index=2, slot=VALUE_ARRAY (temporary index=0, slot=2)
   temporary_clear index=0, slot=2
   temporary_set index=4, slot=2 (make_list context=8)
-  temporary_set index=5, slot=9 (iterator (make_list context=8 (make_list context=8 (global context=8, name="z", slot=2))))
+  temporary_set index=5, slot=9 (iterator (make_list context=8 (global context=8, name="z", slot=2)))
   temporary_set index=6, slot=5 (global context=4, name="_", slot=5)
   localize_glob_slot index=7, name="_", slot=1
   jump to=L7

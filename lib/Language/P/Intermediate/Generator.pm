@@ -1122,10 +1122,14 @@ sub _function_call {
         ++$i;
     }
 
-    _add_value $self,
-        opcode_nam( $tree->function == OP_RETURN ? OP_MAKE_LIST : OP_MAKE_ARRAY,
-                    _get_stack( $self, $argcount ),
-                    context => CXT_LIST );
+    if( $argcount == 1 && $tree->function == OP_RETURN ) {
+        _unary_list( $self, _get_stack( $self, 1 ) );
+    } else {
+        _add_value $self,
+            opcode_nam( $tree->function == OP_RETURN ? OP_MAKE_LIST : OP_MAKE_ARRAY,
+                        _get_stack( $self, $argcount ),
+                        context => CXT_LIST );
+    }
 
     if( $is_func ) {
         $self->dispatch( $tree->function );
@@ -1173,6 +1177,19 @@ sub _method_call {
             opcode_npam( OP_CALL_METHOD, $tree->pos, [ $arglist ],
                          context  => _context( $tree ),
                          method   => $tree->method );
+    }
+}
+
+sub _unary_list {
+    my( $self, $arg ) = @_;
+    my $opn = $arg->[0]->opcode_n;
+
+    if( $opn == OP_MAKE_LIST ) {
+        _add_value( $self, $arg->[0] );
+    } else {
+        _add_value $self,
+            opcode_nam( OP_MAKE_LIST, $arg,
+                        context => CXT_LIST );
     }
 }
 
@@ -1453,10 +1470,7 @@ sub _binary_op {
         $self->dispatch( $tree->left );
         if( $tree->left->isa( 'Language::P::ParseTree::Parentheses' ) ) {
             $op = OP_REPEAT_ARRAY;
-            _add_value $self,
-                opcode_nam( OP_MAKE_LIST,
-                            _get_stack( $self, 1 ),
-                            context => CXT_LIST );
+            _unary_list( $self, _get_stack( $self, 1 ) );
         } else {
             $op = OP_REPEAT_SCALAR;
         }
@@ -1741,10 +1755,7 @@ sub _setup_list_iteration {
         $self->push_block( 0, $tree->pos_s, $tree->pos_e );
     }
     $self->dispatch( $list );
-    _add_value $self,
-        opcode_nam( OP_MAKE_LIST,
-                    _get_stack( $self, 1 ),
-                    context => CXT_LIST );
+    _unary_list( $self, _get_stack( $self, 1 ) );
 
     my $iterator = $self->{_temporary_count}++;
     my( $glob );

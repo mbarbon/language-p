@@ -13,7 +13,6 @@ L1: # scope=1
   temporary_set index=0, slot=2
   global context=8, name="y", slot=2
   make_list arg_count=1, context=8
-  make_list arg_count=1, context=8
   iterator
   temporary_set index=1, slot=9
   global context=4, name="_", slot=5
@@ -57,7 +56,6 @@ L1: # scope=1
   temporary_set index=0, slot=2
   global context=8, name="y", slot=2
   make_list arg_count=1, context=8
-  make_list arg_count=1, context=8
   iterator
   temporary_set index=1, slot=9
   global context=4, name="_", slot=5
@@ -99,7 +97,6 @@ L6: # scope=1
   make_list arg_count=0, context=8
   temporary_set index=4, slot=2
   global context=8, name="z", slot=2
-  make_list arg_count=1, context=8
   make_list arg_count=1, context=8
   iterator
   temporary_set index=5, slot=9
