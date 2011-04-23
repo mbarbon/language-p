@@ -324,13 +324,43 @@ sub _generate_segment {
     my( $self, $segment, $target ) = @_;
     my $transform = Language::P::Intermediate::Transform->new;
     my $is_sub = $segment->is_sub;
+    my $is_const = $segment->is_constant;
     my $is_regex = $segment->is_regex;
     my $pad = Language::P::Toy::Value::ScratchPad->new( $self->runtime );
 
     $transform->to_linear( $segment );
 
     my $code = $target;
-    if( $is_sub && !$code ) {
+    if( $is_const && !$code ) {
+        # TODO abstract away
+        my $const_op = $segment->basic_blocks->[-2]->bytecode->[-3];
+        my( $flags, $value );
+        if( $const_op->opcode_n == OP_CONSTANT_STRING ) {
+            $flags = CONST_STRING;
+            $value = $const_op->value;
+        } elsif( $const_op->opcode_n == OP_CONSTANT_INTEGER ) {
+            $flags = CONST_NUMBER|NUM_INTEGER;
+            $value = $const_op->value;
+        } elsif( $const_op->opcode_n == OP_CONSTANT_FLOAT ) {
+            $flags = CONST_NUMBER|NUM_FLOAT;
+            $value = $const_op->value;
+        } elsif( $segment->is_constant_prototype ) {
+            $flags = -1;
+            $value = undef;
+        } else {
+            die "Invalid constant sub in IR generation";
+        }
+
+        $code = Language::P::Toy::Value::Subroutine::Const->new
+                    ( $self->runtime,
+                      { bytecode       => [],
+                        name           => _qualify( $segment->name ),
+                        lexicals       => $pad,
+                        prototype      => $segment->prototype,
+                        constant_flags => $flags,
+                        constant_value => $value,
+                        } );
+    } elsif( $is_sub && !$code ) {
         $code = Language::P::Toy::Value::Subroutine->new
                     ( $self->runtime,
                       { bytecode => [],

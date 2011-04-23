@@ -722,9 +722,27 @@ sub _generate_bytecode {
         push @{$self->_code_segments}, $self->_main;
         $self->_main( undef );
     } else {
+        my $flags = $is_sub ? CODE_SUB : CODE_MAIN;
+        # constant sub optimization
+        if(    $is_sub
+            && $prototype && $prototype->[1] == 0 && $prototype->[2] == 0
+            && @$statements == 2 ) {
+            # first statement is a LexicalState, second an (implicit) return
+            my $value = $statements->[1]->arguments->[0];
+
+            if( $value->is_constant ) {
+                $flags |= CODE_CONSTANT;
+            } elsif(    $value->isa( 'Language::P::ParseTree::LexicalSymbol' )
+                     && $outer ) {
+                my $code_from = _uplevel( $outer, $value->level - 1 );
+
+                $flags |= CODE_CONSTANT_PROTOTYPE unless $code_from->is_main;
+            }
+        }
+
         push @{$self->_code_segments},
              Language::P::Intermediate::Code->new
-                 ( { type         => $is_sub ? CODE_SUB : CODE_MAIN,
+                 ( { type         => $flags,
                      name         => $name,
                      basic_blocks => [],
                      outer        => $outer,

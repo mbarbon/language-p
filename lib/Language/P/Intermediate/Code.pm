@@ -31,10 +31,12 @@ sub new {
     return $self;
 }
 
-sub is_main  { $_[0]->{type} == CODE_MAIN || $_[0]->{type} == CODE_EVAL }
-sub is_sub   { $_[0]->{type} == CODE_SUB }
-sub is_regex { $_[0]->{type} == CODE_REGEX }
-sub is_eval  { $_[0]->{type} == CODE_EVAL }
+sub is_main     { $_[0]->{type} == CODE_MAIN || $_[0]->{type} == CODE_EVAL }
+sub is_sub      { ( $_[0]->{type} & CODE_SUB ) ? 1 : 0 }
+sub is_regex    { $_[0]->{type} == CODE_REGEX }
+sub is_eval     { $_[0]->{type} == CODE_EVAL }
+sub is_constant { ( $_[0]->{type} & CODE_CONSTANT ) ? 1 : 0 }
+sub is_constant_prototype { ( $_[0]->{type} & CODE_CONSTANT_PROTOTYPE ) ? 1 : 0 }
 
 sub find_alive_blocks {
     my( $self ) = @_;

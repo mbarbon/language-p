@@ -8,6 +8,7 @@ __PACKAGE__->mk_ro_accessors( qw(name prototype) );
 
 sub type { 6 }
 sub is_subroutine { 1 }
+sub is_constant { 0 }
 
 sub new {
     my( $class, $runtime, $args ) = @_;
@@ -72,5 +73,15 @@ sub call {
 }
 
 sub is_defined { 0 }
+
+package Language::P::Toy::Value::Subroutine::Const;
+
+use strict;
+use warnings;
+use parent qw(Language::P::Toy::Value::Subroutine);
+
+__PACKAGE__->mk_ro_accessors( qw(constant_value constant_flags) );
+
+sub is_constant { 1 }
 
 1;

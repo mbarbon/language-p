@@ -2417,6 +2417,38 @@ sub o_make_closure {
                         } );
     $runtime->make_closure( $clone );
 
+    # constant sub optimization
+    if( $sub->is_constant ) {
+        my $value = $clone->lexicals->values->[0];
+
+        # closed over a constant
+        if( $value->isa( 'Language::P::Toy::Value::StringNumber' ) ) {
+            my( $flags, $const );
+
+            if( $value->is_string( $runtime ) ) {
+                $flags = CONST_STRING;
+                $const = $value->as_string( $runtime );
+            } elsif( $value->is_float( $runtime ) ) {
+                $flags = CONST_NUMBER|NUM_FLOAT;
+                $const = $value->as_float( $runtime );
+            } else {
+                $flags = CONST_NUMBER|NUM_INTEGER;
+                $const = $value->as_integer( $runtime );
+            }
+
+            $clone = Language::P::Toy::Value::Subroutine::Const->new
+                        ( $runtime,
+                          { bytecode   => $clone->bytecode,
+                            stack_size => $clone->stack_size,
+                            lexicals   => $clone->lexicals,
+                            closed     => $clone->closed,
+                            prototype  => $clone->prototype,
+                            constant_value => $const,
+                            constant_flags => $flags,
+                            } );
+        }
+    }
+
     push @{$runtime->{_stack}}, Language::P::Toy::Value::Reference->new
                                     ( $runtime,
                                       { reference => $clone,

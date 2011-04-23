@@ -2321,12 +2321,27 @@ sub _declared_id {
 
         return ( $call, 1 );
     } else {
-        my $fqname;
+        my( $fqname, $proto, $declared );
 
         if( $cg && !$ov ) {
             $fqname = 'CORE::GLOBAL::' . $op->[O_VALUE];
         } else {
             $fqname = _qualify( $self, $op->[O_VALUE], $opidt );
+        }
+
+        if( my $decl = $self->runtime->get_symbol( $fqname, VALUE_SUB ) ) {
+            # constant sub optimization
+            if( $decl->is_constant ) {
+                my $val = Language::P::ParseTree::Constant->new
+                              ( { flags => $decl->constant_flags,
+                                  value => $decl->constant_value,
+                                  } );
+
+                return ( $val, 2 );
+            }
+
+            $proto = $decl->prototype;
+            $declared = 1;
         }
 
         my $symbol = Language::P::ParseTree::Symbol->new
@@ -2340,8 +2355,8 @@ sub _declared_id {
                         pos       => $op->[O_POS],
                         } );
 
-        if( my $decl = $self->runtime->get_symbol( $fqname, VALUE_SUB ) ) {
-            $call->set_prototype( $decl->prototype );
+        if( $declared ) {
+            $call->set_prototype( $proto );
             return ( $call, 1 );
         }
     }
@@ -2352,6 +2367,25 @@ sub _declared_id {
 sub _parse_listop {
     my( $self, $op ) = @_;
     my( $call, $declared ) = _declared_id( $self, $op );
+
+    # constant sub optimization
+    if( $declared == 2 ) {
+        # parse argument list
+        my $next = $self->lexer->peek( X_TERM );
+
+        if( $next->[O_TYPE] == T_OPPAR ) {
+            _lex_token( $self, T_OPPAR );
+            my( $args, $fh ) = _parse_arglist( $self, PREC_LOWEST, 0, 0 );
+            _lex_token( $self, T_CLPAR );
+
+            if( $args ) {
+                _parse_error( $self, $op->[O_POS], "Too many arguments for %s",
+                              _qualify( $self, $op->[O_VALUE], $op->[O_ID_TYPE] ) );
+            }
+        }
+
+        return $call;
+    }
 
     return _parse_listop_like( $self, $op, $declared, $call );
 }

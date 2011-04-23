@@ -620,6 +620,7 @@ sub wrap_method {
     {
         package Language::P::Toy::Value::WrappedSub;
 
+        sub is_constant { 0 }
         sub prototype { Language::P::Constants::PROTO_DEFAULT }
         sub call { shift->( @_ ) }
     }
