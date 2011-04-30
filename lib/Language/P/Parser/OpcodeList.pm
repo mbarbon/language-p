@@ -106,7 +106,7 @@ array_shift         u       same                 1   1  context=i1
 array_slice         0       same                 2   1  context=i1,create=i1,class=ElementAccess
 array_unshift       0       same                 2   1  context=i1
 assign              0       same                 2   1  context=i1
-assign_list         0       same                 2   1  context=i1
+assign_list         0       same                 2   1  context=i1,common=i1,class=ListAssign
 backtick            0       same                 1   1  context=i1
 binmode             0       same                 1   1  context=i1
 bit_and             0       same                 2   1  context=i1

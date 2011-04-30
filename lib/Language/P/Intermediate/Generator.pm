@@ -1357,6 +1357,43 @@ sub _substitution {
     return $block;
 }
 
+sub _list_assign_key {
+    my( $self, $tree ) = @_;
+
+    if( $tree->isa( 'Language::P::ParseTree::Symbol' ) ) {
+        return $tree->sigil . "\0" . $tree->name;
+    } elsif( $tree->isa( 'Language::P::ParseTree::LexicalDeclaration' ) ) {
+        return $tree;
+    } elsif( $tree->isa( 'Language::P::ParseTree::LexicalSymbol' ) ) {
+        return $tree->declaration;
+    }
+
+    die 'Invalid tree ', ref $tree;
+}
+
+sub _list_assign_common {
+    my( $self, $left, $right ) = @_;
+    my $llist = $left->assign_list;
+    my $rlist = $right->assign_list;
+
+    return 1 unless $llist && $rlist;
+
+    my %left;
+
+    foreach my $l ( @$llist ) {
+        return 1 unless $l->is_symbol;
+        $left{_list_assign_key( $self, $l )} = 1;
+    }
+
+    foreach my $r ( @$rlist ) {
+        next if $r->is_constant;
+        return 1 unless $r->is_symbol;
+        return 1 if $left{_list_assign_key( $self, $r )};
+    }
+
+    return 0;
+}
+
 sub _binary_op {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
@@ -1416,10 +1453,13 @@ sub _binary_op {
                              _get_stack( $self, 2 ),
                              context => _context( $tree ) );
         } else {
+            my $common = _list_assign_common( $self, $tree->left, $tree->right );
+
             _add_value $self,
                 opcode_npam( OP_ASSIGN_LIST, $tree->pos,
                              _get_stack( $self, 2 ),
-                             context => _context( $tree ) );
+                             context => _context( $tree ),
+                             common  => $common );
         }
     } elsif( $tree->op == OP_MATCH || $tree->op == OP_NOT_MATCH ) {
         # TODO maybe build a different parse tree?

@@ -32,6 +32,7 @@ sub is_pattern { 0 }
 sub can_implicit_return { 1 }
 sub always_void { 0 }
 sub is_declaration { 0 }
+sub assign_list { return undef }
 sub lvalue_context { Language::P::Constants::CXT_SCALAR }
 sub parent { $_[0]->{parent} }
 sub pos   { $_[0]->{pos} || $_[0]->{pos_s} }
@@ -210,6 +211,7 @@ our @FIELDS = qw(name sigil);
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
 sub is_symbol { 1 }
+sub assign_list { return [ $_[0] ] }
 sub lvalue_context {
     my( $self ) = @_;
 
@@ -359,6 +361,7 @@ our @FIELDS = qw(op left right);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub assign_list { return $_[0]->op == Language::P::Opcodes::OP_ASSIGN ? $_[0]->left->assign_list : undef }
 sub always_void {
     return    $_[0]->op == Language::P::Opcodes::OP_LOG_AND
            || $_[0]->op == Language::P::Opcodes::OP_LOG_OR
@@ -382,6 +385,7 @@ use warnings;
 use parent -norequire, qw(Language::P::ParseTree::UnOp);
 
 sub op { Language::P::ParseTree::OP_PARENTHESES }
+sub assign_list { return [ $_[0]->left ] }
 sub lvalue_context { Language::P::Constants::CXT_LIST }
 
 package Language::P::ParseTree::Local;
@@ -391,6 +395,7 @@ use warnings;
 use parent -norequire, qw(Language::P::ParseTree::UnOp);
 
 sub op { Language::P::ParseTree::OP_LOCAL }
+sub assign_list { $_[0]->left->assign_list }
 sub lvalue_context { $_[0]->left->lvalue_context }
 
 package Language::P::ParseTree::Jump;
@@ -417,6 +422,7 @@ our @FIELDS = qw(expressions);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub assign_list { $_[0]->{expressions} }
 sub lvalue_context { Language::P::Constants::CXT_LIST }
 
 package Language::P::ParseTree::Slice;
@@ -429,6 +435,7 @@ our @FIELDS = qw(subscripted subscript type reference);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub assign_list { return [ $_[0] ] }
 sub lvalue_context { Language::P::ParseTree::CXT_LIST }
 
 package Language::P::ParseTree::Subscript;
@@ -521,6 +528,7 @@ our @FIELDS = qw(condition iftrue iffalse);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub assign_list { return [ $_[0] ] }
 sub lvalue_context {
     my( $self ) = @_;
     my $l = $self->iftrue->lvalue_context;
