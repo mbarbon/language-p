@@ -38,7 +38,7 @@ L2: # scope=0
 # foo
 L1: # scope=1
   lexical_state_set index=1
-  assign context=CXT_VOID (lexical lexical_info={index=0, slot=VALUE_ARRAY}), (make_list context=CXT_LIST|CXT_LVALUE (lexical lexical_info={index=1, slot=VALUE_SCALAR}), (lexical lexical_info={index=2, slot=VALUE_SCALAR}))
+  assign_list context=CXT_VOID (lexical lexical_info={index=0, slot=VALUE_ARRAY}), (make_list context=CXT_LIST|CXT_LVALUE (lexical lexical_info={index=1, slot=VALUE_SCALAR}), (lexical lexical_info={index=2, slot=VALUE_SCALAR}))
   jump_if_true to=L3 (lexical lexical_info={index=1, slot=VALUE_SCALAR})
   jump to=L4
 L2: # scope=1

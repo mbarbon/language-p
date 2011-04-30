@@ -1410,10 +1410,17 @@ sub _binary_op {
         $self->dispatch( $tree->right );
         $self->dispatch( $tree->left );
 
-        _add_value $self,
-            opcode_npam( $tree->op, $tree->pos,
-                         _get_stack( $self, 2 ),
-                         context => _context( $tree ) );
+        if( $tree->left->lvalue_context != CXT_LIST ) {
+            _add_value $self,
+                opcode_npam( OP_ASSIGN, $tree->pos,
+                             _get_stack( $self, 2 ),
+                             context => _context( $tree ) );
+        } else {
+            _add_value $self,
+                opcode_npam( OP_ASSIGN_LIST, $tree->pos,
+                             _get_stack( $self, 2 ),
+                             context => _context( $tree ) );
+        }
     } elsif( $tree->op == OP_MATCH || $tree->op == OP_NOT_MATCH ) {
         # TODO maybe build a different parse tree?
         if( $tree->right->isa( 'Language::P::ParseTree::Transliteration' ) ) {

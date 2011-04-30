@@ -179,7 +179,7 @@ L1: # scope=1
   lexical_state_set index=0
   jump to=L2
 L2: # scope=2
-  jump_if_true false=L5, true=L3 (assign context=4 (each context=8 (global context=8, name="x", slot=3)), (make_list context=24 (lexical_pad lexical_info={index=0, slot=VALUE_SCALAR}), (lexical_pad lexical_info={index=1, slot=VALUE_SCALAR})))
+  jump_if_true false=L5, true=L3 (assign_list context=4 (each context=8 (global context=8, name="x", slot=3)), (make_list context=24 (lexical_pad lexical_info={index=0, slot=VALUE_SCALAR}), (lexical_pad lexical_info={index=1, slot=VALUE_SCALAR})))
 L3: # scope=3
   constant_integer value=1
   jump to=L2

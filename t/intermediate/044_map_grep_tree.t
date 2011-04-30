@@ -19,7 +19,7 @@ L10: # scope=1
 L11: # scope=1
   set index=4, slot=VALUE_ARRAY (temporary index=4, slot=2)
   temporary_clear index=4, slot=2
-  assign context=2 (make_list context=8 (get index=2, slot=VALUE_ARRAY), (get index=4, slot=VALUE_ARRAY)), (global context=24, name="r", slot=2)
+  assign_list context=2 (make_list context=8 (get index=2, slot=VALUE_ARRAY), (get index=4, slot=VALUE_ARRAY)), (global context=24, name="r", slot=2)
   jump to=L12
 L12: # scope=0
   end
@@ -75,7 +75,7 @@ L5: # scope=1
 L6: # scope=1
   set index=3, slot=2 (temporary index=0, slot=2)
   temporary_clear index=0, slot=2
-  assign context=2 (get index=3, slot=2), (global context=24, name="x", slot=2)
+  assign_list context=2 (get index=3, slot=2), (global context=24, name="x", slot=2)
   jump to=L8
 L7: # scope=2
   push_element (get index=2, slot=2), (divide context=8 (global context=4, name="_", slot=1), (constant_integer value=2))
