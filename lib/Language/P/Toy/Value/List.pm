@@ -23,7 +23,7 @@ sub assign_array {
     my( $self, $runtime, $other ) = @_;
     my $count = 0;
 
-    # FIXME optimize: don't do it unless necessary
+    # must clone the rvalue either here or in assign_iterator
     my $oiter = $other->clone( $runtime, 1 )->iterator( $runtime );
     for( my $iter = $self->iterator( $runtime ); $iter->next( $runtime ); ) {
         $count += $iter->item->assign_iterator( $runtime, $oiter );

@@ -61,7 +61,7 @@ sub assign_array {
 
         return 1;
     } else {
-        # FIXME optimize: don't do it unless necessary
+        # must clone the rvalue either here or in assign_iterator
         my $oiter = $other->clone( $runtime, 1 )->iterator( $runtime );
         return $self->assign_iterator( $runtime, $oiter );
     }
