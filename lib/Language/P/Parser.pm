@@ -314,6 +314,7 @@ sub _enter_scope {
                                              };
     } elsif( @{$self->{_lexical_state}} > 1 ) {
         $self->{_lexical_state}[-1]{sub} = $self->{_lexical_state}[-2]{sub};
+        $self->{_lexical_state}[-1]{is_sub} = $self->{_lexical_state}[-2]{is_sub};
     }
     $self->_lexicals( Language::P::Parser::Lexicals->new
                           ( { outer         => $self->_lexicals,
