@@ -299,7 +299,6 @@ sub _enter_scope {
                                        lexicals => $self->_lexicals,
                                        pending  => [],
                                        is_sub   => $is_sub,
-                                       top_level=> $top_level,
                                        hints    => 0,
                                        warnings => undef,
                                        changed  => 0,
