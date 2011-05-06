@@ -328,8 +328,9 @@ sub _leave_scope {
 
     $self->_add_pending_lexicals;
     my $state = pop @{$self->{_lexical_state}};
+    _patch_gotos( $self, $state ) if    $self->_lexicals->is_subroutine
+                                     || $self->_lexicals->top_level;
     $self->_lexicals( $state->{lexicals} );
-    _patch_gotos( $self, $state ) if $state->{is_sub} || $state->{top_level};
 }
 
 sub _patch_gotos {
