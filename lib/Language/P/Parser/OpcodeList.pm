@@ -333,6 +333,7 @@ substr              v       same                -1   1  context=i1,arg_count=i1
 subtract            0       same                 2   1  context=i1
 subtract_assign     0       same                 2   1  context=i1
 swap_assign         0       same                 2   1  context=i1
+swap_assign_list    0       same                 2   1  context=i1,common=i1,class=ListAssign
 temporary           0       same                 0   1  index=i,slot=i_sigil,class=Temporary
 temporary_clear     0       same                 0   0  index=i,slot=i_sigil,class=Temporary
 temporary_set       0       same                 1   0  index=i,slot=i_sigil,class=Temporary

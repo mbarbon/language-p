@@ -1608,6 +1608,23 @@ sub o_assign {
     return $pc + 1;
 }
 
+sub o_swap_assign_list {
+    my( $op, $runtime, $pc ) = @_;
+    my $vr = pop @{$runtime->{_stack}};
+    my $vl = pop @{$runtime->{_stack}};
+
+    my $count = $vl->assign_array( $runtime, $vr );
+
+    if( _context( $op, $runtime ) == CXT_SCALAR ) {
+        push @{$runtime->{_stack}},
+             Language::P::Toy::Value::Scalar->new_integer( $runtime, $count );
+    } else {
+        push @{$runtime->{_stack}}, $vl;
+    }
+
+    return $pc + 1;
+}
+
 sub o_assign_list {
     my( $op, $runtime, $pc ) = @_;
     my $vl = pop @{$runtime->{_stack}};

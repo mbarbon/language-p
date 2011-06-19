@@ -1432,10 +1432,20 @@ sub _binary_op {
         }
         $self->dispatch( $tree->right );
         if( $tree->op == OP_LOG_AND_ASSIGN || $tree->op == OP_LOG_OR_ASSIGN ) {
-            _add_value $self,
-                opcode_nam( OP_SWAP_ASSIGN,
-                            _get_stack( $self, 2 ),
-                            context => _context( $tree ) );
+            if( $tree->left->lvalue_context != CXT_LIST ) {
+                _add_value $self,
+                    opcode_nam( OP_SWAP_ASSIGN,
+                                _get_stack( $self, 2 ),
+                                context => _context( $tree ) );
+            } else {
+                my $common = _list_assign_common( $self, $tree->left, $tree->right );
+
+                _add_value $self,
+                    opcode_npam( OP_SWAP_ASSIGN_LIST, $tree->pos,
+                                 _get_stack( $self, 2 ),
+                                 context => _context( $tree ),
+                                 common  => $common );
+            }
             _discard_value( $self )
                 if _context( $tree ) == CXT_VOID;
         } elsif( _context( $tree ) == CXT_VOID && !$tree->right->always_void ) {
