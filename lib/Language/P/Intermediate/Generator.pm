@@ -1309,8 +1309,15 @@ sub _local {
 
 sub _parentheses {
     my( $self, $tree ) = @_;
+    my $cxt = _context_lvalue( $tree );
 
     $self->dispatch( $tree->left );
+
+    if( $cxt & CXT_LVALUE ) {
+        _add_value $self,
+            opcode_nam( OP_MAKE_LIST, _get_stack( $self, 1 ),
+                        context  => $cxt );
+    }
 }
 
 sub _substitution {
