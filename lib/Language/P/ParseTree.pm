@@ -412,6 +412,15 @@ use strict;
 use warnings;
 use parent -norequire, qw(Language::P::ParseTree::UnOp);
 
+sub lvalue_context {
+    my( $self ) = @_;
+
+    return    $self->op == Language::P::Opcodes::OP_DEREFERENCE_HASH
+           || $self->op == Language::P::Opcodes::OP_DEREFERENCE_ARRAY ?
+                 Language::P::Constants::CXT_LIST :
+                 Language::P::Constants::CXT_SCALAR;
+}
+
 package Language::P::ParseTree::List;
 
 use strict;
