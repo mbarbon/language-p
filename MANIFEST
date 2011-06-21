@@ -70,6 +70,7 @@ t/intermediate/002_base_ssa.t
 t/intermediate/002_base_tree.t
 t/intermediate/005_lexicals_ssa.t
 t/intermediate/005_lexicals_tree.t
+t/intermediate/006_assign_ssa.t
 t/intermediate/011_call.t
 t/intermediate/011_call_tree.t
 t/intermediate/013_anonarrayhash_ssa.t
