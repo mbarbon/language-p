@@ -51,12 +51,7 @@ sub _return_value {
     my( $runtime, $cxt, $rv ) = @_;
 
     if( $cxt == CXT_SCALAR ) {
-        if( $rv->get_count( $runtime ) > 0 ) {
-            return $rv->get_item( $runtime, $rv->get_count( $runtime ) - 1 )
-                      ->as_scalar( $runtime );
-        } else {
-            return Language::P::Toy::Value::Undef->new( $runtime );
-        }
+        return $rv->as_scalar( $runtime );
     } elsif( $cxt == CXT_LIST ) {
         return $rv;
     } elsif( $cxt == CXT_VOID ) {
