@@ -11,7 +11,9 @@ lib/Language/P/Opcodes.pm
 lib/Language/P/Toy/Assembly.pm
 lib/Language/P/Intermediate/SerializeGenerated.pm
 META.yml
+META.json
 MYMETA.yml
+MYMETA.json
 
 # Misc
 TAGS
