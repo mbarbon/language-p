@@ -1141,7 +1141,13 @@ sub _function_call {
     }
 
     if( $argcount == 1 && $tree->function == OP_RETURN ) {
-        _unary_list( $self, _get_stack( $self, 1 ) );
+        my $arg = _get_stack( $self, 1 )->[0];
+
+        if(    $arg->opcode_n == OP_MAKE_LIST
+            && @{$arg->parameters} == 1 ) {
+            $arg = $arg->parameters->[0];
+        }
+        _add_value $self, $arg;
     } else {
         _add_value $self,
             opcode_nam( $tree->function == OP_RETURN ? OP_MAKE_LIST : OP_MAKE_ARRAY,

@@ -53,6 +53,22 @@ sub _return_value {
     if( $cxt == CXT_SCALAR ) {
         return $rv->as_scalar( $runtime );
     } elsif( $cxt == CXT_LIST ) {
+        return $rv->isa( 'Language::P::Toy::Value::Array' ) ?
+            $rv : Language::P::Toy::Value::List->new( $runtime,
+                                                      { array => [ $rv ] } );
+    } elsif( $cxt == CXT_VOID ) {
+        # it is easier to generate code if a subroutine
+        # always returns a value (even if a dummy one)
+        return $empty_list;
+    }
+}
+
+sub _slice_value {
+    my( $runtime, $cxt, $rv ) = @_;
+
+    if( $cxt == CXT_SCALAR ) {
+        return $rv->as_scalar( $runtime );
+    } elsif( $cxt == CXT_LIST ) {
         return $rv;
     } elsif( $cxt == CXT_VOID ) {
         # it is easier to generate code if a subroutine
@@ -2020,7 +2036,7 @@ sub o_array_slice {
     my $indices = pop @{$runtime->{_stack}};
     my $rv = $array->slice( $runtime, $indices, $op->{create} );
 
-    push @{$runtime->{_stack}}, _return_value( $runtime, $cxt, $rv );
+    push @{$runtime->{_stack}}, _slice_value( $runtime, $cxt, $rv );
 
     return $pc + 1;
 }
@@ -2032,7 +2048,7 @@ sub o_list_slice {
     my $indices = pop @{$runtime->{_stack}};
     my $rv = $list->slice( $runtime, $indices );
 
-    push @{$runtime->{_stack}}, _return_value( $runtime, $cxt, $rv );
+    push @{$runtime->{_stack}}, _slice_value( $runtime, $cxt, $rv );
 
     return $pc + 1;
 }
@@ -2133,7 +2149,7 @@ sub o_hash_slice {
     my $keys = pop @{$runtime->{_stack}};
     my $rv = $hash->slice( $runtime, $keys, $op->{create} );
 
-    push @{$runtime->{_stack}}, _return_value( $runtime, $cxt, $rv );
+    push @{$runtime->{_stack}}, _slice_value( $runtime, $cxt, $rv );
 
     return $pc + 1;
 }

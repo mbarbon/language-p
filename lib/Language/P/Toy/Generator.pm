@@ -333,7 +333,9 @@ sub _generate_segment {
     my $code = $target;
     if( $is_const && !$code ) {
         # TODO abstract away
-        my $const_op = $segment->basic_blocks->[-2]->bytecode->[-3];
+        my $const_op = $segment->basic_blocks->[-2]->bytecode->[-2];
+        $const_op = $segment->basic_blocks->[-2]->bytecode->[-3]
+            if $const_op->opcode_n == OP_MAKE_LIST;
         my( $flags, $value );
         if( $const_op->opcode_n == OP_CONSTANT_STRING ) {
             $flags = CONST_STRING;
