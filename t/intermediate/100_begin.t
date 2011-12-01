@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use t::lib::TestIntermediate tests => 4;
+use t::lib::TestIntermediate tests => 5;
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
 1;
@@ -19,6 +19,30 @@ L1: # scope=1
 L2: # scope=1
   end
 # BEGIN
+L1: # scope=1
+  lexical_state_set index=1
+  return context=1 (constant_integer value=3)
+EOI
+
+generate_ssa_and_diff( <<'EOP', <<'EOI' );
+1;
+package X;
+
+BEGIN {
+    3;
+}
+EOP
+# main
+L1: # scope=1
+  lexical_state_set index=0
+  constant_integer value=1
+  jump to=L2
+L2: # scope=1
+  lexical_state_set index=1
+  jump to=L3
+L3: # scope=1
+  end
+# X::BEGIN
 L1: # scope=1
   lexical_state_set index=1
   return context=1 (constant_integer value=3)

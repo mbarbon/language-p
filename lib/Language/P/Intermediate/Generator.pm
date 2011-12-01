@@ -1798,11 +1798,8 @@ sub _cond_loop {
     _emit_label( $self, $tree );
 
     my $is_until = $tree->block_type eq 'until';
-    my( $start_cond, $start_loop, $start_continue, $end_loop ) = _new_blocks( $self, 4 );
-    $tree->set_attribute( 'lbl_next', $tree->continue ? $start_continue :
-                                                        $start_cond );
-    $tree->set_attribute( 'lbl_last', $end_loop );
-    $tree->set_attribute( 'lbl_redo', $start_loop );
+    my $start_cond = _new_block( $self );
+    my $scope_id = $self->_current_block->id;
 
     _add_jump $self,
         opcode_nm( OP_JUMP, to => $start_cond ), $start_cond;
@@ -1812,6 +1809,13 @@ sub _cond_loop {
         _start_bb( $self );
         $self->push_block( 0, $tree->pos_s, $tree->pos_e );
     }
+    my( $start_loop, $start_continue ) = _new_blocks( $self, 2 );
+    my $end_loop = _new_block_scope( $self, $scope_id );
+
+    $tree->set_attribute( 'lbl_next', $tree->continue ? $start_continue :
+                                                        $start_cond );
+    $tree->set_attribute( 'lbl_last', $end_loop );
+    $tree->set_attribute( 'lbl_redo', $start_loop );
 
     $self->dispatch_cond( $tree->condition,
                           $is_until ? ( $end_loop, $start_loop ) :
@@ -1843,14 +1847,16 @@ sub _setup_list_iteration {
     my( $self, $tree, $iter_var, $list, $in_block ) = @_;
     my $is_lexical_declaration = $iter_var->isa( 'Language::P::ParseTree::LexicalDeclaration' );
     my $is_lexical = $is_lexical_declaration || $iter_var->isa( 'Language::P::ParseTree::LexicalSymbol' );
-
-    my( $start_step, $start_loop, $start_continue, $exit_loop, $end_loop ) =
-        _new_blocks( $self, 5 );
+    my $scope_id = $self->_current_block->id;
 
     if( $in_block ) {
         _start_bb( $self );
         $self->push_block( 0, $tree->pos_s, $tree->pos_e );
     }
+    my( $start_step, $start_loop, $start_continue, $exit_loop ) =
+        _new_blocks( $self, 4 );
+    my $end_loop = _new_block_scope( $self, $scope_id );
+
     $self->dispatch( $list );
     _unary_list( $self, _get_stack( $self, 1 ) );
 
@@ -2137,13 +2143,17 @@ sub _for {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
-    my( $start_cond, $start_loop, $start_step, $end_loop ) = _new_blocks( $self, 4 );
-    $tree->set_attribute( 'lbl_next', $start_step );
-    $tree->set_attribute( 'lbl_last', $end_loop );
-    $tree->set_attribute( 'lbl_redo', $start_loop );
+    my $scope_id = $self->_current_block->id;
 
     _start_bb( $self );
     $self->push_block( 0, $tree->pos_s, $tree->pos_e );
+
+    my( $start_cond, $start_loop, $start_step ) = _new_blocks( $self, 3 );
+    my $end_loop = _new_block_scope( $self, $scope_id );
+
+    $tree->set_attribute( 'lbl_next', $start_step );
+    $tree->set_attribute( 'lbl_last', $end_loop );
+    $tree->set_attribute( 'lbl_redo', $start_loop );
 
     if( $tree->initializer ) {
         $self->dispatch( $tree->initializer );

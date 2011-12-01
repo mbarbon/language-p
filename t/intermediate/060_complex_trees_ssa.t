@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use t::lib::TestIntermediate tests => 9;
+use t::lib::TestIntermediate tests => 11;
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
 sub is_scalar {
@@ -226,3 +226,82 @@ L1: # scope=0
   rx_start_match
   rx_accept groups=0
 EOI
+
+generate_ssa_and_diff( <<'EOP', <<'EOI' );
+for $r ( 13, 14 ) {
+    print $r ? "ok $r\n" : "not ok\n";
+}
+my $r = 8;
+EOP
+# main
+L1: # scope=1
+  lexical_state_set index=0
+  jump to=L2
+L10: # scope=3
+  set index=3, slot=1 (concat_assign context=4 (concat_assign context=4 (concat_assign context=4 (fresh_string value=""), (constant_string value="ok ")), (global context=4, name="r", slot=1)), (constant_string value="\x0a"))
+  jump to=L9
+L11: # scope=3
+  set index=4, slot=1 (constant_string value="not ok\x0a")
+  jump to=L9
+L12: # scope=1
+  assign context=2 (constant_integer value=8), (lexical_pad lexical_info={index=0, slot=1})
+  jump to=L13
+L13: # scope=1
+  end
+L2: # scope=2
+  temporary_set index=0, slot=9 (iterator (make_list context=8 (constant_integer value=13), (constant_integer value=14)))
+  temporary_set index=1, slot=5 (global context=4, name="r", slot=5)
+  localize_glob_slot index=2, name="r", slot=1
+  jump to=L3
+L3: # scope=2
+  set index=1, slot=1 (iterator_next (temporary index=0, slot=9))
+  jump_if_null false=L4, true=L6 (get index=1, slot=1)
+L4: # scope=2
+  swap_glob_slot_set slot=1 (get index=1, slot=1), (temporary index=1, slot=5)
+  jump to=L8
+L6: # scope=2
+  jump to=L7
+L7: # scope=1
+  temporary_clear index=1, slot=5
+  restore_glob_slot index=2, name="r", slot=1
+  jump to=L12
+L8: # scope=3
+  set index=2, slot=7 (global context=4, name="STDOUT", slot=7)
+  jump_if_true false=L11, true=L10 (global context=4, name="r", slot=1)
+L9: # scope=3
+  set index=5, slot=1 (phi blocks=[L10, L11], indices=[3, 4], slots=[1, 1])
+  print context=2 (get index=2, slot=7), (make_array context=8 (get index=5, slot=1))
+  jump to=L3
+EOI
+
+generate_ssa_and_diff( <<'EOP', <<'EOI' );
+#!/usr/bin/perl -w
+
+while( $i < 0 ) {
+    2;
+}
+
+while( $i < 3 ) {
+    4;
+}
+EOP
+# main
+L1: # scope=1
+  lexical_state_set index=0
+  jump to=L2
+L10: # scope=2
+  jump to=L6
+L2: # scope=2
+  jump_if_f_lt false=L10, true=L3 (global context=CXT_SCALAR, name="i", slot=VALUE_SCALAR), (constant_integer value=0)
+L3: # scope=3
+  constant_integer value=2
+  jump to=L2
+L6: # scope=4
+  jump_if_f_lt false=L9, true=L7 (global context=CXT_SCALAR, name="i", slot=VALUE_SCALAR), (constant_integer value=3)
+L7: # scope=5
+  constant_integer value=4
+  jump to=L6
+L9: # scope=1
+  end
+EOI
+
