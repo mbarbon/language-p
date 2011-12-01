@@ -42,10 +42,9 @@ L1: # scope=1
   jump_if_true to=L3 (lexical lexical_info={index=1, slot=VALUE_SCALAR})
   jump to=L4
 L2: # scope=1
-  set index=4, slot=VALUE_ARRAY (make_list context=CXT_LIST (get index=3, slot=VALUE_ARRAY))
   lexical_clear lexical_info={index=2, slot=VALUE_SCALAR}
   lexical_clear lexical_info={index=1, slot=VALUE_SCALAR}
-  return context=CXT_CALLER (get index=4, slot=VALUE_ARRAY)
+  return context=CXT_CALLER (get index=3, slot=VALUE_ARRAY)
 L3: # scope=1
   set index=1, slot=VALUE_ARRAY (lexical_pad lexical_info={index=0, slot=VALUE_ARRAY})
   set index=3, slot=VALUE_ARRAY (get index=1, slot=VALUE_ARRAY)

@@ -26,13 +26,13 @@ L2: # scope=0
 # outer
 L1: # scope=1
   lexical_state_set index=1
-  return context=1 (make_list context=8 (make_closure (constant_sub value=anoncode)))
+  return context=1 (make_closure (constant_sub value=anoncode))
 # anoncode
 L1: # scope=1
   lexical_state_set index=1
-  return context=1 (make_list context=8 (constant_integer value=3))
+  return context=1 (constant_integer value=3)
 # anoncode
 L1: # scope=1
   lexical_state_set index=1
-  return context=1 (make_list context=8 (constant_integer value=4))
+  return context=1 (constant_integer value=4)
 EOI

@@ -21,7 +21,7 @@ L2: # scope=0
 # BEGIN
 L1: # scope=1
   lexical_state_set index=1
-  return context=1 (make_list context=8 (constant_integer value=3))
+  return context=1 (constant_integer value=3)
 EOI
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );

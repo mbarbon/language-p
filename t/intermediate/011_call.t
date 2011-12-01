@@ -36,6 +36,5 @@ L1: # scope=1
   concat_assign context=4
   make_array arg_count=1, context=8
   print context=1
-  make_list arg_count=1, context=8
   return context=1
 EOI

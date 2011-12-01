@@ -42,10 +42,9 @@ L1: # scope=1
   jump_if_true false=L4, true=L3 (lexical lexical_info={index=1, slot=VALUE_SCALAR})
 L2: # scope=1
   set index=3, slot=VALUE_ARRAY (phi blocks=[L3, L4], indices=[1, 2], slots=[VALUE_ARRAY, VALUE_ARRAY])
-  set index=4, slot=VALUE_ARRAY (make_list context=8 (get index=3, slot=VALUE_ARRAY))
   lexical_clear lexical_info={index=2, slot=VALUE_SCALAR}
   lexical_clear lexical_info={index=1, slot=VALUE_SCALAR}
-  return context=1 (get index=4, slot=VALUE_ARRAY)
+  return context=1 (get index=3, slot=VALUE_ARRAY)
 L3: # scope=1
   set index=1, slot=VALUE_ARRAY (lexical_pad lexical_info={index=0, slot=VALUE_ARRAY})
   jump to=L2

@@ -20,5 +20,5 @@ L2: # scope=0
 # foo
 L1: # scope=1
   lexical_state_set index=1
-  return context=1 (make_list context=8 (print context=1 (global context=4, name="STDOUT", slot=7), (make_array context=8 (concat_assign context=4 (concat_assign context=4 (concat_assign context=4 (fresh_string value=""), (constant_string value="ok ")), (array_element context=4, create=0 (constant_integer value=0), (lexical lexical_info={index=0, slot=VALUE_ARRAY}))), (constant_string value="\x0a")))))
+  return context=1 (print context=1 (global context=4, name="STDOUT", slot=7), (make_array context=8 (concat_assign context=4 (concat_assign context=4 (concat_assign context=4 (fresh_string value=""), (constant_string value="ok ")), (array_element context=4, create=0 (constant_integer value=0), (lexical lexical_info={index=0, slot=VALUE_ARRAY}))), (constant_string value="\x0a"))))
 EOI

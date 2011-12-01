@@ -94,7 +94,7 @@ L2: # scope=1
 L3: # scope=1
   jump_if_true false=L2, true=L4 (array_element context=4, create=0 (constant_integer value=0), (lexical lexical_info={index=0, slot=VALUE_ARRAY}))
 L4: # scope=1
-  return context=1 (make_list context=8 (call context=1 (make_array context=8 (constant_integer value=123)), (global context=4, name="xx", slot=4)))
+  return context=1 (call context=1 (make_array context=8 (constant_integer value=123)), (global context=4, name="xx", slot=4))
 EOI
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
