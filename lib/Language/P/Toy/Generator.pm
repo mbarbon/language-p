@@ -276,12 +276,9 @@ sub _generate_block {
 sub _generate_scope {
     my( $self, $scope_id, $converted ) = @_;
 
-    return if $self->_generated_scopes->{$scope_id};
     $self->_generated_scopes->{$scope_id} = 1;
 
     my $scope = $self->_segment->scopes->[$scope_id];
-    _generate_scope( $self, $scope->{outer}, $converted )
-        if $scope->{outer} != -1;
     my $state = $self->_segment->lexical_states->[$scope->lexical_state];
 
     my @exit_bytecode;
@@ -416,14 +413,13 @@ sub _generate_segment {
             foreach @{$segment->basic_blocks};
     } else {
         _generate_scope( $self, $segment->scopes->[0]->{id}, \@converted );
-    }
-
-    if( $is_eval ) {
-        # handles the 'return undef on failure'
-        # behaviour of eval
-        push @{$self->_code->bytecode},
-            o( 'make_list', arg_count => 0, context => CXT_LIST ),
-            o( 'return' );
+        if( $is_eval ) {
+            # handles the 'return undef on failure'
+            # behaviour of eval
+            push @{$self->_code->bytecode},
+                o( 'make_list', arg_count => 0, context => CXT_LIST ),
+                o( 'return' );
+        }
     }
 
     foreach my $block ( @converted ) {
