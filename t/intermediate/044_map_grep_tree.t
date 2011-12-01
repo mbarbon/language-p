@@ -21,7 +21,7 @@ L11: # scope=1
   temporary_clear index=4, slot=2
   assign_list common=1, context=2 (make_list context=8 (get index=2, slot=VALUE_ARRAY), (get index=4, slot=VALUE_ARRAY)), (global context=24, name="r", slot=2)
   jump to=L12
-L12: # scope=0
+L12: # scope=1
   end
 L2: # scope=1
   set index=1, slot=VALUE_SCALAR (iterator_next (temporary index=1, slot=9))
@@ -80,6 +80,6 @@ L6: # scope=1
 L7: # scope=2
   push_element (get index=2, slot=2), (divide context=8 (global context=4, name="_", slot=1), (constant_integer value=2))
   jump to=L2
-L8: # scope=0
+L8: # scope=1
   end
 EOI

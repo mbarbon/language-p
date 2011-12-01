@@ -13,7 +13,7 @@ EOP
 L1: # scope=1
   lexical_state_set index=0
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 # is_scalar
 L1: # scope=1
@@ -57,11 +57,11 @@ L1: # scope=1
   jump to=L6
 L11: # scope=2
   jump_if_true false=L14, true=L16 (constant_integer value=4)
-L14: # scope=1
+L14: # scope=2
   jump to=L4
-L15: # scope=0
+L15: # scope=1
   end
-L16: # scope=0
+L16: # scope=2
   jump to=L6
 L4: # scope=1
   constant_integer value=6
@@ -83,7 +83,7 @@ L1: # scope=1
   lexical_state_set index=0
   set index=1, slot=VALUE_SCALAR (make_closure (constant_sub value=anoncode))
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 # anoncode
 L1: # scope=1
@@ -160,7 +160,7 @@ EOP
 L1: # scope=1
   lexical_state_set index=0
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 # x
 L1: # scope=1

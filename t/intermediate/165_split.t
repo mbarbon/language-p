@@ -14,7 +14,7 @@ L1: # scope=1
   rx_split arg_count=2, context=2
   pop
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 # anoncode
 L1: # scope=0
@@ -34,7 +34,7 @@ L1: # scope=1
   rx_split arg_count=2, context=2
   pop
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 # anoncode
 L1: # scope=0
@@ -54,7 +54,7 @@ L1: # scope=1
   rx_split arg_count=2, context=2
   pop
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 # anoncode
 L1: # scope=0
@@ -73,6 +73,6 @@ L1: # scope=1
   rx_split_skipspaces arg_count=1, context=2
   pop
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 EOI

@@ -17,7 +17,7 @@ L2: # scope=1
   lexical_state_set index=1
   eval context=2, globals={}, hints=0, lexicals={}, package="x", warnings=undef (constant_string value="2")
   jump to=L3
-L3: # scope=0
+L3: # scope=1
   end
 EOI
 
@@ -44,7 +44,7 @@ L4: # scope=1
   set index=3, slot=VALUE_SCALAR (phi blocks=[L2, L3], indices=[1, 2], slots=[VALUE_SCALAR, VALUE_SCALAR])
   assign context=2 (get index=3, slot=VALUE_SCALAR), (global context=20, name="x", slot=1)
   jump to=L5
-L5: # scope=0
+L5: # scope=1
   end
 EOI
 

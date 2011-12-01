@@ -21,7 +21,7 @@ L2: # scope=1
   eval context=2, globals={}, hints=0, lexicals={}, package="x", warnings=undef
   pop
   jump to=L3
-L3: # scope=0
+L3: # scope=1
   end
 EOI
 
@@ -47,7 +47,7 @@ L4: # scope=1
   assign context=2
   pop
   jump to=L5
-L5: # scope=0
+L5: # scope=1
   end
 EOI
 

@@ -32,7 +32,7 @@ EOP
 L1: # scope=1
   lexical_state_set index=0
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 # foo
 L1: # scope=1
@@ -49,7 +49,7 @@ EOP
 L1: # scope=1
   lexical_state_set index=0
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 # foo
 L1: # scope=1

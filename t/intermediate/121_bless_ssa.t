@@ -11,6 +11,6 @@ L1: # scope=1
   lexical_state_set index=0
   bless context=2 (global context=4, name="a", slot=1), (global context=4, name="b", slot=1)
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 EOI

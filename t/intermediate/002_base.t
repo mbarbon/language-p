@@ -16,7 +16,7 @@ L1: # scope=1
   assign context=2
   pop
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 EOI
 
@@ -33,7 +33,7 @@ L1: # scope=1
   print context=2
   pop
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 EOI
 
@@ -52,6 +52,6 @@ L1: # scope=1
   assign context=2
   pop
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 EOI

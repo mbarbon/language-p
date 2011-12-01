@@ -70,7 +70,7 @@ L8: # scope=5
   constant_integer value=3
   pop
   jump to=L2
-L9: # scope=0
+L9: # scope=1
   end
 EOI
 
@@ -102,7 +102,7 @@ L5: # scope=3
   jump to=L2
 L7: # scope=2
   jump to=L2
-L8: # scope=0
+L8: # scope=1
   end
 EOI
 
@@ -119,7 +119,7 @@ L1: # scope=1
   constant_integer value=0
   pop
   jump to=L4
-L10: # scope=0
+L10: # scope=1
   end
 L2: # scope=1
   constant_integer value=2

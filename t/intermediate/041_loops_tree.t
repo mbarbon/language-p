@@ -47,7 +47,7 @@ L4: # scope=3
   jump to=L4
 L6: # scope=1
   end
-L7: # scope=0
+L7: # scope=1
   jump to=L4
 EOI
 

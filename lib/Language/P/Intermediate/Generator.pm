@@ -344,6 +344,13 @@ sub _new_block {
                  ( $block ? $block->id : 0 ), 1 );
 }
 
+sub _new_block_scope {
+    my( $self, $scope_id ) = @_;
+
+    return Language::P::Intermediate::BasicBlock->new_from_label
+               ( 'L' . ++$self->{_label_count}, $scope_id, 1 );
+}
+
 sub _new_fake_block {
     my( $self ) = @_;
 
@@ -376,7 +383,7 @@ sub _check_split_edges {
     foreach my $block ( @pred ) {
         next if @{$block->successors} != 2;
 
-        my $new_block = _new_block( $self );
+        my $new_block = _new_block_scope( $self, $block->scope );
         push @{$self->_code_segments->[0]->basic_blocks}, $new_block;
         $new_block->add_jump_unoptimized( opcode_nm( OP_JUMP, to => $current ), $current );
         $block->_change_successor( $current, $new_block );
@@ -542,9 +549,6 @@ sub generate_use {
     $self->_local_count( 0 );
     $self->_in_args_map( {} );
 
-    my $head = $self->_new_block;
-    my $empty = $self->_new_block;
-
     push @{$self->_code_segments},
          Language::P::Intermediate::Code->new
              ( { type         => CODE_SUB,
@@ -556,13 +560,14 @@ sub generate_use {
                  } );
     $self->_lexicals->{$self->_code_segments->[-1]}{max_stack} = 1;
 
-    _add_blocks $self, $head;
+    _add_blocks $self, _new_block( $self );
+
+    $self->push_block( 0, undef, undef );
     $self->push_block( SCOPE_SUB|SCOPE_MAIN, $tree->pos_s, $tree->pos_e );
 
     _lexical_state( $self, $tree->lexical_state );
 
-    my $body = $self->_new_block;
-    my $return = $self->_new_block;
+    my( $empty, $body, $return ) = _new_blocks( $self, 3 );
 
     # check the Perl version
     if( $tree->version && !$tree->package ) {
@@ -605,6 +610,8 @@ sub generate_use {
         _add_blocks $self, $return;
         $self->pop_block;
         _add_bytecode $self, opcode_n( OP_END );
+
+        $self->pop_block;
 
         return $self->_code_segments;
     }
@@ -675,6 +682,8 @@ sub generate_use {
     _add_blocks $self, $return;
     $self->pop_block;
     _add_bytecode $self, opcode_n( OP_END );
+
+    $self->pop_block;
 
     return $self->_code_segments;
 }
@@ -798,7 +807,7 @@ sub _generate_bytecode {
     $self->pop_block;
 
     if( @{$self->_current_basic_block->bytecode} != 0 ) {
-        my $end = _new_block( $self );
+        my $end = _new_block_scope( $self, 1 );
         _add_jump $self, opcode_nm( OP_JUMP, to => $end ), $end;
         _add_blocks $self, $end;
     }

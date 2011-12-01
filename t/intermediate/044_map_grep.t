@@ -42,7 +42,7 @@ L6: # scope=1
   assign_list common=1, context=2
   pop
   jump to=L7
-L7: # scope=0
+L7: # scope=1
   end
 EOI
 
@@ -74,7 +74,7 @@ L11: # scope=1
   assign_list common=1, context=2
   pop
   jump to=L12
-L12: # scope=0
+L12: # scope=1
   end
 L2: # scope=1
   temporary index=1, slot=9

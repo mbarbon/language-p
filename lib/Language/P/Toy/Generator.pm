@@ -326,6 +326,7 @@ sub _generate_segment {
     my $is_sub = $segment->is_sub;
     my $is_const = $segment->is_constant;
     my $is_regex = $segment->is_regex;
+    my $is_eval = $segment->is_eval;
     my $pad = Language::P::Toy::Value::ScratchPad->new( $self->runtime );
 
     $transform->to_linear( $segment );
@@ -415,6 +416,14 @@ sub _generate_segment {
             foreach @{$segment->basic_blocks};
     } else {
         _generate_scope( $self, $segment->scopes->[0]->{id}, \@converted );
+    }
+
+    if( $is_eval ) {
+        # handles the 'return undef on failure'
+        # behaviour of eval
+        push @{$self->_code->bytecode},
+            o( 'make_list', arg_count => 0, context => CXT_LIST ),
+            o( 'return' );
     }
 
     foreach my $block ( @converted ) {
@@ -583,9 +592,8 @@ sub _end {
     my( $self, $bytecode, $op ) = @_;
 
     if( !$self->_code->isa( 'Language::P::Toy::Value::Regex' ) ) {
-        # could be avoided in most cases, but simplifies code
-        # generation and automatically handles the 'return undef on
-        # failure' behaviour of eval
+        # TODO could be avoided in most cases, but simplifies code
+        # generation
         push @$bytecode,
             o( 'make_list', arg_count => 0, context => CXT_LIST ),
             o( 'return' );

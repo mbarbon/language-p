@@ -21,7 +21,7 @@ L1: # scope=1
   assign context=2 (call context=4 (make_array context=8), (global context=4, name="outer", slot=4)), (global context=20, name="x", slot=1)
   assign context=2 (make_closure (constant_sub value=anoncode)), (global context=20, name="y", slot=1)
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 # outer
 L1: # scope=1

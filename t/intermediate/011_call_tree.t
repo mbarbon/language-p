@@ -15,7 +15,7 @@ L1: # scope=1
   lexical_state_set index=0
   call context=2 (make_array context=8 (constant_integer value=1)), (global context=4, name="foo", slot=4)
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 # foo
 L1: # scope=1

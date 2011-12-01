@@ -22,7 +22,7 @@ L3: # scope=1
 L4: # scope=1
   set index=3, slot=VALUE_SCALAR (get index=1, slot=VALUE_SCALAR)
   jump to=L3
-L5: # scope=0
+L5: # scope=1
   end
 EOI
 
@@ -45,7 +45,7 @@ L3: # scope=1
 L4: # scope=1
   set index=3, slot=VALUE_SCALAR (get index=1, slot=VALUE_SCALAR)
   jump to=L3
-L5: # scope=0
+L5: # scope=1
   end
 EOI
 
@@ -78,7 +78,7 @@ L6: # scope=1
 L7: # scope=1
   set index=5, slot=VALUE_SCALAR (get index=3, slot=VALUE_SCALAR)
   jump to=L6
-L8: # scope=0
+L8: # scope=1
   end
 EOI
 
@@ -111,6 +111,6 @@ L6: # scope=1
 L7: # scope=1
   set index=5, slot=VALUE_SCALAR (get index=3, slot=VALUE_SCALAR)
   jump to=L6
-L8: # scope=0
+L8: # scope=1
   end
 EOI

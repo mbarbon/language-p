@@ -11,7 +11,7 @@ L1: # scope=1
   lexical_state_set index=0
   rx_transliterate context=2, flags=0, match="a", replacement="b" (global context=4, name="x", slot=1)
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 EOI
 
@@ -33,7 +33,7 @@ L3: # scope=1
 L4: # scope=1
   set index=3, slot=1 (constant_integer value=2)
   jump to=L2
-L5: # scope=0
+L5: # scope=1
   end
 EOI
 
@@ -45,6 +45,6 @@ L1: # scope=1
   lexical_state_set index=0
   not context=2 (rx_transliterate context=2, flags=0, match="a", replacement="b" (global context=4, name="b", slot=1))
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 EOI

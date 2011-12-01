@@ -16,7 +16,7 @@ L1: # scope=1
 L2: # scope=2
   array_push context=CXT_VOID (get index=1, slot=VALUE_ARRAY), (make_array context=CXT_LIST (dereference_array context=CXT_LIST (global context=CXT_SCALAR, name="foo", slot=VALUE_SCALAR)))
   jump to=L3
-L3: # scope=0
+L3: # scope=1
   end
 EOI
 
@@ -33,7 +33,7 @@ L1: # scope=1
   lexical_state_set index=0
   make_list context=2 (lexical_pad lexical_info={index=0, slot=VALUE_ARRAY}), (lexical_pad lexical_info={index=1, slot=VALUE_ARRAY})
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 # foo
 L1: # scope=1

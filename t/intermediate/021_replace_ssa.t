@@ -13,7 +13,7 @@ L1: # scope=1
   jump to=L3
 L2: # scope=2
   stop (constant_string value="b")
-L3: # scope=0
+L3: # scope=1
   end
 # anoncode
 L1: # scope=0
@@ -42,7 +42,7 @@ L4: # scope=1
   jump to=L2
 L5: # scope=2
   stop (constant_string value="b")
-L6: # scope=0
+L6: # scope=1
   end
 # anoncode
 L1: # scope=0

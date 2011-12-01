@@ -14,7 +14,7 @@ L1: # scope=1
   exists_array context=2
   pop
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 EOI
 
@@ -30,7 +30,7 @@ L1: # scope=1
   exists_hash context=2
   pop
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 EOI
 
@@ -44,7 +44,7 @@ L1: # scope=1
   exists context=2
   pop
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 EOI
 
@@ -61,6 +61,6 @@ L1: # scope=1
   caller arg_count=1, context=2
   pop
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 EOI

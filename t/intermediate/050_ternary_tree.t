@@ -22,7 +22,7 @@ L4: # scope=1
   set index=2, slot=VALUE_SCALAR (add context=4 (global context=4, name="c", slot=1), (constant_integer value=3))
   set index=3, slot=VALUE_SCALAR (get index=2, slot=VALUE_SCALAR)
   jump to=L2
-L5: # scope=0
+L5: # scope=1
   end
 EOI
 
@@ -56,7 +56,7 @@ L7: # scope=1
   set index=3, slot=VALUE_SCALAR (global context=4, name="e", slot=1)
   set index=4, slot=VALUE_SCALAR (get index=3, slot=VALUE_SCALAR)
   jump to=L5
-L8: # scope=0
+L8: # scope=1
   end
 EOI
 
@@ -79,6 +79,6 @@ L4: # scope=1
   set index=2, slot=VALUE_SCALAR (reference context=4 (global context=4, name="x", slot=3))
   set index=3, slot=VALUE_SCALAR (get index=2, slot=VALUE_SCALAR)
   jump to=L2
-L5: # scope=0
+L5: # scope=1
   end
 EOI

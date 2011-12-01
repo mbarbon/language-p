@@ -16,7 +16,7 @@ L1: # scope=1
   array_push context=2
   pop
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 EOI
 
@@ -30,7 +30,7 @@ L1: # scope=1
   array_pop context=2
   pop
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 EOI
 
@@ -51,6 +51,6 @@ L1: # scope=1
   call context=2
   pop
   jump to=L2
-L2: # scope=0
+L2: # scope=1
   end
 EOI

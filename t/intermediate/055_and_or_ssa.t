@@ -20,7 +20,7 @@ L3: # scope=1
   jump to=L5
 L4: # scope=1
   jump to=L3
-L5: # scope=0
+L5: # scope=1
   end
 EOI
 
@@ -58,7 +58,7 @@ L3: # scope=1
   jump to=L5
 L4: # scope=1
   jump to=L3
-L5: # scope=0
+L5: # scope=1
   end
 EOI
 
@@ -104,7 +104,7 @@ L6: # scope=1
   jump to=L8
 L7: # scope=1
   jump to=L6
-L8: # scope=0
+L8: # scope=1
   end
 EOI
 
@@ -158,7 +158,7 @@ L6: # scope=1
   jump to=L8
 L7: # scope=1
   jump to=L6
-L8: # scope=0
+L8: # scope=1
   end
 EOI
 
@@ -180,6 +180,6 @@ L3: # scope=1
   jump to=L5
 L4: # scope=1
   jump to=L3
-L5: # scope=0
+L5: # scope=1
   end
 EOI

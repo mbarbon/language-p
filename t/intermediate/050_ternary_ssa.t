@@ -20,7 +20,7 @@ L3: # scope=1
 L4: # scope=1
   set index=2, slot=VALUE_SCALAR (add context=4 (global context=4, name="c", slot=1), (constant_integer value=3))
   jump to=L2
-L5: # scope=0
+L5: # scope=1
   end
 EOI
 
@@ -50,7 +50,7 @@ L6: # scope=1
 L7: # scope=1
   set index=3, slot=VALUE_SCALAR (global context=4, name="e", slot=1)
   jump to=L5
-L8: # scope=0
+L8: # scope=1
   end
 EOI
 
@@ -72,6 +72,6 @@ L3: # scope=1
 L4: # scope=1
   set index=3, slot=VALUE_SCALAR (global context=4, name="c", slot=1)
   jump to=L2
-L5: # scope=0
+L5: # scope=1
   end
 EOI
