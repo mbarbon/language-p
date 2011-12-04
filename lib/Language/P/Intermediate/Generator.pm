@@ -30,10 +30,6 @@ sub new {
 sub set_option {
     my( $self, $option, $value ) = @_;
 
-    if( $option eq 'dump-ir' ) {
-        $self->_options->{$option} = 1;
-    }
-
     return 0;
 }
 
@@ -820,21 +816,41 @@ sub _generate_bytecode {
     _check_split_edges( $self, $_ )
         foreach @{$self->_code_segments->[0]->basic_blocks};
 
-    if( $self->_options->{'dump-ir'} ) {
-        ( my $outfile = $self->file_name ) =~ s/(\.\w+)?$/.ir/;
-        open my $ir_dump, '>', $outfile || die "Can't open '$outfile': $!";
 
-        foreach my $cs ( @{$self->_code_segments} ) {
-            $cs->find_alive_blocks;
-            foreach my $bb ( @{$cs->basic_blocks} ) {
-                foreach my $ins ( @{$bb->bytecode} ) {
-                    print $ir_dump $ins->as_string( \%NUMBER_TO_NAME );
+    return $self->_code_segments;
+}
+
+sub dump_ir {
+    my( $self, $ir_dump, $segments ) = @_;
+
+    foreach my $cs ( @$segments ) {
+        $cs->find_alive_blocks;
+
+        my $name = $cs->is_main ? 'main' :
+                                  $cs->name || 'anoncode';
+        printf $ir_dump "# %s\n", $name;
+
+        foreach my $sc ( @{$cs->scopes} ) {
+            printf $ir_dump "# scope %d, outer %d\n", $sc->id, $sc->outer;
+
+            foreach my $bc ( @{$sc->bytecode} ) {
+                foreach my $ins ( @$bc) {
+                    print $ir_dump $ins->as_string( \%NUMBER_TO_NAME, \%OP_ATTRIBUTES );
                 }
             }
         }
-    }
 
-    return $self->_code_segments;
+        foreach my $bb ( @{$cs->basic_blocks} ) {
+            next if $bb->dead;
+            printf $ir_dump "%s: # scope=%d\n",
+                            $bb->start_label,
+                            $bb->scope;
+
+            foreach my $ins ( @{$bb->bytecode} ) {
+                print $ir_dump $ins->as_string( \%NUMBER_TO_NAME, \%OP_ATTRIBUTES );
+            }
+        }
+    }
 }
 
 my %dispatch =
@@ -2397,8 +2413,6 @@ sub _subroutine {
 
     my $generator = Language::P::Intermediate::Generator->new
                         ( { _options => { %{$self->{_options}},
-                                          # performed by caller
-                                          'dump-ir' => 0,
                                           },
                             _lexicals => $self->_lexicals,
                             is_stack => $self->is_stack,
@@ -2417,8 +2431,6 @@ sub _use {
 
     my $generator = Language::P::Intermediate::Generator->new
                         ( { _options => { %{$self->{_options}},
-                                          # performed by caller
-                                          'dump-ir' => 0,
                                           },
                             _lexicals => $self->_lexicals,
                             is_stack => $self->is_stack,

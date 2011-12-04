@@ -7,7 +7,7 @@ use parent qw(Language::P::ParseTree::Visitor);
 __PACKAGE__->mk_ro_accessors( qw(runtime) );
 __PACKAGE__->mk_accessors( qw(_code _pending _block_map _index_map
                               _options _generated _intermediate _processing
-                              _eval_context _segment _saved_subs
+                              _eval_context _segment _saved_subs _saved_segments
                               _generated_scopes _data_handle) );
 
 use Language::P::Toy::Intermediate;
@@ -70,7 +70,6 @@ sub set_option {
 
     if( $option eq 'dump-ir' ) {
         $self->_options->{$option} = 1;
-        $self->_intermediate->set_option( 'dump-ir' );
     }
     if( $option eq 'dump-bytecode' ) {
         $self->_options->{$option} = 1;
@@ -112,6 +111,9 @@ sub process {
         # BEGIN block would look if written in Perl
         my $sub_int = $self->_intermediate->generate_use( $tree );
 
+        if( $self->_options->{'dump-ir'} ) {
+            push @{$self->{_saved_segments} ||= []}, $sub_int;
+        }
         if( $self->_options->{'dump-bytecode'} ) {
             push @{$self->{_saved_subs} ||= []},
                  @{$self->_tree_generator->generate_use( $tree )};
@@ -126,6 +128,10 @@ sub process {
     }
     if( $tree->isa( 'Language::P::ParseTree::NamedSubroutine' ) ) {
         my $sub_int = $self->_intermediate->generate_subroutine( $tree );
+
+        if( $self->_options->{'dump-ir'} ) {
+            push @{$self->{_saved_segments} ||= []}, $sub_int;
+        }
 
         if( $self->_options->{'dump-bytecode'} ) {
             push @{$self->{_saved_subs} ||= []},
@@ -504,6 +510,26 @@ sub finished {
     my $head = pop @{$self->{_processing}};
 
     my $res = _generate_segment( $self, $main_int->[0], $head );
+
+    if( $self->_options->{'dump-ir'} && !$main_int->[0]->is_eval ) {
+        my $all_subs = [ $main_int, @{$self->_saved_segments} ];
+        my $outfile = _dump_path( $self->runtime,
+                                  $self->_intermediate->file_name . '.ir' );
+
+        require File::Path;
+        require File::Basename;
+
+        File::Path::mkpath( File::Basename::dirname( $outfile ) );
+
+        open my $ir_dump, '>', $outfile || die "Can't open '$outfile': $!";
+
+        foreach my $blocks ( @$all_subs ) {
+            $self->_intermediate->dump_ir( $ir_dump, $blocks );
+        }
+
+        $self->_saved_segments( undef );
+        close $ir_dump;
+    }
 
     if( $self->_options->{'dump-bytecode'} && !$main_int->[0]->is_eval ) {
         require Language::P::Intermediate::Serialize;
