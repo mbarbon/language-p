@@ -8,6 +8,7 @@
 .pb$
 ^lib/Language/P/Intermediate/SerializeGenerated\.pm$
 ^MYMETA.yml$
+^MYMETA\.json$
 ^foo$
 
 # Avoid version control files.

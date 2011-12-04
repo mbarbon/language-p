@@ -32,7 +32,9 @@ lib/Language/P/ParseTree/PropagateContext.pm
 lib/Language/P/ParseTree/Visitor.pm
 lib/Language/P/Parser.pm
 lib/Language/P/Parser/Exception.pm
+lib/Language/P/Parser/KeywordList.pm
 lib/Language/P/Parser/Lexicals.pm
+lib/Language/P/Parser/OpcodeList.pm
 lib/Language/P/Parser/Regex.pm
 lib/Language/P/Toy/Exception.pm
 lib/Language/P/Toy/Generator.pm
