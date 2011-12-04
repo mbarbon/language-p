@@ -100,6 +100,7 @@ t/intermediate/050_ternary_tree.t
 t/intermediate/055_and_or.t
 t/intermediate/055_and_or_ssa.t
 t/intermediate/055_and_or_tree.t
+t/intermediate/060_complex_trees.t
 t/intermediate/060_complex_trees_ssa.t
 t/intermediate/085_closure_ssa.t
 t/intermediate/100_begin.t
@@ -255,6 +256,7 @@ t/run/005_assignment.t
 t/run/005_glob_assignment.t
 t/run/006_brackets.t
 t/run/007_if.t
+t/run/008_blocks.t
 t/run/008_loops.t
 t/run/010_arithmetic.t
 t/run/010_bitshift.t

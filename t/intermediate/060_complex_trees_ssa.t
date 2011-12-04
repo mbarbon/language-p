@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use t::lib::TestIntermediate tests => 11;
+use t::lib::TestIntermediate tests => 12;
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
 sub is_scalar {
@@ -275,8 +275,6 @@ L9: # scope=3
 EOI
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
-#!/usr/bin/perl -w
-
 while( $i < 0 ) {
     2;
 }
@@ -305,3 +303,23 @@ L9: # scope=1
   end
 EOI
 
+generate_ssa_and_diff( <<'EOP', <<'EOI' );
+while( do { my $c; 0 } ) {
+    1;
+}
+EOP
+# main
+L1: # scope=1
+  lexical_state_set index=0
+  jump to=L2
+L2: # scope=3
+  lexical_pad lexical_info={index=0, slot=VALUE_SCALAR}
+  set index=1, slot=VALUE_SCALAR (constant_integer value=0)
+  lexical_pad_clear lexical_info={index=0, slot=VALUE_SCALAR}
+  jump_if_true false=L5, true=L3 (get index=1, slot=VALUE_SCALAR)
+L3: # scope=4
+  constant_integer value=1
+  jump to=L2
+L5: # scope=1
+  end
+EOI

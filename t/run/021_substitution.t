@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..9\n";
+print "1..10\n";
 
 # simple replace
 $x = 'abcd';
@@ -8,6 +8,10 @@ print $x =~ s/c/xx/ ? "ok\n" : "not ok\n";
 print $x =~ s/z/zz/ ? "no ok\n" : "ok\n";
 
 print $x eq 'abxxd' ? "ok\n" : "not ok - $x\n";
+
+$x =~ s/b/qq/;
+
+print $x eq 'aqqxxd' ? "ok\n" : "not ok - $x\n";
 
 # backreferences
 $x = 'abcdef';

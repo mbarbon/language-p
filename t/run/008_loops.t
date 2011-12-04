@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..16\n";
+print "1..17\n";
 
 $i = 0;
 $j = 1;
@@ -40,3 +40,10 @@ for $r ( 13, 14 ) {
 
 print $k == 7 ? "ok 15\n" : "not ok 15 - $k\n";
 print $r == 8 ? "ok 16\n" : "not ok 16 - $r\n";
+
+{
+    while( $i < 4 ) {
+        $i = $i + 1;
+        print "ok 17\n";
+    }
+}
