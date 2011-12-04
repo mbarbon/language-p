@@ -85,6 +85,7 @@ t/intermediate/040_conditional_loops.t
 t/intermediate/040_conditional_loops_ssa.t
 t/intermediate/040_conditional_loops_tree.t
 t/intermediate/041_loops.t
+t/intermediate/041_loops_ssa.t
 t/intermediate/041_loops_tree.t
 t/intermediate/043_foreach.t
 t/intermediate/043_foreach_ssa.t

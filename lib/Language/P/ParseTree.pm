@@ -405,6 +405,7 @@ use warnings;
 use parent -norequire, qw(Language::P::ParseTree::UnOp);
 
 sub always_void { 1 }
+sub can_implicit_return { 0 }
 
 package Language::P::ParseTree::Dereference;
 

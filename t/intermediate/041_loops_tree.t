@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use t::lib::TestIntermediate tests => 3;
+use t::lib::TestIntermediate tests => 4;
 
 generate_tree_and_diff( <<'EOP', <<'EOI' );
 for( $i = 0; $i < 10; $i = $i + 1 ) {
@@ -82,5 +82,26 @@ L8: # scope=3
   print context=2 (global context=4, name="STDOUT", slot=7), (make_array context=8 (global context=4, name="i", slot=1))
   jump to=L3
 L9: # scope=1
+  end
+EOI
+
+generate_tree_and_diff( <<'EOP', <<'EOI' );
+sub a {
+    {
+        last;
+    }
+}
+EOP
+# main
+L1: # scope=1
+  lexical_state_set index=0
+  jump to=L2
+L2: # scope=1
+  end
+# a
+L1: # scope=1
+  lexical_state_set index=1
+  jump to=L4
+L4: # scope=1
   end
 EOI

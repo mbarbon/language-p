@@ -1,11 +1,6 @@
 #!/usr/bin/perl -w
 
-use strict;
-use warnings;
-use Test::More tests => 3;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 4;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 FOO: while(1) {
@@ -62,4 +57,17 @@ iftrues:
       context: CXT_SCALAR
       flags: CONST_NUMBER|NUM_INTEGER
       value: 1
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+{
+    last
+}
+EOP
+--- !parsetree:BareBlock
+continue: ~
+lines:
+  - !parsetree:Jump
+    left: ~
+    op: OP_LAST
 EOE
