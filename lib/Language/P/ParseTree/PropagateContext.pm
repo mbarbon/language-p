@@ -312,6 +312,7 @@ sub _binary_op {
              || $tree->op == OP_DIVIDE_ASSIGN
              || $tree->op == OP_LOG_AND_ASSIGN
              || $tree->op == OP_LOG_OR_ASSIGN
+             || $tree->op == OP_DEFINED_OR_ASSIGN
              || $tree->op == OP_MODULUS_ASSIGN
              || $tree->op == OP_MULTIPLY_ASSIGN
              || $tree->op == OP_POWER_ASSIGN

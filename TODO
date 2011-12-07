@@ -1,5 +1,6 @@
 Parsing:
 - 5.10/5.12 syntax
+  - // and //= done (parsing only)
 - check that right side of mixed-assign is a scalar
 - stash access through hash syntax
 - glob access through hash syntax
