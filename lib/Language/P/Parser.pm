@@ -99,6 +99,7 @@ my %prec_assoc_bin =
     T_XOR()             => [ 14, ASSOC_LEFT,  OP_BIT_XOR ],
     T_ANDAND()          => [ 15, ASSOC_LEFT,  OP_LOG_AND ],
     T_OROR()            => [ 16, ASSOC_LEFT,  OP_LOG_OR ],
+    T_DEFINEDOR()       => [ 16, ASSOC_LEFT,  OP_DEFINED_OR ],
     T_DOTDOT()          => [ 17, ASSOC_NON,   OP_DOT_DOT ],
     T_DOTDOTDOT()       => [ 17, ASSOC_NON,   OP_DOT_DOT_DOT ],
     T_INTERR()          => [ 18, ASSOC_RIGHT ], # ternary

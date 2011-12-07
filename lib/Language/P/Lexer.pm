@@ -40,7 +40,7 @@ BEGIN {
        T_PLUSEQUAL T_MINUSEQUAL T_STAREQUAL T_SLASHEQUAL T_LABEL T_TILDE
        T_VSTRING T_VERSION T_DOTEQUAL T_SSTAREQUAL T_PERCENTEQUAL
        T_POWEREQUAL T_AMPERSANDEQUAL T_OREQUAL T_XOREQUAL
-       T_ANDANDEQUAL T_OROREQUAL
+       T_ANDANDEQUAL T_OROREQUAL T_DEFINEDOR
 
        T_CLASS_START T_CLASS_END T_CLASS T_QUANTIFIER T_ASSERTION T_ALTERNATE
        T_CLGROUP T_BACKREFERENCE T_POSIX
@@ -223,6 +223,7 @@ my %ops =
     'or'  => T_ORORLOW,
     'not' => T_NOTLOW,
     'xor' => T_XORLOW,
+    '//'  => T_DEFINEDOR,
     );
 
 my %filetest =
@@ -1333,10 +1334,12 @@ sub lex {
 
         return [ $self->{pos}, $ops{$brack}, $brack ];
     };
-    # / (either regex start or division operator)
+    # / (either regex start, defined-or, or division operator)
     $$_ =~ s/^\///x and do {
         if( $expect == X_TERM || $expect == X_STATE || $expect == X_REF ) {
             return _prepare_sublex( $self, 'm', '/' );
+        } elsif ( $$_ =~ s/^\///x ) {
+            return [ $self->{pos}, T_DEFINEDOR, '//' ];
         } else {
             return [ $self->{pos}, T_SLASH, '/' ];
         }

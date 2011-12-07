@@ -295,7 +295,9 @@ sub _binary_op {
 
     # FIXME some binary operators do not force scalar context
 
-    if( $tree->op == OP_LOG_OR || $tree->op == OP_LOG_AND ) {
+    # FIXME no idea how this ties in with OP_DEFINED_OR --Steffen
+    if(    $tree->op == OP_LOG_OR || $tree->op == OP_LOG_AND
+        || $tree->op == OP_DEFINED_OR ) {
         $self->visit( $tree->left, CXT_SCALAR );
         $self->visit( $tree->right, _lv( $cxt & CXT_VOID ? CXT_VOID :
                                          $cxt & CXT_CALLER ? CXT_CALLER :

@@ -366,7 +366,9 @@ sub always_void {
     return    $_[0]->op == Language::P::Opcodes::OP_LOG_AND
            || $_[0]->op == Language::P::Opcodes::OP_LOG_OR
            || $_[0]->op == Language::P::Opcodes::OP_LOG_AND_ASSIGN
-           || $_[0]->op == Language::P::Opcodes::OP_LOG_OR_ASSIGN ? 1 : 0 }
+           || $_[0]->op == Language::P::Opcodes::OP_LOG_OR_ASSIGN
+           || $_[0]->op == Language::P::Opcodes::OP_DEFINED_OR ? 1 : 0 }
+# FIXME OP_DEFINED_OR? I don't know why the above are in always_void. More code reading required. --Steffen
 
 package Language::P::ParseTree::UnOp;
 
