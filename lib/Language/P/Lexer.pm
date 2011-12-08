@@ -799,15 +799,15 @@ sub lex_identifier {
         $id = [ $self->{pos}, T_ID, chr( ord( $1 ) - ord( 'A' ) + 1 ) . $2, T_FQ_ID, 0 ];
     };
     $id or $$_ =~ s/^{//x and do {
-        my $spcbef = _skip_space( $self );
+        _skip_space( $self );
         my $maybe_id;
         if( $$_ =~ s/^([\w\x00-\x1f]\w*)//x ) {
             $maybe_id = $1;
         } else {
-            $$_ = '{' . $spcbef . $$_;
+            $$_ = '{ ' . $$_;
             return undef;
         }
-        my $spcaft = _skip_space( $self );
+        _skip_space( $self );
 
         if( $$_ =~ s/^}//x ) {
             $id = [ $self->{pos}, T_ID, $maybe_id, T_ID, 0 ];
@@ -821,7 +821,8 @@ sub lex_identifier {
             $id = [ $self->{pos}, T_ID, $maybe_id, T_ID, 0 ];
         } else {
             # not a simple identifier
-            $$_ = '{' . $spcbef . $maybe_id . $spcaft . $$_;
+            # TODO wrong line number for the '$maybe_id' part
+            $$_ = '{ ' . $maybe_id . ' ' . $$_;
             return undef;
         }
     };
@@ -1307,7 +1308,7 @@ sub lex {
                 }
             } elsif( $expect != X_BLOCK ) {
                 # try to guess if it is a block or anonymous hash
-                $self->_skip_space;
+                _skip_space( $self );
 
                 if( $$_ =~ /^}/ ) {
                     return [ $self->{pos}, T_OPHASH, '{' ];
@@ -1322,7 +1323,7 @@ sub lex {
                     # or identifier
                     my $next = $self->peek( X_NOTHING );
 
-                    $self->_skip_space;
+                    _skip_space( $self );
                     if(    $$_ =~ /^=>/
                         || ( $$_ =~ /^,/ && $next->[O_TYPE] != T_ID ) ) {
                         return [ $self->{pos}, T_OPHASH, '{' ];
