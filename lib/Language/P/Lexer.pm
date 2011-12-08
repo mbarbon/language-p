@@ -298,7 +298,6 @@ my %pattern_special =
 sub _skip_space {
     my( $self ) = @_;
     my $buffer = $self->buffer;
-    my $retval = '';
     my $reset_pos = 0;
 
     for(;;) {
@@ -333,9 +332,8 @@ sub _skip_space {
             return;
         }
 
-        $$buffer =~ s/^([ \t]+)// && defined wantarray and $retval .= $1;
+        $$buffer =~ s/^([ \t]+)//;
         if( $$buffer =~ s/^([\r\n])// ) {
-            $retval .= $1 if defined wantarray;
             $self->{_start_of_line} = 1;
             $self->{line} += $self->{_line_length};
             $self->{_line_length} = 1;
@@ -343,7 +341,6 @@ sub _skip_space {
             next;
         }
         if( $$buffer =~ s/^(#.*\n)// ) {
-            $retval .= $1 if defined wantarray;
             $self->{_start_of_line} = 1;
             $self->{line} += $self->{_line_length};
             $self->{_line_length} = 1;
@@ -358,8 +355,6 @@ sub _skip_space {
     if( $reset_pos ) {
         $self->{pos} = [ $self->{file}, $self->{line} ];
     }
-
-    return $retval;
 }
 
 # taken from intuit_more in toke.c
