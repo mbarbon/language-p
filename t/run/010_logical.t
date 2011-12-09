@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..14\n";
+print "1..15\n";
 
 print 2 == ( 1 && 2 ) ? "ok\n" : "not ok\n";
 print 0 == ( 0 && 2 ) ? "ok\n" : "not ok\n";
@@ -10,6 +10,7 @@ print 2 == ( 0 || 2 ) ? "ok\n" : "not ok\n";
 print 1 == ( 1 // 2 ) ? "ok\n" : "not ok\n";
 print 0 == ( 0 // 2 ) ? "ok\n" : "not ok\n";
 print 2 == ( undef // 2 ) ? "ok\n" : "not ok\n";
+print 3 == ( undef() // 3 ) ? "ok\n" : "not ok\n";
 
 $a = 1;
 $a &&= 2;
