@@ -334,6 +334,10 @@ t/run/920_constant.t
 t/run/923_exporter.t
 t/run/927_exporter_heavy.t
 t/run/950_p_object.t
+t/run/aliasing/010_reference.t
+t/run/aliasing/030_sub_params.t
+t/run/aliasing/040_sub_param_element.t
+t/run/aliasing/050_sub_param_reference.t
 t/run/files/Bar.pm
 t/run/files/Foo.pm
 t/run/files/Moo.pm
