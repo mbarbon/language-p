@@ -338,6 +338,9 @@ t/run/aliasing/010_reference.t
 t/run/aliasing/030_sub_params.t
 t/run/aliasing/040_sub_param_element.t
 t/run/aliasing/050_sub_param_reference.t
+t/run/aliasing/070_foreach.t
+t/run/aliasing/070_foreach_element.t
+t/run/aliasing/070_foreach_reference.t
 t/run/files/Bar.pm
 t/run/files/Foo.pm
 t/run/files/Moo.pm
