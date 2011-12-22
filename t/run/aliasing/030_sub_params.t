@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..5\n";
+print "1..6\n";
 
 sub sub_plain {
     $_[1] = 7;
@@ -30,6 +30,9 @@ sub sub_unalias {
     $_[1] = 7;
 }
 
+sub sub_forward {
+    sub_plain( 1, $_[1], 2 );
+}
 
 $x = 0;
 sub_plain( 1, $x, 2 );
@@ -55,3 +58,7 @@ $x = 0;
 sub_unalias( 1, $x, 2 );
 
 print $x == 0 ? "ok\n" : "not ok\n";
+
+$x = 0;
+sub_forward( 1, $x, 2 );
+print $x == 7 ? "ok\n" : "not ok\n";
