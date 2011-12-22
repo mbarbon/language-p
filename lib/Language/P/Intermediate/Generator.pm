@@ -441,7 +441,7 @@ sub pop_block {
 sub create_main {
     my( $self, $outer, $is_eval ) = @_;
     my $main = Language::P::Intermediate::Code->new
-                   ( { type         => $is_eval ? CODE_EVAL : CODE_MAIN,
+                   ( { flags        => $is_eval ? CODE_EVAL : CODE_MAIN,
                        name         => undef,
                        basic_blocks => [],
                        outer        => $outer,
@@ -457,7 +457,7 @@ sub create_eval_context {
     my( $self, $indices, $lexicals ) = @_;
     my( $lex, $lex_idx, $pad_idx, $lex_list ) = ( {}, [], [], [] );
     my $cxt = Language::P::Intermediate::Code->new
-                  ( { type     => CODE_MAIN,
+                  ( { flags    => CODE_MAIN,
                       name     => undef,
                       outer    => undef,
                       lexicals => $lex_list,
@@ -504,7 +504,7 @@ sub _generate_regex {
 
     push @{$self->_code_segments},
          Language::P::Intermediate::Code->new
-             ( { type         => CODE_REGEX,
+             ( { flags        => CODE_REGEX,
                  basic_blocks => [],
                  regex_string => $regex->original,
                  outer        => $outer,
@@ -547,7 +547,7 @@ sub generate_use {
 
     push @{$self->_code_segments},
          Language::P::Intermediate::Code->new
-             ( { type         => CODE_SUB,
+             ( { flags        => CODE_SUB,
                  name         => 'BEGIN',
                  basic_blocks => [],
                  outer        => undef,
@@ -747,7 +747,7 @@ sub _generate_bytecode {
 
         push @{$self->_code_segments},
              Language::P::Intermediate::Code->new
-                 ( { type         => $flags,
+                 ( { flags        => $flags,
                      name         => $name,
                      basic_blocks => [],
                      outer        => $outer,

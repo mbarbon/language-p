@@ -70,7 +70,7 @@ sub _write_sub {
         $self->{bb_map}{$bb->[$i]} = $i;
     }
 
-    print $out pack 'C', $code->type;
+    print $out pack 'C', $code->flags;
     print $out pack 'V', $code->outer ? $self->{sub_map}{$code->outer} : -1;
     if( !$code->is_regex ) {
         print $out pack 'V', scalar @{$code->lexicals};
