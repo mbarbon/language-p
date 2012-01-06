@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use t::lib::TestParser tests => 9;
+use t::lib::TestParser tests => 10;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 for(;;) {
@@ -256,5 +256,51 @@ variable: !parsetree:LexicalDeclaration
   context: CXT_SCALAR
   flags: DECLARATION_MY
   name: x
+  sigil: VALUE_SCALAR
+EOE
+
+parse_and_diff_yaml( <<'EOP', <<'EOE' );
+for ( $a[0], $b{c} ) {
+    1;
+}
+EOP
+--- !parsetree:Foreach
+block: !parsetree:Block
+  lines:
+    - !parsetree:Constant
+      context: CXT_VOID
+      flags: CONST_NUMBER|NUM_INTEGER
+      value: 1
+continue: ~
+expression: !parsetree:List
+  context: CXT_LIST
+  expressions:
+    - !parsetree:Subscript
+      context: CXT_LIST|CXT_LVALUE
+      reference: 0
+      subscript: !parsetree:Constant
+        context: CXT_SCALAR
+        flags: CONST_NUMBER|NUM_INTEGER
+        value: 0
+      subscripted: !parsetree:Symbol
+        context: CXT_LIST|CXT_LVALUE
+        name: a
+        sigil: VALUE_ARRAY
+      type: VALUE_ARRAY
+    - !parsetree:Subscript
+      context: CXT_LIST|CXT_LVALUE
+      reference: 0
+      subscript: !parsetree:Constant
+        context: CXT_SCALAR
+        flags: CONST_STRING
+        value: c
+      subscripted: !parsetree:Symbol
+        context: CXT_LIST|CXT_LVALUE
+        name: b
+        sigil: VALUE_HASH
+      type: VALUE_HASH
+variable: !parsetree:Symbol
+  context: CXT_SCALAR
+  name: _
   sigil: VALUE_SCALAR
 EOE

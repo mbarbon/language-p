@@ -55,6 +55,30 @@ sub method_map { \%dispatch }
 
 sub _lv { return $_[0] | ( $_[1] & CXT_LVALUE ) }
 
+sub _element_context {
+    my( $self, $list, $context ) = @_;
+
+    # another context simplification: on the one hand all foreach
+    # arguments should be put in lvalue context, on the other hand
+    # this suffices to forces array/hash element creation and avoids
+    # yet another context value
+    if( $list->isa( 'Language::P::ParseTree::List' ) ) {
+        $list->set_attribute( 'context', $context & ~CXT_LVALUE );
+
+        foreach my $op ( @{$list->expressions} ) {
+            if( $op->isa( 'Language::P::ParseTree::Subscript' ) ) {
+                $self->visit( $op, $context );
+            } else {
+                $self->visit( $op, $context & ~CXT_LVALUE);
+            }
+        }
+    } elsif( $list->isa( 'Language::P::ParseTree::Subscript' ) ) {
+        $self->visit( $list, $context );
+    } else {
+        $self->visit( $list, $context & ~CXT_LVALUE);
+    }
+}
+
 sub _noop {
     my( $self, $tree, $cxt ) = @_;
 
@@ -350,7 +374,7 @@ sub _foreach {
     my( $self, $tree, $cxt ) = @_;
 
     $self->visit( $tree->variable, CXT_SCALAR );
-    $self->visit( $tree->expression, CXT_LIST );
+    _element_context( $self, $tree->expression, CXT_LIST|CXT_LVALUE );
     $self->visit( $tree->block, CXT_VOID );
     $self->visit( $tree->continue, CXT_VOID ) if $tree->continue;
 }
