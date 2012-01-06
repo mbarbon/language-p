@@ -2219,7 +2219,7 @@ sub o_each {
         if( $cxt == CXT_SCALAR ) {
             push @{$runtime->{_stack}}, $key_scalar;
         } else {
-            my $value = $hash->get_item_or_undef( $runtime, $key );
+            my $value = $hash->get_item_or_undef( $runtime, $key, 0 );
             push @{$runtime->{_stack}},
                  Language::P::Toy::Value::List->new( $runtime,
                                                      { array => [ $key_scalar,
@@ -2242,7 +2242,7 @@ sub o_glob_element {
     my $hash = pop @{$runtime->{_stack}};
     my $key = pop @{$runtime->{_stack}};
 
-    push @{$runtime->{_stack}}, $hash->get_item_or_undef( $runtime, $key->as_string( $runtime ) );
+    push @{$runtime->{_stack}}, $hash->get_item_or_undef( $runtime, $key->as_string( $runtime ), 0 );
 
     return $pc + 1;
 }
@@ -2509,7 +2509,7 @@ sub o_localize_array_element {
     my $int_index = $index->as_integer( $runtime );
 
     my $saved = $array->localize_element( $runtime, $int_index );
-    my $new = $array->get_item_or_undef( $runtime, $int_index );
+    my $new = $array->get_item_or_undef( $runtime, $int_index, 0 );
 
     $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] =
         [ $array, $int_index, $saved ];
@@ -2536,7 +2536,7 @@ sub o_localize_hash_element {
     my $str_key = $index->as_string( $runtime );
 
     my $saved = $hash->localize_element( $runtime, $str_key );
-    my $new = $hash->get_item_or_undef( $runtime, $str_key );
+    my $new = $hash->get_item_or_undef( $runtime, $str_key, 0 );
 
     $runtime->{_stack}->[$runtime->{_frame} - 3 - $op->{index}] =
         [ $hash, $str_key, $saved ];

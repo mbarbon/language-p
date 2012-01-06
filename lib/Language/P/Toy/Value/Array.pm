@@ -41,7 +41,7 @@ sub localize {
 
 sub localize_element {
     my( $self, $runtime, $index ) = @_;
-    my $value = $self->get_item_or_undef( $runtime, $index );
+    my $value = $self->get_item_or_undef( $runtime, $index, 0 );
     my $new = Language::P::Toy::Value::Undef->new( $runtime );
 
     # no need to check boundaries after get_item_or_undef

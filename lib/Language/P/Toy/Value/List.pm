@@ -54,7 +54,7 @@ sub slice {
         my $index = $iter->item->as_integer;
 
         $found ||= $index <= $#{$self->{array}};
-        push @res, $self->get_item_or_undef( $runtime, $index );
+        push @res, $self->get_item_or_undef( $runtime, $index, 0 );
     }
     @res = () unless $found;
 
