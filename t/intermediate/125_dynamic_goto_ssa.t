@@ -9,7 +9,7 @@ EOP
 # main
 L1: # scope=1
   lexical_state_set index=0
-  dynamic_goto context=2 (reference context=4 (global context=4, name="foo", slot=4))
+  dynamic_goto context=CXT_VOID (reference context=CXT_SCALAR (global context=CXT_SCALAR|CXT_LVALUE, name="foo", slot=4))
 EOI
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
@@ -20,7 +20,7 @@ L1: # scope=1
   lexical_state_set index=0
   jump to=L2
 L2: # scope=2
-  dynamic_goto context=2 (reference context=4 (dereference_subroutine context=4 (call context=4 (make_array context=8), (global context=4, name="foo", slot=4))))
+  dynamic_goto context=CXT_VOID (reference context=CXT_SCALAR (dereference_subroutine context=CXT_SCALAR|CXT_LVALUE (call context=CXT_SCALAR (make_array context=CXT_LIST), (global context=CXT_SCALAR, name="foo", slot=VALUE_SUB))))
 EOI
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
@@ -37,7 +37,7 @@ L2: # scope=1
 # foo
 L1: # scope=1
   lexical_state_set index=1
-  dynamic_goto context=1 (reference context=4 (global context=4, name="foo", slot=4))
+  dynamic_goto context=CXT_CALLER (reference context=CXT_SCALAR (global context=CXT_SCALAR|CXT_LVALUE, name="foo", slot=VALUE_SUB))
 EOI
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
@@ -58,7 +58,7 @@ L1: # scope=1
 L2: # scope=1
   end
 L3: # scope=1
-  jump_if_true false=L2, true=L4 (global context=4, name="a", slot=1)
+  jump_if_true false=L2, true=L4 (global context=CXT_SCALAR, name="a", slot=VALUE_SCALAR)
 L4: # scope=1
-  dynamic_goto context=1 (reference context=4 (global context=4, name="foo", slot=4))
+  dynamic_goto context=CXT_CALLER (reference context=CXT_SCALAR (global context=CXT_SCALAR|CXT_LVALUE, name="foo", slot=VALUE_SUB))
 EOI

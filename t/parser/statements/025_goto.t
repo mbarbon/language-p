@@ -32,7 +32,7 @@ arguments:
   - !parsetree:UnOp
     context: CXT_SCALAR
     left: !parsetree:Symbol
-      context: CXT_SCALAR
+      context: CXT_SCALAR|CXT_LVALUE
       name: foo
       sigil: VALUE_SUB
     op: OP_REFERENCE
@@ -48,7 +48,7 @@ arguments:
   - !parsetree:UnOp
     context: CXT_SCALAR
     left: !parsetree:Symbol
-      context: CXT_SCALAR
+      context: CXT_SCALAR|CXT_LVALUE
       name: foo
       sigil: VALUE_SUB
     op: OP_REFERENCE
@@ -64,7 +64,7 @@ arguments:
   - !parsetree:UnOp
     context: CXT_SCALAR
     left: !parsetree:Dereference
-      context: CXT_SCALAR
+      context: CXT_SCALAR|CXT_LVALUE|CXT_VIVIFY
       left: !parsetree:Block
         lines:
           - !parsetree:FunctionCall

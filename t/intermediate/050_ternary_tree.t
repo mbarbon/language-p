@@ -66,17 +66,17 @@ EOP
 # main
 L1: # scope=1
   lexical_state_set index=0
-  jump_if_f_gt to=L3 (global context=4, name="a", slot=1), (constant_integer value=2)
+  jump_if_f_gt to=L3 (global context=CXT_SCALAR, name="a", slot=VALUE_SCALAR), (constant_integer value=2)
   jump to=L4
 L2: # scope=1
-  assign context=2 (get index=3, slot=VALUE_SCALAR), (global context=20, name="x", slot=1)
+  assign context=CXT_VOID (get index=3, slot=VALUE_SCALAR), (global context=CXT_SCALAR|CXT_LVALUE, name="x", slot=VALUE_SCALAR)
   jump to=L5
 L3: # scope=1
-  set index=1, slot=VALUE_HASH (global context=4, name="x", slot=3)
+  set index=1, slot=VALUE_HASH (global context=CXT_SCALAR, name="x", slot=VALUE_HASH)
   set index=3, slot=VALUE_SCALAR (get index=1, slot=VALUE_HASH)
   jump to=L2
 L4: # scope=1
-  set index=2, slot=VALUE_SCALAR (reference context=4 (global context=4, name="x", slot=3))
+  set index=2, slot=VALUE_SCALAR (reference context=CXT_SCALAR (global context=CXT_SCALAR|CXT_LVALUE, name="x", slot=VALUE_HASH))
   set index=3, slot=VALUE_SCALAR (get index=2, slot=VALUE_SCALAR)
   jump to=L2
 L5: # scope=1

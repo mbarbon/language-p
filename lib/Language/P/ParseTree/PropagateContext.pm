@@ -256,6 +256,11 @@ sub _unary_op {
         || $tree->op == OP_POSTINC
         || $tree->op == OP_POSTDEC ) {
         $self->visit( $tree->left, CXT_SCALAR|CXT_LVALUE );
+    } elsif( $tree->op == OP_REFERENCE && !$tree->left->is_constant ) {
+        # this is a simplification: not all references are used in
+        # lvalue context after being takes, but it's easier than creating
+        # yet another context just for this
+        $self->visit( $tree->left, CXT_SCALAR|CXT_LVALUE );
     } else {
         $self->visit( $tree->left, CXT_SCALAR );
     }

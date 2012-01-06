@@ -83,7 +83,7 @@ EOP
 --- !parsetree:UnOp
 context: CXT_VOID
 left: !parsetree:Symbol
-  context: CXT_SCALAR
+  context: CXT_SCALAR|CXT_LVALUE
   name: a
   sigil: VALUE_SCALAR
 op: OP_REFERENCE
@@ -95,7 +95,7 @@ EOP
 --- !parsetree:UnOp
 context: CXT_VOID
 left: !parsetree:Symbol
-  context: CXT_SCALAR
+  context: CXT_SCALAR|CXT_LVALUE
   name: a
   sigil: VALUE_SUB
 op: OP_REFERENCE
@@ -108,7 +108,7 @@ EOP
 context: CXT_VOID
 left: !parsetree:FunctionCall
   arguments: ~
-  context: CXT_SCALAR
+  context: CXT_SCALAR|CXT_LVALUE
   function: !parsetree:Symbol
     context: CXT_SCALAR
     name: a
