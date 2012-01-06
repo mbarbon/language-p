@@ -8,7 +8,7 @@ EOP
 --- !parsetree:Builtin
 arguments:
   - !parsetree:Subscript
-    context: CXT_SCALAR
+    context: CXT_SCALAR|CXT_NOCREATE
     reference: 0
     subscript: !parsetree:Constant
       context: CXT_SCALAR
@@ -29,7 +29,7 @@ EOP
 --- !parsetree:Builtin
 arguments:
   - !parsetree:Subscript
-    context: CXT_SCALAR
+    context: CXT_SCALAR|CXT_NOCREATE
     reference: 0
     subscript: !parsetree:Constant
       context: CXT_SCALAR

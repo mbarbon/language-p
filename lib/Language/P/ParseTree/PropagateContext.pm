@@ -241,6 +241,8 @@ sub _function_call {
         foreach my $arg ( @{$tree->arguments} ) {
             my $arg_cxt = $arg_index <= $#$arg_cxts ? $arg_cxts->[$arg_index] :
                                                       $arg_cxts->[-1];
+	    $arg_cxt |= CXT_NOCREATE
+                if $arg->isa( 'Language::P::ParseTree::Subscript' );
             $self->visit( $arg, $arg_cxt );
             ++$arg_index;
         }
@@ -256,7 +258,11 @@ sub _method_call {
 
     if( $tree->arguments ) {
         foreach my $arg ( @{$tree->arguments} ) {
-            $self->visit( $arg, CXT_LIST );
+	    if( $arg->isa( 'Language::P::ParseTree::Subscript' ) ) {
+	        $self->visit( $arg, CXT_LIST|CXT_NOCREATE );
+            } else {
+                $self->visit( $arg, CXT_LIST );
+	    }
         }
     }
 }
