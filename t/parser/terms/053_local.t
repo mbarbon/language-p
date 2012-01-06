@@ -1,11 +1,6 @@
 #!/usr/bin/perl -w
 
-use strict;
-use warnings;
-use Test::More tests => 5;
-
-use lib 't/lib';
-use TestParser qw(:all);
+use t::lib::TestParser tests => 5;
 
 parse_and_diff_yaml( <<'EOP', <<'EOE' );
 local $foo;
@@ -49,7 +44,7 @@ left: !parsetree:Local
       flags: CONST_STRING
       value: x
     subscripted: !parsetree:Symbol
-      context: CXT_LIST
+      context: CXT_LIST|CXT_LVALUE
       name: foo
       sigil: VALUE_HASH
     type: VALUE_HASH
