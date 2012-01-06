@@ -166,7 +166,9 @@ sub get_item_or_undef {
     my( $self, $runtime, $index, $create ) = @_;
 
     if( $index < 0 && -$index > $self->get_count ) {
-        if( $create ) {
+        if( $create == 2 ) {
+            return Language::P::Toy::Value::Array::Element->new( $runtime, $self, $index );
+        } elsif( $create == 1 ) {
             my $message = sprintf "Modification of non-creatable array value attempted, subscript %d", $index;
             my $exc = Language::P::Toy::Exception->new
                           ( { message  => $message,
@@ -179,7 +181,9 @@ sub get_item_or_undef {
     }
 
     if( $index > $#{$self->{array}} ) {
-        if( $create ) {
+        if( $create == 2 ) {
+            return Language::P::Toy::Value::Array::Element->new( $runtime, $self, $index );
+        } elsif( $create == 1 ) {
             push @{$self->{array}}, Language::P::Toy::Value::Undef->new( $runtime )
               foreach 1 .. $index - $#{$self->{array}};
         } else {
@@ -308,6 +312,34 @@ sub item {
     my( $self, $runtime ) = @_;
 
     return $self->{array}->get_item( $runtime, $self->{index} );
+}
+
+package Language::P::Toy::Value::Array::Element;
+
+use strict;
+use warnings;
+use parent qw(Language::P::Toy::Value::ActiveScalar);
+
+__PACKAGE__->mk_ro_accessors( qw(array index) );
+
+sub new {
+    my( $class, $runtime, $array, $index ) = @_;
+    my $self = $class->SUPER::new( $runtime,
+                                   { array => $array,
+                                     index => $index,
+                                     } );
+}
+
+sub _get {
+    my( $self, $runtime ) = @_;
+
+    return $self->array->get_item_or_undef( $runtime, $self->index, 0 );
+}
+
+sub _set {
+    my( $self, $runtime, $other ) = @_;
+
+    return $self->array->get_item_or_undef( $runtime, $self->index, 1 )->assign( $runtime, $other );
 }
 
 1;

@@ -101,7 +101,9 @@ sub get_item_or_undef {
     my( $self, $runtime, $key, $create ) = @_;
 
     if( !exists $self->{hash}{$key} ) {
-        if( $create ) {
+        if( $create == 2 ) {
+            return Language::P::Toy::Value::Hash::Element->new( $runtime, $self, $key );
+        } elsif( $create == 1 ) {
             return $self->{hash}{$key} =
                        Language::P::Toy::Value::Undef->new( $runtime );
         } else {
@@ -222,6 +224,34 @@ sub next_key {
     }
 
     return $self->{iterator}->item( $runtime );
+}
+
+package Language::P::Toy::Value::Hash::Element;
+
+use strict;
+use warnings;
+use parent qw(Language::P::Toy::Value::ActiveScalar);
+
+__PACKAGE__->mk_ro_accessors( qw(hash key) );
+
+sub new {
+    my( $class, $runtime, $hash, $key ) = @_;
+    my $self = $class->SUPER::new( $runtime,
+                                   { hash => $hash,
+                                     key  => $key,
+                                     } );
+}
+
+sub _get {
+    my( $self, $runtime ) = @_;
+
+    return $self->hash->get_item_or_undef( $runtime, $self->key, 0 );
+}
+
+sub _set {
+    my( $self, $runtime, $other ) = @_;
+
+    return $self->hash->get_item_or_undef( $runtime, $self->key, 1 )->assign( $runtime, $other );
 }
 
 1;

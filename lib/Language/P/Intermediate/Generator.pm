@@ -2510,6 +2510,10 @@ sub _subscript {
     $self->dispatch( $tree->subscripted );
 
     my $lvalue = $tree->get_attribute( 'context' ) & (CXT_LVALUE|CXT_VIVIFY);
+    my $maybe_lvalue = $tree->get_attribute( 'context' ) & CXT_NOCREATE;
+    my $create = $maybe_lvalue ? 2 :
+                 $lvalue       ? 1 :
+                                 0;
     if( $tree->type == VALUE_ARRAY ) {
         _add_value $self, opcode_npam( OP_VIVIFY_ARRAY, $tree->pos,
                                        _get_stack( $self, 1 ),
@@ -2517,7 +2521,7 @@ sub _subscript {
           if $tree->reference;
         _add_value $self, opcode_npam( OP_ARRAY_ELEMENT, $tree->pos,
                                        _get_stack( $self, 2 ),
-                                       create    => $lvalue ? 1 : 0,
+                                       create    => $create,
                                        context   => _context( $tree ) );
     } elsif( $tree->type == VALUE_HASH ) {
         _add_value $self, opcode_npam( OP_VIVIFY_HASH, $tree->pos,
@@ -2526,7 +2530,7 @@ sub _subscript {
           if $tree->reference;
         _add_value $self, opcode_npam( OP_HASH_ELEMENT, $tree->pos,
                                        _get_stack( $self, 2 ),
-                                       create    => $lvalue ? 1 : 0,
+                                       create    => $create,
                                        context   => _context( $tree ) );
     } elsif( $tree->type == VALUE_GLOB ) {
         _add_value $self, opcode_npam( OP_DEREFERENCE_GLOB, $tree->pos,
@@ -2535,7 +2539,7 @@ sub _subscript {
           if $tree->reference;
         _add_value $self, opcode_npam( OP_GLOB_ELEMENT, $tree->pos,
                                        _get_stack( $self, 2 ),
-                                       create    => $lvalue ? 1 : 0,
+                                       create    => $create,
                                        context   => _context( $tree ) );
     } else {
         die $tree->type;
