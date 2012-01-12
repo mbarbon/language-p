@@ -521,13 +521,9 @@ sub _parse_sub {
     _lex_token( $self, T_ID ) unless $no_sub_token;
     my $name = $self->lexer->lex_alphabetic_identifier( 0 );
     my $fqname = $name ? _qualify( $self, $name->[O_VALUE], $name->[O_ID_TYPE] ) : undef;
-    my( $proto, $next );
-
-    $next = $self->lexer->lex( X_BLOCK );
-    if( $next->[O_TYPE] == T_OPPAR ) {
-        $proto = _parse_sub_proto( $self );
-        $next = $self->lexer->lex( X_BLOCK );
-    }
+    my $proto = _parse_sub_proto( $self );
+    my $attributes = _parse_attributes( $self, 1 );
+    my $next = $self->lexer->lex( X_BLOCK );
 
     if( $fqname ) {
         _parse_error( $self, $name->[O_POS], "Named sub not allowed" )
@@ -536,11 +532,15 @@ sub _parse_sub {
         if( $next->[O_TYPE] == T_SEMICOLON ) {
             $self->generator->add_declaration( $fqname, $proto );
 
-            return Language::P::ParseTree::SubroutineDeclaration->new
-                       ( { name      => $fqname,
-                           prototype => $proto,
-                           pos       => $name->[O_POS],
-                           } );
+            my $decl = Language::P::ParseTree::SubroutineDeclaration->new
+                           ( { name      => $fqname,
+                               prototype => $proto,
+                               pos       => $name->[O_POS],
+                               } );
+
+            $decl->set_attribute( 'attributes', $attributes ) if $attributes;
+
+            return $decl;
         } elsif( $next->[O_TYPE] != T_OPBRK ) {
             _syntax_error( $self, $next );
         }
@@ -559,6 +559,8 @@ sub _parse_sub {
                             ( { pos_s     => $pos,
                                 prototype => $proto,
                                 } );
+
+    $sub->set_attribute( 'attributes', $attributes ) if $attributes;
     # add @_ to lexical scope
     $self->_lexicals->add_name( VALUE_ARRAY, '_' );
     my $lex_state = _lexical_state_node( $self, 1 );
@@ -583,7 +585,12 @@ sub _parse_sub {
 
 sub _parse_sub_proto {
     my( $self ) = @_;
-    my $proto = $self->lexer->lex_proto_or_attr;
+    my $next = $self->lexer->peek( X_BLOCK );
+
+    return undef unless $next->[O_TYPE] == T_OPPAR;
+    _lex_token( $self );
+
+    my $proto = $self->lexer->lex_prototype;
     my @proto = ( 0, 0, 0 );
     my $in_bracket = 0;
     my $saw_semicolon = 0;
@@ -778,7 +785,7 @@ sub _parse_for {
                                pos     => $name->[O_POS],
                                } );
         $foreach_var = _process_declaration( $self, $foreach_var,
-                                             $token->[O_ID_TYPE] );
+                                             $token->[O_ID_TYPE], 0, undef );
     } elsif( $token->[O_TYPE] == T_DOLLAR ) {
         my $id = $self->lexer->lex_identifier( 0 );
         $foreach_var = _find_symbol( $self, $token->[O_POS], VALUE_SCALAR,
@@ -1834,8 +1841,10 @@ sub _parse_lexical {
     local $self->{_in_declaration} = 1;
     my $term = _parse_term_list_if_parens( $self, PREC_NAMED_UNOP );
     my $force_closed = !$self->_lexical_state->[-1]{is_sub};
+    my $attributes = _parse_attributes( $self, 0 );
 
-    return _process_declaration( $self, $term, $keyword, $force_closed );
+    return _process_declaration( $self, $term, $keyword, $force_closed,
+                                 $attributes );
 }
 
 sub _check_my_declaration {
@@ -1875,11 +1884,12 @@ sub _check_our_declaration {
 # node into either a fully-qualified symbol (our) or a lexical
 # declaration (my)
 sub _process_declaration {
-    my( $self, $decl, $keyword, $force_closed ) = @_;
+    my( $self, $decl, $keyword, $force_closed, $attributes ) = @_;
 
     if( $decl->isa( 'Language::P::ParseTree::List' ) ) {
         foreach my $e ( @{$decl->expressions} ) {
-            $e = _process_declaration( $self, $e, $keyword, $force_closed );
+            $e = _process_declaration( $self, $e, $keyword, $force_closed,
+                                       $attributes );
         }
 
         return $decl;
@@ -1908,6 +1918,8 @@ sub _process_declaration {
             $sym->set_closed_over if $force_closed;
         }
         push @{$self->{_lexical_state}[-1]{pending}}, $sym;
+
+        $sym->set_attribute( 'attributes', [ @$attributes ] ) if $attributes;
 
         return $sym;
     } elsif(    $decl->isa( 'Language::P::ParseTree::Builtin' )
@@ -2805,6 +2817,27 @@ sub _parse_eval {
                             } );
 
     return $tree;
+}
+
+sub _parse_attributes {
+    my( $self, $is_sub ) = @_;
+    my $next = $self->lexer->peek( X_OPERATOR );
+
+    return undef unless $next->[O_TYPE] == T_COLON;
+    _lex_token( $self );
+
+    my $attribute = $self->lexer->lex_attribute( $is_sub );
+    return undef unless $attribute;
+    my @attributes = $attribute;
+
+    for (;;) {
+        $attribute = $self->lexer->lex_attribute( $is_sub );
+
+        last unless $attribute;
+        push @attributes, $attribute;
+    }
+
+    return \@attributes;
 }
 
 1;

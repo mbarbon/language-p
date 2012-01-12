@@ -917,7 +917,7 @@ my %regex_flags =
     );
 
 sub _find_end {
-    my( $self, $op, $quote_start ) = @_;
+    my( $self, $op, $quote_start, $is_attribute ) = @_;
 
     local $_ = $self->buffer;
 
@@ -940,7 +940,13 @@ sub _find_end {
     my( $interpolated, $delim_count, $str ) = ( 0, 1, '' );
     SCAN_END: for(;;) {
         $self->_fill_buffer unless length $$_;
-        _lexer_error( $self, $pos, "Can't find string terminator '$quote_end' anywhere before EOF" ) unless length $$_;
+        unless( length $$_ ) {
+            if( $is_attribute ) {
+                _lexer_error( $self, $pos, "Unterminated attribute parameter in attribute list" );
+            } else {
+                _lexer_error( $self, $pos, "Can't find string terminator '$quote_end' anywhere before EOF" );
+            }
+        }
 
         while( length $$_ ) {
             my $c = substr $$_, 0, 1, '';
@@ -948,7 +954,7 @@ sub _find_end {
             if( $c eq '\\' ) {
                 my $qc = substr $$_, 0, 1, '';
 
-                if( $qc eq $quote_start || $qc eq $quote_end ) {
+                if( ( $qc eq $quote_start || $qc eq $quote_end ) && !$is_attribute ) {
                     $str .= $qc;
                 } else {
                     $str .= "\\" . $qc;
@@ -997,16 +1003,52 @@ sub _find_end {
                0, $interpolate, \$str, undef, undef, $interpolated ] );
 }
 
-sub lex_proto_or_attr {
+sub lex_prototype {
     my( $self ) = @_;
-    my( $quote, $token ) = _find_end( $self, 'q', '(' );
+    my( $quote, $token ) = _find_end( $self, 'q', '(', 0 );
 
     return $token->[4];
 }
 
+sub lex_attribute {
+    my( $self, $is_sub ) = @_;
+
+    local $_ = $self->buffer;
+
+    _skip_space( $self );
+    $$_ =~ s/^://;
+    _skip_space( $self );
+
+    if( $$_ =~ /^(\W)/ ) {
+        return undef
+          if    $1 eq ';' || $1 eq '}'
+             || (  $is_sub && $1 eq '{' )
+             || ( !$is_sub && ( $1 eq '=' || $1 eq ')' ) );
+
+        _lexer_error( $self, $self->{pos},
+                      "Invalid separator character '$1' in attribute list" );
+    }
+
+    my $id = $self->lex_alphabetic_identifier( LEX_NO_PACKAGE );
+
+    return undef unless $id;
+
+    _lexer_error( $self, $self->{pos},
+                  "Invalid attribute '%s'", $id->[O_VALUE] )
+        if $id->[O_VALUE] !~ /^[a-zA-Z_]/;
+
+    if( $$_ =~ s/^\(// ) {
+        my( $quote, $token ) = _find_end( $self, 'q', '(', 1 );
+
+        return $id->[O_VALUE] . '(' . ${$token->[4]} . ')';
+    } else {
+        return $id->[O_VALUE];
+    }
+}
+
 sub _prepare_sublex {
     my( $self, $op, $quote_start ) = @_;
-    my( $quote, $token ) = _find_end( $self, $op, $quote_start );
+    my( $quote, $token ) = _find_end( $self, $op, $quote_start, 0 );
 
     # oops, found fat comma: not a quote-like operator
     return $token if $token->[O_TYPE] == T_STRING;
@@ -1015,7 +1057,7 @@ sub _prepare_sublex {
         # scan second part of substitution/transliteration
         if( $op eq 's' || $op eq 'tr' || $op eq 'y' ) {
             my $quote_char = $quote_end{$quote} ? undef : $quote;
-            my( undef, $rest ) = _find_end( $self, $op, $quote_char );
+            my( undef, $rest ) = _find_end( $self, $op, $quote_char, 0 );
             $token->[O_RX_SECOND_HALF] = $rest;
         }
 

@@ -30,7 +30,7 @@ sub _filter_fields {
         $clone->{$field} = ref( $v ) ? $self->visit( $v ) : $v;
     }
 
-    foreach my $attr ( qw(context label) ) {
+    foreach my $attr ( qw(context label attributes) ) {
         if( $tree->has_attribute( $attr ) ) {
             $clone->{$attr} = $tree->get_attribute( $attr );
         }

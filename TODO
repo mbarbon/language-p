@@ -4,6 +4,11 @@ Parsing:
 - global variables/symbols (STDOUT, punctuation)
 - scoping (check if/while conditions, for loop headers, etc.)
 - attributes
+  - apply or ignore builtin attributes
+  - apply custom attributes
+  - allow pluggable attribute handling
+  - apply attributes to lexicals/our/sub declarations/sub definitions
+  - find a way a parse-time for the sub definition to refer to attributes in the declaration
 - formats
 - indirect method calls
   - find more corner cases
