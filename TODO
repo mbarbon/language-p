@@ -1,8 +1,6 @@
 Parsing:
 - 5.10/5.12 syntax
 - check that right side of mixed-assign is a scalar
-- stash access through hash syntax
-- glob access through hash syntax
 - global variables/symbols (STDOUT, punctuation)
 - scoping (check if/while conditions, for loop headers, etc.)
 - attributes
@@ -102,6 +100,7 @@ Runtime:
 - symbolic references
 - die without arguments, exception propagation, $SIG{__DIE__}
 - hasargs, evaltext and is_require values in caller
+- glob access through hash syntax
 
 Refactoring:
 - check offsets for call sequence, refactor stack handling
