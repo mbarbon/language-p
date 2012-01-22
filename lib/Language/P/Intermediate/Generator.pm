@@ -1031,7 +1031,6 @@ sub _builtin {
 
         my $arg = $tree->arguments->[0];
 
-        $self->dispatch( $arg->subscript );
         $self->dispatch( $arg->subscripted );
 
         _add_value $self,
@@ -1040,6 +1039,9 @@ sub _builtin {
                          $tree->pos, _get_stack( $self, 1 ),
                          context => CXT_SCALAR )
               if $arg->reference;
+
+        $self->dispatch( $arg->subscript );
+
         _add_value $self,
             opcode_npam( $arg->type == VALUE_ARRAY ? OP_EXISTS_ARRAY :
                                                      OP_EXISTS_HASH,
@@ -1050,7 +1052,6 @@ sub _builtin {
 
         my $arg = $tree->arguments->[0];
 
-        $self->dispatch( $arg->subscript );
         $self->dispatch( $arg->subscripted );
 
         _add_value $self,
@@ -1059,6 +1060,9 @@ sub _builtin {
                          $tree->pos, _get_stack( $self, 1 ),
                          context => CXT_SCALAR )
               if $arg->reference;
+
+        $self->dispatch( $arg->subscript );
+
         if( $tree->arguments->[0]->isa( 'Language::P::ParseTree::Subscript' ) ) {
             # element
             _add_value $self,
@@ -1299,7 +1303,6 @@ sub _local {
                      $left->type == VALUE_ARRAY  ? OP_VIVIFY_ARRAY :
                                                    OP_VIVIFY_HASH;
 
-        $self->dispatch( $left->subscript );
         $self->dispatch( $left->subscripted );
 
         if( $vivify ) {
@@ -1308,6 +1311,8 @@ sub _local {
                              _get_stack( $self, 1 ),
                              context => CXT_SCALAR );
         }
+
+        $self->dispatch( $left->subscript );
 
         _add_value $self,
             opcode_npam( $op_save, $left->pos,
@@ -2506,7 +2511,6 @@ sub _subscript {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
-    $self->dispatch( $tree->subscript );
     $self->dispatch( $tree->subscripted );
 
     my $lvalue = $tree->get_attribute( 'context' ) & (CXT_LVALUE|CXT_VIVIFY);
@@ -2514,29 +2518,30 @@ sub _subscript {
     my $create = $maybe_lvalue ? 2 :
                  $lvalue       ? 1 :
                                  0;
-    if( $tree->type == VALUE_ARRAY ) {
-        _add_value $self, opcode_npam( OP_VIVIFY_ARRAY, $tree->pos,
+    my $vivify = !$tree->reference           ? 0 :
+                 $tree->type == VALUE_ARRAY  ? OP_VIVIFY_ARRAY :
+                 $tree->type == VALUE_HASH   ? OP_VIVIFY_HASH :
+                                               OP_DEREFERENCE_GLOB;
+
+    if( $vivify ) {
+        _add_value $self, opcode_npam( $vivify, $tree->pos,
                                        _get_stack( $self, 1 ),
-                                       context   => CXT_SCALAR )
-          if $tree->reference;
+                                       context   => CXT_SCALAR );
+    }
+
+    $self->dispatch( $tree->subscript );
+
+    if( $tree->type == VALUE_ARRAY ) {
         _add_value $self, opcode_npam( OP_ARRAY_ELEMENT, $tree->pos,
                                        _get_stack( $self, 2 ),
                                        create    => $create,
                                        context   => _context( $tree ) );
     } elsif( $tree->type == VALUE_HASH ) {
-        _add_value $self, opcode_npam( OP_VIVIFY_HASH, $tree->pos,
-                                       _get_stack( $self, 1 ),
-                                       context   => CXT_SCALAR )
-          if $tree->reference;
         _add_value $self, opcode_npam( OP_HASH_ELEMENT, $tree->pos,
                                        _get_stack( $self, 2 ),
                                        create    => $create,
                                        context   => _context( $tree ) );
     } elsif( $tree->type == VALUE_GLOB ) {
-        _add_value $self, opcode_npam( OP_DEREFERENCE_GLOB, $tree->pos,
-                                       _get_stack( $self, 1 ),
-                                       context   => CXT_SCALAR )
-          if $tree->reference;
         _add_value $self, opcode_npam( OP_GLOB_ELEMENT, $tree->pos,
                                        _get_stack( $self, 2 ),
                                        create    => $create,
@@ -2550,24 +2555,28 @@ sub _slice {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
-    $self->dispatch( $tree->subscript );
     $self->dispatch( $tree->subscripted );
+
+    my $vivify = !$tree->reference           ? 0 :
+                 $tree->type == VALUE_ARRAY  ? OP_VIVIFY_ARRAY :
+                 $tree->type == VALUE_HASH   ? OP_VIVIFY_HASH :
+                                               0;
+
+    if( $vivify ) {
+        _add_value $self, opcode_npam( $vivify, $tree->pos,
+                                       _get_stack( $self, 1 ),
+                                       context   => CXT_SCALAR );
+    }
+
+    $self->dispatch( $tree->subscript );
 
     my $lvalue = $tree->get_attribute( 'context' ) & (CXT_LVALUE|CXT_VIVIFY);
     if( $tree->type == VALUE_ARRAY ) {
-        _add_value $self, opcode_npam( OP_VIVIFY_ARRAY, $tree->pos,
-                                       _get_stack( $self, 1 ),
-                                       context   => CXT_SCALAR )
-          if $tree->reference;
         _add_value $self, opcode_npam( OP_ARRAY_SLICE, $tree->pos,
                                        _get_stack( $self, 2 ),
                                        create    => $lvalue ? 1 : 0,
                                        context   => _context( $tree ) );
     } elsif( $tree->type == VALUE_HASH ) {
-        _add_value $self, opcode_npam( OP_VIVIFY_HASH, $tree->pos,
-                                       _get_stack( $self, 1 ),
-                                       context   => CXT_SCALAR )
-          if $tree->reference;
         _add_value $self, opcode_npam( OP_HASH_SLICE, $tree->pos,
                                        _get_stack( $self, 2 ),
                                        create    => $lvalue ? 1 : 0,

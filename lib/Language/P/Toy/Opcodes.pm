@@ -2021,8 +2021,8 @@ _make_bool_ft( $_ ) foreach
 
 sub o_array_element {
     my( $op, $runtime, $pc ) = @_;
-    my $array = pop @{$runtime->{_stack}};
     my $index = pop @{$runtime->{_stack}};
+    my $array = pop @{$runtime->{_stack}};
 
     push @{$runtime->{_stack}}, $array->get_item_or_undef( $runtime, $index->as_integer( $runtime ), $op->{create} );
 
@@ -2032,8 +2032,8 @@ sub o_array_element {
 sub o_array_slice {
     my( $op, $runtime, $pc ) = @_;
     my $cxt = _context( $op, $runtime );
-    my $array = pop @{$runtime->{_stack}};
     my $indices = pop @{$runtime->{_stack}};
+    my $array = pop @{$runtime->{_stack}};
     my $rv = $array->slice( $runtime, $indices, $op->{create} );
 
     push @{$runtime->{_stack}}, _slice_value( $runtime, $cxt, $rv );
@@ -2044,8 +2044,8 @@ sub o_array_slice {
 sub o_list_slice {
     my( $op, $runtime, $pc ) = @_;
     my $cxt = _context( $op, $runtime );
-    my $list = pop @{$runtime->{_stack}};
     my $indices = pop @{$runtime->{_stack}};
+    my $list = pop @{$runtime->{_stack}};
     my $rv = $list->slice( $runtime, $indices );
 
     push @{$runtime->{_stack}}, _slice_value( $runtime, $cxt, $rv );
@@ -2102,8 +2102,8 @@ sub o_splice {
 
 sub o_exists_array {
     my( $op, $runtime, $pc ) = @_;
-    my $array = pop @{$runtime->{_stack}};
     my $index = pop @{$runtime->{_stack}};
+    my $array = pop @{$runtime->{_stack}};
 
     push @{$runtime->{_stack}}, $array->exists( $runtime, $index->as_integer( $runtime ) );
 
@@ -2134,8 +2134,8 @@ sub o_delete_array_slice {
 
 sub o_hash_element {
     my( $op, $runtime, $pc ) = @_;
-    my $hash = pop @{$runtime->{_stack}};
     my $key = pop @{$runtime->{_stack}};
+    my $hash = pop @{$runtime->{_stack}};
 
     push @{$runtime->{_stack}}, $hash->get_item_or_undef( $runtime, $key->as_string( $runtime ), $op->{create} );
 
@@ -2145,8 +2145,8 @@ sub o_hash_element {
 sub o_hash_slice {
     my( $op, $runtime, $pc ) = @_;
     my $cxt = _context( $op, $runtime );
-    my $hash = pop @{$runtime->{_stack}};
     my $keys = pop @{$runtime->{_stack}};
+    my $hash = pop @{$runtime->{_stack}};
     my $rv = $hash->slice( $runtime, $keys, $op->{create} );
 
     push @{$runtime->{_stack}}, _slice_value( $runtime, $cxt, $rv );
@@ -2156,8 +2156,8 @@ sub o_hash_slice {
 
 sub o_exists_hash {
     my( $op, $runtime, $pc ) = @_;
-    my $hash = pop @{$runtime->{_stack}};
     my $key = pop @{$runtime->{_stack}};
+    my $hash = pop @{$runtime->{_stack}};
 
     push @{$runtime->{_stack}}, $hash->exists( $runtime, $key->as_string( $runtime ) );
 
@@ -2166,8 +2166,8 @@ sub o_exists_hash {
 
 sub o_delete_hash {
     my( $op, $runtime, $pc ) = @_;
-    my $hash = pop @{$runtime->{_stack}};
     my $index = pop @{$runtime->{_stack}};
+    my $hash = pop @{$runtime->{_stack}};
 
     push @{$runtime->{_stack}},
          $hash->delete_item( $runtime, $index->as_string( $runtime ) );
@@ -2504,8 +2504,8 @@ sub o_make_qr {
 
 sub o_localize_array_element {
     my( $op, $runtime, $pc ) = @_;
-    my $array = pop @{$runtime->{_stack}};
     my $index = pop @{$runtime->{_stack}};
+    my $array = pop @{$runtime->{_stack}};
     my $int_index = $index->as_integer( $runtime );
 
     my $saved = $array->localize_element( $runtime, $int_index );
@@ -2531,8 +2531,8 @@ sub o_restore_array_element {
 
 sub o_localize_hash_element {
     my( $op, $runtime, $pc ) = @_;
-    my $hash = pop @{$runtime->{_stack}};
     my $index = pop @{$runtime->{_stack}};
+    my $hash = pop @{$runtime->{_stack}};
     my $str_key = $index->as_string( $runtime );
 
     my $saved = $hash->localize_element( $runtime, $str_key );

@@ -57,7 +57,7 @@ EOP
 # main
 L1: # scope=1
   lexical_state_set index=0
-  assign context=CXT_VOID (constant_integer value=1), (array_element context=CXT_SCALAR, create=1 (constant_integer value=0), (global context=CXT_LIST|CXT_LVALUE, name="x", slot=VALUE_ARRAY))
+  assign context=CXT_VOID (constant_integer value=1), (array_element context=CXT_SCALAR, create=1 (global context=CXT_LIST|CXT_LVALUE, name="x", slot=VALUE_ARRAY), (constant_integer value=0))
   jump to=L2
 L2: # scope=1
   end
@@ -69,7 +69,7 @@ EOP
 # main
 L1: # scope=1
   lexical_state_set index=0
-  call context=CXT_VOID (make_array context=CXT_LIST (array_element context=CXT_LIST, create=2 (constant_integer value=0), (global context=CXT_LIST, name="x", slot=VALUE_ARRAY))), (global context=CXT_SCALAR, name="foo", slot=VALUE_SUB)
+  call context=CXT_VOID (make_array context=CXT_LIST (array_element context=CXT_LIST, create=2 (global context=CXT_LIST, name="x", slot=VALUE_ARRAY), (constant_integer value=0))), (global context=CXT_SCALAR, name="foo", slot=VALUE_SUB)
   jump to=L2
 L2: # scope=1
   end

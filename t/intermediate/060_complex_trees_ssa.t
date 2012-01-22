@@ -92,7 +92,7 @@ L1: # scope=1
 L2: # scope=1
   end
 L3: # scope=1
-  jump_if_true false=L2, true=L4 (array_element context=4, create=0 (constant_integer value=0), (lexical lexical_info={index=0, slot=VALUE_ARRAY}))
+  jump_if_true false=L2, true=L4 (array_element context=4, create=0 (lexical lexical_info={index=0, slot=VALUE_ARRAY}), (constant_integer value=0))
 L4: # scope=1
   return context=1 (call context=1 (make_array context=8 (constant_integer value=123)), (global context=4, name="xx", slot=4))
 EOI

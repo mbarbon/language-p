@@ -9,7 +9,7 @@ EOP
 # main
 L1: # scope=1
   lexical_state_set index=0
-  defined context=CXT_VOID (array_element context=CXT_SCALAR, create=0 (constant_integer value=1), (global context=CXT_LIST, name="a", slot=VALUE_ARRAY))
+  defined context=CXT_VOID (array_element context=CXT_SCALAR, create=0 (global context=CXT_LIST, name="a", slot=VALUE_ARRAY), (constant_integer value=1))
   jump to=L2
 L2: # scope=1
   end

@@ -9,8 +9,8 @@ EOP
 # main
 L1: # scope=1
   lexical_state_set index=0
-  constant_integer value=1
   global context=8, name="foo", slot=2
+  constant_integer value=1
   exists_array context=2
   pop
   jump to=L2
@@ -24,9 +24,9 @@ EOP
 # main
 L1: # scope=1
   lexical_state_set index=0
-  constant_integer value=1
   global context=4, name="foo", slot=1
   vivify_hash context=4
+  constant_integer value=1
   exists_hash context=2
   pop
   jump to=L2
