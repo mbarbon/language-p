@@ -126,6 +126,7 @@ use parent -norequire, qw(Language::P::ParseTree::Node);
 
 our @FIELDS = qw(value flags);
 
+sub assign_list { return [] }
 sub is_constant { 1 }
 sub is_bareword { $_[0]->{flags} & Language::P::Constants::STRING_BARE }
 sub is_string   { $_[0]->{flags} & Language::P::Constants::CONST_STRING }
@@ -361,7 +362,7 @@ our @FIELDS = qw(op left right);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
-sub assign_list { return $_[0]->op == Language::P::Opcodes::OP_ASSIGN ? $_[0]->left->assign_list : undef }
+sub assign_list { return [ @{$_[0]->left->assign_list || []}, @{$_[0]->right->assign_list || []} ] }
 sub always_void {
     return    $_[0]->op == Language::P::Opcodes::OP_LOG_AND
            || $_[0]->op == Language::P::Opcodes::OP_LOG_OR
@@ -378,6 +379,8 @@ our @FIELDS = qw(op left);
 
 __PACKAGE__->mk_ro_accessors( @FIELDS );
 
+sub assign_list { $_[0]->left->assign_list }
+
 package Language::P::ParseTree::Parentheses;
 
 use strict;
@@ -385,7 +388,6 @@ use warnings;
 use parent -norequire, qw(Language::P::ParseTree::UnOp);
 
 sub op { Language::P::ParseTree::OP_PARENTHESES }
-sub assign_list { return [ $_[0]->left ] }
 sub lvalue_context { Language::P::Constants::CXT_LIST }
 
 package Language::P::ParseTree::Local;
@@ -395,7 +397,6 @@ use warnings;
 use parent -norequire, qw(Language::P::ParseTree::UnOp);
 
 sub op { Language::P::ParseTree::OP_LOCAL }
-sub assign_list { $_[0]->left->assign_list }
 sub lvalue_context { $_[0]->left->lvalue_context }
 
 package Language::P::ParseTree::Jump;
@@ -413,6 +414,7 @@ use strict;
 use warnings;
 use parent -norequire, qw(Language::P::ParseTree::UnOp);
 
+sub assign_list { return undef }
 sub lvalue_context {
     my( $self ) = @_;
 

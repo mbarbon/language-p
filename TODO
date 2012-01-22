@@ -33,6 +33,7 @@ Parsing:
     - (?( - condition
   - empty pattern
 - vstrings and versions in 'use' and 'no'
+- exaustive checks for when to apply the 'common' optimization in array assignment
 
 IR:
 - generate glob dereferences for open/binmode/pipe

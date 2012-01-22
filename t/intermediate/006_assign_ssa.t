@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use t::lib::TestIntermediate tests => 6;
+use t::lib::TestIntermediate tests => 7;
 
 generate_ssa_and_diff( <<'EOP', <<'EOI' );
 $x = @y
@@ -46,6 +46,18 @@ EOP
 L1: # scope=1
   lexical_state_set index=0
   assign_list common=1, context=CXT_VOID (global context=CXT_SCALAR, name="y", slot=VALUE_SCALAR), (vivify_array context=CXT_LIST|CXT_LVALUE (global context=CXT_SCALAR, name="x", slot=VALUE_SCALAR))
+  jump to=L2
+L2: # scope=1
+  end
+EOI
+
+generate_ssa_and_diff( <<'EOP', <<'EOI' );
+@x = 7
+EOP
+# main
+L1: # scope=1
+  lexical_state_set index=0
+  assign_list common=0, context=2 (constant_integer value=7), (global context=24, name="x", slot=2)
   jump to=L2
 L2: # scope=1
   end
