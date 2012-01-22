@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-print "1..11\n";
+print "1..13\n";
 
 $t = ( $a, $c, $b ) = ( 1, 3, 2 );
 
@@ -30,3 +30,8 @@ print $#y == 2 ? "ok\n" : "not ok - $#y\n";
 print $#x == 1 ? "ok\n" : "not ok - $#x\n";
 print $#y == -1 ? "ok\n" : "not ok - $#y\n";
 print $#z == 2 ? "ok\n" : "not ok - $#z\n";
+
+@x = 3;
+
+print $#x == 0 ? "ok\n" : "not ok - $#x\n";
+print "$x[0]" eq '3' ? "ok\n" : "not ok - $x[0]\n";
