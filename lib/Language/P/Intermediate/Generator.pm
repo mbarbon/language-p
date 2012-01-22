@@ -2510,7 +2510,7 @@ sub _subscript {
     $self->dispatch( $tree->subscripted );
 
     my $lvalue = $tree->get_attribute( 'context' ) & (CXT_LVALUE|CXT_VIVIFY);
-    my $maybe_lvalue = $tree->get_attribute( 'context' ) & CXT_NOCREATE;
+    my $maybe_lvalue = $tree->get_attribute( 'context' ) & CXT_MAYBE_LVALUE;
     my $create = $maybe_lvalue ? 2 :
                  $lvalue       ? 1 :
                                  0;

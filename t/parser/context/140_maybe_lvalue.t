@@ -8,7 +8,7 @@ EOP
 --- !parsetree:FunctionCall
 arguments:
   - !parsetree:Subscript
-    context: CXT_LIST|CXT_NOCREATE
+    context: CXT_LIST|CXT_MAYBE_LVALUE
     reference: 0
     subscript: !parsetree:Constant
       context: CXT_SCALAR
@@ -20,7 +20,7 @@ arguments:
       sigil: VALUE_ARRAY
     type: VALUE_ARRAY
   - !parsetree:Subscript
-    context: CXT_LIST|CXT_NOCREATE
+    context: CXT_LIST|CXT_MAYBE_LVALUE
     reference: 0
     subscript: !parsetree:Constant
       context: CXT_SCALAR

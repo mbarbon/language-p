@@ -238,10 +238,11 @@ sub _function_call {
 
     if( $tree->arguments ) {
         my $arg_index = 0;
+        my $create = $tree->function == OP_DEFINED ? 0 : CXT_MAYBE_LVALUE;
         foreach my $arg ( @{$tree->arguments} ) {
             my $arg_cxt = $arg_index <= $#$arg_cxts ? $arg_cxts->[$arg_index] :
                                                       $arg_cxts->[-1];
-	    $arg_cxt |= CXT_NOCREATE
+	    $arg_cxt |= $create
                 if $arg->isa( 'Language::P::ParseTree::Subscript' );
             $self->visit( $arg, $arg_cxt );
             ++$arg_index;

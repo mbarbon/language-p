@@ -390,7 +390,7 @@ EOP
 --- !parsetree:BuiltinIndirect
 arguments:
   - !parsetree:Subscript
-    context: CXT_LIST|CXT_NOCREATE
+    context: CXT_LIST|CXT_MAYBE_LVALUE
     reference: 0
     subscript: !parsetree:Constant
       context: CXT_SCALAR
