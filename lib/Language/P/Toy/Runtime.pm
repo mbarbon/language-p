@@ -8,7 +8,7 @@ use Language::P::Toy::Value::MainSymbolTable;
 use Language::P::Constants qw(:all);
 use Language::P::Parser qw(:all);
 
-__PACKAGE__->mk_ro_accessors( qw(symbol_table _variables _parser) );
+__PACKAGE__->mk_ro_accessors( qw(symbol_table _variables _parser _options) );
 __PACKAGE__->mk_accessors( qw(parser) );
 
 sub new {
@@ -23,6 +23,7 @@ sub new {
     $self->{_frame} = -1;
     $self->{_stack} = [];
     $self->{_eval_count} = 0;
+    $self->{_options} = {};
 
     return $self;
 }
@@ -30,7 +31,11 @@ sub new {
 sub set_option {
     my( $self, $option, $value ) = @_;
 
-    $self->parser->set_option( $option, $value );
+    if( $option eq 'compile-only' ) {
+        $self->_options->{$option} = 1;
+    } else {
+        $self->parser->set_option( $option, $value );
+    }
 }
 
 sub reset {
@@ -109,7 +114,8 @@ sub run_file {
         $parser->parse_file( $program, $flags );
     };
     $self->_after_parse( $program ) if $is_main;
-    $self->run_last_file( $code, $context );
+    $self->run_last_file( $code, $context )
+        if !$is_main || !$self->_options->{'compile-only'};
 }
 
 sub run_string {
@@ -127,7 +133,8 @@ sub run_string {
         $parser->parse_string( $program, $flags, $program_name );
     };
     $self->_after_parse( $program ) if $is_main;
-    $self->run_last_file( $code, $context );
+    $self->run_last_file( $code, $context )
+        if !$is_main || !$self->_options->{'compile-only'};
 }
 
 # maybe put in teh code object

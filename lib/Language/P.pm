@@ -98,11 +98,15 @@ sub process_command_line {
             $self->runtime->set_option( $1 );
             next;
         };
-        $arg =~ /^-e/ and do {
+        $arg =~ /^-e$/ and do {
             ++$i;
             my $code = $self->program_code( $argv->[$i] );
 
             die "No code specified for -e.\n" unless defined $code;
+        };
+        $arg =~ /^-c$/ and do {
+            $self->runtime->set_option( 'compile-only' );
+            next;
         };
 
         # pass through
