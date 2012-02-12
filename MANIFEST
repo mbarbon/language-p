@@ -109,6 +109,7 @@ t/intermediate/120_builtins.t
 t/intermediate/121_bless_ssa.t
 t/intermediate/121_defined_ssa.t
 t/intermediate/121_exists_ssa.t
+t/intermediate/121_scalar_ssa.t
 t/intermediate/125_dynamic_goto_ssa.t
 t/intermediate/165_split.t
 t/lib/TestIntermediate.pm
