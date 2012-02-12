@@ -15,7 +15,7 @@ print $x{$x[1]} == $y[1] ? "ok\n" : "not ok - $x{$x[1]} $y[1]\n";
 print $x{$x[2]} == $y[2] ? "ok\n" : "not ok - $x{$x[2]} $y[2]\n";
 
 $index = 0;
-while( my( $k, $v ) = each %x ) {
+while( ( $k, $v ) = each %x ) {
     print $k eq $x[$index] ? "ok\n" : "not ok - $k eq $x[$index]\n";
     print $v eq $y[$index] ? "ok\n" : "not ok - $v eq $y[$index]\n";
 
@@ -23,7 +23,7 @@ while( my( $k, $v ) = each %x ) {
 }
 
 $index = 0;
-while( my $k = each %x ) {
+while( $k = each %x ) {
     print $k eq $x[$index] ? "ok\n" : "not ok - $k eq $x[$index]\n";
 
     $index = $index + 1;
