@@ -1441,8 +1441,10 @@ sub _binary_op {
     my( $self, $tree ) = @_;
     _emit_label( $self, $tree );
 
-    if(    $tree->op == OP_LOG_AND || $tree->op == OP_LOG_OR
-        || $tree->op == OP_LOG_AND_ASSIGN || $tree->op == OP_LOG_OR_ASSIGN ) {
+    my $op = $tree->op;
+    if(    $op == OP_LOG_AND || $op == OP_LOG_OR
+        || $op == OP_LOG_AND_ASSIGN || $op == OP_LOG_OR_ASSIGN
+        || $op == OP_DEFINED_OR || $op == OP_DEFINED_OR_ASSIGN ) {
         $self->dispatch( $tree->left );
 
         my( $right, $end, $to_end ) = _new_blocks( $self, 3 );
@@ -1453,9 +1455,10 @@ sub _binary_op {
         _add_jump $self,
             opcode_npam( OP_JUMP_IF_TRUE, $tree->pos,
                          _get_stack( $self, 1 ),
-                         $tree->op == OP_LOG_AND || $tree->op == OP_LOG_AND_ASSIGN ?
+                         $op == OP_LOG_AND || $op == OP_LOG_AND_ASSIGN ?
                              ( true => $right,  false => $to_end ) :
-                             ( true => $to_end, false => $right ) ),
+                             ( true => $to_end, false => $right ) # || and //
+                       ),
              $right, $to_end;
 
         _add_blocks $self, $to_end;
